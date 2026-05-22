@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 180" fill="none">
+  <defs>
+    <linearGradient id="lg" x1="0" y1="0" x2="0" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0D9488"/>
+      <stop offset="100%" stop-color="#0A6B62"/>
+    </linearGradient>
+  </defs>
+  <!-- Left bar (shortest) -->
+  <polygon points="12,180 12,108 38,82 38,180" fill="url(#lg)"/>
+  <!-- Middle bar -->
+  <polygon points="58,180 58,52 84,26 84,180" fill="url(#lg)"/>
+  <!-- Right F -->
+  <!-- Vertical stem -->
+  <polygon points="104,180 104,20 130,20 130,180" fill="url(#lg)"/>
+  <!-- Top horizontal -->
+  <polygon points="104,20 190,20 190,46 104,46" fill="url(#lg)"/>
+  <!-- Middle horizontal -->
+  <polygon points="104,84 170,84 170,110 104,110" fill="url(#lg)"/>
+</svg>

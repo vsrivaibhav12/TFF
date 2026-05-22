@@ -1,0 +1,43 @@
+import type { Metadata } from 'next';
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
+import './globals.css';
+import { Toaster } from 'sonner';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const display = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-display',
+  weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
+});
+
+export const metadata: Metadata = {
+  title: { default: 'The Fiscal Fulcrum | Finance Partner | Coimbatore', template: '%s | The Fiscal Fulcrum' },
+  description: 'Structured compliance, financial intelligence, and strategic advisory for Coimbatore\u2019s manufacturing MSMEs. CaaS, Virtual CFO, BizLens, CBAM.',
+  robots: { index: true, follow: true },
+};
+
+export const viewport = { themeColor: '#0D9488', width: 'device-width', initialScale: 1 };
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={`${inter.variable} ${display.variable} scroll-smooth`}>
+      <body className="min-h-screen antialiased">
+        {children}
+        <Toaster
+          position="bottom-right"
+          richColors
+          closeButton
+          toastOptions={{
+            className: 'border-zinc-200 rounded-xl shadow-lg',
+          }}
+        />
+      </body>
+    </html>
+  );
+}
