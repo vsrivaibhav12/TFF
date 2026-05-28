@@ -10,15 +10,17 @@ import QueriesTable from './queries-table';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminQueriesPage() {
-  const me = await requireRole(['admin', 'team']);
-  await requireCapabilityOrRedirect(me, 'queries.assign');
   const sb = createClient();
 
-  const { data: queries } = await sb
+  const mePromise = requireRole(['admin', 'team']);
+  const queriesPromise = sb
     .from('queries')
     .select('id, subject, status, created_at, clients(business_name), users_profile:created_by(full_name)')
     .order('created_at', { ascending: false })
     .limit(100);
+
+  const [me, { data: queries }] = await Promise.all([mePromise, queriesPromise]);
+  await requireCapabilityOrRedirect(me, 'queries.assign');
 
   const exportData = (queries ?? []).map((q: any) => ({
     subject: q.subject,

@@ -14,17 +14,19 @@ import ExportButton from '@/components/sophistication/export-button';
 export const dynamic = 'force-dynamic';
 
 export default async function BillingTrackerPage() {
-    const me = await requireRole(['admin', 'team']);
-    await requireCapabilityOrRedirect(me, 'manage_billing_entities');
   const sb = createClient();
 
-  const { data: tasks } = await sb
+  const mePromise = requireRole(['admin', 'team']);
+  const tasksPromise = sb
     .from('tasks')
     .select('id, task_number, title, status, bill_amount, bill_reference, billed, billed_date, completed_date, client_id, clients!tasks_client_id_fkey(business_name)')
     .eq('is_billable', true)
     .eq('is_deleted', false)
     .order('completed_date', { ascending: false })
     .limit(200);
+
+  const [me, { data: tasks }] = await Promise.all([mePromise, tasksPromise]);
+  await requireCapabilityOrRedirect(me, 'manage_billing_entities');
 
   const pendingCount = (tasks ?? []).filter((t: any) => !t.billed).length;
   const totalAmount = (tasks ?? []).reduce((sum: number, t: any) => sum + (t.bill_amount || 0), 0);

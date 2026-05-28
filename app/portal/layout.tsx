@@ -17,12 +17,14 @@ const FULL_NAV: Array<NavItem & { gate?: string }> = [
 ];
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireRole('client');
-  const visible = await getVisibleModulesForCurrentClient();
+  const [user, visible, clients] = await Promise.all([
+    requireRole('client'),
+    getVisibleModulesForCurrentClient(),
+    listAccessibleClients(),
+  ]);
   const nav = FULL_NAV.filter((n) => !n.gate || visible.has(n.gate as any)).map(({ gate, ...rest }) => rest);
 
   // For client users, show business name in top bar instead of personal name / UUID email
-  const clients = await listAccessibleClients();
   const businessName = clients[0]?.business_name;
   const displayUser = businessName ? { ...user, full_name: businessName } : user;
 

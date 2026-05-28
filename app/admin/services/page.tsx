@@ -10,7 +10,7 @@ import SubServiceDialog from './sub-service-dialog';
 import TaskTemplatePanel from './task-template-panel';
 import { CategoryManager } from './category-dialog';
 import EmptyState from '@/components/sophistication/empty-state';
-import { Layers, Search, Grid3X3, List } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import ServiceSearchWrapper from './service-search-wrapper';
 import ServiceCard from './service-card';
 
@@ -44,10 +44,6 @@ export default async function AdminServicesPage() {
     sub_services: (subServices as any[]).filter((ss) => ss.service_id === s.id).map((ss) => ss.name).join(', '),
   }));
 
-  const totalSubServices = subServices.length;
-  const totalTemplates = Object.values(templatesBySub).flat().length;
-  const totalSteps = Object.values(stepsByTemplate).flat().length;
-
   // Group services
   const servicesWithCategory = (services as any[]).filter((s) => s.category_id);
   const servicesWithoutCategory = (services as any[]).filter((s) => !s.category_id);
@@ -67,48 +63,6 @@ export default async function AdminServicesPage() {
           </>
         }
       />
-
-      {/* Stats bar */}
-      {services.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="tff-card p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
-              <Layers className="h-4 w-4 text-teal-600" />
-            </div>
-            <div>
-              <div className="text-lg font-bold text-zinc-900 leading-none">{services.length}</div>
-              <div className="text-[11px] text-zinc-500 mt-0.5">Services</div>
-            </div>
-          </div>
-          <div className="tff-card p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
-              <Grid3X3 className="h-4 w-4 text-teal-600" />
-            </div>
-            <div>
-              <div className="text-lg font-bold text-zinc-900 leading-none">{totalSubServices}</div>
-              <div className="text-[11px] text-zinc-500 mt-0.5">Sub-services</div>
-            </div>
-          </div>
-          <div className="tff-card p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
-              <List className="h-4 w-4 text-teal-600" />
-            </div>
-            <div>
-              <div className="text-lg font-bold text-zinc-900 leading-none">{totalTemplates}</div>
-              <div className="text-[11px] text-zinc-500 mt-0.5">Task templates</div>
-            </div>
-          </div>
-          <div className="tff-card p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
-              <Search className="h-4 w-4 text-teal-600" />
-            </div>
-            <div>
-              <div className="text-lg font-bold text-zinc-900 leading-none">{totalSteps}</div>
-              <div className="text-[11px] text-zinc-500 mt-0.5">Template steps</div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Search wrapper with all data for client-side filtering */}
       <ServiceSearchWrapper

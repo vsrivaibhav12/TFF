@@ -30,6 +30,29 @@ const VALID_CATEGORIES = new Set([
   'other',
 ]);
 
+// Common category aliases that users might type in spreadsheets
+const CATEGORY_ALIASES: Record<string, string> = {
+  'sole proprietorship': 'sole_proprietor',
+  'sole proprietor': 'sole_proprietor',
+  'proprietorship': 'sole_proprietor',
+  'proprietor': 'sole_proprietor',
+  'partnership firm': 'partnership',
+  'private limited': 'pvt_ltd',
+  'private limited company': 'pvt_ltd',
+  'pvt ltd': 'pvt_ltd',
+  'pvt. ltd.': 'pvt_ltd',
+  'public limited': 'public_ltd',
+  'public limited company': 'public_ltd',
+  'ltd': 'public_ltd',
+  'limited liability partnership': 'llp',
+  'hindu undivided family': 'huf',
+  'association of persons': 'aop',
+  'non profit': 'ngo',
+  'non-profit': 'ngo',
+  'trust': 'ngo',
+  'society': 'ngo',
+};
+
 // Headers we accept (case-insensitive, trimmed). Map any of them to canonical key.
 const HEADER_ALIASES: Record<string, keyof ParsedClientRow> = {
   'business name': 'business_name',
@@ -71,6 +94,30 @@ function s(v: any): string {
   return String(v).trim();
 }
 
+function normalizePan(v: string): string {
+  return v.replace(/\s+/g, '').toUpperCase();
+}
+
+function normalizeGstin(v: string): string {
+  return v.replace(/\s+/g, '').toUpperCase();
+}
+
+function normalizeCategory(v: string): string | undefined {
+  const lower = v.toLowerCase().trim();
+  if (VALID_CATEGORIES.has(lower)) return lower;
+  const alias = CATEGORY_ALIASES[lower];
+  if (alias) return alias;
+  // Try fuzzy: remove spaces and punctuation
+  const fuzzy = lower.replace(/[\s._-]+/g, '');
+  for (const [key, val] of Object.entries(CATEGORY_ALIASES)) {
+    if (key.replace(/[\s._-]+/g, '') === fuzzy) return val;
+  }
+  for (const valid of VALID_CATEGORIES) {
+    if (valid.replace(/_/g, '') === fuzzy) return valid;
+  }
+  return undefined;
+}
+
 /**
  * Parse a CSV or XLSX buffer into normalized client rows.
  * - First non-empty row is treated as the header row.
@@ -104,18 +151,33 @@ export function parseClientsBuffer(buffer: Buffer | Uint8Array, fileName?: strin
       (out as any)[key] = v || undefined;
     });
 
+    // --- Normalization ---
+    out.business_name = out.business_name ? out.business_name.trim() : '';
+    if (out.pan) out.pan = normalizePan(out.pan);
+    if (out.gstin) out.gstin = normalizeGstin(out.gstin);
+    if (out.category) {
+      const normalized = normalizeCategory(out.category);
+      if (normalized) out.category = normalized;
+    }
+    if (out.primary_contact_email) out.primary_contact_email = out.primary_contact_email.trim().toLowerCase();
+    if (out.primary_contact_phone) out.primary_contact_phone = out.primary_contact_phone.replace(/\s+/g, '');
+    if (out.city) out.city = out.city.trim();
+    if (out.state) out.state = out.state.trim();
+    if (out.pincode) out.pincode = out.pincode.trim();
+    if (out.group) out.group = out.group.trim();
+
     // --- Validation ---
     if (!out.business_name) out.errors.push('business_name is required');
     if (out.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(out.pan)) {
       out.errors.push(`invalid PAN: ${out.pan}`);
     }
-    if (out.gstin && !/^[0-9]{2}[A-Z0-9]{13}$/.test(out.gstin)) {
+    if (out.gstin && !/^[0-9]{2}[A-Z0-9]{10}[0-9][A-Z][0-9A-Z]$/.test(out.gstin)) {
       out.errors.push(`invalid GSTIN: ${out.gstin}`);
     }
     if (out.category && !VALID_CATEGORIES.has(out.category)) {
       out.errors.push(`invalid category "${out.category}" (allowed: ${[...VALID_CATEGORIES].join(', ')})`);
     }
-    if (out.primary_contact_email && !/^\S+@\S+\.\S+$/.test(out.primary_contact_email)) {
+    if (out.primary_contact_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(out.primary_contact_email)) {
       out.errors.push(`invalid email: ${out.primary_contact_email}`);
     }
     rows.push(out);

@@ -96,14 +96,14 @@ export async function commitClientImportAction(input: {
     const gstins = input.rows.map((r) => r.gstin).filter(Boolean) as string[];
     const existingPans = new Set<string>();
     const existingGstins = new Set<string>();
-    const BATCH_SIZE = 100;
-    for (let i = 0; i < pans.length; i += BATCH_SIZE) {
-      const batch = pans.slice(i, i + BATCH_SIZE);
+    const LOOKUP_BATCH = 100;
+    for (let i = 0; i < pans.length; i += LOOKUP_BATCH) {
+      const batch = pans.slice(i, i + LOOKUP_BATCH);
       const { data } = await sb.from('clients').select('pan').in('pan', batch);
       (data ?? []).forEach((r: any) => r.pan && existingPans.add(r.pan));
     }
-    for (let i = 0; i < gstins.length; i += BATCH_SIZE) {
-      const batch = gstins.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < gstins.length; i += LOOKUP_BATCH) {
+      const batch = gstins.slice(i, i + LOOKUP_BATCH);
       const { data } = await sb.from('clients').select('gstin').in('gstin', batch);
       (data ?? []).forEach((r: any) => r.gstin && existingGstins.add(r.gstin));
     }
@@ -127,7 +127,6 @@ export async function commitClientImportAction(input: {
           .select('id')
           .single();
         if (groupErr) {
-          // Fall back to skipping group assignment for this name
           console.warn('Failed to auto-create group:', name, groupErr.message);
         } else if (newGroup) {
           groupNameToId.set(name, newGroup.id);
@@ -135,14 +134,32 @@ export async function commitClientImportAction(input: {
       }
     }
 
-    let inserted = 0;
+    // Build insert-ready rows, skipping duplicates and pre-validation failures
+    type InsertRow = {
+      business_name: string;
+      pan: string | null;
+      gstin: string | null;
+      category: string | null;
+      industry: string | null;
+      primary_contact_person: string | null;
+      primary_contact_email: string | null;
+      primary_contact_phone: string | null;
+      city: string | null;
+      state: string | null;
+      pincode: string | null;
+      group_id: string | null;
+      _row_index: number;
+      _business_name: string;
+    };
+
+    const toInsert: InsertRow[] = [];
     let skipped = 0;
-    let failed = 0;
+    let preFailed = 0;
     const errorEntries: Array<{ row_index: number; business_name: string; error: string }> = [];
 
     for (const r of input.rows) {
       if (r.errors.length > 0) {
-        failed++;
+        preFailed++;
         errorEntries.push({
           row_index: r.row_index,
           business_name: r.business_name || '(no name)',
@@ -168,8 +185,7 @@ export async function commitClientImportAction(input: {
         });
         continue;
       }
-
-      const insertRow: Record<string, any> = {
+      toInsert.push({
         business_name: r.business_name,
         pan: r.pan ?? null,
         gstin: r.gstin ?? null,
@@ -182,19 +198,46 @@ export async function commitClientImportAction(input: {
         state: r.state ?? null,
         pincode: r.pincode ?? null,
         group_id: r.group ? (groupNameToId.get(r.group) ?? null) : null,
-      };
-      const { error } = await sb.from('clients').insert(insertRow);
-      if (error) {
-        failed++;
-        errorEntries.push({
-          row_index: r.row_index,
-          business_name: r.business_name,
-          error: error.message,
+        _row_index: r.row_index,
+        _business_name: r.business_name,
+      });
+    }
+
+    // Batch insert for speed; fall back to per-row on batch failure
+    let inserted = 0;
+    let failed = preFailed;
+    const INSERT_BATCH = 100;
+    for (let i = 0; i < toInsert.length; i += INSERT_BATCH) {
+      const batch = toInsert.slice(i, i + INSERT_BATCH);
+      const batchPayload = batch.map(({ _row_index, _business_name, ...rest }) => rest);
+      const { error: batchError } = await sb.from('clients').insert(batchPayload);
+
+      if (!batchError) {
+        // Whole batch succeeded
+        inserted += batch.length;
+        batch.forEach((r) => {
+          if (r.pan) existingPans.add(r.pan);
+          if (r.gstin) existingGstins.add(r.gstin);
         });
-      } else {
-        inserted++;
-        if (r.pan) existingPans.add(r.pan);
-        if (r.gstin) existingGstins.add(r.gstin);
+        continue;
+      }
+
+      // Batch failed — try one-by-one to identify culprits
+      for (const r of batch) {
+        const { _row_index, _business_name, ...payload } = r;
+        const { error } = await sb.from('clients').insert(payload);
+        if (error) {
+          failed++;
+          errorEntries.push({
+            row_index: _row_index,
+            business_name: _business_name,
+            error: error.message,
+          });
+        } else {
+          inserted++;
+          if (r.pan) existingPans.add(r.pan);
+          if (r.gstin) existingGstins.add(r.gstin);
+        }
       }
     }
 

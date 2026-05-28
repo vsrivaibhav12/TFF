@@ -13,7 +13,9 @@ export interface AppUser {
   is_prime_admin?: boolean;
 }
 
-export async function getCurrentUser(): Promise<AppUser | null> {
+import { cache } from 'react';
+
+export const getCurrentUser = cache(async (): Promise<AppUser | null> => {
   const supabase = createClient();
   const {
     data: { user },
@@ -29,7 +31,7 @@ export async function getCurrentUser(): Promise<AppUser | null> {
 
   if (!profile || !profile.is_active) return null;
   return profile as AppUser;
-}
+});
 
 export async function requireUser(): Promise<AppUser> {
   const u = await getCurrentUser();
