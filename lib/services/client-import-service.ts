@@ -14,6 +14,7 @@ export interface ParsedClientRow {
   city?: string;
   state?: string;
   pincode?: string;
+  group?: string;
   errors: string[];
 }
 
@@ -55,6 +56,9 @@ const HEADER_ALIASES: Record<string, keyof ParsedClientRow> = {
   'pincode': 'pincode',
   'pin': 'pincode',
   'zip': 'pincode',
+  'group': 'group',
+  'client group': 'group',
+  'group name': 'group',
 };
 
 function normHeader(h: string): keyof ParsedClientRow | null {

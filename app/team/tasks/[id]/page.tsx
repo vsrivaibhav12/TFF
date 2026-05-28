@@ -25,11 +25,15 @@ import {
 } from '@/lib/repositories/task-custom-fields';
 import { listWorkDoneForTask } from '@/lib/repositories/workdone';
 import { requireRole } from '@/lib/auth/require-role';
+import { listGrantedCapabilities } from '@/lib/repositories/staff-capabilities';
 
 export const dynamic = 'force-dynamic';
 
 export default async function TeamTaskDetail({ params }: { params: { id: string } }) {
   const me = await requireRole(['admin', 'team']);
+  const capabilities = me.role === 'admin' ? [] : await listGrantedCapabilities(me.id);
+  const capSet = new Set(capabilities);
+  const canEditSteps = me.role === 'admin' || capSet.has('tasks.complete');
   const task = await getTask(params.id);
   if (!task) notFound();
   const [activity, notes, team, steps, cfDefs, cfValues, allLabels, assignedLabels, workdone] = await Promise.all([
@@ -115,7 +119,7 @@ export default async function TeamTaskDetail({ params }: { params: { id: string 
             />
           )}
 
-          <TaskStepsPanel taskId={task.id} initial={steps as any} editable={false} />
+          <TaskStepsPanel taskId={task.id} initial={steps as any} editable={canEditSteps} allowAddStep={canEditSteps} />
 
           <BlockedOnClientToggle
             taskId={task.id}

@@ -108,6 +108,33 @@ export async function commitClientImportAction(input: {
       (data ?? []).forEach((r: any) => r.gstin && existingGstins.add(r.gstin));
     }
 
+    // --- Group auto-create / lookup ---
+    const groupNames = Array.from(new Set(input.rows.map((r) => r.group).filter(Boolean) as string[]));
+    const groupNameToId = new Map<string, string>();
+    if (groupNames.length > 0) {
+      const { data: existingGroups } = await sb
+        .from('client_groups')
+        .select('id, name')
+        .in('name', groupNames)
+        .eq('is_deleted', false);
+      (existingGroups ?? []).forEach((g: any) => groupNameToId.set(g.name, g.id));
+
+      const missingNames = groupNames.filter((n) => !groupNameToId.has(n));
+      for (const name of missingNames) {
+        const { data: newGroup, error: groupErr } = await sb
+          .from('client_groups')
+          .insert({ name })
+          .select('id')
+          .single();
+        if (groupErr) {
+          // Fall back to skipping group assignment for this name
+          console.warn('Failed to auto-create group:', name, groupErr.message);
+        } else if (newGroup) {
+          groupNameToId.set(name, newGroup.id);
+        }
+      }
+    }
+
     let inserted = 0;
     let skipped = 0;
     let failed = 0;
@@ -154,6 +181,7 @@ export async function commitClientImportAction(input: {
         city: r.city ?? null,
         state: r.state ?? null,
         pincode: r.pincode ?? null,
+        group_id: r.group ? (groupNameToId.get(r.group) ?? null) : null,
       };
       const { error } = await sb.from('clients').insert(insertRow);
       if (error) {

@@ -139,7 +139,7 @@ export default function ClientImportPage() {
               <code className="block rounded bg-zinc-50 border border-zinc-200 p-3 text-xs leading-relaxed">
                 business_name <span className="text-zinc-400">(required)</span>, pan, gstin, category,
                 industry, primary_contact_person, primary_contact_email,
-                primary_contact_phone, city, state, pincode
+                primary_contact_phone, city, state, pincode, group
               </code>
               <p className="text-zinc-500 text-xs">
                 <strong>category</strong> must be one of: sole_proprietor, partnership, llp,
@@ -239,6 +239,7 @@ export default function ClientImportPage() {
                     <TableHead className="px-3 py-2 font-medium">State</TableHead>
                     <TableHead className="px-3 py-2 font-medium">Email</TableHead>
                     <TableHead className="px-3 py-2 font-medium">Phone</TableHead>
+                    <TableHead className="px-3 py-2 font-medium">Group</TableHead>
                     <TableHead className="px-3 py-2 font-medium">Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -287,6 +288,7 @@ export default function ClientImportPage() {
                             <span className="text-zinc-600">{r.primary_contact_phone ?? '—'}</span>
                           )}
                         </TableCell>
+                        <TableCell className="px-3 py-2 text-zinc-600 align-top">{r.group ?? '—'}</TableCell>
                         <TableCell className="px-3 py-2 align-top">
                           {hasErr ? (
                             <span className="text-xs text-amber-700">{r.errors.join('; ')}</span>
