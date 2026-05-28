@@ -14,6 +14,12 @@ export interface ImportPreview {
   source?: 'file' | 'gstn_paste';
 }
 
+export interface ImportErrorEntry {
+  row_index: number;
+  business_name: string;
+  error: string;
+}
+
 /**
  * Parse the uploaded file (CSV or XLSX) on the server and return a preview.
  * No DB writes happen on preview — only validation.
@@ -76,13 +82,20 @@ export async function previewGstnPasteAction(input: {
 
 /**
  * Commit the import: insert valid rows into `clients` and write an audit
- * batch record to `client_import_batches` (per v3.2 spec). Insert-only;
- * skips duplicates by PAN/GSTIN if those already exist.
+ * batch record to `client_import_batches`. Supports update-existing mode.
  */
 export async function commitClientImportAction(input: {
   file_name: string;
   rows: ParsedClientRow[];
-}): Promise<ActionResult<{ batch_id: string; inserted: number; skipped: number; failed: number }>> {
+  update_existing?: boolean;
+}): Promise<ActionResult<{
+  batch_id: string;
+  inserted: number;
+  updated: number;
+  skipped: number;
+  failed: number;
+  errors: ImportErrorEntry[];
+}>> {
   try {
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'clients.create');
@@ -90,22 +103,23 @@ export async function commitClientImportAction(input: {
       return fail('No rows to import', 'VALIDATION');
     }
     const sb = createClient();
+    const updateExisting = !!input.update_existing;
 
-    // Pre-load existing PAN/GSTIN to skip duplicates server-side
+    // Pre-load existing PAN/GSTIN → client id for dedup and optional update
     const pans = input.rows.map((r) => r.pan).filter(Boolean) as string[];
     const gstins = input.rows.map((r) => r.gstin).filter(Boolean) as string[];
-    const existingPans = new Set<string>();
-    const existingGstins = new Set<string>();
+    const existingPanToId = new Map<string, string>();
+    const existingGstinToId = new Map<string, string>();
     const LOOKUP_BATCH = 100;
     for (let i = 0; i < pans.length; i += LOOKUP_BATCH) {
       const batch = pans.slice(i, i + LOOKUP_BATCH);
-      const { data } = await sb.from('clients').select('pan').in('pan', batch);
-      (data ?? []).forEach((r: any) => r.pan && existingPans.add(r.pan));
+      const { data } = await sb.from('clients').select('id, pan').in('pan', batch).eq('is_deleted', false);
+      (data ?? []).forEach((r: any) => { if (r.pan) existingPanToId.set(r.pan, r.id); });
     }
     for (let i = 0; i < gstins.length; i += LOOKUP_BATCH) {
       const batch = gstins.slice(i, i + LOOKUP_BATCH);
-      const { data } = await sb.from('clients').select('gstin').in('gstin', batch);
-      (data ?? []).forEach((r: any) => r.gstin && existingGstins.add(r.gstin));
+      const { data } = await sb.from('clients').select('id, gstin').in('gstin', batch).eq('is_deleted', false);
+      (data ?? []).forEach((r: any) => { if (r.gstin) existingGstinToId.set(r.gstin, r.id); });
     }
 
     // --- Group auto-create / lookup ---
@@ -134,8 +148,17 @@ export async function commitClientImportAction(input: {
       }
     }
 
-    // Build insert-ready rows, skipping duplicates and pre-validation failures
-    type InsertRow = {
+    // Track intra-file duplicates for clear messaging
+    const seenPans = new Set<string>();
+    const seenGstins = new Set<string>();
+
+    let inserted = 0;
+    let updated = 0;
+    let skipped = 0;
+    let failed = 0;
+    const errors: ImportErrorEntry[] = [];
+
+    type ClientPayload = {
       business_name: string;
       pan: string | null;
       gstin: string | null;
@@ -148,44 +171,10 @@ export async function commitClientImportAction(input: {
       state: string | null;
       pincode: string | null;
       group_id: string | null;
-      _row_index: number;
-      _business_name: string;
     };
 
-    const toInsert: InsertRow[] = [];
-    let skipped = 0;
-    let preFailed = 0;
-    const errorEntries: Array<{ row_index: number; business_name: string; error: string }> = [];
-
-    for (const r of input.rows) {
-      if (r.errors.length > 0) {
-        preFailed++;
-        errorEntries.push({
-          row_index: r.row_index,
-          business_name: r.business_name || '(no name)',
-          error: r.errors.join('; '),
-        });
-        continue;
-      }
-      if (r.pan && existingPans.has(r.pan)) {
-        skipped++;
-        errorEntries.push({
-          row_index: r.row_index,
-          business_name: r.business_name,
-          error: `Duplicate PAN ${r.pan} — skipped`,
-        });
-        continue;
-      }
-      if (r.gstin && existingGstins.has(r.gstin)) {
-        skipped++;
-        errorEntries.push({
-          row_index: r.row_index,
-          business_name: r.business_name,
-          error: `Duplicate GSTIN ${r.gstin} — skipped`,
-        });
-        continue;
-      }
-      toInsert.push({
+    function buildPayload(r: ParsedClientRow): ClientPayload {
+      return {
         business_name: r.business_name,
         pan: r.pan ?? null,
         gstin: r.gstin ?? null,
@@ -198,46 +187,65 @@ export async function commitClientImportAction(input: {
         state: r.state ?? null,
         pincode: r.pincode ?? null,
         group_id: r.group ? (groupNameToId.get(r.group) ?? null) : null,
-        _row_index: r.row_index,
-        _business_name: r.business_name,
-      });
+      };
     }
 
-    // Batch insert for speed; fall back to per-row on batch failure
-    let inserted = 0;
-    let failed = preFailed;
-    const INSERT_BATCH = 100;
-    for (let i = 0; i < toInsert.length; i += INSERT_BATCH) {
-      const batch = toInsert.slice(i, i + INSERT_BATCH);
-      const batchPayload = batch.map(({ _row_index, _business_name, ...rest }) => rest);
-      const { error: batchError } = await sb.from('clients').insert(batchPayload);
-
-      if (!batchError) {
-        // Whole batch succeeded
-        inserted += batch.length;
-        batch.forEach((r) => {
-          if (r.pan) existingPans.add(r.pan);
-          if (r.gstin) existingGstins.add(r.gstin);
+    for (const r of input.rows) {
+      if (r.errors.length > 0) {
+        failed++;
+        errors.push({
+          row_index: r.row_index,
+          business_name: r.business_name || '(no name)',
+          error: r.errors.join('; '),
         });
         continue;
       }
 
-      // Batch failed — try one-by-one to identify culprits
-      for (const r of batch) {
-        const { _row_index, _business_name, ...payload } = r;
-        const { error } = await sb.from('clients').insert(payload);
+      const dupPanId = r.pan ? existingPanToId.get(r.pan) : undefined;
+      const dupGstinId = r.gstin ? existingGstinToId.get(r.gstin) : undefined;
+      const existingId = dupPanId || dupGstinId;
+
+      if (existingId && updateExisting) {
+        const { error } = await sb.from('clients').update(buildPayload(r)).eq('id', existingId);
         if (error) {
           failed++;
-          errorEntries.push({
-            row_index: _row_index,
-            business_name: _business_name,
-            error: error.message,
-          });
+          errors.push({ row_index: r.row_index, business_name: r.business_name, error: error.message });
         } else {
-          inserted++;
-          if (r.pan) existingPans.add(r.pan);
-          if (r.gstin) existingGstins.add(r.gstin);
+          updated++;
         }
+        continue;
+      }
+
+      if (r.pan && seenPans.has(r.pan)) {
+        skipped++;
+        errors.push({ row_index: r.row_index, business_name: r.business_name, error: `Duplicate PAN ${r.pan} in file` });
+        continue;
+      }
+      if (r.gstin && seenGstins.has(r.gstin)) {
+        skipped++;
+        errors.push({ row_index: r.row_index, business_name: r.business_name, error: `Duplicate GSTIN ${r.gstin} in file` });
+        continue;
+      }
+
+      if (r.pan && dupPanId) {
+        skipped++;
+        errors.push({ row_index: r.row_index, business_name: r.business_name, error: `PAN ${r.pan} already exists` });
+        continue;
+      }
+      if (r.gstin && dupGstinId) {
+        skipped++;
+        errors.push({ row_index: r.row_index, business_name: r.business_name, error: `GSTIN ${r.gstin} already exists` });
+        continue;
+      }
+
+      const { error } = await sb.from('clients').insert(buildPayload(r));
+      if (error) {
+        failed++;
+        errors.push({ row_index: r.row_index, business_name: r.business_name, error: error.message });
+      } else {
+        inserted++;
+        if (r.pan) seenPans.add(r.pan);
+        if (r.gstin) seenGstins.add(r.gstin);
       }
     }
 
@@ -247,10 +255,10 @@ export async function commitClientImportAction(input: {
         uploaded_by: me.id,
         source_filename: input.file_name,
         total_rows: input.rows.length,
-        successful_rows: inserted,
+        successful_rows: inserted + updated,
         skipped_rows: skipped,
         error_rows: failed,
-        errors: errorEntries,
+        errors,
         status: 'completed',
       })
       .select('id')
@@ -259,7 +267,7 @@ export async function commitClientImportAction(input: {
 
     revalidatePath('/admin/clients');
     revalidatePath('/admin/clients/import');
-    return ok({ batch_id: batch.id, inserted, skipped, failed });
+    return ok({ batch_id: batch.id, inserted, updated, skipped, failed, errors });
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
   }

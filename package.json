@@ -21,6 +21,7 @@
     "db:apply-attendance-rls": "tsx scripts/apply-attendance-rls.ts",
     "db:apply-updated-at-migration": "tsx scripts/apply-updated-at-migration.ts",
     "db:apply-unique-constraint-fix": "tsx scripts/apply-unique-constraint-fix.ts",
+    "db:wipe-client-data": "tsx scripts/wipe-client-data.ts",
     "git:commit-and-push": "tsx scripts/git-commit-and-push.ts",
     "proxy": "node proxy.js",
     "test": "node --import ./__tests__/setup.js --import tsx --test __tests__/*.test.ts",
