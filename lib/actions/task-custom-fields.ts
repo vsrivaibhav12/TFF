@@ -20,7 +20,7 @@ const definitionSchema = z.object({
 
 export async function createCustomFieldDefinitionAction(input: any): Promise<ActionResult<{ id: string }>> {
   try {
-    const me = await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'manage_custom_fields');
     const parsed = definitionSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -40,7 +40,7 @@ export async function createCustomFieldDefinitionAction(input: any): Promise<Act
 
 export async function deleteCustomFieldDefinitionAction(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'manage_custom_fields');
     const sb = createClient();
     const { error } = await sb.from('task_custom_field_definitions').delete().eq('id', id);
@@ -94,7 +94,7 @@ const labelSchema = z.object({
 
 export async function createLabelAction(input: any): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'manage_custom_fields');
     const parsed = labelSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -110,7 +110,7 @@ export async function createLabelAction(input: any): Promise<ActionResult<void>>
 
 export async function deactivateLabelAction(code: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'manage_custom_fields');
     const sb = createClient();
     const { error } = await sb.from('task_labels').update({ is_active: false }).eq('code', code);

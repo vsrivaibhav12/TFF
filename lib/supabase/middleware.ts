@@ -20,10 +20,10 @@ const ROLE_HOME: Record<string, string> = {
   client: '/portal',
 };
 
-const ROLE_ALLOWED_PREFIX: Record<string, string> = {
-  admin: '/admin',
-  team: '/team',
-  client: '/portal',
+const ROLE_ALLOWED_PREFIX: Record<string, string[]> = {
+  admin: ['/admin', '/team'],
+  team: ['/team', '/admin'],
+  client: ['/portal'],
 };
 
 // Paths anyone authenticated may hit (account-self, legal, /api/cmdk for search, etc.)
@@ -120,9 +120,9 @@ export async function updateSession(request: NextRequest) {
         }
       }
 
-      const allowedPrefix = ROLE_ALLOWED_PREFIX[role];
+      const allowedPrefixes = ROLE_ALLOWED_PREFIX[role] ?? [];
       const home = ROLE_HOME[role] ?? '/';
-      if (allowedPrefix && matchedProtected !== allowedPrefix) {
+      if (allowedPrefixes.length > 0 && !allowedPrefixes.includes(matchedProtected)) {
         const url = request.nextUrl.clone();
         url.pathname = home;
         return NextResponse.redirect(url);

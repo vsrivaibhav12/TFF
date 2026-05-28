@@ -1,3 +1,5 @@
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { listPayrollRuns } from '@/lib/repositories/payroll';
 import { listTeamUsers } from '@/lib/repositories/clients';
@@ -15,6 +17,8 @@ import { formatCurrencyINR, formatDateIST } from '@/lib/utils';
 export const dynamic = 'force-dynamic';
 
 export default async function PayrollPage() {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'payroll.run');
   const [runs, team] = await Promise.all([listPayrollRuns(), listTeamUsers()]);
   const settingsMap = new Map<string, any>();
   await Promise.all(

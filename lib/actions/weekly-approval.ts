@@ -22,8 +22,8 @@ export async function submitWeekForApprovalAction(input: z.infer<typeof submitSc
     const sb = createClient();
 
     // Read manager_id
-    const { data: profile } = await sb.from('users_profile').select('manager_id, full_name').eq('id', me.id).maybeSingle();
-    const managerId = (profile as any)?.manager_id;
+    const { data: profile } = await sb.from('users_profile').select('reports_to, full_name').eq('id', me.id).maybeSingle();
+    const managerId = (profile as any)?.reports_to;
 
     // Compute summary from attendance logs
     const summary = await computeWeekSummary(me.id, parsed.data.week_start, parsed.data.week_end);

@@ -1,3 +1,4 @@
+import { requireRole } from '@/lib/auth/require-role';
 import { createClient } from '@/lib/supabase/server';
 import { todayIST, timeAgo } from '@/lib/utils';
 import Link from 'next/link';
@@ -25,6 +26,7 @@ import { enrichTasksWithProgress } from '@/lib/repositories/tasks';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
+  await requireRole('admin');
   const sb = createClient();
 
   const todayIso = todayIST();

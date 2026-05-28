@@ -17,7 +17,7 @@ export async function listDscRecords(filter?: { clientId?: string; status?: stri
 
 export async function getDscById(id: string) {
   const sb = createClient();
-  const { data } = await sb.from('dsc_records').select('*, clients(business_name)').eq('id', id).maybeSingle();
+  const { data } = await sb.from('dsc_records').select('*, clients(business_name)').eq('id', id).eq('is_deleted', false).maybeSingle();
   return data;
 }
 

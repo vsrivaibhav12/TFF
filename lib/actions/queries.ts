@@ -31,7 +31,7 @@ export async function createQueryAction(input: CreateQueryInput): Promise<Action
       .from('queries')
       .insert({
         client_id: parsed.data.client_id,
-        user_id: me.id,
+        created_by: me.id,
         subject: parsed.data.subject,
         description: parsed.data.description,
         status: 'open',

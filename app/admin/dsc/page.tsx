@@ -1,3 +1,5 @@
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { listDscRecords } from '@/lib/repositories/dsc';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { PageHeader } from '@/components/ui/page-header';
@@ -14,6 +16,8 @@ import { KeyRound } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 export default async function DscPage() {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'dsc.manage');
   const [items, clients] = await Promise.all([listDscRecords(), listAccessibleClients()]);
   const today = new Date();
 
@@ -44,8 +48,6 @@ export default async function DscPage() {
           title="No DSCs registered"
           body="Add the first digital signature certificate to start tracking expiries."
           icon={<KeyRound className="h-6 w-6 text-zinc-400" />}
-          actionOnClick={() => document.querySelector<HTMLButtonElement>('[data-testid="dsc-new"]')?.click()}
-          actionLabel="Add DSC"
         />
       ) : (
         <div className="tff-card overflow-hidden">

@@ -105,7 +105,7 @@ export async function updateClient(input: UpdateClientInput): Promise<ActionResu
 
 export async function softDeleteClient(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'clients.delete');
     
     await clientService.updateClientRecord(id, { 
@@ -119,6 +119,37 @@ export async function softDeleteClient(id: string): Promise<ActionResult<void>> 
     return ok(undefined);
   } catch (err: any) {
     return fail(err.message || 'Failed to delete client', err.code || 'INTERNAL_ERROR');
+  }
+}
+
+const BulkDeleteClientsSchema = z.object({
+  clientIds: z.array(z.string().uuid()).min(1, 'No clients selected'),
+});
+
+export async function bulkDeleteClients(input: z.infer<typeof BulkDeleteClientsSchema>): Promise<ActionResult<void>> {
+  try {
+    const me = await requireRole(['admin', 'team']);
+    await requireCapability(me, 'clients.delete');
+    
+    const parsedData = BulkDeleteClientsSchema.safeParse(input);
+    if (!parsedData.success) {
+      return fail(parsedData.error.errors[0]?.message ?? 'Validation failed', 'VALIDATION_ERROR');
+    }
+
+    const { clientIds } = parsedData.data;
+    const deletedAt = new Date().toISOString();
+    
+    await Promise.all(clientIds.map(id => clientService.updateClientRecord(id, {
+      is_deleted: true,
+      deleted_at: deletedAt,
+      deleted_by: me.id
+    })));
+    
+    revalidatePath('/admin/clients');
+    revalidatePath('/team/clients');
+    return ok(undefined);
+  } catch (err: any) {
+    return fail(err.message || 'Failed to delete clients', err.code || 'INTERNAL_ERROR');
   }
 }
 
@@ -159,7 +190,7 @@ const GroupSchema = z.object({
 
 export async function createClientGroup(input: z.infer<typeof GroupSchema>): Promise<ActionResult<{ id: string }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'clients.edit');
     const parsed = GroupSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -177,7 +208,7 @@ export async function createClientGroup(input: z.infer<typeof GroupSchema>): Pro
 
 export async function updateClientGroup(id: string, input: z.infer<typeof GroupSchema>): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'clients.edit');
     const parsed = GroupSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -195,7 +226,7 @@ export async function updateClientGroup(id: string, input: z.infer<typeof GroupS
 
 export async function deleteClientGroup(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'clients.delete');
     await clientService.softDeleteClientGroupRecord(id);
     revalidatePath('/admin/clients');

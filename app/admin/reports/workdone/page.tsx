@@ -22,7 +22,7 @@ function fmtHM(min: number): string {
 }
 
 export default async function WorkDoneReportsPage({ searchParams }: { searchParams: SearchParams }) {
-  const me = await requireRole('admin');
+  const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'view_workdone_reports');
 
   const today = new Date();

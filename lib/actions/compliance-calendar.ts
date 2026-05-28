@@ -74,7 +74,7 @@ export async function upsertComplianceRuleAction(
   input: z.infer<typeof ruleSchema>,
 ): Promise<ActionResult<{ id: string }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'manage_compliance_rules');
     const parsed = ruleSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -97,7 +97,7 @@ export async function upsertComplianceRuleAction(
 
 export async function toggleComplianceRuleActiveAction(input: { id: string; is_active: boolean }): Promise<ActionResult<{ regenerated: number }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'manage_compliance_rules');
     const sb = createClient();
     const { error } = await sb
@@ -118,7 +118,7 @@ export async function toggleComplianceRuleActiveAction(input: { id: string; is_a
 
 export async function refreshAllComplianceEventsAction(): Promise<ActionResult<{ generated: number }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'manage_compliance_rules');
     const r = await refreshComplianceEvents();
     revalidatePath('/admin/compliance');

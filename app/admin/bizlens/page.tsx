@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { Activity, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -10,7 +11,8 @@ import EmptyState from '@/components/sophistication/empty-state';
 export const dynamic = 'force-dynamic';
 
 export default async function BizLensStudio() {
-  await requireRole('admin');
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'bizlens.enter');
   const sb = createClient();
 
   const { data: clients, error: clientsErr } = await sb

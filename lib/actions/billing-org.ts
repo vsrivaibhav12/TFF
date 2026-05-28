@@ -90,7 +90,7 @@ const billingEntitySchema = z.object({
 
 export async function upsertBillingEntityAction(input: z.infer<typeof billingEntitySchema>): Promise<ActionResult<{ id: string }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'manage_billing_entities');
     const parsed = billingEntitySchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -116,7 +116,7 @@ export async function setBillingEntityAccessAction(input: {
   billing_entity_ids: string[];
 }): Promise<ActionResult<{ granted: number }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'manage_billing_entities');
     if (!input.user_id) return fail('user_id required', 'VALIDATION');
     const sb = createClient();

@@ -10,7 +10,7 @@ import { z } from 'zod';
 
 export async function runPayrollAction(input: { user_id: string; year: number; month: number; total_working_days?: number; adjustments?: PayrollAdjustment[] }): Promise<ActionResult<{ id: string }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'payroll.run');
     const sb = createClient();
 
@@ -56,7 +56,7 @@ export async function runPayrollAction(input: { user_id: string; year: number; m
       .lte('attendance_date', monthEnd.toISOString().slice(0, 10));
     let present = 0, leave = 0;
     for (const l of logs ?? []) {
-      if ((l as any).status === 'present' || (l as any).status === 'work_from_home') present++;
+      if ((l as any).status === 'present') present++;
       else if ((l as any).status === 'leave') leave++;
     }
     const facts: PayrollFacts = { total_working_days: totalWorkingDays, actual_present_days: present, actual_leave_days: leave };
@@ -116,7 +116,7 @@ export async function upsertPayrollSettingsAction(
   input: z.infer<typeof settingsSchema>
 ): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'payroll.run');
     const parsed = settingsSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');

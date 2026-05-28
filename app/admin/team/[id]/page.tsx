@@ -19,7 +19,7 @@ export default async function AdminTeamMemberPage({ params }: { params: { id: st
   const currentUser = await getCurrentUser();
   const { data: user } = await sb
     .from("users_profile")
-    .select("id, full_name, email, role, is_active, phone_number, job_title, department, active_role_template_id, is_prime_admin, manager_id")
+    .select("id, full_name, email, role, is_active, phone_number, job_title, department, active_role_template_id, is_prime_admin, reports_to")
     .eq("id", params.id)
     .maybeSingle();
   if (!user) notFound();
@@ -115,7 +115,7 @@ export default async function AdminTeamMemberPage({ params }: { params: { id: st
             <div className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">Reports to (manager)</div>
             <ManagerControl
               userId={params.id}
-              currentManagerId={user.manager_id}
+              currentManagerId={user.reports_to}
               team={teamList.data?.map((u: any) => ({ id: u.id, full_name: u.full_name, email: u.email })) ?? []}
             />
           </div>

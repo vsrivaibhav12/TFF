@@ -23,6 +23,8 @@ const MODULE_TO_SERVICE_CODE: Record<string, string> = {
   'portal.vendors': 'CAAS',
 };
 
+const BATCH_SIZE = 100;
+
 /**
  * Returns the set of enabled module keys across ALL clients linked to the user.
  * portal.dashboard is always implicitly visible.
@@ -41,23 +43,31 @@ export async function getVisibleModulesForCurrentClient(): Promise<Set<PortalMod
   const clientIds = (cu ?? []).map(r => r.client_id);
   if (clientIds.length === 0) return new Set(['portal.dashboard']);
 
-  // 2. Get active services for these clients
-  const { data: services } = await sb
-    .from('client_services')
-    .select('service_id, services!inner(code)')
-    .in('client_id', clientIds)
-    .eq('is_active', true);
-  const activeServiceCodes = new Set((services ?? []).map((s: any) => s.services.code));
+  // 2. Get active services for these clients (batched)
+  const activeServiceCodes = new Set<string>();
+  for (let i = 0; i < clientIds.length; i += BATCH_SIZE) {
+    const batch = clientIds.slice(i, i + BATCH_SIZE);
+    const { data: services } = await sb
+      .from('client_services')
+      .select('service_id, services!inner(code)')
+      .in('client_id', batch)
+      .eq('is_active', true);
+    for (const s of (services ?? []) as any[]) {
+      activeServiceCodes.add(s.services.code);
+    }
+  }
 
-  // 3. Get admin-enabled overrides
-  const { data: visibility } = await sb
-    .from('client_portal_visibility')
-    .select('module_key, is_enabled')
-    .in('client_id', clientIds);
-  
+  // 3. Get admin-enabled overrides (batched)
   const overrides = new Map<string, boolean>();
-  for (const v of visibility ?? []) {
-    overrides.set(v.module_key, v.is_enabled);
+  for (let i = 0; i < clientIds.length; i += BATCH_SIZE) {
+    const batch = clientIds.slice(i, i + BATCH_SIZE);
+    const { data: visibility } = await sb
+      .from('client_portal_visibility')
+      .select('module_key, is_enabled')
+      .in('client_id', batch);
+    for (const v of visibility ?? []) {
+      overrides.set(v.module_key, v.is_enabled);
+    }
   }
 
   const out = new Set<PortalModule>();

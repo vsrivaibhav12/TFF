@@ -1,3 +1,4 @@
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
 import { PageHeader } from '@/components/ui/page-header';
@@ -9,7 +10,8 @@ import QueriesTable from './queries-table';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminQueriesPage() {
-  await requireRole('admin');
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'queries.assign');
   const sb = createClient();
 
   const { data: queries } = await sb

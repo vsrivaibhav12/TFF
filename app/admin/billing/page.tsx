@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { formatDateIST } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,7 +14,8 @@ import ExportButton from '@/components/sophistication/export-button';
 export const dynamic = 'force-dynamic';
 
 export default async function BillingTrackerPage() {
-  await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
+    await requireCapabilityOrRedirect(me, 'manage_billing_entities');
   const sb = createClient();
 
   const { data: tasks } = await sb

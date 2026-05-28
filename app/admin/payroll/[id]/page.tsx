@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { getPayrollRun } from '@/lib/repositories/payroll';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +10,8 @@ import { ChevronLeft } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 export default async function PayrollDetail({ params }: { params: { id: string } }) {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'payroll.run');
   const run = await getPayrollRun(params.id);
   if (!run) notFound();
   const r: any = run;

@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { getClientById } from '@/lib/repositories/clients';
 import { listVcfoSnapshots, listSolutionLog } from '@/lib/repositories/vcfo';
@@ -16,6 +18,8 @@ import SolutionStatusUpdater from '@/components/operations/vcfo/solution-status-
 export const dynamic = 'force-dynamic';
 
 export default async function AdminVcfoClientPage({ params }: { params: { clientId: string } }) {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'vcfo.enter');
   const client = await getClientById(params.clientId);
   if (!client) notFound();
 

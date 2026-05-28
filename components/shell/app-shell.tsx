@@ -5,34 +5,13 @@ import {
   LogOut,
   Menu,
   X,
-  LayoutDashboard,
-  Layout,
-  Users,
-  Briefcase,
-  FileText,
-  MessageSquare,
-  BarChart3,
-  Calendar,
-  Settings,
-  ShieldCheck,
-  KeyRound,
-  Wallet,
-  TrendingUp,
-  ScrollText,
-  ClipboardList,
-  Gavel,
-  Search,
-  Bell,
-  Receipt,
-  Calculator,
-  Layers,
-  UsersRound,
   ChevronRight,
   User,
-  FileCheck,
-  Lock,
   PanelLeft,
   PanelLeftClose,
+  Layout,
+  Calendar,
+  Search,
   type LucideIcon,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -42,8 +21,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import NotificationsBell from './notifications-bell';
 import CommandPalette from './command-palette';
 import ShortcutsHelp from '@/components/sophistication/shortcuts-help';
-import ViewAsClientToggle from '@/components/sophistication/view-as-client-toggle';
+
 import MobileBottomNavTeam from './mobile-bottom-nav-team';
+import { ICONS, type NavItem } from './nav-icons';
+export { type NavItem } from './nav-icons';
 
 // Collapsible section state for sidebar (R-12)
 function CollapsibleSection({ label, children, defaultOpen = true }: { label: string; children: React.ReactNode; defaultOpen?: boolean }) {
@@ -63,40 +44,6 @@ function CollapsibleSection({ label, children, defaultOpen = true }: { label: st
   );
 }
 
-const ICONS: Record<string, LucideIcon> = {
-  layout: Layout,
-  dashboard: LayoutDashboard,
-  users: Users,
-  briefcase: Briefcase,
-  file: FileText,
-  message: MessageSquare,
-  chart: BarChart3,
-  calendar: Calendar,
-  settings: Settings,
-  shield: ShieldCheck,
-  key: KeyRound,
-  wallet: Wallet,
-  trending: TrendingUp,
-  scroll: ScrollText,
-  clipboard: ClipboardList,
-  gavel: Gavel,
-  bell: Bell,
-  receipt: Receipt,
-  calculator: Calculator,
-  layers: Layers,
-  group: UsersRound,
-  'file-check': FileCheck,
-  lock: Lock,
-};
-
-export type NavIconName = keyof typeof ICONS;
-
-export interface NavItem {
-  href: string;
-  label: string;
-  icon: NavIconName;
-  section?: string;
-}
 
 function getInitials(name: string | null): string {
   if (!name) return 'U';
@@ -516,12 +463,12 @@ export default function AppShell({
         </main>
 
         {/* Mobile bottom nav for staff and admin (R-13) */}
-        {(role === 'team' || role === 'admin') && <MobileBottomNavTeam />}
+        {(role === 'team' || role === 'admin') && <MobileBottomNavTeam nav={nav} role={role} />}
 
         {/* Global overlays */}
         <CommandPalette role={role} />
         <ShortcutsHelp role={role} />
-        {(role === 'admin' || role === 'team') && <ViewAsClientToggle />}
+
       </div>
     </div>
   );

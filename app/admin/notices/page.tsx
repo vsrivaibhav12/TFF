@@ -1,3 +1,5 @@
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { listAllNotices } from '@/lib/repositories/notices';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { listSavedViews } from '@/lib/actions/saved-views';
@@ -15,6 +17,12 @@ import NoticesTable from './notices-table';
 
 export const dynamic = 'force-dynamic';
 
+async function requireNoticesGuard() {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'notices.manage');
+  return me;
+}
+
 function buildNoticeUrl(sp: Record<string, string | undefined>, overrides: Record<string, string | undefined>) {
   const params = new URLSearchParams();
   for (const [k, v] of Object.entries({ ...sp, ...overrides })) {
@@ -25,6 +33,7 @@ function buildNoticeUrl(sp: Record<string, string | undefined>, overrides: Recor
 }
 
 export default async function AdminNoticesPage({ searchParams }: { searchParams: { status?: string; type?: string; client?: string; due_from?: string; due_to?: string } }) {
+  await requireNoticesGuard();
   const [items, clients, views] = await Promise.all([
     listAllNotices({
       status: searchParams.status,

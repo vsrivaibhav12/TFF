@@ -4,13 +4,12 @@ import { listAccessibleClients } from '@/lib/repositories/clients';
 import { listLeaveRequests } from '@/lib/repositories/leave';
 import { listPermissionRequests } from '@/lib/repositories/permission';
 import { getDirectReports } from '@/lib/repositories/staff';
-import { getPendingWeeklySubmissions, getAllPendingWeeklySubmissions } from '@/lib/repositories/weekly-approval';
-import { listAllUpcomingDueDates } from '@/lib/repositories/compliance';
+
+
 import { enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { formatDateIST } from '@/lib/utils';
 import {
   ArrowRight,
   Briefcase,
@@ -37,31 +36,28 @@ export default async function TeamWorkspace() {
   const isManager = directReports.length > 0;
   const canSeeApprovals = isAdmin || isManager;
 
-  const [counts, overdueCount, dueSoonRaw, clients, pendingLeaveAll, pendingPermissionAll, pendingWeeksAll, compliances] = await Promise.all([
+  const [counts, overdueCount, dueSoonRaw, clients, pendingLeaveAll, pendingPermissionAll] = await Promise.all([
     countTasksByStatus({ assignedTo: me.id }),
     countOverdueTasks({ assignedTo: me.id }),
     listTasks({ assignedTo: me.id, status: ['pending', 'in_progress'], limit: 6 }),
     listAccessibleClients(),
     canSeeApprovals ? listLeaveRequests({ status: 'pending' }) : Promise.resolve([]),
     canSeeApprovals ? listPermissionRequests({ status: 'pending' }) : Promise.resolve([]),
-    canSeeApprovals ? (isAdmin ? getAllPendingWeeklySubmissions() : getPendingWeeklySubmissions(me.id)) : Promise.resolve([]),
-    listAllUpcomingDueDates(15)
+
   ]);
 
   const dueSoon = await enrichTasksWithProgress(dueSoonRaw ?? []);
 
-  const allCompliances = [...compliances.gst, ...compliances.tds, ...compliances.it].sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
 
   const reportIds = directReports.map((r) => r.id);
   let pendingApprovalsCount = 0;
   if (canSeeApprovals) {
     if (isAdmin) {
-      pendingApprovalsCount = pendingLeaveAll.length + pendingPermissionAll.length + pendingWeeksAll.length;
+      pendingApprovalsCount = pendingLeaveAll.length + pendingPermissionAll.length;
     } else {
       pendingApprovalsCount =
         pendingLeaveAll.filter((r: any) => reportIds.includes(r.user_id)).length +
-        pendingPermissionAll.filter((r: any) => reportIds.includes(r.user_id)).length +
-        pendingWeeksAll.filter((r: any) => reportIds.includes(r.user_id)).length;
+        pendingPermissionAll.filter((r: any) => reportIds.includes(r.user_id)).length;
     }
   }
 
@@ -144,39 +140,7 @@ export default async function TeamWorkspace() {
           <PriorityList tasks={dueSoon as any} href="/team/tasks" emptyMessage="No pending tasks" />
         </StaggerItem>
 
-        <StaggerItem>
-          <div className="rounded-2xl bg-white p-5 md:p-6 h-full flex flex-col" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-base font-semibold text-zinc-900 tracking-tight">Upcoming compliance</h3>
-                <p className="text-xs text-zinc-500 mt-0.5">Due within 15 days</p>
-              </div>
-              <Link href="/team/attendance" className="text-xs text-teal-700 hover:underline font-medium inline-flex items-center gap-1">
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-            {allCompliances.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center text-sm text-zinc-400 py-8">No upcoming compliance</div>
-            ) : (
-              <div className="space-y-2">
-                {allCompliances.slice(0, 5).map((c: any) => (
-                  <div key={c.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl border border-zinc-100 hover:bg-zinc-50 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-zinc-900 truncate">{c.clients?.business_name}</div>
-                      <div className="text-xs text-zinc-500 flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{c.compliance_calendar_rules?.service_kind}</Badge>
-                        <span>{c.return_type} ({c.period_label})</span>
-                      </div>
-                    </div>
-                    <div className="text-sm font-medium text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-100 shrink-0">
-                      Due {formatDateIST(c.due_date)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </StaggerItem>
+
       </div>
 
       {/* My clients quick access */}

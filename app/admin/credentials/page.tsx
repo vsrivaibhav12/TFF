@@ -1,3 +1,5 @@
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { listCredentials } from '@/lib/repositories/credentials';
 import { listAccessibleClients } from '@/lib/repositories/clients';
@@ -15,6 +17,8 @@ import EmptyState from '@/components/sophistication/empty-state';
 export const dynamic = 'force-dynamic';
 
 export default async function CredentialsPage() {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'credentials.manage');
   const [items, clients] = await Promise.all([listCredentials(), listAccessibleClients()]);
 
   const exportData = (items ?? []).map((c: any) => ({

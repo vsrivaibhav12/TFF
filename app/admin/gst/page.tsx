@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { listGstFilings } from '@/lib/repositories/compliance';
 import { getGstMonthlyDataForClient } from '@/lib/repositories/gst';
@@ -15,7 +16,8 @@ import ExportButton from '@/components/sophistication/export-button';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminGstPage() {
-  await requireRole('admin');
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'compliance.enter');
   const clients = await listAccessibleClients();
 
   const clientGstData = await Promise.all(

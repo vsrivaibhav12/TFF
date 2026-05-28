@@ -1,3 +1,5 @@
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTask, listTaskActivity, listTaskNotes } from '@/lib/repositories/tasks';
@@ -19,6 +21,8 @@ import VerifyTaskButton from '@/components/tasks/verify-task-button';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminTaskDetail({ params }: { params: { id: string } }) {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'tasks.create');
   const task = await getTask(params.id);
   if (!task) notFound();
   const [activity, notes, team, steps] = await Promise.all([

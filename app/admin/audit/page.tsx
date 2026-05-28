@@ -1,3 +1,5 @@
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/ui/page-header';
@@ -11,6 +13,8 @@ import { Scroll } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 export default async function AuditPage({ searchParams }: { searchParams: { actor?: string; action?: string; entity?: string; from?: string; to?: string } }) {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'audit.view');
   const sb = createClient();
   let q = sb
     .from('global_audit_log')

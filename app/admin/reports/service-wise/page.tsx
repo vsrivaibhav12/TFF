@@ -1,3 +1,4 @@
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +13,8 @@ import BackButton from '@/components/sophistication/back-button';
 export const dynamic = 'force-dynamic';
 
 export default async function ServiceWiseReportPage({ searchParams }: { searchParams: { fy?: string } }) {
-  await requireRole('admin');
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'view_workdone_reports');
   const sb = createClient();
 
   const fy = searchParams.fy ? parseInt(searchParams.fy, 10) : new Date().getFullYear();

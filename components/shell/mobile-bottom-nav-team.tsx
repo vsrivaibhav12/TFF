@@ -4,49 +4,27 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Briefcase, Users, Menu, X, MessageSquare, ClipboardList, Bell, AlertTriangle, ShieldCheck, Calendar } from 'lucide-react';
+import { Menu, X, Bell } from 'lucide-react';
+import { ICONS, type NavItem } from './nav-icons';
 
-const TEAM_MAIN = [
-  { href: '/team', label: 'Home', icon: LayoutDashboard },
-  { href: '/team/work', label: 'Work', icon: Briefcase },
-  { href: '/team/clients', label: 'Clients', icon: Users },
-];
+interface MobileBottomNavTeamProps {
+  nav: NavItem[];
+  role: 'admin' | 'team' | 'client';
+}
 
-const TEAM_MORE = [
-  { href: '/team/queries', label: 'Queries', icon: MessageSquare },
-  { href: '/team/attendance', label: 'Attendance', icon: ClipboardList },
-  { href: '/team/leave', label: 'Leave', icon: Calendar },
-  { href: '/team/approvals', label: 'Approvals', icon: ShieldCheck },
-  { href: '/team/notices', label: 'Notices', icon: AlertTriangle },
-  { href: '/team/work-done', label: 'Work done', icon: ClipboardList },
-  { href: '/account/notifications', label: 'Notifications', icon: Bell },
-];
-
-const ADMIN_MAIN = [
-  { href: '/admin', label: 'Home', icon: LayoutDashboard },
-  { href: '/admin/work', label: 'Work', icon: Briefcase },
-  { href: '/admin/clients', label: 'Clients', icon: Users },
-];
-
-const ADMIN_MORE = [
-  { href: '/admin/notices', label: 'Notices', icon: AlertTriangle },
-  { href: '/admin/queries', label: 'Queries', icon: MessageSquare },
-  { href: '/admin/compliance', label: 'Compliance', icon: ClipboardList },
-  { href: '/admin/attendance', label: 'Attendance', icon: Calendar },
-  { href: '/admin/team', label: 'Team', icon: ShieldCheck },
-  { href: '/admin/reports', label: 'Reports', icon: Bell },
-  { href: '/account/notifications', label: 'Notifications', icon: Bell },
-];
-
-export default function MobileBottomNavTeam() {
+export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamProps) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
 
-  const isAdmin = pathname.startsWith('/admin');
-  const MAIN_TABS = isAdmin ? ADMIN_MAIN : TEAM_MAIN;
-  const MORE_ITEMS = isAdmin ? ADMIN_MORE : TEAM_MORE;
+  // Always append notifications
+  const notificationsLink = { href: '/account/notifications', label: 'Notifications', icon: 'bell' as const };
+  const allItems = [...nav, notificationsLink];
 
-  const isMoreActive = MORE_ITEMS.some((t) => pathname.startsWith(t.href));
+  // First 3 are main tabs, rest go into More
+  const mainItems = allItems.slice(0, 3);
+  const moreItems = allItems.slice(3);
+
+  const isMoreActive = moreItems.some((t) => pathname.startsWith(t.href));
 
   return (
     <>
@@ -54,11 +32,11 @@ export default function MobileBottomNavTeam() {
         data-testid="mobile-bottom-nav-team"
         className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/90 backdrop-blur-lg border-t border-zinc-200/60 grid grid-cols-4 pb-[env(safe-area-inset-bottom,0)]"
       >
-        {MAIN_TABS.map((t) => {
-          const active = t.href === (isAdmin ? '/admin' : '/team')
-            ? pathname === (isAdmin ? '/admin' : '/team')
+        {mainItems.map((t) => {
+          const Icon = ICONS[t.icon];
+          const active = t.href === `/${role}`
+            ? pathname === `/${role}`
             : pathname.startsWith(t.href);
-          const Icon = t.icon;
           return (
             <Link
               key={t.href}
@@ -76,7 +54,7 @@ export default function MobileBottomNavTeam() {
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               )}
-              <Icon className={cn('h-5 w-5 transition-all', active ? 'stroke-[2.5] -translate-y-0.5' : '')} />
+              {Icon && <Icon className={cn('h-5 w-5 transition-all', active ? 'stroke-[2.5] -translate-y-0.5' : '')} />}
               <span className={cn('transition-all', active ? 'font-bold' : '')}>{t.label}</span>
             </Link>
           );
@@ -126,8 +104,8 @@ export default function MobileBottomNavTeam() {
                 </button>
               </div>
               <div className="p-3 grid grid-cols-2 gap-2">
-                {MORE_ITEMS.map((t) => {
-                  const Icon = t.icon;
+                {moreItems.map((t) => {
+                  const Icon = ICONS[t.icon];
                   return (
                     <Link
                       key={t.href}
@@ -135,7 +113,7 @@ export default function MobileBottomNavTeam() {
                       onClick={() => setMoreOpen(false)}
                       className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50 border border-zinc-100"
                     >
-                      <Icon className="h-5 w-5 text-zinc-400" />
+                      {Icon && <Icon className="h-5 w-5 text-zinc-400" />}
                       {t.label}
                     </Link>
                   );

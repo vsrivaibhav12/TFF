@@ -1,5 +1,7 @@
 import ClientImportForm from './import-form';
 import BackButton from '@/components/sophistication/back-button';
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { formatDateIST } from '@/lib/utils';
@@ -30,6 +32,8 @@ async function getRecentBatches() {
 }
 
 export default async function ClientImportPage() {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'clients.create');
   const batches = await getRecentBatches();
   return (
     <div className="space-y-12">

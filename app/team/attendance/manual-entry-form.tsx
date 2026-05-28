@@ -19,14 +19,19 @@ export default function ManualAttendanceForm() {
     check_out_time: '18:00',
   });
 
+  const needsTimes = f.status !== 'leave';
+
   function save() {
     startTransition(async () => {
-      const r = await upsertAttendanceAction({
+      const payload: any = {
         attendance_date: f.date,
-        status: f.status as any,
-        check_in_time: `${f.date}T${f.check_in_time}:00+05:30`,
-        check_out_time: `${f.date}T${f.check_out_time}:00+05:30`,
-      });
+        status: f.status,
+      };
+      if (needsTimes) {
+        payload.check_in_time = `${f.date}T${f.check_in_time}:00+05:30`;
+        payload.check_out_time = `${f.date}T${f.check_out_time}:00+05:30`;
+      }
+      const r = await upsertAttendanceAction(payload);
       if (r.success) {
         toast.success('Attendance recorded');
         setOpen(false);
@@ -50,17 +55,19 @@ export default function ManualAttendanceForm() {
               <Select value={f.status} onValueChange={(v) => setF({ ...f, status: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {['present', 'absent', 'work_from_home', 'leave', 'half_day', 'permission'].map(s => (
+                  {['present', 'leave', 'half_day', 'permission'].map(s => (
                     <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1"><Label>Check in</Label><Input type="time" value={f.check_in_time} onChange={(e) => setF({ ...f, check_in_time: e.target.value })} /></div>
-            <div className="space-y-1"><Label>Check out</Label><Input type="time" value={f.check_out_time} onChange={(e) => setF({ ...f, check_out_time: e.target.value })} /></div>
-          </div>
+          {needsTimes && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1"><Label>Check in</Label><Input type="time" value={f.check_in_time} onChange={(e) => setF({ ...f, check_in_time: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Check out</Label><Input type="time" value={f.check_out_time} onChange={(e) => setF({ ...f, check_out_time: e.target.value })} /></div>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button onClick={save} disabled={pending}>{pending ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />Saving…</> : 'Save attendance'}</Button>

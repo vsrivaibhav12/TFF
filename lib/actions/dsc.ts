@@ -66,7 +66,7 @@ export async function upsertDscAction(input: DscInput): Promise<ActionResult<{ i
 
 export async function deleteDscAction(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'dsc.manage');
     const sb = createClient();
     const { error } = await sb.from('dsc_records').update({ is_deleted: true, updated_at: new Date().toISOString() }).eq('id', id);

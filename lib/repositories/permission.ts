@@ -15,11 +15,14 @@ export async function listPermissionRequests(opts: { userId?: string; status?: s
   // Fetch user names separately because permission_requests FK points to auth.users,
   // so PostgREST cannot resolve users_profile through the FK hint (PGRST200).
   const userIds = [...new Set((data ?? []).map((r: any) => r.user_id).filter(Boolean))];
-  const { data: users } =
-    userIds.length > 0
-      ? await sb.from('users_profile').select('id, full_name, email').in('id', userIds)
-      : { data: [] };
-  const userMap = new Map((users ?? []).map((u: any) => [u.id, u]));
+  const users: any[] = [];
+  const BATCH_SIZE = 100;
+  for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+    const batch = userIds.slice(i, i + BATCH_SIZE);
+    const { data: batchUsers } = await sb.from('users_profile').select('id, full_name, email').in('id', batch);
+    users.push(...(batchUsers ?? []));
+  }
+  const userMap = new Map(users.map((u: any) => [u.id, u]));
 
   return (data ?? []).map((r: any) => ({
     ...r,

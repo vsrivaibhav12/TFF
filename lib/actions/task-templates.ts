@@ -22,7 +22,7 @@ const taskTemplateSchema = z.object({
 
 export async function upsertTaskTemplateAction(input: z.infer<typeof taskTemplateSchema>): Promise<ActionResult<{ id: string }>> {
   try {
-    const me = await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const parsed = taskTemplateSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -44,7 +44,7 @@ export async function upsertTaskTemplateAction(input: z.infer<typeof taskTemplat
 
 export async function deleteTaskTemplateAction(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const sb = createClient();
     const { error } = await sb.from('task_templates').update({ is_deleted: true, updated_at: new Date().toISOString() }).eq('id', id);
@@ -68,7 +68,7 @@ const stepSchema = z.object({
 
 export async function upsertTaskTemplateStepAction(input: z.infer<typeof stepSchema>): Promise<ActionResult<{ id: string }>> {
   try {
-    const me = await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const parsed = stepSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -100,7 +100,7 @@ export async function upsertTaskTemplateStepAction(input: z.infer<typeof stepSch
 
 export async function deleteTaskTemplateStepAction(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const sb = createClient();
     const { error } = await sb.from('task_template_steps').update({ is_deleted: true, updated_at: new Date().toISOString() }).eq('id', id);
@@ -120,7 +120,7 @@ export async function reorderTaskTemplateStepsAction({
   ids_in_order: string[];
 }): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const sb = createClient();
     // Two-pass update to avoid unique-constraint collision on (task_template_id, step_order)

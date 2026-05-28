@@ -15,7 +15,7 @@ const createSchema = z.object({
   job_title: z.string().trim().optional().nullable(),
   department: z.string().trim().optional().nullable(),
   phone_number: z.string().trim().optional().nullable(),
-  manager_id: z.string().uuid().optional().nullable(),
+  manager_id: z.union([z.string().uuid(), z.literal(''), z.null()]).optional().transform(v => v && v !== '' ? v : null),
 });
 
 /**
@@ -69,7 +69,7 @@ export async function createTeamMemberAction(
       job_title: v.job_title || null,
       department: v.department || null,
       phone_number: v.phone_number || null,
-      manager_id: v.manager_id || null,
+      reports_to: v.manager_id || null,
       is_active: true,
     }, { onConflict: 'id' });
     if (profErr) return fail(`Auth user created but profile upsert failed: ${profErr.message}`, 'DB');
@@ -88,7 +88,7 @@ const toggleActiveSchema = z.object({
 
 const updateManagerSchema = z.object({
   user_id: z.string().uuid(),
-  manager_id: z.string().uuid().nullable().optional(),
+  manager_id: z.union([z.string().uuid(), z.literal(''), z.null()]).optional().transform(v => v && v !== '' ? v : null),
 });
 
 export async function updateTeamMemberManagerAction(
@@ -102,7 +102,7 @@ export async function updateTeamMemberManagerAction(
     const sb = createClient();
     const { error } = await sb
       .from('users_profile')
-      .update({ manager_id: parsed.data.manager_id ?? null })
+      .update({ reports_to: parsed.data.manager_id ?? null })
       .eq('id', parsed.data.user_id);
     if (error) return fail(error.message, 'DB');
     revalidatePath('/admin/team');
@@ -132,6 +132,75 @@ export async function toggleTeamMemberActiveAction(
     if (error) return fail(error.message, 'DB');
     revalidatePath('/admin/team');
     revalidatePath(`/admin/team/${parsed.data.user_id}`);
+    return ok(undefined);
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  }
+}
+
+const removeSchema = z.object({
+  user_id: z.string().uuid(),
+});
+
+/**
+ * Permanently remove a team member. Admin-only.
+ * - Cannot remove self.
+ * - Cannot remove prime admins (Mithuna, Vaibhav).
+ * - Soft-deletes profile (is_active=false, is_deleted=true).
+ * - Cleans up config tables.
+ * - Attempts auth user deletion (ignored if FKs block it).
+ */
+export async function removeTeamMemberAction(
+  input: z.infer<typeof removeSchema>,
+): Promise<ActionResult<void>> {
+  try {
+    const me = await requireRole('admin');
+    await requireCapability(me, 'staff.manage');
+    const parsed = removeSchema.safeParse(input);
+    if (!parsed.success) return fail('Invalid input', 'VALIDATION');
+
+    const targetId = parsed.data.user_id;
+    if (targetId === me.id) {
+      return fail('You cannot remove your own account', 'SELF');
+    }
+
+    const sb = createClient();
+    const { data: profile } = await sb
+      .from('users_profile')
+      .select('is_prime_admin, email')
+      .eq('id', targetId)
+      .maybeSingle();
+
+    if (!profile) return fail('User not found', 'NOT_FOUND');
+    if ((profile as any).is_prime_admin) {
+      return fail('Super admins cannot be removed', 'PROTECTED');
+    }
+
+    // 1. Clean up user-specific config tables (best-effort)
+    await sb.from('staff_payroll_settings').delete().eq('user_id', targetId);
+    await sb.from('staff_capabilities').delete().eq('user_id', targetId);
+    await sb.from('team_client_assignment').delete().eq('team_user_id', targetId);
+    await sb.from('notification_preferences').delete().eq('user_id', targetId);
+
+    // 2. Nullify references where possible
+    await sb.from('tasks').update({ assigned_to: null }).eq('assigned_to', targetId);
+    await sb.from('tasks').update({ reviewer_id: null }).eq('reviewer_id', targetId);
+
+    // 3. Soft-delete profile so they vanish from all listings and cannot log in
+    await sb.from('users_profile')
+      .update({ is_active: false, is_deleted: true, reports_to: null })
+      .eq('id', targetId);
+
+    // 4. Attempt auth deletion (may fail due to FKs on historical data; that's OK)
+    try {
+      const svc = createServiceClient();
+      await svc.auth.admin.deleteUser(targetId);
+    } catch {
+      // Auth user may remain if historical data blocks cascade,
+      // but profile is already deactivated so they cannot log in.
+    }
+
+    revalidatePath('/admin/team');
     return ok(undefined);
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');

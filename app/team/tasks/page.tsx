@@ -119,11 +119,6 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
           title="No tasks here yet"
           body="Tasks are auto-created from sub-services on the 1st of every month, or you can add one manually now."
           icon={<Briefcase className="h-6 w-6 text-zinc-400" />}
-          actionLabel="Add your first task"
-          actionOnClick={() => {
-            const btn = document.querySelector('[data-testid="new-task-button"]') as HTMLButtonElement;
-            if (btn) btn.click();
-          }}
         />
       ) : (
         <TaskViewWrapper tasks={filteredTasks as any} hrefPrefix="/team/tasks">

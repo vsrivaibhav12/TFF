@@ -55,7 +55,7 @@ export async function upsertCredentialAction(input: CredentialInput): Promise<Ac
 
 export async function deleteCredentialAction(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'credentials.manage');
     const sb = createClient();
     const { error } = await sb.from('credentials').update({ is_deleted: true, updated_at: new Date().toISOString() }).eq('id', id);

@@ -1,3 +1,4 @@
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { requireRole } from '@/lib/auth/require-role';
 import { listClientGroups } from '@/lib/repositories/clients';
@@ -9,7 +10,8 @@ import ClientGroupsClient from './client-groups-client';
 export const dynamic = 'force-dynamic';
 
 export default async function ClientGroupsPage() {
-  await requireRole('admin');
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'clients.read.all');
   const groups = await listClientGroups();
 
   return (

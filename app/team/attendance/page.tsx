@@ -1,10 +1,10 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { createClient } from '@/lib/supabase/server';
 import { listAttendanceForUser, getTodayAttendance } from '@/lib/repositories/attendance';
 import { listLeaveRequests } from '@/lib/repositories/leave';
 import { listPermissionRequests } from '@/lib/repositories/permission';
-import { getDirectReports, hasDirectReports } from '@/lib/repositories/staff';
+import { getDirectReports, hasDirectReports, getUserProfile } from '@/lib/repositories/staff';
 import { getCurrentWeekSubmission, getWeekBounds, getPendingWeeklySubmissions, getAllPendingWeeklySubmissions } from '@/lib/repositories/weekly-approval';
-import { createClient } from '@/lib/supabase/server';
 import CheckInOut from './check-in-out';
 import ManualAttendanceForm from './manual-entry-form';
 import LeaveForm from '../leave/leave-form';
@@ -53,7 +53,7 @@ export default async function AttendancePage() {
   ] = await Promise.all([
     getTodayAttendance(me.id),
     listAttendanceForUser(me.id, now.getFullYear(), now.getMonth() + 1),
-    sb.from('users_profile').select('geo_check_in_required, paid_leaves_per_month, manager_id').eq('id', me.id).maybeSingle(),
+    getUserProfile(me.id),
     listLeaveRequests({ userId: me.id }),
     canApproveLeave ? listLeaveRequests({ status: 'pending' }) : Promise.resolve([]),
     listPermissionRequests({ userId: me.id }),
@@ -73,9 +73,9 @@ export default async function AttendancePage() {
     ? pendingWeeksAll
     : pendingWeeksAll.filter((r: any) => reportIds.includes(r.user_id));
 
-  const geoRequired = !!profile.data?.geo_check_in_required;
-  const paidLeavesPerMonth = (profile.data?.paid_leaves_per_month as number) ?? 0;
-  const present = monthLogs.filter((l: any) => l.status === 'present' || l.status === 'work_from_home').length;
+  const geoRequired = !!(profile as any)?.geo_check_in_required;
+  const paidLeavesPerMonth = ((profile as any)?.paid_leaves_per_month as number) ?? 0;
+  const present = monthLogs.filter((l: any) => l.status === 'present').length;
   const onLeave = monthLogs.filter((l: any) => l.status === 'leave').length;
 
   // Compute leave balance
@@ -102,7 +102,9 @@ export default async function AttendancePage() {
           <ExportButton data={exportData} filename="my-attendance" format="excel" />
           <ManualAttendanceForm />
           <CheckInOut today={today as any} geoRequired={geoRequired} />
-          <SubmitWeekButton weekStart={weekStart} weekEnd={weekEnd} currentStatus={weekSubmission?.status} />
+          <div className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+            Attendance is tracked automatically. Your manager reviews it at the end of each week.
+          </div>
         </div>
       </div>
 
@@ -110,7 +112,7 @@ export default async function AttendancePage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Metric label="Present this month" value={`${present}d`} icon={<ShieldCheck className="h-4 w-4" />} />
         <Metric label="On leave this month" value={`${onLeave}d`} icon={<CalendarDays className="h-4 w-4" />} />
-        <Metric label="Today" value={today ? ((today as any).status ?? 'present') : 'Not checked in'} icon={<Clock className="h-4 w-4" />} />
+        <Metric label="Today" value={today ? ((today as any).status ?? 'present') : 'Not marked'} icon={<Clock className="h-4 w-4" />} />
         <Metric label="Leave balance" value={`${leaveBalance}d`} icon={<CalendarDays className="h-4 w-4" />} color="text-teal-600" bg="bg-teal-50" border="border-teal-100" />
       </div>
 
@@ -172,7 +174,7 @@ export default async function AttendancePage() {
                     <TableRow key={l.id}>
                       <TableCell>{formatDateIST(l.attendance_date)}</TableCell>
                       <TableCell>
-                        <Badge variant={l.status === 'leave' ? 'warning' : 'success'}>{l.status}</Badge>
+                        <Badge variant={l.status === 'leave' ? 'warning' : l.status === 'present' ? 'success' : 'outline'}>{l.status}</Badge>
                       </TableCell>
                       <TableCell className="text-xs">
                         {l.check_in_time

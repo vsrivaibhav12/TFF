@@ -20,7 +20,7 @@ export interface ImportPreview {
  */
 export async function previewClientImportAction(formData: FormData): Promise<ActionResult<ImportPreview>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'clients.create');
     const file = formData.get('file');
     if (!(file instanceof File)) return fail('No file provided', 'VALIDATION');
@@ -52,7 +52,7 @@ export async function previewGstnPasteAction(input: {
   text: string;
 }): Promise<ActionResult<ImportPreview>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'clients.create');
     if (!input?.text || typeof input.text !== 'string') return fail('No GSTINs provided', 'VALIDATION');
     const rows = parseGstnPasteText(input.text);
@@ -84,7 +84,7 @@ export async function commitClientImportAction(input: {
   rows: ParsedClientRow[];
 }): Promise<ActionResult<{ batch_id: string; inserted: number; skipped: number; failed: number }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'clients.create');
     if (!Array.isArray(input.rows) || input.rows.length === 0) {
       return fail('No rows to import', 'VALIDATION');
@@ -96,12 +96,15 @@ export async function commitClientImportAction(input: {
     const gstins = input.rows.map((r) => r.gstin).filter(Boolean) as string[];
     const existingPans = new Set<string>();
     const existingGstins = new Set<string>();
-    if (pans.length > 0) {
-      const { data } = await sb.from('clients').select('pan').in('pan', pans);
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < pans.length; i += BATCH_SIZE) {
+      const batch = pans.slice(i, i + BATCH_SIZE);
+      const { data } = await sb.from('clients').select('pan').in('pan', batch);
       (data ?? []).forEach((r: any) => r.pan && existingPans.add(r.pan));
     }
-    if (gstins.length > 0) {
-      const { data } = await sb.from('clients').select('gstin').in('gstin', gstins);
+    for (let i = 0; i < gstins.length; i += BATCH_SIZE) {
+      const batch = gstins.slice(i, i + BATCH_SIZE);
+      const { data } = await sb.from('clients').select('gstin').in('gstin', batch);
       (data ?? []).forEach((r: any) => r.gstin && existingGstins.add(r.gstin));
     }
 

@@ -6,7 +6,7 @@ export async function getDirectReports(managerId: string) {
   const { data, error } = await sb
     .from('users_profile')
     .select('id, full_name, email')
-    .eq('manager_id', managerId)
+    .eq('reports_to', managerId)
     .eq('is_active', true)
     .eq('is_deleted', false)
     .order('full_name');
@@ -19,9 +19,20 @@ export async function hasDirectReports(managerId: string): Promise<boolean> {
   const { count, error } = await sb
     .from('users_profile')
     .select('id', { count: 'exact', head: true })
-    .eq('manager_id', managerId)
+    .eq('reports_to', managerId)
     .eq('is_active', true)
     .eq('is_deleted', false);
   if (error) throw error;
   return (count ?? 0) > 0;
+}
+
+export async function getUserProfile(userId: string) {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from('users_profile')
+    .select('geo_check_in_required, reports_to, full_name, email, role, staff_payroll_settings(paid_leaves_per_month)')
+    .eq('id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
 }

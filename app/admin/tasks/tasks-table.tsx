@@ -129,6 +129,27 @@ export default function TasksTable({ tasks, todayIso }: { tasks: Task[]; todayIs
 
   const statuses = ['all', 'pending', 'in_progress', 'completed', 'cancelled'];
 
+  async function bulkDeleteTasks(ids: string[]) {
+    let success = 0, failed = 0;
+    
+    // We confirm before calling this, but let's confirm here for safety
+    if (!confirm(`Are you sure you want to delete ${ids.length} task(s)?`)) return { success, failed };
+
+    // Since bulkDeleteTasksAction takes the array and does Promise.all, we can just call it
+    const { bulkDeleteTasksAction } = await import('@/lib/actions/tasks');
+    const r = await bulkDeleteTasksAction(ids);
+    if (r.success) {
+      success = ids.length;
+      toast.success(`Deleted ${success} tasks`);
+    } else {
+      failed = ids.length;
+      toast.error(r.error);
+    }
+    
+    setSelected(new Set());
+    return { success, failed };
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 flex-wrap">
@@ -296,6 +317,12 @@ export default function TasksTable({ tasks, todayIso }: { tasks: Task[]; todayIs
             ],
             onApply: bulkChangeStatus,
           },
+          {
+            type: 'button',
+            label: 'Delete',
+            variant: 'danger',
+            onApply: bulkDeleteTasks,
+          }
         ]}
       />
     </div>

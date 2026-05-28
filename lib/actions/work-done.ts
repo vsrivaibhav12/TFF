@@ -147,3 +147,55 @@ export async function deleteWorkDoneAction(id: string): Promise<ActionResult<voi
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
   }
 }
+
+const updateWorkDoneSchema = z.object({
+  id: z.string().uuid(),
+  client_id: z.string().uuid().optional().nullable(),
+  task_id: z.string().uuid().optional().nullable(),
+  work_date: z.string(),
+  duration_minutes: z.number().int().positive().max(1440),
+  note: z.string().min(1),
+  started_at: z.string().optional().nullable(),
+  ended_at: z.string().optional().nullable(),
+});
+
+export async function updateWorkDoneAction(input: z.infer<typeof updateWorkDoneSchema>): Promise<ActionResult<void>> {
+  try {
+    const me = await requireRole(['admin', 'team']);
+    await requireCapability(me, 'tasks.complete');
+    const parsed = updateWorkDoneSchema.safeParse(input);
+    if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
+
+    const sb = createClient();
+    const { data: row } = await sb.from('task_workdone').select('user_id, task_id').eq('id', parsed.data.id).maybeSingle();
+    if (!row) return fail('Not found', 'NOT_FOUND');
+    if (me.role !== 'admin' && (row as any).user_id !== me.id) {
+      return fail('You can only edit your own entries', 'FORBIDDEN');
+    }
+    if ((row as any).task_id) {
+      const { data: task } = await sb.from('tasks').select('status, is_deleted').eq('id', (row as any).task_id).maybeSingle();
+      if (task && !canModifyTask(task as any)) {
+        return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+      }
+    }
+
+    const { error } = await sb.from('task_workdone').update({
+      client_id: parsed.data.client_id ?? null,
+      task_id: parsed.data.task_id ?? null,
+      work_date: parsed.data.work_date,
+      duration_minutes: parsed.data.duration_minutes,
+      note: parsed.data.note,
+      started_at: parsed.data.started_at ?? null,
+      ended_at: parsed.data.ended_at ?? null,
+      updated_at: new Date().toISOString(),
+    }).eq('id', parsed.data.id);
+
+    if (error) return fail(error.message, 'DB');
+    revalidatePath('/team/work-done');
+    revalidatePath('/admin/work-done');
+    revalidatePath(`/team/tasks/${(row as any).task_id}`);
+    return ok(undefined);
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  }
+}

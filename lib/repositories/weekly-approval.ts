@@ -64,7 +64,7 @@ export async function computeWeekSummary(userId: string, weekStart: string, week
   return {
     present_days: logs.filter((l) => l.status === 'present').length,
     leave_days: logs.filter((l) => l.status === 'leave').length,
-    wfh_days: logs.filter((l) => l.status === 'work_from_home').length,
+    wfh_days: 0,
     half_days: logs.filter((l) => l.status === 'half_day').length,
   };
 }

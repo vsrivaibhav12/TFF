@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DatePicker } from '@/components/ui/date-picker';
 import { createTaskAction } from '@/lib/actions/tasks';
 import { toast } from 'sonner';
 import { Check, Loader2 } from 'lucide-react';
@@ -147,7 +148,7 @@ export default function BulkTaskForm({ clients, team, groups }: Props) {
               <Checkbox checked={allFilteredSelected} onCheckedChange={toggleAllFiltered} />
               <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Select all visible</span>
             </div>
-            <div className="max-h-80 overflow-y-auto">
+            <div className="max-h-[28rem] overflow-y-auto">
               {filteredClients.map((c) => (
                 <label key={c.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-50 cursor-pointer border-b border-zinc-100 last:border-0">
                   <Checkbox checked={selectedClients.has(c.id)} onCheckedChange={() => toggleClient(c.id)} />
@@ -194,7 +195,7 @@ export default function BulkTaskForm({ clients, team, groups }: Props) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2"><Label>Due date *</Label><Input type="date" value={f.due_date} onChange={(e) => set('due_date', e.target.value)} /></div>
+            <div className="space-y-2"><Label>Due date *</Label><DatePicker value={f.due_date} onChange={(v) => set('due_date', v)} /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">

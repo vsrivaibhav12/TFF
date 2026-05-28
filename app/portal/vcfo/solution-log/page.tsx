@@ -41,14 +41,21 @@ export default async function PortalSolutionLogPage() {
     .eq('is_active', true);
   const clientIds = (clients ?? []).map((r: any) => r.client_id);
 
-  const { data: entries } = clientIds.length > 0
-    ? await sb
+  const BATCH_SIZE = 100;
+  let entries: any[] = [];
+  if (clientIds.length > 0) {
+    for (let i = 0; i < clientIds.length; i += BATCH_SIZE) {
+      const batch = clientIds.slice(i, i + BATCH_SIZE);
+      const { data, error } = await sb
         .from('solution_log')
         .select('id, issue_identified_date, issue_description, issue_category, recommended_solution, actual_outcome, financial_impact_estimate, actual_financial_impact, solution_status, implementation_date, created_at')
-        .in('client_id', clientIds)
+        .in('client_id', batch)
         .order('issue_identified_date', { ascending: false })
-        .limit(200)
-    : { data: [] };
+        .limit(200);
+      if (error) throw error;
+      entries.push(...(data ?? []));
+    }
+  }
 
   const totalDelivered = (entries ?? [])
     .filter((e: any) => e.solution_status === 'implemented' || e.solution_status === 'monitoring')

@@ -1,3 +1,4 @@
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/lib/auth/require-role';
@@ -10,7 +11,8 @@ import QueryReply from '@/app/team/queries/[id]/reply';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminQueryDetail({ params }: { params: { id: string } }) {
-  await requireRole('admin');
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'queries.assign');
   const data = await getQueryWithMessages(params.id);
   if (!data) notFound();
   return (

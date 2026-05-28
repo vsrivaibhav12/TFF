@@ -15,7 +15,7 @@ const categorySchema = z.object({
 });
 export async function upsertServiceCategoryAction(input: z.infer<typeof categorySchema>): Promise<ActionResult<{ id: string }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const parsed = categorySchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -38,7 +38,7 @@ export async function upsertServiceCategoryAction(input: z.infer<typeof category
 
 export async function deleteServiceCategoryAction(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const sb = createClient();
     // Soft delete: also uncategorise linked services
@@ -63,7 +63,7 @@ const serviceSchema = z.object({
 });
 export async function upsertServiceAction(input: z.infer<typeof serviceSchema>): Promise<ActionResult<{ id: string }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const parsed = serviceSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -86,7 +86,7 @@ export async function upsertServiceAction(input: z.infer<typeof serviceSchema>):
 
 export async function deleteServiceAction(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const sb = createClient();
     const { error } = await sb.from('services').update({ is_deleted: true }).eq('id', id);
@@ -116,7 +116,7 @@ const subServiceSchema = z.object({
 });
 export async function upsertSubServiceAction(input: z.infer<typeof subServiceSchema>): Promise<ActionResult<{ id: string }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const parsed = subServiceSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -139,7 +139,7 @@ export async function upsertSubServiceAction(input: z.infer<typeof subServiceSch
 
 export async function deleteSubServiceAction(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const sb = createClient();
     const { error } = await sb.from('sub_services').update({ is_deleted: true, is_active: false }).eq('id', id);
@@ -162,7 +162,7 @@ const sopStepSchema = z.object({
 });
 export async function upsertSopStepAction(input: z.infer<typeof sopStepSchema>): Promise<ActionResult<{ id: string }>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const parsed = sopStepSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -185,7 +185,7 @@ export async function upsertSopStepAction(input: z.infer<typeof sopStepSchema>):
 
 export async function deleteSopStepAction(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const sb = createClient();
     const { error } = await sb.from('sub_service_sop_steps').update({ is_deleted: true }).eq('id', id);
@@ -199,7 +199,7 @@ export async function deleteSopStepAction(id: string): Promise<ActionResult<void
 
 export async function reorderSopStepsAction(input: { sub_service_id: string; ids_in_order: string[] }): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const sb = createClient();
     // Two-pass to avoid unique-collision (sub_service_id, step_order)

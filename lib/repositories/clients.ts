@@ -28,6 +28,24 @@ export async function listAccessibleClients(opts: {
   return data ?? [];
 }
 
+export async function countAccessibleClients(opts: {
+  groupId?: string;
+  city?: string;
+  q?: string;
+} = {}) {
+  const sb = createClient();
+  let q = sb
+    .from('clients')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_deleted', false);
+  if (opts.groupId) q = q.eq('group_id', opts.groupId);
+  if (opts.city) q = q.ilike('city', `%${opts.city}%`);
+  if (opts.q) q = q.or(`business_name.ilike.%${opts.q}%,pan.ilike.%${opts.q}%`);
+  const { count, error } = await q;
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function getClientById(id: string) {
   const sb = createClient();
   const { data, error } = await sb
@@ -55,7 +73,7 @@ export async function listTeamUsers() {
   const sb = createClient();
   const { data, error } = await sb
     .from('users_profile')
-    .select('id, full_name, email, role, is_active, manager_id')
+    .select('id, full_name, email, role, is_active, reports_to, is_prime_admin')
     .in('role', ['team', 'admin'])
     .eq('is_active', true)
     .order('full_name');

@@ -26,19 +26,28 @@ export async function listRoleTemplates(): Promise<RoleTemplate[]> {
   if (!rows || rows.length === 0) return [];
 
   const ids = rows.map((r: any) => r.id);
-  const [{ data: caps }, { data: profiles }] = await Promise.all([
-    sb.from('staff_role_template_capabilities').select('template_id, capability').in('template_id', ids),
-    sb.from('users_profile').select('active_role_template_id').in('active_role_template_id', ids),
-  ]);
+  const caps: any[] = [];
+  const profiles: any[] = [];
+  const BATCH_SIZE = 100;
+
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch = ids.slice(i, i + BATCH_SIZE);
+    const [{ data: capBatch }, { data: profBatch }] = await Promise.all([
+      sb.from('staff_role_template_capabilities').select('template_id, capability').in('template_id', batch),
+      sb.from('users_profile').select('active_role_template_id').in('active_role_template_id', batch),
+    ]);
+    caps.push(...(capBatch ?? []));
+    profiles.push(...(profBatch ?? []));
+  }
 
   const capMap: Record<string, string[]> = {};
-  for (const c of caps ?? []) {
+  for (const c of caps) {
     const k = (c as any).template_id;
     capMap[k] = capMap[k] ?? [];
     capMap[k].push((c as any).capability);
   }
   const staffCount: Record<string, number> = {};
-  for (const p of profiles ?? []) {
+  for (const p of profiles) {
     const k = (p as any).active_role_template_id;
     if (k) staffCount[k] = (staffCount[k] ?? 0) + 1;
   }

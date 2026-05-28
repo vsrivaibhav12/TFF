@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { getLatestProjection } from '@/lib/services/tax-projection';
@@ -12,7 +13,8 @@ import ProjectionForm from './projection-form';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminTaxProjectionsPage() {
-  await requireRole('admin');
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'compliance.enter');
   const clients = await listAccessibleClients();
   const fy = new Date().getFullYear();
 

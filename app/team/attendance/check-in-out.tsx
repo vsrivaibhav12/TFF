@@ -52,13 +52,13 @@ export default function CheckInOut({
 
   return (
     <div className="flex items-center gap-2">
-      {!today?.check_in_time && today?.status !== 'present' && today?.status !== 'work_from_home' && (
+      {!today?.check_in_time && today?.status !== 'present' && (
         <Button onClick={checkIn} disabled={pending} data-testid="attendance-checkin">
           {geoRequired ? <MapPin className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
           {pending ? 'Checking in…' : 'Check in'}
         </Button>
       )}
-      {(today?.check_in_time || today?.status === 'present' || today?.status === 'work_from_home') && !today?.check_out_time && (
+      {(today?.check_in_time || today?.status === 'present') && !today?.check_out_time && (
         <Button onClick={checkOut} disabled={pending} variant="outline" data-testid="attendance-checkout">
           <Clock className="h-4 w-4" /> {pending ? 'Checking out…' : 'Check out'}
         </Button>

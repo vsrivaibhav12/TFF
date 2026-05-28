@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrencyINR } from '@/lib/utils';
 import { TrendingUp, ArrowUpRight, BarChart3 } from 'lucide-react';
@@ -9,7 +10,8 @@ import EmptyState from '@/components/sophistication/empty-state';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminVcfoPage() {
-  await requireRole('admin');
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'vcfo.enter');
   const sb = createClient();
 
   const { data: snapshots } = await sb

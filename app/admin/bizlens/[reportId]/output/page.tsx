@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { getBizlensReport } from '@/lib/actions/bizlens-actions';
 import {
   computeReport, generateInsights, generateExecutiveSummary,
@@ -18,6 +20,8 @@ export default async function BizlensOutputPage({
 }: {
   params: { reportId: string };
 }) {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'bizlens.enter');
   const data = await getBizlensReport(params.reportId);
   if (!data) notFound();
 

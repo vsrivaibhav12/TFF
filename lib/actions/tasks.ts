@@ -325,6 +325,26 @@ export async function softDeleteTaskAction(taskId: string): Promise<ActionResult
   }
 }
 
+export async function bulkDeleteTasksAction(taskIds: string[]): Promise<ActionResult<void>> {
+  try {
+    const me = await requireRole(['admin', 'team']);
+    await requireCapability(me, 'tasks.assign'); // assuming same capability as soft delete
+    
+    if (!taskIds || taskIds.length === 0) {
+      return fail('No tasks selected', 'VALIDATION');
+    }
+    
+    await Promise.all(taskIds.map(id => taskRepo.softDeleteTaskRecord(id, me.id)));
+    
+    revalidatePath('/admin/tasks');
+    revalidatePath('/team/tasks');
+    revalidatePath('/portal/tasks');
+    return ok(undefined);
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  }
+}
+
 export async function updateTaskBillingAction(input: { task_id: string; is_billable: boolean; bill_reference?: string | null; bill_amount?: number | null }): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);

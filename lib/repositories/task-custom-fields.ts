@@ -44,6 +44,7 @@ export async function listDefinitionsForSubService(subServiceId: string): Promis
     .from('sub_services')
     .select('service_id')
     .eq('id', subServiceId)
+    .eq('is_deleted', false)
     .maybeSingle();
   const serviceId = (sub as any)?.service_id ?? null;
   let serviceDefs: any[] = [];

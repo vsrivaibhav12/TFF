@@ -3,9 +3,9 @@ import { ArrowLeft } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 // Future-ready stub. Articles will be looked up here.
-const articles = {}
+const articles: Record<string, any> = {}
 
-export function generateMetadata({ params }) {
+export function generateMetadata({ params }: { params: { slug: string } }) {
   const a = articles[params.slug]
   if (!a) return { title: 'Article — The Fiscal Fulcrum' }
   return {
@@ -14,7 +14,7 @@ export function generateMetadata({ params }) {
   }
 }
 
-export default function ArticlePage({ params }) {
+export default function ArticlePage({ params }: { params: { slug: string } }) {
   const a = articles[params.slug]
   if (!a) return notFound()
   return (

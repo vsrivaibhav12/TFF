@@ -100,13 +100,13 @@ export async function checkOutAction(): Promise<ActionResult<void>> {
 const overrideSchema = z.object({
   user_id: z.string().uuid(),
   attendance_date: z.string(),
-  status: z.enum(['present', 'absent', 'leave', 'work_from_home']),
+  status: z.enum(['present', 'leave']),
   leave_type: z.enum(['paid', 'unpaid', 'sick', 'casual', 'comp']).optional(),
   override_reason: z.string().min(1),
 });
 const upsertSchema = z.object({
   attendance_date: z.string(),
-  status: z.enum(['present', 'absent', 'work_from_home', 'leave', 'half_day', 'permission']),
+  status: z.enum(['present', 'leave', 'half_day', 'permission']),
   check_in_time: z.string().optional(),
   check_out_time: z.string().optional(),
 });
@@ -117,7 +117,7 @@ export async function upsertAttendanceAction(input: z.infer<typeof upsertSchema>
     const parsed = upsertSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const sb = createClient();
-    await sb.from('attendance_logs').upsert(
+    const { error } = await sb.from('attendance_logs').upsert(
       {
         user_id: me.id,
         attendance_date: parsed.data.attendance_date,
@@ -128,6 +128,7 @@ export async function upsertAttendanceAction(input: z.infer<typeof upsertSchema>
       },
       { onConflict: 'user_id,attendance_date' },
     );
+    if (error) return fail(error.message, 'DB');
     revalidatePath('/team/attendance');
     return ok(undefined);
   } catch (e: any) {
@@ -144,7 +145,7 @@ export async function overrideAttendanceAction(
     const parsed = overrideSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const sb = createClient();
-    await sb.from('attendance_logs').upsert(
+    const { error } = await sb.from('attendance_logs').upsert(
       {
         user_id: parsed.data.user_id,
         attendance_date: parsed.data.attendance_date,
@@ -156,6 +157,7 @@ export async function overrideAttendanceAction(
       },
       { onConflict: 'user_id,attendance_date' },
     );
+    if (error) return fail(error.message, 'DB');
     revalidatePath('/team/attendance');
     // H-15: Audit log for attendance overrides
     await writeAudit({

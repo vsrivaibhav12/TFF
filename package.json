@@ -19,11 +19,15 @@
     "db:apply-hr-tables": "tsx scripts/apply-hr-tables.ts",
     "db:apply-task-indices": "tsx scripts/apply-task-indices.ts",
     "db:apply-attendance-rls": "tsx scripts/apply-attendance-rls.ts",
+    "db:apply-updated-at-migration": "tsx scripts/apply-updated-at-migration.ts",
+    "db:apply-unique-constraint-fix": "tsx scripts/apply-unique-constraint-fix.ts",
+    "git:commit-and-push": "tsx scripts/git-commit-and-push.ts",
     "proxy": "node proxy.js",
     "test": "node --import ./__tests__/setup.js --import tsx --test __tests__/*.test.ts",
     "test:watch": "node --import ./__tests__/setup.js --import tsx --test --watch __tests__/*.test.ts",
     "test:one": "node --import ./__tests__/setup.js --import tsx --test",
-    "db:apply-migration": "tsx scripts/apply-migration.ts"
+    "db:apply-migration": "tsx scripts/apply-migration.ts",
+    "db:seed-super-admins": "tsx scripts/seed-super-admins.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -54,6 +58,7 @@
     "lucide-react": "^0.451.0",
     "next": "^14.2.35",
     "react": "^18.3.1",
+    "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.53.0",
     "recharts": "^3.8.1",

@@ -62,6 +62,7 @@ export async function getTask(id: string) {
     .from('tasks')
     .select('*, clients!tasks_client_id_fkey(id, business_name), sub_services!tasks_sub_service_id_fkey(code, name, services!sub_services_service_id_fkey(name)), assignee:users_profile!tasks_assigned_to_fkey(id, full_name, email), reviewer:users_profile!tasks_reviewer_id_fkey(id, full_name, email)')
     .eq('id', id)
+    .eq('is_deleted', false)
     .maybeSingle();
   if (error) throw error;
   return data;
@@ -235,6 +236,7 @@ export async function getSubServiceRequiresVerification(subServiceId: string) {
     .from('sub_services')
     .select('requires_verification')
     .eq('id', subServiceId)
+    .eq('is_deleted', false)
     .maybeSingle();
   if (error) throw error;
   return data;

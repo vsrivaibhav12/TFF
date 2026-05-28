@@ -1,3 +1,4 @@
+import { requireRole } from '@/lib/auth/require-role';
 import Link from 'next/link';
 import { listTeamUsers } from '@/lib/repositories/clients';
 import { PageHeader } from '@/components/ui/page-header';
@@ -7,11 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ShieldCheck, Users } from 'lucide-react';
 import NewTeamMemberDialog from './new-member-dialog';
+import RemoveMemberButton from './remove-member-button';
 import EmptyState from '@/components/sophistication/empty-state';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminTeamPage() {
+  await requireRole('admin');
   const team = await listTeamUsers();
   const managerMap = new Map(team.map((u: any) => [u.id, u.full_name]));
 
@@ -19,7 +22,7 @@ export default async function AdminTeamPage() {
     name: u.full_name,
     email: u.email,
     role: u.role,
-    manager: u.manager_id ? managerMap.get(u.manager_id) ?? '' : '',
+    manager: u.reports_to ? managerMap.get(u.reports_to) ?? '' : '',
     status: u.is_active ? 'Active' : 'Inactive',
   }));
 
@@ -49,11 +52,12 @@ export default async function AdminTeamPage() {
               <TableHead>Role</TableHead>
               <TableHead>Manager</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="w-16"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {team.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="p-0"><EmptyState title="No team members" body="Create the first team member to get started." actionHref="/admin/team" actionLabel="Create member" icon={<Users className="h-6 w-6 text-zinc-400" />} /></TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="p-0"><EmptyState title="No team members" body="Create the first team member to get started." actionHref="/admin/team" actionLabel="Create member" icon={<Users className="h-6 w-6 text-zinc-400" />} /></TableCell></TableRow>
             ) : (team.map((u: any) => (
               <TableRow key={u.id} className="cursor-pointer hover:bg-zinc-50">
                 <TableCell className="font-medium">
@@ -66,10 +70,13 @@ export default async function AdminTeamPage() {
                   <Badge variant={u.role === 'admin' ? 'teal' : 'outline'}>{u.role}</Badge>
                 </TableCell>
                 <TableCell className="text-sm text-zinc-500">
-                  {u.manager_id ? managerMap.get(u.manager_id) ?? '—' : '—'}
+                  {u.reports_to ? managerMap.get(u.reports_to) ?? '—' : '—'}
                 </TableCell>
                 <TableCell>
                   {u.is_active ? <Badge variant="success">Active</Badge> : <Badge variant="warning">Inactive</Badge>}
+                </TableCell>
+                <TableCell>
+                  <RemoveMemberButton userId={u.id} isPrimeAdmin={u.is_prime_admin} />
                 </TableCell>
               </TableRow>
             )))}

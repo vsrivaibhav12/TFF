@@ -31,7 +31,8 @@ export async function listWorkDone(opts: { userId?: string; startDate?: string; 
   let q = sb
     .from('task_workdone')
     .select('*, tasks(title), clients(business_name), users_profile!task_workdone_user_id_fkey(full_name)')
-    .order('work_date', { ascending: false });
+    .order('work_date', { ascending: false })
+    .limit(200);
 
   if (opts.userId) q = q.eq('user_id', opts.userId);
   if (opts.startDate) q = q.gte('work_date', opts.startDate);
@@ -48,7 +49,8 @@ export async function listWorkDoneForTask(taskId: string): Promise<WorkDoneRow[]
     .from('task_workdone')
     .select('*, users_profile!task_workdone_user_id_fkey(full_name)')
     .eq('task_id', taskId)
-    .order('work_date', { ascending: false });
+    .order('work_date', { ascending: false })
+    .limit(200);
   return (data ?? []) as WorkDoneRow[];
 }
 
@@ -60,7 +62,8 @@ export async function listWorkDoneForUser(userId: string, fromIso: string, toIso
     .eq('user_id', userId)
     .gte('work_date', fromIso)
     .lte('work_date', toIso)
-    .order('work_date', { ascending: false });
+    .order('work_date', { ascending: false })
+    .limit(200);
   return (data ?? []) as WorkDoneRow[];
 }
 
@@ -70,7 +73,8 @@ export async function listWorkDoneSummary(fromIso: string, toIso: string): Promi
     .from('task_workdone')
     .select('user_id, client_id, duration_minutes, users_profile!task_workdone_user_id_fkey(full_name), clients(business_name)')
     .gte('work_date', fromIso)
-    .lte('work_date', toIso);
+    .lte('work_date', toIso)
+    .limit(1000);
   const map: Record<string, WorkDoneSummaryRow> = {};
   for (const r of (data ?? []) as any[]) {
     const key = `${r.user_id}::${r.client_id}`;

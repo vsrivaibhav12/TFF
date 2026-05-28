@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { listTasks } from '@/lib/repositories/tasks';
 import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
 import { listSubServices } from '@/lib/repositories/services';
@@ -28,7 +29,8 @@ function buildTaskUrl(base: string, sp: Record<string, string | undefined>, over
 }
 
 export default async function AdminTasksPage({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string } }) {
-  await requireRole('admin');
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'tasks.create');
 
   const status = searchParams.status?.split(',').filter(Boolean) as any;
   const priority = searchParams.priority?.split(',').filter(Boolean) as any;

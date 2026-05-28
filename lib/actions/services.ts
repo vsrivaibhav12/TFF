@@ -7,7 +7,7 @@ import { ok, fail, type ActionResult } from '@/lib/actions/result';
 
 export async function linkSubServiceAction(input: { client_id: string; sub_service_id: string }): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.assign');
     const sb = createClient();
     const { data: existing } = await sb
@@ -29,7 +29,7 @@ export async function linkSubServiceAction(input: { client_id: string; sub_servi
 
 export async function unlinkSubServiceAction(input: { id: string; client_id: string }): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.assign');
     const sb = createClient();
     const { error } = await sb.from('client_sub_services').delete().eq('id', input.id);
@@ -43,7 +43,7 @@ export async function unlinkSubServiceAction(input: { id: string; client_id: str
 
 export async function linkServiceToClientAction(input: { client_id: string; service_id: string; access_level?: 'full' | 'limited' | 'view_only'; service_head_id?: string | null }): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.assign');
     const sb = createClient();
     const { data: existing } = await sb
@@ -74,7 +74,7 @@ export async function linkServiceToClientAction(input: { client_id: string; serv
 
 export async function updateClientServiceHeadAction(input: { id: string; client_id: string; service_head_id?: string | null }): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin']);
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.assign');
     const sb = createClient();
     const { error } = await sb.from('client_services').update({ service_head_id: input.service_head_id ?? null, updated_at: new Date().toISOString() }).eq('id', input.id);

@@ -20,6 +20,7 @@ export async function getCredentialById(id: string) {
     .from('credentials')
     .select('id, client_id, portal_name, portal_url, username, encrypted_password, security_question, encrypted_security_answer, is_active, clients(business_name)')
     .eq('id', id)
+    .eq('is_deleted', false)
     .maybeSingle();
   return data;
 }

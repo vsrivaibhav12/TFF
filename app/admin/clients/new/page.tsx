@@ -1,3 +1,5 @@
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { listClientGroups } from '@/lib/repositories/clients';
@@ -6,6 +8,8 @@ import { ClientCreateForm } from './client-create-form';
 export const dynamic = 'force-dynamic';
 
 export default async function NewClientPage() {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'clients.create');
   const groups = await listClientGroups();
   return (
     <div className="max-w-3xl mx-auto space-y-6">

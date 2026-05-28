@@ -1,3 +1,5 @@
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { listServiceCategories, listServices, listSubServices } from '@/lib/repositories/services';
 import { listTaskTemplates, listTaskTemplateSteps } from '@/lib/repositories/task-templates';
 import { Button } from '@/components/ui/button';
@@ -15,6 +17,8 @@ import ServiceCard from './service-card';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminServicesPage() {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'services.manage');
   const [categories, services, subServices] = await Promise.all([
     listServiceCategories(),
     listServices(),

@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { formatCurrencyINR } from '@/lib/utils';
@@ -13,7 +14,8 @@ import ExportButton from '@/components/sophistication/export-button';
 export const dynamic = 'force-dynamic';
 
 export default async function GstMonthlyDataPage() {
-  await requireRole('admin');
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'compliance.enter');
   const sb = createClient();
   const clients = await listAccessibleClients();
 

@@ -1,10 +1,14 @@
 import { notFound } from 'next/navigation';
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { getBizlensReport } from '@/lib/actions/bizlens-actions';
 import { listBizlensSnapshots } from '@/lib/repositories/bizlens-snapshots';
 import BizlensStudioInputForm from '@/components/operations/bizlens/input-form';
 import BackButton from '@/components/sophistication/back-button';
 
 export default async function BizlensInputPage({ params }: { params: { reportId: string } }) {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'bizlens.enter');
   const report = await getBizlensReport(params.reportId);
   if (!report) notFound();
 

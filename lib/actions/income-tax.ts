@@ -19,7 +19,7 @@ const slabSchema = z.object({
 
 export async function listIncomeTaxSlabsAction(assessmentYear?: string): Promise<ActionResult<repo.IncomeTaxSlab[]>> {
   try {
-    await requireRole('admin');
+    await requireRole(['admin', 'team']);
     const rows = await repo.listIncomeTaxSlabs(assessmentYear);
     return ok(rows);
   } catch (e: any) {
@@ -29,7 +29,7 @@ export async function listIncomeTaxSlabsAction(assessmentYear?: string): Promise
 
 export async function upsertIncomeTaxSlabAction(input: z.infer<typeof slabSchema>): Promise<ActionResult<repo.IncomeTaxSlab>> {
   try {
-    const me = await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'compliance.enter');
     const parsed = slabSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
@@ -53,7 +53,7 @@ export async function upsertIncomeTaxSlabAction(input: z.infer<typeof slabSchema
 
 export async function deleteIncomeTaxSlabAction(id: string): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole('admin');
+    const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'compliance.enter');
     await repo.deleteIncomeTaxSlab(id);
     revalidatePath('/admin/settings/tax-rates');

@@ -1,3 +1,5 @@
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getClientById, listClientUsers, listTeamAssignments, listTeamUsers, listClientGroups } from '@/lib/repositories/clients';
@@ -23,6 +25,8 @@ function statusBadgeClass(status: string) {
 }
 
 export default async function AdminClientDetail({ params }: { params: { id: string } }) {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'clients.read.all');
   const client = await getClientById(params.id);
   if (!client) notFound();
 
