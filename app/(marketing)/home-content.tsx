@@ -9,19 +9,7 @@ import MagneticButton from '@/components/site/MagneticButton'
 import Testimonials from '@/components/site/Testimonials'
 import { ArrowRight } from 'lucide-react'
 
-export const metadata = {
-  title: 'The Fiscal Fulcrum | Finance Partner | Coimbatore',
-  description: 'Structured compliance, financial intelligence, and strategic advisory for Coimbatore\u2019s manufacturing MSMEs. CaaS, Virtual CFO, BizLens, CBAM.',
-  alternates: { canonical: '/' },
-  openGraph: {
-    title: 'The Fiscal Fulcrum | Finance Partner | Coimbatore',
-    description: 'Structured compliance, financial intelligence, and strategic advisory for Coimbatore\u2019s manufacturing MSMEs.',
-    url: 'https://www.fiscalfulcrum.in/',
-    type: 'website',
-  },
-}
-
-export default function Home() {
+export default function HomeContent() {
   return (
     <div>
       {/* === SECTION 1 — HERO === */}
