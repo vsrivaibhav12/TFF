@@ -14,6 +14,8 @@ export interface TransitionInput {
   toStatus: TaskStatus;
   performedBy: string;
   note?: string;
+  arnReference?: string;
+  isArnClientVisible?: boolean;
 }
 
 export async function transitionTaskStatus(input: TransitionInput) {
@@ -61,6 +63,8 @@ export async function transitionTaskStatus(input: TransitionInput) {
     updates.verified_by_user_id = null;
     updates.verified_at = null;
     updates.verification_status = 'pending';
+    if (input.arnReference !== undefined) updates.arn_reference = input.arnReference || null;
+    if (input.isArnClientVisible !== undefined) updates.is_arn_client_visible = input.isArnClientVisible;
   }
 
   await taskRepo.updateTaskRecord(input.taskId, updates);

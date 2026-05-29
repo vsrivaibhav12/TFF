@@ -2,18 +2,24 @@ import { listAccessibleClients, listClientGroups, countAccessibleClients } from 
 import { getComplianceStatusForClients } from '@/lib/repositories/compliance';
 import { countActiveEngagementsForClients } from '@/lib/repositories/client-sub-services';
 import { listSavedViews } from '@/lib/actions/saved-views';
+import { getCurrentUser } from '@/lib/auth/require-role';
+import { hasCapability } from '@/lib/auth/require-capability';
 import Link from 'next/link';
-import { Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/sophistication/empty-state';
 import SavedViewsBar from '@/components/sophistication/saved-views-bar';
 import FilterBar from '@/components/sophistication/filter-bar';
-import ClientsTable from '@/components/clients/clients-table';
+import ClientsListShell from '@/components/clients/clients-list-shell';
 
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 50;
 
 export default async function TeamClientsList({ searchParams }: { searchParams: { group?: string; city?: string; q?: string; page?: string } }) {
+  const me = await getCurrentUser();
+  const canCreate = me ? await hasCapability(me, 'clients.create') : false;
+  const canAssignServices = me ? await hasCapability(me, 'services.assign') : false;
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
 
@@ -66,6 +72,11 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
           <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">My clients</h1>
           <p className="text-sm text-zinc-500 mt-1">{totalCount} client{totalCount !== 1 ? 's' : ''} assigned to you</p>
         </div>
+        {canCreate && (
+          <Button asChild>
+            <Link href="/admin/clients/new"><Plus className="h-4 w-4 mr-1" /> New client</Link>
+          </Button>
+        )}
       </div>
 
       <FilterBar
@@ -88,7 +99,7 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
         />
       ) : (
         <>
-          <ClientsTable clients={enrichedClients as any} basePath="/team/clients" />
+          <ClientsListShell clients={enrichedClients as any} basePath="/team/clients" showBulkAssign={canAssignServices} />
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">

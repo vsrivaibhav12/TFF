@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -9,12 +10,15 @@ import { toast } from 'sonner';
 import { transitionTaskAction, addTaskNoteAction, assignTaskAction } from '@/lib/actions/tasks';
 import { nextStatuses } from '@/lib/services/task-transitions';
 import { Lock, RotateCcw } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function TaskActions({ task, team }: { task: any; team: any[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [note, setNote] = useState('');
   const [transitionTarget, setTransitionTarget] = useState('');
+  const [arnReference, setArnReference] = useState(task.arn_reference || '');
+  const [isArnClientVisible, setIsArnClientVisible] = useState(task.is_arn_client_visible || false);
   const [assignedTo, setAssignedTo] = useState(task.assigned_to || '');
   const [reviewerId, setReviewerId] = useState(task.reviewer_id || '');
 
@@ -24,9 +28,14 @@ export default function TaskActions({ task, team }: { task: any; team: any[] }) 
   function doTransition() {
     if (!transitionTarget) return;
     startTransition(async () => {
-      const r = await transitionTaskAction({ task_id: task.id, to_status: transitionTarget as any, note: note || undefined });
+      const payload: any = { task_id: task.id, to_status: transitionTarget as any, note: note || undefined };
+      if (transitionTarget === 'completed') {
+        payload.arn_reference = arnReference || null;
+        payload.is_arn_client_visible = isArnClientVisible;
+      }
+      const r = await transitionTaskAction(payload);
       if (!r.success) toast.error(r.error);
-      else { toast.success(`Status updated to ${transitionTarget}`); setNote(''); setTransitionTarget(''); router.refresh(); }
+      else { toast.success(`Status updated to ${transitionTarget}`); setNote(''); setTransitionTarget(''); setArnReference(''); setIsArnClientVisible(false); router.refresh(); }
     });
   }
   function addNote() {
@@ -98,6 +107,15 @@ export default function TaskActions({ task, team }: { task: any; team: any[] }) 
             </Select>
             <Button onClick={doTransition} disabled={!transitionTarget || pending} data-testid="transition-submit">Apply</Button>
           </div>
+          {transitionTarget === 'completed' && (
+            <div className="flex items-center gap-3">
+              <Input className="flex-1" value={arnReference} onChange={(e) => setArnReference(e.target.value)} placeholder="ARN / Acknowledgement / Reference number (optional)" />
+              <div className="flex items-center gap-2">
+                <Checkbox id="arn-visible" checked={isArnClientVisible} onCheckedChange={(v) => setIsArnClientVisible(v === true)} />
+                <Label htmlFor="arn-visible" className="cursor-pointer text-xs">Client visible</Label>
+              </div>
+            </div>
+          )}
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional note (will be saved with the transition)" rows={2} data-testid="transition-note" />
         </div>
       )}

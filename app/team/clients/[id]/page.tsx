@@ -6,10 +6,13 @@ import { listTasks, enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import { listAllNotices } from '@/lib/repositories/notices';
 import { listQueries } from '@/lib/repositories/queries';
 import { listEntityAuditLogs } from '@/lib/repositories/audit';
+import { getCurrentUser } from '@/lib/auth/require-role';
+import { hasCapability } from '@/lib/auth/require-capability';
 import AuditTimeline from '@/components/sophistication/audit-timeline';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ProgressRing } from '@/components/ui/progress-ring';
-import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, AlertTriangle, MessageSquare, Briefcase, ArrowRight, TrendingUp } from 'lucide-react';
+import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, AlertTriangle, MessageSquare, Briefcase, ArrowRight, TrendingUp, Pencil } from 'lucide-react';
 import { formatDateIST } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +25,8 @@ function statusBadgeClass(status: string) {
 }
 
 export default async function TeamClientDetail({ params }: { params: { id: string } }) {
+  const me = await getCurrentUser();
+  const canEdit = me ? await hasCapability(me, 'clients.edit') : false;
   const client = await getClientById(params.id);
   if (!client) notFound();
 
@@ -66,7 +71,11 @@ export default async function TeamClientDetail({ params }: { params: { id: strin
               </div>
             </div>
           </div>
-
+          {canEdit && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/admin/clients/${params.id}`}><Pencil className="h-4 w-4 mr-1" /> Edit</Link>
+            </Button>
+          )}
         </div>
       </div>
 

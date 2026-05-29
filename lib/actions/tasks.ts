@@ -24,8 +24,6 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
       ...parsed.data,
       status: 'pending',
       bill_amount: parsed.data.bill_amount ?? null,
-      arn_reference: parsed.data.arn_reference || null,
-      is_arn_client_visible: parsed.data.is_arn_client_visible ?? false,
     });
     
     await taskRepo.addTaskActivity({
@@ -65,7 +63,7 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
   }
 }
 
-export async function transitionTaskAction(input: { task_id: string; to_status: TaskStatus; note?: string }): Promise<ActionResult<void>> {
+export async function transitionTaskAction(input: { task_id: string; to_status: TaskStatus; note?: string; arn_reference?: string | null; is_arn_client_visible?: boolean }): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team', 'client']);
     if (me.role !== 'client') await requireCapability(me, 'tasks.complete');
@@ -87,6 +85,8 @@ export async function transitionTaskAction(input: { task_id: string; to_status: 
       toStatus: parsed.data.to_status,
       performedBy: me.id,
       note: parsed.data.note,
+      arnReference: parsed.data.arn_reference ?? undefined,
+      isArnClientVisible: parsed.data.is_arn_client_visible ?? undefined,
     });
     
     revalidatePath('/team/tasks');

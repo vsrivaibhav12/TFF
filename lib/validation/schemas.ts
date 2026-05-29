@@ -59,8 +59,6 @@ export const createTaskSchema = z.object({
   is_billable: z.boolean().default(false),
   bill_reference: z.string().max(80).optional().nullable(),
   bill_amount: z.number().nonnegative().optional().nullable(),
-  arn_reference: z.string().max(120).optional().nullable(),
-  is_arn_client_visible: z.boolean().default(false),
 });
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 
@@ -89,6 +87,8 @@ export const transitionTaskSchema = z.object({
   task_id: z.string().uuid(),
   to_status: taskStatusEnum,
   note: z.string().max(2000).optional(),
+  arn_reference: z.string().max(120).optional().nullable(),
+  is_arn_client_visible: z.boolean().optional(),
 });
 
 export const filingStatusEnum = z.enum(['not_started', 'data_received', 'in_progress', 'review', 'filed']);

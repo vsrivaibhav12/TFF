@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { bulkDeleteClients } from '@/lib/actions/clients';
+import BulkAssignSubService from '@/components/clients/bulk-assign-subservice';
 
 interface EnrichedClient {
   id: string;
@@ -47,7 +48,7 @@ function ComplianceDots({ gst, tds, it }: { gst: string; tds: string; it: string
   );
 }
 
-export default function ClientsTableClient({ clients }: { clients: EnrichedClient[] }) {
+export default function ClientsTableClient({ clients, showBulkAssign = false }: { clients: EnrichedClient[]; showBulkAssign?: boolean }) {
   const [sortKey, setSortKey] = useState<'name' | 'engagements'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -106,6 +107,12 @@ export default function ClientsTableClient({ clients }: { clients: EnrichedClien
             {selectedIds.size} client(s) selected
           </div>
           <div className="flex gap-2">
+            {showBulkAssign && (
+              <BulkAssignSubService
+                selectedClientIds={Array.from(selectedIds)}
+                onDone={() => setSelectedIds(new Set())}
+              />
+            )}
             <Button size="sm" variant="outline" className="text-zinc-900 bg-white hover:bg-zinc-100 border-none" onClick={() => setSelectedIds(new Set())}>
               Cancel
             </Button>

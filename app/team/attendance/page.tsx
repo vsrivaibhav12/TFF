@@ -1,4 +1,4 @@
-import { requireRole } from '@/lib/auth/require-role';
+import { requireRole, getCurrentUser } from '@/lib/auth/require-role';
 import { createClient } from '@/lib/supabase/server';
 import { listAttendanceForUser, getTodayAttendance } from '@/lib/repositories/attendance';
 import { listLeaveRequests } from '@/lib/repositories/leave';
@@ -100,7 +100,7 @@ export default async function AttendancePage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <ExportButton data={exportData} filename="my-attendance" format="excel" />
-          <ManualAttendanceForm />
+          {isAdmin && <ManualAttendanceForm />}
           <CheckInOut today={today as any} geoRequired={geoRequired} />
           <div className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
             Attendance is tracked automatically. Your manager reviews it at the end of each week.

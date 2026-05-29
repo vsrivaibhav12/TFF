@@ -113,7 +113,7 @@ const upsertSchema = z.object({
 
 export async function upsertAttendanceAction(input: z.infer<typeof upsertSchema>): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin', 'team']);
+    const me = await requireRole(['admin']);
     const parsed = upsertSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const sb = createClient();
@@ -140,7 +140,7 @@ export async function overrideAttendanceAction(
   input: z.infer<typeof overrideSchema>,
 ): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin', 'team']);
+    const me = await requireRole(['admin']);
     await requireCapability(me, 'attendance.approve');
     const parsed = overrideSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');

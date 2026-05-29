@@ -1,5 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
-import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
+import { requireCapabilityOrRedirect, hasCapability } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { listAccessibleClients, listClientGroups, countAccessibleClients } from '@/lib/repositories/clients';
 import { getComplianceStatusForClients } from '@/lib/repositories/compliance';
@@ -20,6 +20,7 @@ const PAGE_SIZE = 50;
 export default async function AdminClientsList({ searchParams }: { searchParams: { group?: string; city?: string; q?: string; page?: string } }) {
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'clients.read.all');
+  const canAssignServices = await hasCapability(me, 'services.assign');
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
 
@@ -118,7 +119,7 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
         />
       ) : (
         <>
-          <ClientsTableClient clients={enrichedClients as any} />
+          <ClientsTableClient clients={enrichedClients as any} showBulkAssign={canAssignServices} />
 
           {/* Pagination controls */}
           {totalPages > 1 && (

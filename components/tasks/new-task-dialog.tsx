@@ -38,8 +38,9 @@ export default function NewTaskDialog({ clients, team, defaultClientId, triggerL
     period_year: '',
     period_month: '',
     period_quarter: '',
-    arn_reference: '',
-    is_arn_client_visible: false,
+    is_billable: false,
+    bill_reference: '',
+    bill_amount: '',
   });
 
   function set<K extends keyof typeof f>(k: K, v: any) { setF((p) => ({ ...p, [k]: v })); }
@@ -82,14 +83,15 @@ export default function NewTaskDialog({ clients, team, defaultClientId, triggerL
         period_year: f.period_year ? parseInt(f.period_year, 10) : undefined,
         period_month: f.period_month ? parseInt(f.period_month, 10) : undefined,
         period_quarter: f.period_quarter ? parseInt(f.period_quarter, 10) : undefined,
-        arn_reference: f.arn_reference || undefined,
-        is_arn_client_visible: f.is_arn_client_visible,
+        is_billable: f.is_billable,
+        bill_reference: f.bill_reference || undefined,
+        bill_amount: f.bill_amount ? parseFloat(f.bill_amount) : undefined,
       };
       const r = await createTaskAction(payload);
       if (r.success) {
         toast.success('Task created');
         setOpen(false);
-        setF({ client_id: defaultClientId ?? '', sub_service_id: '', task_template_id: '', title: '', description: '', priority: 'medium', assigned_to: '', due_date: '', period_year: '', period_month: '', period_quarter: '', arn_reference: '', is_arn_client_visible: false });
+        setF({ client_id: defaultClientId ?? '', sub_service_id: '', task_template_id: '', title: '', description: '', priority: 'medium', assigned_to: '', due_date: '', period_year: '', period_month: '', period_quarter: '', is_billable: false, bill_reference: '', bill_amount: '' });
       } else {
         toast.error(r.error);
       }
@@ -180,11 +182,16 @@ export default function NewTaskDialog({ clients, team, defaultClientId, triggerL
                 <div className="space-y-2"><Label>Quarter</Label><Input type="number" min={1} max={4} value={f.period_quarter} onChange={(e) => set('period_quarter', e.target.value)} placeholder="1-4" /></div>
               </div>
               <div className="flex items-center gap-3">
-                <Input className="flex-1" value={f.arn_reference} onChange={(e) => set('arn_reference', e.target.value)} placeholder="ARN / Acknowledgement / Reference number (optional)" />
                 <div className="flex items-center gap-2">
-                  <Checkbox id="arn-visible" checked={f.is_arn_client_visible} onCheckedChange={(v) => set('is_arn_client_visible', v === true)} />
-                  <Label htmlFor="arn-visible" className="cursor-pointer text-xs">Client visible</Label>
+                  <Checkbox id="billable" checked={f.is_billable} onCheckedChange={(v) => set('is_billable', v === true)} />
+                  <Label htmlFor="billable" className="cursor-pointer text-xs">Billable</Label>
                 </div>
+                {f.is_billable && (
+                  <>
+                    <Input className="flex-1" value={f.bill_reference} onChange={(e) => set('bill_reference', e.target.value)} placeholder="Bill reference" />
+                    <Input type="number" min={0} step={0.01} className="w-28" value={f.bill_amount} onChange={(e) => set('bill_amount', e.target.value)} placeholder="Amount" />
+                  </>
+                )}
               </div>
             </>
           )}

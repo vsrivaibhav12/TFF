@@ -1,10 +1,11 @@
 /**
- * Maps nav href prefixes to the capability required to see them.
+ * Maps nav href prefixes to the capability(s) required to see them.
  * Used by both team and admin layouts to dynamically filter sidebar items.
+ * Value can be a single capability string or an array of capabilities (any one grants access).
  */
-export const NAV_CAPABILITY_MAP: Record<string, string> = {
+export const NAV_CAPABILITY_MAP: Record<string, string | string[]> = {
   // Team pages
-  '/team/clients': 'clients.read.all',
+  '/team/clients': ['clients.read.all', 'clients.create', 'clients.edit', 'clients.delete', 'clients.assign_team', 'clients.toggle_portal'],
   '/team/notices': 'notices.manage',
   '/team/hearings': 'hearings.manage',
   '/team/approvals': 'attendance.approve',
@@ -29,13 +30,14 @@ export const NAV_CAPABILITY_MAP: Record<string, string> = {
 };
 
 /**
- * Returns the capability required for a given href, or null if no restriction.
+ * Returns the capability(s) required for a given href, or null if no restriction.
  */
-export function getRequiredCapability(href: string): string | null {
+export function getRequiredCapabilities(href: string): string[] | null {
   // Exact match first
-  if (NAV_CAPABILITY_MAP[href]) return NAV_CAPABILITY_MAP[href];
+  const exact = NAV_CAPABILITY_MAP[href];
+  if (exact) return Array.isArray(exact) ? exact : [exact];
   // Longest prefix match
-  let bestMatch: string | null = null;
+  let bestMatch: string | string[] | null = null;
   let bestLen = 0;
   for (const prefix of Object.keys(NAV_CAPABILITY_MAP)) {
     if (href.startsWith(prefix + '/') || href === prefix) {
@@ -45,7 +47,7 @@ export function getRequiredCapability(href: string): string | null {
       }
     }
   }
-  return bestMatch;
+  return bestMatch ? (Array.isArray(bestMatch) ? bestMatch : [bestMatch]) : null;
 }
 
 /**
@@ -60,8 +62,8 @@ export function filterNavByCapabilities(
   if (userRole === 'admin') return nav;
   const capSet = new Set(capabilities);
   return nav.filter((item) => {
-    const required = getRequiredCapability(item.href);
+    const required = getRequiredCapabilities(item.href);
     if (!required) return true;
-    return capSet.has(required);
+    return required.some((cap) => capSet.has(cap));
   });
 }

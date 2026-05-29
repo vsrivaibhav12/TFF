@@ -174,8 +174,58 @@ export async function upsertSopStepAction(input: z.infer<typeof sopStepSchema>):
       revalidatePath('/admin/services');
       return ok({ id });
     }
+    // Check if this is the first SOP step for this sub-service ( triggers backfill )
+    const { count: priorCount } = await sb
+      .from('sub_service_sop_steps')
+      .select('*', { count: 'exact', head: true })
+      .eq('sub_service_id', rest.sub_service_id)
+      .eq('is_deleted', false);
+    const isFirstSopStep = (priorCount ?? 0) === 0;
+
     const { data, error } = await sb.from('sub_service_sop_steps').insert(rest).select('id').single();
     if (error) return fail(error.message, 'DB');
+
+    if (isFirstSopStep) {
+      // Backfill: find non-completed tasks with zero steps for this sub-service
+      const { data: tasksToBackfill } = await sb
+        .from('tasks')
+        .select('id')
+        .eq('sub_service_id', rest.sub_service_id)
+        .not('status', 'in', '(completed,cancelled)');
+      if (tasksToBackfill && tasksToBackfill.length > 0) {
+        const taskIds = tasksToBackfill.map((t: any) => t.id);
+        // Filter to only those with zero steps
+        const { data: stepsData } = await sb
+          .from('task_steps')
+          .select('task_id')
+          .in('task_id', taskIds);
+        // Build a set of tasks that already have steps
+        const tasksWithSteps = new Set((stepsData ?? []).map((s: any) => s.task_id));
+        const tasksNeedingSteps = taskIds.filter((id: string) => !tasksWithSteps.has(id));
+        if (tasksNeedingSteps.length > 0) {
+          const { data: sopSteps } = await sb
+            .from('sub_service_sop_steps')
+            .select('id, step_order, title, description, is_required')
+            .eq('sub_service_id', rest.sub_service_id)
+            .eq('is_deleted', false)
+            .order('step_order', { ascending: true });
+          if (sopSteps && sopSteps.length > 0) {
+            const rows = tasksNeedingSteps.flatMap((taskId: string) =>
+              sopSteps.map((s: any) => ({
+                task_id: taskId,
+                step_order: s.step_order,
+                title: s.title,
+                description: s.description ?? null,
+                is_required: s.is_required ?? true,
+                source_sop_step_id: s.id,
+              }))
+            );
+            await sb.from('task_steps').insert(rows);
+          }
+        }
+      }
+    }
+
     revalidatePath('/admin/services');
     return ok({ id: data.id });
   } catch (e: any) {
