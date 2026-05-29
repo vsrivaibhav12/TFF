@@ -193,6 +193,7 @@ CREATE POLICY "task_steps_team" ON task_steps
 -- Team ALL: assigned client OR queries.assign
 DROP POLICY IF EXISTS "queries_team_view" ON queries;
 DROP POLICY IF EXISTS "queries_team_assigned" ON queries;
+DROP POLICY IF EXISTS "queries_team_all" ON queries;
 CREATE POLICY "queries_team_all" ON queries
   FOR ALL TO authenticated
   USING (
@@ -347,6 +348,7 @@ CREATE POLICY "dsc_records_team_update" ON dsc_records
 
 -- GST filings
 DROP POLICY IF EXISTS "gst_filings_team_only" ON gst_filings;
+DROP POLICY IF EXISTS "gst_filings_team_select" ON gst_filings;
 CREATE POLICY "gst_filings_team_select" ON gst_filings
   FOR SELECT TO authenticated
   USING (
@@ -388,6 +390,7 @@ CREATE POLICY "gst_filings_team_update" ON gst_filings
 
 -- TDS filings
 DROP POLICY IF EXISTS "tds_filings_team_only" ON tds_filings;
+DROP POLICY IF EXISTS "tds_filings_team_select" ON tds_filings;
 CREATE POLICY "tds_filings_team_select" ON tds_filings
   FOR SELECT TO authenticated
   USING (
@@ -429,6 +432,7 @@ CREATE POLICY "tds_filings_team_update" ON tds_filings
 
 -- IT filings
 DROP POLICY IF EXISTS "it_filings_team_only" ON it_filings;
+DROP POLICY IF EXISTS "it_filings_team_select" ON it_filings;
 CREATE POLICY "it_filings_team_select" ON it_filings
   FOR SELECT TO authenticated
   USING (
@@ -470,6 +474,7 @@ CREATE POLICY "it_filings_team_update" ON it_filings
 
 -- Compliance status
 DROP POLICY IF EXISTS "compliance_status_team_only" ON compliance_status;
+DROP POLICY IF EXISTS "compliance_status_team_select" ON compliance_status;
 CREATE POLICY "compliance_status_team_select" ON compliance_status
   FOR SELECT TO authenticated
   USING (
@@ -504,6 +509,7 @@ CREATE POLICY "compliance_status_team_update" ON compliance_status
 
 -- GST data entries
 DROP POLICY IF EXISTS "gst_data_entries_team_only" ON gst_data_entries;
+DROP POLICY IF EXISTS "gst_data_entries_team_select" ON gst_data_entries;
 CREATE POLICY "gst_data_entries_team_select" ON gst_data_entries
   FOR SELECT TO authenticated
   USING (
@@ -545,6 +551,7 @@ CREATE POLICY "gst_data_entries_team_update" ON gst_data_entries
 
 -- Financial data
 DROP POLICY IF EXISTS "financial_data_team_only" ON financial_data;
+DROP POLICY IF EXISTS "financial_data_team_select" ON financial_data;
 CREATE POLICY "financial_data_team_select" ON financial_data
   FOR SELECT TO authenticated
   USING (
@@ -586,6 +593,7 @@ CREATE POLICY "financial_data_team_update" ON financial_data
 
 -- vCFO snapshots
 DROP POLICY IF EXISTS "vcfo_snapshots_team_view" ON vcfo_snapshots;
+DROP POLICY IF EXISTS "vcfo_snapshots_team_select" ON vcfo_snapshots;
 CREATE POLICY "vcfo_snapshots_team_select" ON vcfo_snapshots
   FOR SELECT TO authenticated
   USING (
@@ -630,6 +638,7 @@ CREATE POLICY "vcfo_snapshots_team_update" ON vcfo_snapshots
 -- ============================================================================
 
 DROP POLICY IF EXISTS "solution_log_team_view" ON solution_log;
+DROP POLICY IF EXISTS "solution_log_team_select" ON solution_log;
 CREATE POLICY "solution_log_team_select" ON solution_log
   FOR SELECT TO authenticated
   USING (
@@ -674,6 +683,7 @@ CREATE POLICY "solution_log_team_update" ON solution_log
 -- ============================================================================
 
 DROP POLICY IF EXISTS "documents_team_view" ON documents;
+DROP POLICY IF EXISTS "documents_team_select" ON documents;
 CREATE POLICY "documents_team_select" ON documents
   FOR SELECT TO authenticated
   USING (
@@ -690,6 +700,7 @@ CREATE POLICY "documents_team_select" ON documents
 -- ============================================================================
 
 DROP POLICY IF EXISTS "communication_log_team_view" ON client_communication_log;
+DROP POLICY IF EXISTS "communication_log_team_select" ON client_communication_log;
 CREATE POLICY "communication_log_team_select" ON client_communication_log
   FOR SELECT TO authenticated
   USING (

@@ -53,9 +53,11 @@ CREATE POLICY "task_steps_client_read" ON task_steps
 
 -- client_groups
 DROP POLICY IF EXISTS "client_groups_admin" ON client_groups;
+DROP POLICY IF EXISTS "client_groups_admin_select" ON client_groups;
 CREATE POLICY "client_groups_admin_select" ON client_groups
   FOR SELECT TO authenticated
   USING (public.current_user_role() IN ('admin', 'team'));
+DROP POLICY IF EXISTS "client_groups_admin_mutate" ON client_groups;
 CREATE POLICY "client_groups_admin_mutate" ON client_groups
   FOR ALL TO authenticated
   USING (public.current_user_role() = 'admin')
@@ -63,9 +65,11 @@ CREATE POLICY "client_groups_admin_mutate" ON client_groups
 
 -- client_users
 DROP POLICY IF EXISTS "client_users_admin" ON client_users;
+DROP POLICY IF EXISTS "client_users_admin_select" ON client_users;
 CREATE POLICY "client_users_admin_select" ON client_users
   FOR SELECT TO authenticated
   USING (public.current_user_role() IN ('admin', 'team') OR user_id = auth.uid());
+DROP POLICY IF EXISTS "client_users_admin_mutate" ON client_users;
 CREATE POLICY "client_users_admin_mutate" ON client_users
   FOR ALL TO authenticated
   USING (public.current_user_role() = 'admin')
@@ -73,9 +77,11 @@ CREATE POLICY "client_users_admin_mutate" ON client_users
 
 -- team_client_assignment
 DROP POLICY IF EXISTS "tca_admin" ON team_client_assignment;
+DROP POLICY IF EXISTS "tca_admin_select" ON team_client_assignment;
 CREATE POLICY "tca_admin_select" ON team_client_assignment
   FOR SELECT TO authenticated
   USING (public.current_user_role() IN ('admin', 'team'));
+DROP POLICY IF EXISTS "tca_admin_mutate" ON team_client_assignment;
 CREATE POLICY "tca_admin_mutate" ON team_client_assignment
   FOR ALL TO authenticated
   USING (public.current_user_role() = 'admin')
@@ -83,9 +89,11 @@ CREATE POLICY "tca_admin_mutate" ON team_client_assignment
 
 -- client_services
 DROP POLICY IF EXISTS "client_services_admin_team" ON client_services;
+DROP POLICY IF EXISTS "client_services_admin_select" ON client_services;
 CREATE POLICY "client_services_admin_select" ON client_services
   FOR SELECT TO authenticated
   USING (public.current_user_role() IN ('admin', 'team'));
+DROP POLICY IF EXISTS "client_services_admin_mutate" ON client_services;
 CREATE POLICY "client_services_admin_mutate" ON client_services
   FOR ALL TO authenticated
   USING (public.current_user_role() = 'admin')
@@ -93,9 +101,11 @@ CREATE POLICY "client_services_admin_mutate" ON client_services
 
 -- client_sub_services
 DROP POLICY IF EXISTS "client_sub_services_admin_team" ON client_sub_services;
+DROP POLICY IF EXISTS "client_sub_services_admin_select" ON client_sub_services;
 CREATE POLICY "client_sub_services_admin_select" ON client_sub_services
   FOR SELECT TO authenticated
   USING (public.current_user_role() IN ('admin', 'team'));
+DROP POLICY IF EXISTS "client_sub_services_admin_mutate" ON client_sub_services;
 CREATE POLICY "client_sub_services_admin_mutate" ON client_sub_services
   FOR ALL TO authenticated
   USING (public.current_user_role() = 'admin')
@@ -103,9 +113,11 @@ CREATE POLICY "client_sub_services_admin_mutate" ON client_sub_services
 
 -- task_templates
 DROP POLICY IF EXISTS "task_templates_team" ON task_templates;
+DROP POLICY IF EXISTS "task_templates_team_select" ON task_templates;
 CREATE POLICY "task_templates_team_select" ON task_templates
   FOR SELECT TO authenticated
   USING (public.current_user_role() IN ('admin', 'team'));
+DROP POLICY IF EXISTS "task_templates_admin_mutate" ON task_templates;
 CREATE POLICY "task_templates_admin_mutate" ON task_templates
   FOR ALL TO authenticated
   USING (public.current_user_role() = 'admin')
