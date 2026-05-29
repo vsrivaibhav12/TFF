@@ -10,6 +10,7 @@ import * as taskService from '@/lib/services/task-service';
 import { canModifyTask, canCompleteTask } from '@/lib/services/task-modify-guard';
 import * as taskRepo from '@/lib/repositories/tasks';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service-role';
 import { seedTaskStepsFromSop, seedTaskStepsFromTemplate } from '@/lib/services/task-steps-service';
 import { notify } from '@/lib/services/notification-service';
 
@@ -54,7 +55,7 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
     // If linked to a task template, copy its steps onto the new task
     if (parsed.data.task_template_id) {
       try {
-        const sb = createClient();
+        const sb = createServiceClient();
         await seedTaskStepsFromTemplate(sb as any, { task_id: data.id, task_template_id: parsed.data.task_template_id });
       } catch (e) {
         console.error('Template step seeding failed:', e);
@@ -62,7 +63,7 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
     } else if (parsed.data.sub_service_id) {
       // Fallback: copy SOP steps from sub-service for backward compatibility
       try {
-        const sb = createClient();
+        const sb = createServiceClient();
         await seedTaskStepsFromSop(sb as any, { task_id: data.id, sub_service_id: parsed.data.sub_service_id });
       } catch (e) {
         console.error('SOP seeding failed:', e);
@@ -89,7 +90,7 @@ export async function transitionTaskAction(input: { task_id: string; to_status: 
     
     const task = await taskRepo.getTask(parsed.data.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task as any)) {
+    if (!canModifyTask(task as any, parsed.data.to_status)) {
       return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
     }
     if (parsed.data.to_status === 'completed') {
@@ -586,6 +587,64 @@ export async function bulkCreateTasksAction(input: z.infer<typeof bulkCreateTask
     revalidatePath('/admin/tasks');
     revalidatePath('/portal/tasks');
     return ok({ created });
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  }
+}
+
+
+const updateTaskSchema = z.object({
+  task_id: z.string().uuid(),
+  title: z.string().min(2).max(200).optional(),
+  description: z.string().max(2000).optional().nullable(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
+  due_date: z.string().date().optional().nullable(),
+  period_year: z.number().int().min(2000).max(2100).optional().nullable(),
+  period_month: z.number().int().min(1).max(12).optional().nullable(),
+  period_quarter: z.number().int().min(1).max(4).optional().nullable(),
+});
+
+export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>): Promise<ActionResult<void>> {
+  try {
+    const me = await requireRole(['admin', 'team', 'client']);
+    if (me.role !== 'client') await requireCapability(me, 'tasks.assign');
+    const parsed = updateTaskSchema.safeParse(input);
+    if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
+
+    const { task_id, ...updates } = parsed.data;
+    const task = await taskRepo.getTask(task_id);
+    if (!task) return fail('Task not found', 'NOT_FOUND');
+    if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+
+    await taskRepo.updateTaskRecord(task_id, {
+      ...updates,
+      updated_at: new Date().toISOString(),
+    });
+
+    revalidatePath(`/team/tasks/${task_id}`);
+    revalidatePath(`/admin/tasks/${task_id}`);
+    return ok(undefined);
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  }
+}
+
+
+export async function loadTemplateStepsAction(input: { task_id: string; task_template_id: string }): Promise<ActionResult<{ count: number }>> {
+  try {
+    const me = await requireRole(['admin', 'team']);
+    await requireCapability(me, 'tasks.create');
+
+    const task = await taskRepo.getTask(input.task_id);
+    if (!task) return fail('Task not found', 'NOT_FOUND');
+    if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+
+    const sb = createServiceClient();
+    const count = await seedTaskStepsFromTemplate(sb as any, { task_id: input.task_id, task_template_id: input.task_template_id });
+
+    revalidatePath(`/team/tasks/${input.task_id}`);
+    revalidatePath(`/admin/tasks/${input.task_id}`);
+    return ok({ count });
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
   }

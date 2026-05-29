@@ -1,9 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ChevronLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { ChevronLeft, Pencil, Check, X, Loader2, CalendarDays } from 'lucide-react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { formatDateIST, timeAgo } from '@/lib/utils';
 import TaskActions from '@/app/team/tasks/[id]/task-actions';
 import TaskStepsPanel from '@/components/tasks/task-steps-panel';
@@ -14,6 +19,9 @@ import CustomFieldsPanel from '@/components/tasks/custom-fields-panel';
 import WorkDonePanel from '@/components/tasks/workdone-panel';
 import DeleteTaskButton from '@/components/tasks/delete-task-button';
 import VerifyTaskButton from '@/components/tasks/verify-task-button';
+import LoadTemplateStepsButton from '@/components/tasks/load-template-steps-button';
+import { updateTaskAction } from '@/lib/actions/tasks';
+import { toast } from 'sonner';
 
 interface Props {
   task: any;
@@ -49,13 +57,33 @@ export default function TaskDetailShell({
   clientPath,
 }: Props) {
   const isClosed = task.status === 'completed' || task.status === 'cancelled';
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [editingPeriod, setEditingPeriod] = useState(false);
+  const [editingPriority, setEditingPriority] = useState(false);
+  const [editingDueDate, setEditingDueDate] = useState(false);
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description || '');
+  const [periodYear, setPeriodYear] = useState(task.period_year ?? '');
+  const [periodMonth, setPeriodMonth] = useState(task.period_month ?? '');
+  const [periodQuarter, setPeriodQuarter] = useState(task.period_quarter ?? '');
+  const [priority, setPriority] = useState(task.priority);
+  const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.slice(0, 10) : '');
+  const [saving, setSaving] = useState(false);
+
+  async function saveField(updates: any, onSuccess?: () => void) {
+    setSaving(true);
+    const r = await updateTaskAction({ task_id: task.id, ...updates });
+    setSaving(false);
+    if (!r.success) { toast.error(r.error); return false; }
+    toast.success('Updated');
+    onSuccess?.();
+    return true;
+  }
 
   return (
     <div className="space-y-8">
-      <Link
-        href={basePath}
-        className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900"
-      >
+      <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
         <ChevronLeft className="h-4 w-4" /> Tasks
       </Link>
 
@@ -69,36 +97,128 @@ export default function TaskDetailShell({
             </span>
           )}
         </div>
-        <h1 className="tff-page-title">{task.title}</h1>
+
+        {/* Editable title */}
+        <div className="flex items-center gap-2">
+          {editingTitle ? (
+            <div className="flex items-center gap-2 flex-1">
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} className="text-lg font-semibold" autoFocus />
+              <Button size="sm" variant="ghost" onClick={async () => { if (await saveField({ title })) setEditingTitle(false); }} disabled={saving}>
+                <Check className="h-4 w-4 text-teal-600" />
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => { setTitle(task.title); setEditingTitle(false); }}>
+                <X className="h-4 w-4 text-zinc-400" />
+              </Button>
+            </div>
+          ) : (
+            <>
+              <h1 className="tff-page-title">{task.title}</h1>
+              {!isClosed && (
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setEditingTitle(true)}>
+                  <Pencil className="h-3.5 w-3.5 text-zinc-400" />
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+
         <div className="mt-2 flex items-center gap-2 flex-wrap">
-          <Badge
-            variant={
-              task.status === 'completed'
-                ? 'success'
-                : task.status === 'in_progress'
-                ? 'teal'
-                : 'warning'
-            }
-          >
+          <Badge variant={task.status === 'completed' ? 'success' : task.status === 'in_progress' ? 'teal' : 'warning'}>
             {task.status.replace('_', ' ')}
           </Badge>
-          <Badge variant="outline">{task.priority}</Badge>
           {task.is_verified && (
             <Badge variant="outline" className="border-teal-200 bg-teal-50 text-teal-700">Verified</Badge>
           )}
-          <Link
-            href={clientPath}
-            className="text-sm text-zinc-500 hover:text-teal-700 hover:underline"
-          >
+          <Link href={clientPath} className="text-sm text-zinc-500 hover:text-teal-700 hover:underline">
             {task.clients?.business_name}
           </Link>
         </div>
+
+        {/* Editable period */}
+        <div className="mt-2 flex items-center gap-2">
+          {editingPeriod ? (
+            <div className="flex items-center gap-2">
+              <Input type="number" min={2000} max={2100} value={periodYear} onChange={(e) => setPeriodYear(e.target.value)} className="w-20 h-7 text-xs" placeholder="Year" />
+              <Input type="number" min={1} max={12} value={periodMonth} onChange={(e) => setPeriodMonth(e.target.value)} className="w-16 h-7 text-xs" placeholder="Month" />
+              <Input type="number" min={1} max={4} value={periodQuarter} onChange={(e) => setPeriodQuarter(e.target.value)} className="w-16 h-7 text-xs" placeholder="Q" />
+              <Button size="sm" variant="ghost" className="h-7 px-2" onClick={async () => { if (await saveField({ period_year: periodYear ? parseInt(periodYear) : null, period_month: periodMonth ? parseInt(periodMonth) : null, period_quarter: periodQuarter ? parseInt(periodQuarter) : null })) setEditingPeriod(false); }} disabled={saving}>
+                <Check className="h-3 w-3 text-teal-600" />
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => { setPeriodYear(task.period_year ?? ''); setPeriodMonth(task.period_month ?? ''); setPeriodQuarter(task.period_quarter ?? ''); setEditingPeriod(false); }}>
+                <X className="h-3 w-3 text-zinc-400" />
+              </Button>
+            </div>
+          ) : (
+            <>
+              <span className="text-xs text-zinc-500">
+                Period: {task.period_month && task.period_year ? `${task.period_month}/${task.period_year}${task.period_quarter ? ` · Q${task.period_quarter}` : ''}` : '—'}
+              </span>
+              {!isClosed && (
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setEditingPeriod(true)}>
+                  <Pencil className="h-3 w-3 text-zinc-400" />
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Editable priority + due date */}
+        <div className="mt-2 flex items-center gap-4 flex-wrap">
+          {editingPriority ? (
+            <div className="flex items-center gap-2">
+              <Select value={priority} onValueChange={(v) => setPriority(v as any)}>
+                <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button size="sm" variant="ghost" className="h-7 px-2" onClick={async () => { if (await saveField({ priority })) setEditingPriority(false); }} disabled={saving}>
+                <Check className="h-3 w-3 text-teal-600" />
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => { setPriority(task.priority); setEditingPriority(false); }}>
+                <X className="h-3 w-3 text-zinc-400" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1">
+              <Badge variant="outline">{task.priority}</Badge>
+              {!isClosed && (
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setEditingPriority(true)}>
+                  <Pencil className="h-3 w-3 text-zinc-400" />
+                </Button>
+              )}
+            </div>
+          )}
+
+          {editingDueDate ? (
+            <div className="flex items-center gap-2">
+              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-7 text-xs w-36" />
+              <Button size="sm" variant="ghost" className="h-7 px-2" onClick={async () => { if (await saveField({ due_date: dueDate || null })) setEditingDueDate(false); }} disabled={saving}>
+                <Check className="h-3 w-3 text-teal-600" />
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => { setDueDate(task.due_date ? task.due_date.slice(0, 10) : ''); setEditingDueDate(false); }}>
+                <X className="h-3 w-3 text-zinc-400" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-zinc-500 flex items-center gap-1"><CalendarDays className="h-3 w-3" /> Due: {task.due_date ? formatDateIST(task.due_date) : '—'}</span>
+              {!isClosed && (
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setEditingDueDate(true)}>
+                  <Pencil className="h-3 w-3 text-zinc-400" />
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
         {task.labels && task.labels.length > 0 && (
           <div className="mt-3 flex items-center gap-1.5">
             {task.labels.map((label: string) => (
-              <Badge key={label} variant="outline" className="bg-zinc-100 text-zinc-600 border-zinc-200">
-                {label}
-              </Badge>
+              <Badge key={label} variant="outline" className="bg-zinc-100 text-zinc-600 border-zinc-200">{label}</Badge>
             ))}
           </div>
         )}
@@ -107,56 +227,111 @@ export default function TaskDetailShell({
       {/* Tabs + Sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <Tabs defaultValue="overview">
+          <Tabs defaultValue="steps">
             <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="steps">Steps ({steps.length})</TabsTrigger>
               <TabsTrigger value="work">Work done</TabsTrigger>
-              <TabsTrigger value="activity">Activity ({activity.length})</TabsTrigger>
               <TabsTrigger value="notes">Notes ({notes.length})</TabsTrigger>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="activity">Activity ({activity.length})</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
-              <div className="tff-card p-6">
-                <h3 className="font-semibold mb-3">Description</h3>
-                <p className="text-sm text-zinc-700 whitespace-pre-wrap leading-relaxed">
-                  {task.description || <span className="text-zinc-400 italic">No description provided.</span>}
-                </p>
-              </div>
-
-              {!isClosed && (
-                <StuckToggle
-                  taskId={task.id}
-                  isStuck={!!task.is_stuck}
-                  reasonCode={task.stuck_reason_code}
-                  reasonNote={task.stuck_reason_note}
-                />
-              )}
-
-              <BlockedOnClientToggle
-                taskId={task.id}
-                isBlocked={!!task.is_blocked_on_client}
-              />
-
-              {task.is_blocked_on_client && <SendReminderButton taskId={task.id} />}
-
-              <TaskActions task={task} team={team} />
-
-              <CustomFieldsPanel
-                taskId={task.id}
-                definitions={cfDefs}
-                values={cfValues}
-                allLabels={allLabels}
-                assignedLabels={assignedLabels}
-              />
-            </TabsContent>
-
-            <TabsContent value="steps">
-              <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} />
+            <TabsContent value="steps" className="space-y-4">
+              <LoadTemplateStepsButton taskId={task.id} subServiceId={task.sub_service_id} currentSteps={steps} />
+              <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} />
             </TabsContent>
 
             <TabsContent value="work">
               <WorkDonePanel taskId={task.id} initial={workdone} currentUserId={currentUserId} />
+            </TabsContent>
+
+            <TabsContent value="notes">
+              <div className="space-y-4">
+                {/* Billing & ARN summary card */}
+                <div className="tff-card p-4">
+                  <h3 className="text-sm font-semibold mb-3">Financial & Reference</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-zinc-500 text-xs">Billable</span>
+                      <p className="font-medium">{task.is_billable ? 'Yes' : 'No'}</p>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500 text-xs">Bill reference</span>
+                      <p className="font-medium">{task.bill_reference || '—'}</p>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500 text-xs">Bill amount</span>
+                      <p className="font-medium">{task.bill_amount ? `₹${task.bill_amount}` : '—'}</p>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500 text-xs">ARN / Ref</span>
+                      <p className="font-medium">{task.arn_reference || '—'}</p>
+                    </div>
+                    {task.arn_reference && (
+                      <div>
+                        <span className="text-zinc-500 text-xs">Client visible</span>
+                        <p className="font-medium">{task.is_arn_client_visible ? 'Yes' : 'No'}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="tff-card p-6">
+                  <h3 className="font-semibold mb-3">Notes ({notes.length})</h3>
+                  <div className="space-y-4">
+                    {notes.map((n: any) => (
+                      <div key={n.id} className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+                        <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 flex justify-between">
+                          <span>{n.users_profile?.full_name}</span>
+                          <span>{timeAgo(n.created_at)}</span>
+                        </div>
+                        <p className="text-xs text-zinc-700 leading-relaxed whitespace-pre-wrap">{n.note_text}</p>
+                      </div>
+                    ))}
+                    {notes.length === 0 && <p className="text-zinc-300 text-xs text-center py-4 italic">No internal notes yet.</p>}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="overview" className="space-y-6">
+              {/* Editable description */}
+              <div className="tff-card p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold">Description</h3>
+                  {!isClosed && !editingDesc && (
+                    <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEditingDesc(true)}>
+                      <Pencil className="h-3.5 w-3.5 text-zinc-400" />
+                    </Button>
+                  )}
+                </div>
+                {editingDesc ? (
+                  <div className="space-y-2">
+                    <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} autoFocus />
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={async () => { if (await saveField({ description: description || null })) setEditingDesc(false); }} disabled={saving}>
+                        {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => { setDescription(task.description || ''); setEditingDesc(false); }}>Cancel</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-zinc-700 whitespace-pre-wrap leading-relaxed">
+                    {task.description || <span className="text-zinc-400 italic">No description provided.</span>}
+                  </p>
+                )}
+              </div>
+
+              {!isClosed && (
+                <StuckToggle taskId={task.id} isStuck={!!task.is_stuck} reasonCode={task.stuck_reason_code} reasonNote={task.stuck_reason_note} />
+              )}
+
+              <BlockedOnClientToggle taskId={task.id} isBlocked={!!task.is_blocked_on_client} />
+              {task.is_blocked_on_client && <SendReminderButton taskId={task.id} />}
+
+              <TaskActions task={task} team={team} />
+
+              <CustomFieldsPanel taskId={task.id} definitions={cfDefs} values={cfValues} allLabels={allLabels} assignedLabels={assignedLabels} />
             </TabsContent>
 
             <TabsContent value="activity">
@@ -182,24 +357,6 @@ export default function TaskDetailShell({
                 </div>
               </div>
             </TabsContent>
-
-            <TabsContent value="notes">
-              <div className="tff-card p-6">
-                <h3 className="font-semibold mb-3">Notes ({notes.length})</h3>
-                <div className="space-y-4">
-                  {notes.map((n: any) => (
-                    <div key={n.id} className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
-                      <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 flex justify-between">
-                        <span>{n.users_profile?.full_name}</span>
-                        <span>{timeAgo(n.created_at)}</span>
-                      </div>
-                      <p className="text-xs text-zinc-700 leading-relaxed whitespace-pre-wrap">{n.note_text}</p>
-                    </div>
-                  ))}
-                  {notes.length === 0 && <p className="text-zinc-300 text-xs text-center py-4 italic">No internal notes yet.</p>}
-                </div>
-              </div>
-            </TabsContent>
           </Tabs>
         </div>
 
@@ -221,7 +378,7 @@ export default function TaskDetailShell({
               <DetailItem label="Reviewer" value={task.reviewer?.full_name || '—'} />
               <DetailItem label="Service" value={task.sub_services ? `${task.sub_services.services?.name ?? ''} › ${task.sub_services.name}` : '—'} />
               {task.is_billable && (
-                <DetailItem label="Billing" value={`Billable · ${task.bill_reference || 'No ref'}`} />
+                <DetailItem label="Billing" value={`Billable · ${task.bill_reference || 'No ref'} · ₹${task.bill_amount ?? 0}`} />
               )}
               {task.arn_reference && (
                 <DetailItem label="ARN / Ref" value={`${task.arn_reference}${task.is_arn_client_visible ? ' (client visible)' : ''}`} />

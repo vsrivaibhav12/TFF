@@ -23,7 +23,7 @@ export interface TransitionInput {
 export async function transitionTaskStatus(input: TransitionInput) {
   const task = await taskRepo.getTask(input.taskId);
   if (!task) throw new ServiceError('Task not found', 'NOT_FOUND');
-  if (!canModifyTask(task as any)) {
+  if (!canModifyTask(task as any, input.toStatus)) {
     throw new ServiceError('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
   }
   

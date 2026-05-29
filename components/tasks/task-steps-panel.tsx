@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,11 +28,15 @@ export default function TaskStepsPanel({
   initial,
   editable = true,
   allowAddStep = true,
+  enforceSequence = false,
+  status,
 }: {
   taskId: string;
   initial: Step[];
   editable?: boolean;
   allowAddStep?: boolean;
+  enforceSequence?: boolean;
+  status?: string;
 }) {
   const [steps, setSteps] = useState<Step[]>(initial);
   const [draft, setDraft] = useState('');
@@ -42,12 +46,38 @@ export default function TaskStepsPanel({
   const [showHelp, setShowHelp] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const completed = steps.filter((s) => s.completed_at).length;
-  const total = steps.length;
+  const isClosed = status === 'completed' || status === 'cancelled';
+  const canEdit = editable && !isClosed;
+
+  const sortedSteps = useMemo(() => {
+    return [...steps].sort((a, b) => a.step_order - b.step_order);
+  }, [steps]);
+
+  const completed = sortedSteps.filter((s) => s.completed_at).length;
+  const total = sortedSteps.length;
   const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
 
   function toggle(s: Step) {
     const next = !s.completed_at;
+
+    if (next && enforceSequence) {
+      const idx = sortedSteps.findIndex((x) => x.id === s.id);
+      const prevIncomplete = sortedSteps.slice(0, idx).find((x) => !x.completed_at);
+      if (prevIncomplete) {
+        toast.error(`Complete step ${prevIncomplete.step_order} first`);
+        return;
+      }
+    }
+
+    if (!next && enforceSequence) {
+      const idx = sortedSteps.findIndex((x) => x.id === s.id);
+      const nextComplete = sortedSteps.slice(idx + 1).find((x) => x.completed_at);
+      if (nextComplete) {
+        toast.error(`Uncheck step ${nextComplete.step_order} first`);
+        return;
+      }
+    }
+
     setSteps((arr) => arr.map((x) => x.id === s.id ? { ...x, completed_at: next ? new Date().toISOString() : null } : x));
     startTransition(async () => {
       const r = await toggleTaskStepAction({ step_id: s.id, task_id: taskId, completed: next });
@@ -110,8 +140,8 @@ export default function TaskStepsPanel({
 
   function moveStep(index: number, dir: -1 | 1) {
     const newIndex = index + dir;
-    if (newIndex < 0 || newIndex >= steps.length) return;
-    const next = [...steps];
+    if (newIndex < 0 || newIndex >= sortedSteps.length) return;
+    const next = [...sortedSteps];
     const [moved] = next.splice(index, 1);
     next.splice(newIndex, 0, moved);
     const reordered = next.map((s, i) => ({ ...s, step_order: i + 1 }));
@@ -130,7 +160,7 @@ export default function TaskStepsPanel({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold flex items-center gap-2"><ListChecks className="h-4 w-4 text-teal-600" /> Checklist</h3>
-          {editable && (
+          {canEdit && (
             <button onClick={() => setShowHelp((v) => !v)} className="text-zinc-300 hover:text-zinc-500" title="How to use checklist">
               <HelpCircle className="h-4 w-4" />
             </button>
@@ -146,6 +176,8 @@ export default function TaskStepsPanel({
           <p><strong>Pencil</strong> edits the step title and description.</p>
           <p><strong>Trash</strong> deletes a step permanently.</p>
           <p>Type in the box below and click <strong>Add</strong> to create new ad-hoc steps.</p>
+          {enforceSequence && <p className="text-teal-700"><strong>Sequence enforced:</strong> complete steps in order; uncheck in reverse order.</p>}
+          {isClosed && <p className="text-red-600"><strong>Locked:</strong> this task is closed — steps cannot be edited.</p>}
         </div>
       )}
 
@@ -154,27 +186,27 @@ export default function TaskStepsPanel({
           <div className="h-full bg-teal-600 transition-all" style={{ width: `${pct}%` }} />
         </div>
       )}
-      {steps.length === 0 ? (
+      {sortedSteps.length === 0 ? (
         <div className="space-y-2">
           <p className="text-sm text-zinc-500">No checklist for this task yet.</p>
-          {editable && (
+          {canEdit && (
             <p className="text-xs text-zinc-400">If this task is linked to a sub-service with an SOP, steps are auto-added when the task is created. Otherwise, add your own steps below.</p>
           )}
         </div>
       ) : (
-        <ul className="space-y-2">{steps.map((s, idx) => {
+        <ul className="space-y-2">{sortedSteps.map((s, idx) => {
           const done = !!s.completed_at;
           const isEditing = editingId === s.id;
           return (
             <li key={s.id} className={cn('flex items-start gap-2 rounded-lg border border-zinc-200 p-3', done && 'bg-teal-50/30 border-teal-200')}>
-              {editable && (
+              {canEdit && (
                 <div className="flex flex-col items-center gap-0.5 pt-0.5">
                   <button onClick={() => moveStep(idx, -1)} disabled={idx === 0 || pending} className="text-zinc-300 hover:text-zinc-600 disabled:opacity-30" title="Move up"><ArrowUp className="h-3 w-3" /></button>
                   <GripVertical className="h-3 w-3 text-zinc-300" />
-                  <button onClick={() => moveStep(idx, 1)} disabled={idx === steps.length - 1 || pending} className="text-zinc-300 hover:text-zinc-600 disabled:opacity-30" title="Move down"><ArrowDown className="h-3 w-3" /></button>
+                  <button onClick={() => moveStep(idx, 1)} disabled={idx === sortedSteps.length - 1 || pending} className="text-zinc-300 hover:text-zinc-600 disabled:opacity-30" title="Move down"><ArrowDown className="h-3 w-3" /></button>
                 </div>
               )}
-              <Checkbox checked={done} onCheckedChange={() => toggle(s)} disabled={pending} data-testid={`step-${s.id}`} className="mt-1" />
+              <Checkbox checked={done} onCheckedChange={() => toggle(s)} disabled={pending || !canEdit} data-testid={`step-${s.id}`} className="mt-1" />
               <div className="flex-1 min-w-0">
                 {isEditing ? (
                   <div className="space-y-2">
@@ -198,9 +230,9 @@ export default function TaskStepsPanel({
                 )}
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                {editable && !s.source_sop_step_id && <Badge variant="outline" className="text-[9px]">ad-hoc</Badge>}
-                {editable && !s.is_required && <Badge variant="outline" className="text-[9px]">optional</Badge>}
-                {editable && !isEditing && !done && (
+                {canEdit && !s.source_sop_step_id && <Badge variant="outline" className="text-[9px]">ad-hoc</Badge>}
+                {canEdit && !s.is_required && <Badge variant="outline" className="text-[9px]">optional</Badge>}
+                {canEdit && !isEditing && !done && (
                   <>
                     <button onClick={() => startEdit(s)} className="p-1 rounded hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700" title="Edit step"><Pencil className="h-3 w-3" /></button>
                     <button onClick={() => removeStep(s.id)} className="p-1 rounded hover:bg-red-50 text-zinc-400 hover:text-red-600" title="Delete step"><Trash2 className="h-3 w-3" /></button>
@@ -211,7 +243,7 @@ export default function TaskStepsPanel({
           );
         })}</ul>
       )}
-      {allowAddStep && (
+      {allowAddStep && canEdit && (
         <div className="flex items-center gap-2 pt-2 border-t border-zinc-100">
           <Input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Add ad-hoc step…" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addStep(); } }} data-testid="task-step-input" />
           <Button onClick={addStep} disabled={pending || !draft.trim()} size="sm" data-testid="task-step-add"><Plus className="h-3 w-3" /> Add</Button>

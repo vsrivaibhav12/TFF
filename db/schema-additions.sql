@@ -290,8 +290,9 @@ CREATE TABLE IF NOT EXISTS task_steps (
   completed_by UUID REFERENCES users_profile(id),
   completion_note TEXT,
 
-  -- Provenance: which SOP step seeded this row (NULL for ad-hoc steps)
+  -- Provenance: which SOP step or template step seeded this row (NULL for ad-hoc steps)
   source_sop_step_id UUID REFERENCES sub_service_sop_steps(id),
+  source_template_step_id UUID REFERENCES task_template_steps(id),
 
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),

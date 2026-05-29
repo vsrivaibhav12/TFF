@@ -10,8 +10,9 @@ describe('Task Modify Guard', () => {
     assert.ok(canModifyTask({ status: 'cancelled' }));
   });
 
-  test('cannot modify completed task', () => {
+  test('cannot modify completed task except reopen', () => {
     assert.ok(!canModifyTask({ status: 'completed' }));
+    assert.ok(canModifyTask({ status: 'completed' }, 'in_progress'));
   });
 
   test('cannot modify deleted task regardless of status', () => {

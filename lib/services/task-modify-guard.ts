@@ -1,6 +1,9 @@
-export function canModifyTask(task: { status: string; is_deleted?: boolean | null }): boolean {
-  if (task.status === 'completed') return false;
+export function canModifyTask(
+  task: { status: string; is_deleted?: boolean | null },
+  toStatus?: string
+): boolean {
   if (task.is_deleted) return false;
+  if (task.status === 'completed' && toStatus !== 'in_progress') return false;
   return true;
 }
 
