@@ -3,6 +3,7 @@ import { listTasks } from '@/lib/repositories/tasks';
 import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
 import { listSubServices } from '@/lib/repositories/services';
 import { listSavedViews } from '@/lib/actions/saved-views';
+import { getCurrentUser } from '@/lib/auth/require-role';
 import { PageHeader } from '@/components/ui/page-header';
 import ExportButton from '@/components/sophistication/export-button';
 import EmptyState from '@/components/sophistication/empty-state';
@@ -25,11 +26,14 @@ function buildTaskUrl(base: string, sp: Record<string, string | undefined>, over
 }
 
 export default async function TeamTasksList({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string } }) {
+  const me = await getCurrentUser();
   const status = searchParams.status?.split(',').filter(Boolean) as any;
   const priority = searchParams.priority?.split(',').filter(Boolean) as any;
+  // Default to showing the current user's assigned tasks unless a specific filter is set
+  const assignedTo = searchParams.assigned ?? me?.id ?? undefined;
 
   const [tasks, clients, team, subServices, views] = await Promise.all([
-    listTasks({ status, priority, assignedTo: searchParams.assigned, clientId: searchParams.client, subServiceId: searchParams.sub_service, dueFrom: searchParams.due_from, dueTo: searchParams.due_to }),
+    listTasks({ status, priority, assignedTo, clientId: searchParams.client, subServiceId: searchParams.sub_service, dueFrom: searchParams.due_from, dueTo: searchParams.due_to }),
     listAccessibleClients(),
     listTeamUsers(),
     listSubServices(),

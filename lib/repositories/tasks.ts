@@ -16,7 +16,7 @@ export async function listTasks(opts: {
   const sb = createClient();
   let q = sb
     .from('tasks')
-    .select('id, task_number, title, status, priority, due_date, period_year, period_month, period_quarter, assigned_to, reviewer_id, sub_service_id, client_id, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status, is_billable, bill_reference, is_verified, created_at, updated_at, clients!tasks_client_id_fkey(id, business_name)')
+    .select('id, task_number, title, status, priority, due_date, period_year, period_month, period_quarter, assigned_to, reviewer_id, sub_service_id, client_id, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status, is_billable, bill_reference, is_verified, created_at, updated_at, clients!tasks_client_id_fkey(id, business_name), assignee:users_profile!tasks_assigned_to_fkey(id, full_name, email)')
     .eq('is_deleted', false)
     .order('due_date', { ascending: true, nullsFirst: false });
   if (opts.clientId) q = q.eq('client_id', opts.clientId);

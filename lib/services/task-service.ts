@@ -16,6 +16,8 @@ export interface TransitionInput {
   note?: string;
   arnReference?: string;
   isArnClientVisible?: boolean;
+  billReference?: string;
+  billAmount?: number;
 }
 
 export async function transitionTaskStatus(input: TransitionInput) {
@@ -65,6 +67,8 @@ export async function transitionTaskStatus(input: TransitionInput) {
     updates.verification_status = 'pending';
     if (input.arnReference !== undefined) updates.arn_reference = input.arnReference || null;
     if (input.isArnClientVisible !== undefined) updates.is_arn_client_visible = input.isArnClientVisible;
+    if (input.billReference !== undefined) updates.bill_reference = input.billReference || null;
+    if (input.billAmount !== undefined) updates.bill_amount = input.billAmount ?? null;
   }
 
   await taskRepo.updateTaskRecord(input.taskId, updates);

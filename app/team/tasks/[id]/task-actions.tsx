@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,20 @@ export default function TaskActions({ task, team }: { task: any; team: any[] }) 
   const [transitionTarget, setTransitionTarget] = useState('');
   const [arnReference, setArnReference] = useState(task.arn_reference || '');
   const [isArnClientVisible, setIsArnClientVisible] = useState(task.is_arn_client_visible || false);
+  const [billReference, setBillReference] = useState(task.bill_reference || '');
+  const [billAmount, setBillAmount] = useState(task.bill_amount ? String(task.bill_amount) : '');
   const [assignedTo, setAssignedTo] = useState(task.assigned_to || '');
   const [reviewerId, setReviewerId] = useState(task.reviewer_id || '');
+
+  // Sync local state when the task prop updates after router.refresh()
+  useEffect(() => {
+    setAssignedTo(task.assigned_to || '');
+    setReviewerId(task.reviewer_id || '');
+    setArnReference(task.arn_reference || '');
+    setIsArnClientVisible(task.is_arn_client_visible || false);
+    setBillReference(task.bill_reference || '');
+    setBillAmount(task.bill_amount ? String(task.bill_amount) : '');
+  }, [task.assigned_to, task.reviewer_id, task.arn_reference, task.is_arn_client_visible, task.bill_reference, task.bill_amount]);
 
   const candidates = nextStatuses(task.status);
   const isClosed = task.status === 'completed' || task.status === 'cancelled';
@@ -32,10 +44,14 @@ export default function TaskActions({ task, team }: { task: any; team: any[] }) 
       if (transitionTarget === 'completed') {
         payload.arn_reference = arnReference || null;
         payload.is_arn_client_visible = isArnClientVisible;
+        if (task.is_billable) {
+          payload.bill_reference = billReference || null;
+          payload.bill_amount = billAmount ? parseFloat(billAmount) : null;
+        }
       }
       const r = await transitionTaskAction(payload);
       if (!r.success) toast.error(r.error);
-      else { toast.success(`Status updated to ${transitionTarget}`); setNote(''); setTransitionTarget(''); setArnReference(''); setIsArnClientVisible(false); router.refresh(); }
+      else { toast.success(`Status updated to ${transitionTarget}`); setNote(''); setTransitionTarget(''); setArnReference(''); setIsArnClientVisible(false); setBillReference(''); setBillAmount(''); router.refresh(); }
     });
   }
   function addNote() {
@@ -108,12 +124,20 @@ export default function TaskActions({ task, team }: { task: any; team: any[] }) 
             <Button onClick={doTransition} disabled={!transitionTarget || pending} data-testid="transition-submit">Apply</Button>
           </div>
           {transitionTarget === 'completed' && (
-            <div className="flex items-center gap-3">
-              <Input className="flex-1" value={arnReference} onChange={(e) => setArnReference(e.target.value)} placeholder="ARN / Acknowledgement / Reference number (optional)" />
-              <div className="flex items-center gap-2">
-                <Checkbox id="arn-visible" checked={isArnClientVisible} onCheckedChange={(v) => setIsArnClientVisible(v === true)} />
-                <Label htmlFor="arn-visible" className="cursor-pointer text-xs">Client visible</Label>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Input className="flex-1" value={arnReference} onChange={(e) => setArnReference(e.target.value)} placeholder="ARN / Acknowledgement / Reference number (optional)" />
+                <div className="flex items-center gap-2">
+                  <Checkbox id="arn-visible" checked={isArnClientVisible} onCheckedChange={(v) => setIsArnClientVisible(v === true)} />
+                  <Label htmlFor="arn-visible" className="cursor-pointer text-xs">Client visible</Label>
+                </div>
               </div>
+              {task.is_billable && (
+                <div className="flex items-center gap-3">
+                  <Input className="flex-1" value={billReference} onChange={(e) => setBillReference(e.target.value)} placeholder="Bill reference *" />
+                  <Input type="number" min={0} step={0.01} className="w-32" value={billAmount} onChange={(e) => setBillAmount(e.target.value)} placeholder="Amount *" />
+                </div>
+              )}
             </div>
           )}
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional note (will be saved with the transition)" rows={2} data-testid="transition-note" />

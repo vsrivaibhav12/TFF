@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
@@ -20,10 +21,26 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
     const parsed = createTaskSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     
+    // Inherit is_billable from sub-service if linked
+    let isBillable = parsed.data.is_billable ?? false;
+    if (parsed.data.sub_service_id) {
+      const sb = createClient();
+      const { data: sub } = await sb
+        .from('sub_services')
+        .select('is_billable')
+        .eq('id', parsed.data.sub_service_id)
+        .maybeSingle();
+      if (sub && sub.is_billable !== null) {
+        isBillable = sub.is_billable;
+      }
+    }
+    
     const data = await taskRepo.createTaskWithAutoNumber({
       ...parsed.data,
       status: 'pending',
-      bill_amount: parsed.data.bill_amount ?? null,
+      is_billable: isBillable,
+      bill_amount: null,
+      bill_reference: null,
     });
     
     await taskRepo.addTaskActivity({
@@ -63,7 +80,7 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
   }
 }
 
-export async function transitionTaskAction(input: { task_id: string; to_status: TaskStatus; note?: string; arn_reference?: string | null; is_arn_client_visible?: boolean }): Promise<ActionResult<void>> {
+export async function transitionTaskAction(input: { task_id: string; to_status: TaskStatus; note?: string; arn_reference?: string | null; is_arn_client_visible?: boolean; bill_reference?: string | null; bill_amount?: number | null }): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team', 'client']);
     if (me.role !== 'client') await requireCapability(me, 'tasks.complete');
@@ -76,7 +93,10 @@ export async function transitionTaskAction(input: { task_id: string; to_status: 
       return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
     }
     if (parsed.data.to_status === 'completed') {
-      const check = canCompleteTask(task as any);
+      const check = canCompleteTask(task as any, {
+        bill_reference: parsed.data.bill_reference ?? undefined,
+        bill_amount: parsed.data.bill_amount ?? undefined,
+      });
       if (!check.ok) return fail(check.reason, 'BILLING_REQUIRED');
     }
     
@@ -87,6 +107,8 @@ export async function transitionTaskAction(input: { task_id: string; to_status: 
       note: parsed.data.note,
       arnReference: parsed.data.arn_reference ?? undefined,
       isArnClientVisible: parsed.data.is_arn_client_visible ?? undefined,
+      billReference: parsed.data.bill_reference ?? undefined,
+      billAmount: parsed.data.bill_amount ?? undefined,
     });
     
     revalidatePath('/team/tasks');
@@ -490,6 +512,80 @@ export async function reopenTaskAction(input: { task_id: string; reason: string 
     revalidatePath('/team/tasks');
     revalidatePath('/admin/tasks');
     return ok(undefined);
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  }
+}
+
+
+const bulkCreateTasksSchema = z.object({
+  client_ids: z.array(z.string().uuid()).min(1),
+  sub_service_id: z.string().uuid(),
+  assigned_to: z.string().uuid().optional().nullable(),
+  due_date: z.string().date(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
+  period_year: z.number().int().min(2000).max(2100),
+  period_month: z.number().int().min(1).max(12).optional().nullable(),
+  period_quarter: z.number().int().min(1).max(4).optional().nullable(),
+});
+
+export async function bulkCreateTasksAction(input: z.infer<typeof bulkCreateTasksSchema>): Promise<ActionResult<{ created: number }>> {
+  try {
+    const me = await requireRole(['admin', 'team']);
+    await requireCapability(me, 'tasks.create');
+    const parsed = bulkCreateTasksSchema.safeParse(input);
+    if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
+
+    const sb = createClient();
+
+    // Fetch sub-service details for naming and is_billable
+    const { data: subService } = await sb
+      .from('sub_services')
+      .select('name, is_billable')
+      .eq('id', parsed.data.sub_service_id)
+      .maybeSingle();
+
+    let created = 0;
+    for (const clientId of parsed.data.client_ids) {
+      const { data: client } = await sb
+        .from('clients')
+        .select('business_name')
+        .eq('id', clientId)
+        .maybeSingle();
+
+      const clientName = client?.business_name ?? 'Client';
+      const periodLabel = parsed.data.period_month
+        ? `${parsed.data.period_month}/${parsed.data.period_year}`
+        : `${parsed.data.period_year}`;
+      const title = `${clientName} — ${subService?.name ?? 'Task'} — ${periodLabel}`;
+
+      try {
+        await taskRepo.createTaskWithAutoNumber({
+          client_id: clientId,
+          sub_service_id: parsed.data.sub_service_id,
+          title,
+          description: '',
+          priority: parsed.data.priority,
+          assigned_to: parsed.data.assigned_to,
+          due_date: parsed.data.due_date,
+          period_year: parsed.data.period_year,
+          period_month: parsed.data.period_month,
+          period_quarter: parsed.data.period_quarter,
+          status: 'pending',
+          is_billable: subService?.is_billable ?? false,
+          bill_amount: null,
+          bill_reference: null,
+        });
+        created++;
+      } catch (e: any) {
+        console.error('Bulk task creation failed for client', clientId, e);
+      }
+    }
+
+    revalidatePath('/team/tasks');
+    revalidatePath('/admin/tasks');
+    revalidatePath('/portal/tasks');
+    return ok({ created });
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
   }

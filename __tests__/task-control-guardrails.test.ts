@@ -25,15 +25,21 @@ describe('Task Modify Guard', () => {
     assert.ok(r.ok);
   });
 
-  test('can complete billable task with bill reference', () => {
-    const r = canCompleteTask({ status: 'in_progress', is_billable: true, bill_reference: 'INV-001' });
+  test('can complete billable task with bill reference and amount', () => {
+    const r = canCompleteTask({ status: 'in_progress', is_billable: true, bill_reference: 'INV-001', bill_amount: 5000 });
     assert.ok(r.ok);
   });
 
   test('cannot complete billable task without bill reference', () => {
-    const r = canCompleteTask({ status: 'in_progress', is_billable: true, bill_reference: null });
+    const r = canCompleteTask({ status: 'in_progress', is_billable: true, bill_reference: null, bill_amount: 5000 });
     assert.ok(!r.ok);
     if (!r.ok) assert.equal(r.reason, 'Billable tasks require a bill reference before completion');
+  });
+
+  test('cannot complete billable task without bill amount', () => {
+    const r = canCompleteTask({ status: 'in_progress', is_billable: true, bill_reference: 'INV-001', bill_amount: null });
+    assert.ok(!r.ok);
+    if (!r.ok) assert.equal(r.reason, 'Billable tasks require a bill amount before completion');
   });
 
   test('cannot complete already-completed task', () => {

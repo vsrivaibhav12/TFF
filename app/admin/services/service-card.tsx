@@ -12,7 +12,9 @@ import {
   ChevronRight,
   ListChecks,
   Footprints,
+  Users,
 } from 'lucide-react';
+import Link from 'next/link';
 import ServiceDialog from './service-dialog';
 import SubServiceDialog from './sub-service-dialog';
 import TaskTemplatePanel from './task-template-panel';
@@ -183,15 +185,23 @@ export default function ServiceCard({
                       </span>
                     )}
                   </div>
-                  <SubServiceDialog
-                    serviceId={ss.service_id}
-                    serviceName={ss.services?.name ?? ''}
-                    initial={ss}
-                  >
-                    <button className="text-[11px] text-zinc-400 hover:text-teal-700 font-medium transition-colors shrink-0">
-                      Edit
-                    </button>
-                  </SubServiceDialog>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/admin/services/sub-services/${ss.id}/clients`}
+                      className="inline-flex items-center gap-1 text-[11px] text-teal-700 hover:text-teal-800 font-medium transition-colors"
+                    >
+                      <Users className="h-3 w-3" /> Clients
+                    </Link>
+                    <SubServiceDialog
+                      serviceId={ss.service_id}
+                      serviceName={ss.services?.name ?? ''}
+                      initial={ss}
+                    >
+                      <button className="text-[11px] text-zinc-400 hover:text-teal-700 font-medium transition-colors shrink-0">
+                        Edit
+                      </button>
+                    </SubServiceDialog>
+                  </div>
                 </div>
                 <TaskTemplatePanel
                   subService={ss}

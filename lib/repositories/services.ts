@@ -59,3 +59,14 @@ export async function listClientSubServices(clientId: string) {
   if (error) throw error;
   return data ?? [];
 }
+
+export async function listClientsBySubService(subServiceId: string) {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from('client_sub_services')
+    .select('id, is_active, clients(id, business_name, pan, gstin, city)')
+    .eq('sub_service_id', subServiceId)
+    .eq('clients.is_deleted', false);
+  if (error) throw error;
+  return data ?? [];
+}

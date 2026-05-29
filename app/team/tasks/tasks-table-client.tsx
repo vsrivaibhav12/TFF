@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatDateIST, cn } from '@/lib/utils';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 import { transitionTaskAction } from '@/lib/actions/tasks';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, User } from 'lucide-react';
 
 interface TaskRow {
   id: string;
@@ -20,6 +20,7 @@ interface TaskRow {
   period_month?: number | null;
   is_verified?: boolean;
   clients?: { business_name: string } | null;
+  assignee?: { id: string; full_name: string; email: string } | null;
 }
 
 export default function TasksTableClient({ tasks }: { tasks: TaskRow[] }) {
@@ -57,6 +58,7 @@ export default function TasksTableClient({ tasks }: { tasks: TaskRow[] }) {
               <TableHead className="w-24">Number</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Client</TableHead>
+              <TableHead>Assignee</TableHead>
               <TableHead>Period</TableHead>
               <TableHead>Due</TableHead>
               <TableHead>Status</TableHead>
@@ -70,6 +72,13 @@ export default function TasksTableClient({ tasks }: { tasks: TaskRow[] }) {
               <TableCell><span className="text-xs font-mono text-zinc-500">{t.task_number ?? '—'}</span></TableCell>
               <TableCell><Link href={`/team/tasks/${t.id}`} className="font-medium hover:text-teal-700">{t.title}</Link></TableCell>
               <TableCell>{t.clients?.business_name}</TableCell>
+              <TableCell>
+                {t.assignee?.full_name ? (
+                  <span className="text-sm text-zinc-700">{t.assignee.full_name}</span>
+                ) : (
+                  <span className="text-sm text-zinc-400">Unassigned</span>
+                )}
+              </TableCell>
               <TableCell className="text-zinc-500">{t.period_month && t.period_year ? `${t.period_month}/${t.period_year}` : '—'}</TableCell>
               <TableCell>{formatDateIST(t.due_date)}</TableCell>
               <TableCell><Badge variant={t.status === 'completed' ? 'success' : t.status === 'in_progress' ? 'teal' : 'warning'}>{t.status.replace(/_/g, ' ')}</Badge></TableCell>

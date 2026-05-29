@@ -89,6 +89,8 @@ export const transitionTaskSchema = z.object({
   note: z.string().max(2000).optional(),
   arn_reference: z.string().max(120).optional().nullable(),
   is_arn_client_visible: z.boolean().optional(),
+  bill_reference: z.string().max(80).optional().nullable(),
+  bill_amount: z.number().nonnegative().optional().nullable(),
 });
 
 export const filingStatusEnum = z.enum(['not_started', 'data_received', 'in_progress', 'review', 'filed']);
