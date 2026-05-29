@@ -52,19 +52,26 @@ export async function setPortalVisibilityAction(input: {
  * Seed dashboard + tasks + queries when admin first toggles portal_enabled=true.
  * Idempotent (does nothing if rows already exist).
  */
-export async function seedDefaultPortalVisibility(clientId: string, performedBy: string) {
-  const sb = createClient();
-  const defaults: PortalModule[] = ['portal.dashboard', 'portal.tasks', 'portal.queries'];
-  for (const mod of defaults) {
-    await sb.from('client_portal_visibility').upsert(
-      {
-        client_id: clientId,
-        module_key: mod,
-        is_enabled: true,
-        updated_at: new Date().toISOString(),
-        updated_by: performedBy,
-      },
-      { onConflict: 'client_id,module_key' },
-    );
+export async function seedDefaultPortalVisibility(clientId: string, performedBy: string): Promise<ActionResult<void>> {
+  try {
+    const me = await requireRole(['admin']);
+    await requireCapability(me, 'clients.toggle_portal');
+    const sb = createClient();
+    const defaults: PortalModule[] = ['portal.dashboard', 'portal.tasks', 'portal.queries'];
+    for (const mod of defaults) {
+      await sb.from('client_portal_visibility').upsert(
+        {
+          client_id: clientId,
+          module_key: mod,
+          is_enabled: true,
+          updated_at: new Date().toISOString(),
+          updated_by: performedBy,
+        },
+        { onConflict: 'client_id,module_key' },
+      );
+    }
+    return ok(undefined);
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
   }
 }

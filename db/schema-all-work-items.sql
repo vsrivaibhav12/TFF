@@ -75,14 +75,14 @@ UNION ALL
 SELECT
   q.id,
   'query' AS source_type,
-  q.query_number AS reference_number,
+  NULL::text AS reference_number,
   q.subject AS title,
   q.status,
   q.priority,
   NULL::date AS due_date,
   q.created_at,
   q.updated_at,
-  q.raised_by AS assigned_to,
+  q.created_by AS assigned_to,
   NULL::uuid AS reviewer_id,
   q.client_id,
   c.business_name AS client_name,
@@ -100,7 +100,7 @@ SELECT
   NULL::text AS service_name
 FROM queries q
 LEFT JOIN clients c ON c.id = q.client_id
-WHERE q.is_deleted = false
+WHERE q.status != 'closed'
 
 UNION ALL
 
@@ -113,8 +113,8 @@ SELECT
   e.status,
   'medium' AS priority,
   e.due_date,
-  e.created_at,
-  e.updated_at,
+  e.generated_at AS created_at,
+  e.generated_at AS updated_at,
   NULL::uuid AS assigned_to,
   NULL::uuid AS reviewer_id,
   e.client_id,
@@ -139,5 +139,5 @@ WHERE e.task_id IS NULL;  -- only show virtual events not yet linked to a task
 -- Indexes for common filters (on the underlying tables, not the view)
 CREATE INDEX IF NOT EXISTS idx_tasks_source_type ON tasks(is_deleted, status, due_date) WHERE is_deleted = false;
 CREATE INDEX IF NOT EXISTS idx_notices_source_type ON notices(is_deleted, status, due_date) WHERE is_deleted = false;
-CREATE INDEX IF NOT EXISTS idx_queries_source_type ON queries(is_deleted, status, created_at) WHERE is_deleted = false;
+CREATE INDEX IF NOT EXISTS idx_queries_source_type ON queries(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_compliance_events_unlinked ON compliance_calendar_events(task_id, due_date) WHERE task_id IS NULL;

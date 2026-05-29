@@ -266,6 +266,7 @@ export async function commitClientImportAction(input: {
     if (batchErr) return fail(`Batch audit failed: ${batchErr.message}`, 'DB');
 
     revalidatePath('/admin/clients');
+    revalidatePath('/team/clients');
     revalidatePath('/admin/clients/import');
     return ok({ batch_id: batch.id, inserted, updated, skipped, failed, errors });
   } catch (e: any) {

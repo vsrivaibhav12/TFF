@@ -40,11 +40,12 @@ export async function updateBizlensReport(reportId: string, updates: Partial<biz
 }
 
 export async function getBizlensReports(clientId: string) {
-  // Read actions usually don't need ActionResult wrapping if they are simple fetches
+  await requireRole(['admin', 'team', 'client']);
   return await bizlensRepo.listReportsByClient(clientId);
 }
 
 export async function getBizlensReport(reportId: string) {
+  await requireRole(['admin', 'team', 'client']);
   return await bizlensRepo.getReportById(reportId);
 }
 

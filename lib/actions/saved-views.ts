@@ -46,15 +46,19 @@ export async function deleteSavedViewAction(id: string): Promise<ActionResult<vo
   }
 }
 
-export async function listSavedViews(scope: string) {
-  const sb = createClient();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return [];
-  const { data } = await sb
-    .from('saved_views')
-    .select('id, name, is_default, filters')
-    .eq('user_id', user.id)
-    .eq('scope', scope)
-    .order('name', { ascending: true });
-  return data ?? [];
+export async function listSavedViews(scope: string): Promise<any[]> {
+  try {
+    const sb = createClient();
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return [];
+    const { data } = await sb
+      .from('saved_views')
+      .select('id, name, is_default, filters')
+      .eq('user_id', user.id)
+      .eq('scope', scope)
+      .order('name', { ascending: true });
+    return data ?? [];
+  } catch {
+    return [];
+  }
 }

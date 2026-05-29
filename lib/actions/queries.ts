@@ -15,16 +15,26 @@ export async function createQueryAction(input: CreateQueryInput): Promise<Action
     const parsed = createQuerySchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const sb = createClient();
-    // H-9: Verify team members are assigned to the client they're creating a query for
+    // H-9: Verify team members are assigned to the client they're creating a query for,
+    // OR they hold the queries.assign capability which grants cross-client access.
     if (me.role === 'team') {
       const { data: assignment } = await sb
         .from('team_client_assignment')
         .select('id')
-        .eq('user_id', me.id)
+        .eq('team_user_id', me.id)
         .eq('client_id', parsed.data.client_id)
         .maybeSingle();
       if (!assignment) {
-        return fail('You are not assigned to this client', 'NOT_ASSIGNED');
+        const { data: cap } = await sb
+          .from('staff_capabilities')
+          .select('id')
+          .eq('user_id', me.id)
+          .eq('capability', 'queries.assign')
+          .is('revoked_at', null)
+          .maybeSingle();
+        if (!cap) {
+          return fail('You are not assigned to this client', 'NOT_ASSIGNED');
+        }
       }
     }
     const { data, error } = await sb

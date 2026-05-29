@@ -9,6 +9,7 @@
     "lint": "next lint",
     "db:apply-schema": "tsx scripts/apply-schema.ts",
     "db:apply-schema-additions": "tsx scripts/apply-schema-additions.ts",
+    "db:apply-rls-capabilities": "tsx scripts/apply-rls-capabilities.ts",
     "db:apply-phase-2": "tsx scripts/apply-phase-2-task-enhancements.ts",
     "db:fix-missing-columns": "tsx scripts/apply-fix-all-missing-columns.ts",
     "db:seed": "tsx scripts/seed.ts",

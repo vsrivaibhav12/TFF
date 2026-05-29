@@ -4,7 +4,7 @@ import { getClientById } from '@/lib/repositories/clients';
 import { listVcfoSnapshots, listSolutionLog } from '@/lib/repositories/vcfo';
 import { clientHasServiceKind } from '@/lib/auth/service-applicability';
 import { requireRole } from '@/lib/auth/require-role';
-import { requireCapability } from '@/lib/auth/require-capability';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import VcfoForm from '@/components/operations/vcfo/vcfo-form';
 import SolutionForm from '@/components/operations/vcfo/solution-form';
 import ServiceLocked from '@/components/shell/service-locked';
@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function TeamVcfoClientPage({ params }: { params: { id: string } }) {
   const me = await requireRole(['admin', 'team']);
-  await requireCapability(me, 'vcfo.enter');
+  await requireCapabilityOrRedirect(me, 'vcfo.enter');
 
   const client = await getClientById(params.id);
   if (!client) notFound();

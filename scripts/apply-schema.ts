@@ -148,6 +148,15 @@ GRANT ALL ON SCHEMA public TO anon, authenticated, service_role;`,
     console.log('[schema] additive RLS applied');
   }
 
+  // Capability-aware RLS policies (expands team access beyond assignment)
+  const capPath = path.join(process.cwd(), 'db', 'rls-capabilities.sql');
+  if (fs.existsSync(capPath)) {
+    console.log('[schema] applying capability RLS policies...');
+    const capSql = fs.readFileSync(capPath, 'utf8');
+    await runSql(capSql, 'rls-capabilities');
+    console.log('[schema] capability RLS applied');
+  }
+
   // Quick sanity: count tables in public
   const tablesRes = await runSql(
     `SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';`,

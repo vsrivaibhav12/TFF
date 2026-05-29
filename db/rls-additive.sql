@@ -19,6 +19,32 @@ LANGUAGE SQL SECURITY DEFINER STABLE SET search_path = public AS $$
 $$;
 GRANT EXECUTE ON FUNCTION public.current_user_role() TO anon, authenticated, service_role;
 
+-- Helper: check whether the calling user has an active capability grant.
+-- Defensive: returns FALSE if staff_capabilities does not yet exist (fresh installs).
+CREATE OR REPLACE FUNCTION public.user_has_capability(cap TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+BEGIN
+  IF to_regclass('public.staff_capabilities') IS NULL THEN
+    RETURN FALSE;
+  END IF;
+  RETURN EXISTS (
+    SELECT 1 FROM staff_capabilities
+    WHERE user_id = auth.uid()
+      AND capability = cap
+      AND revoked_at IS NULL
+  );
+EXCEPTION WHEN undefined_table THEN
+  RETURN FALSE;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.user_has_capability(TEXT) TO anon, authenticated, service_role;
+
 -- ----------------------------------------------------------------------------
 -- users_profile : everyone can read all profiles (needed for FK joins in UI).
 -- Self-update only. Admin can update anyone.
@@ -45,13 +71,35 @@ DROP POLICY IF EXISTS "clients_team_select" ON clients;
 CREATE POLICY "clients_team_select" ON clients FOR SELECT TO authenticated
   USING (
     public.current_user_role() = 'team'
-    AND id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+    AND (
+      id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+      OR public.user_has_capability('clients.read.all')
+    )
   );
+
 DROP POLICY IF EXISTS "clients_team_update" ON clients;
 CREATE POLICY "clients_team_update" ON clients FOR UPDATE TO authenticated
   USING (
     public.current_user_role() = 'team'
-    AND id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+    AND (
+      id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+      OR public.user_has_capability('clients.edit')
+      OR public.user_has_capability('clients.toggle_portal')
+    )
+  );
+
+DROP POLICY IF EXISTS "clients_team_insert" ON clients;
+CREATE POLICY "clients_team_insert" ON clients FOR INSERT TO authenticated
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('clients.create')
+  );
+
+DROP POLICY IF EXISTS "clients_team_delete" ON clients;
+CREATE POLICY "clients_team_delete" ON clients FOR DELETE TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('clients.delete')
   );
 
 -- ----------------------------------------------------------------------------
@@ -123,7 +171,18 @@ DROP POLICY IF EXISTS "tasks_team_insert" ON tasks;
 CREATE POLICY "tasks_team_insert" ON tasks FOR INSERT TO authenticated
   WITH CHECK (
     public.current_user_role() = 'team'
-    AND client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+    AND (
+      client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+      OR public.user_has_capability('tasks.create')
+      OR public.user_has_capability('tasks.assign')
+    )
+  );
+
+DROP POLICY IF EXISTS "tasks_team_delete" ON tasks;
+CREATE POLICY "tasks_team_delete" ON tasks FOR DELETE TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('tasks.delete')
   );
 
 -- task_activity, task_notes, task_document_requests, task_templates
