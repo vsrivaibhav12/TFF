@@ -20,7 +20,7 @@ interface TaskRow {
   period_month?: number | null;
   is_verified?: boolean;
   clients?: { business_name: string } | null;
-  assignee?: { id: string; full_name: string; email: string } | null;
+  users_profile?: { id: string; full_name: string; email: string } | null;
 }
 
 export default function TasksTableClient({ tasks }: { tasks: TaskRow[] }) {
@@ -58,7 +58,7 @@ export default function TasksTableClient({ tasks }: { tasks: TaskRow[] }) {
               <TableHead className="w-24">Number</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Client</TableHead>
-              <TableHead>Assignee</TableHead>
+              <TableHead>Owner</TableHead>
               <TableHead>Period</TableHead>
               <TableHead>Due</TableHead>
               <TableHead>Status</TableHead>
@@ -73,8 +73,8 @@ export default function TasksTableClient({ tasks }: { tasks: TaskRow[] }) {
               <TableCell><Link href={`/team/tasks/${t.id}`} className="font-medium hover:text-teal-700">{t.title}</Link></TableCell>
               <TableCell>{t.clients?.business_name}</TableCell>
               <TableCell>
-                {t.assignee?.full_name ? (
-                  <span className="text-sm text-zinc-700">{t.assignee.full_name}</span>
+                {t.users_profile?.full_name ? (
+                  <span className="text-sm text-zinc-700">{t.users_profile.full_name}</span>
                 ) : (
                   <span className="text-sm text-zinc-400">Unassigned</span>
                 )}

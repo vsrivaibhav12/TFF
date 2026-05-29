@@ -100,7 +100,7 @@ CREATE POLICY "tca_team_write" ON team_client_assignment
 -- TASKS
 -- ============================================================================
 
--- Team SELECT: assigned client OR task capabilities
+-- Team SELECT: assigned client OR assigned task OR task capabilities
 DROP POLICY IF EXISTS "tasks_team_view" ON tasks;
 CREATE POLICY "tasks_team_view" ON tasks
   FOR SELECT TO authenticated
@@ -108,6 +108,8 @@ CREATE POLICY "tasks_team_view" ON tasks
     public.current_user_role() = 'team'
     AND (
       client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+      OR assigned_to = auth.uid()
+      OR reviewer_id = auth.uid()
       OR public.user_has_capability('tasks.assign')
       OR public.user_has_capability('tasks.complete')
       OR public.user_has_capability('tasks.create')

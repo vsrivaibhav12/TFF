@@ -3,6 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 import type { TaskStatus } from '@/lib/validation/schemas';
 import { todayIST } from '@/lib/utils';
 
+function normalizeFkArray(row: any, key: string) {
+  if (row && Array.isArray(row[key]) && row[key].length > 0) {
+    row[key] = row[key][0];
+  } else if (row && Array.isArray(row[key])) {
+    row[key] = null;
+  }
+}
+
 export async function listTasks(opts: {
   clientId?: string;
   assignedTo?: string;
@@ -16,7 +24,7 @@ export async function listTasks(opts: {
   const sb = createClient();
   let q = sb
     .from('tasks')
-    .select('id, task_number, title, status, priority, due_date, period_year, period_month, period_quarter, assigned_to, reviewer_id, sub_service_id, client_id, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status, is_billable, bill_reference, is_verified, created_at, updated_at, clients!tasks_client_id_fkey(id, business_name), assignee:users_profile!tasks_assigned_to_fkey(id, full_name, email)')
+    .select('id, task_number, title, status, priority, due_date, period_year, period_month, period_quarter, assigned_to, reviewer_id, sub_service_id, client_id, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status, is_billable, bill_reference, is_verified, created_at, updated_at, clients!tasks_client_id_fkey(id, business_name), users_profile!tasks_assigned_to_fkey(id, full_name, email)')
     .eq('is_deleted', false)
     .order('due_date', { ascending: true, nullsFirst: false });
   if (opts.clientId) q = q.eq('client_id', opts.clientId);
@@ -53,6 +61,10 @@ export async function listTasks(opts: {
   if (opts.limit) q = q.limit(opts.limit);
   const { data, error } = await q;
   if (error) throw error;
+  for (const row of (data ?? []) as any[]) {
+    normalizeFkArray(row, 'users_profile');
+    normalizeFkArray(row, 'clients');
+  }
   return data ?? [];
 }
 
@@ -65,6 +77,15 @@ export async function getTask(id: string) {
     .eq('is_deleted', false)
     .maybeSingle();
   if (error) throw error;
+  if (data) {
+    normalizeFkArray(data, 'assignee');
+    normalizeFkArray(data, 'reviewer');
+    normalizeFkArray(data, 'clients');
+    normalizeFkArray(data, 'sub_services');
+    if (data.sub_services) {
+      normalizeFkArray(data.sub_services, 'services');
+    }
+  }
   return data;
 }
 
