@@ -130,10 +130,12 @@ CREATE POLICY "task_templates_admin_mutate" ON task_templates
 
 -- client_compliance_profiles
 DROP POLICY IF EXISTS ccp_admin ON client_compliance_profiles;
+DROP POLICY IF EXISTS "ccp_admin_select" ON client_compliance_profiles;
 CREATE POLICY ccp_admin_select ON client_compliance_profiles
   FOR SELECT TO authenticated
   USING (public.current_user_role() IN ('admin', 'team')
     OR client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid()));
+DROP POLICY IF EXISTS "ccp_admin_mutate" ON client_compliance_profiles;
 CREATE POLICY ccp_admin_mutate ON client_compliance_profiles
   FOR ALL TO authenticated
   USING (public.current_user_role() = 'admin')
@@ -141,10 +143,12 @@ CREATE POLICY ccp_admin_mutate ON client_compliance_profiles
 
 -- compliance_calendar_events
 DROP POLICY IF EXISTS cce_admin ON compliance_calendar_events;
+DROP POLICY IF EXISTS "cce_admin_select" ON compliance_calendar_events;
 CREATE POLICY cce_admin_select ON compliance_calendar_events
   FOR SELECT TO authenticated
   USING (public.current_user_role() IN ('admin', 'team')
     OR client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid()));
+DROP POLICY IF EXISTS "cce_admin_mutate" ON compliance_calendar_events;
 CREATE POLICY cce_admin_mutate ON compliance_calendar_events
   FOR ALL TO authenticated
   USING (public.current_user_role() = 'admin')
@@ -152,6 +156,7 @@ CREATE POLICY cce_admin_mutate ON compliance_calendar_events
 
 -- document_requests
 DROP POLICY IF EXISTS docreq_team ON document_requests;
+DROP POLICY IF EXISTS "docreq_team_select" ON document_requests;
 CREATE POLICY docreq_team_select ON document_requests
   FOR SELECT TO authenticated
   USING (
@@ -159,12 +164,14 @@ CREATE POLICY docreq_team_select ON document_requests
     OR client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
     OR client_id IN (SELECT client_id FROM client_users WHERE user_id = auth.uid() AND is_active = TRUE)
   );
+DROP POLICY IF EXISTS "docreq_team_insert" ON document_requests;
 CREATE POLICY docreq_team_insert ON document_requests
   FOR INSERT TO authenticated
   WITH CHECK (
     public.current_user_role() IN ('admin', 'team')
     OR client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
   );
+DROP POLICY IF EXISTS "docreq_team_update" ON document_requests;
 CREATE POLICY docreq_team_update ON document_requests
   FOR UPDATE TO authenticated
   USING (
@@ -175,6 +182,7 @@ CREATE POLICY docreq_team_update ON document_requests
     public.current_user_role() IN ('admin', 'team')
     OR client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
   );
+DROP POLICY IF EXISTS "docreq_team_delete" ON document_requests;
 CREATE POLICY docreq_team_delete ON document_requests
   FOR DELETE TO authenticated
   USING (
@@ -184,18 +192,21 @@ CREATE POLICY docreq_team_delete ON document_requests
 
 -- task_custom_field_values
 DROP POLICY IF EXISTS tcfv_team ON task_custom_field_values;
+DROP POLICY IF EXISTS "tcfv_team_select" ON task_custom_field_values;
 CREATE POLICY tcfv_team_select ON task_custom_field_values
   FOR SELECT TO authenticated
   USING (
     public.current_user_role() IN ('admin', 'team')
     OR task_id IN (SELECT id FROM tasks WHERE client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid()))
   );
+DROP POLICY IF EXISTS "tcfv_team_insert" ON task_custom_field_values;
 CREATE POLICY tcfv_team_insert ON task_custom_field_values
   FOR INSERT TO authenticated
   WITH CHECK (
     public.current_user_role() IN ('admin', 'team')
     OR task_id IN (SELECT id FROM tasks WHERE client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid()))
   );
+DROP POLICY IF EXISTS "tcfv_team_update" ON task_custom_field_values;
 CREATE POLICY tcfv_team_update ON task_custom_field_values
   FOR UPDATE TO authenticated
   USING (
@@ -206,6 +217,7 @@ CREATE POLICY tcfv_team_update ON task_custom_field_values
     public.current_user_role() IN ('admin', 'team')
     OR task_id IN (SELECT id FROM tasks WHERE client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid()))
   );
+DROP POLICY IF EXISTS "tcfv_team_delete" ON task_custom_field_values;
 CREATE POLICY tcfv_team_delete ON task_custom_field_values
   FOR DELETE TO authenticated
   USING (
@@ -215,18 +227,21 @@ CREATE POLICY tcfv_team_delete ON task_custom_field_values
 
 -- task_label_assignments
 DROP POLICY IF EXISTS tla_team ON task_label_assignments;
+DROP POLICY IF EXISTS "tla_team_select" ON task_label_assignments;
 CREATE POLICY tla_team_select ON task_label_assignments
   FOR SELECT TO authenticated
   USING (
     public.current_user_role() IN ('admin', 'team')
     OR task_id IN (SELECT id FROM tasks WHERE client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid()))
   );
+DROP POLICY IF EXISTS "tla_team_insert" ON task_label_assignments;
 CREATE POLICY tla_team_insert ON task_label_assignments
   FOR INSERT TO authenticated
   WITH CHECK (
     public.current_user_role() IN ('admin', 'team')
     OR task_id IN (SELECT id FROM tasks WHERE client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid()))
   );
+DROP POLICY IF EXISTS "tla_team_update" ON task_label_assignments;
 CREATE POLICY tla_team_update ON task_label_assignments
   FOR UPDATE TO authenticated
   USING (
@@ -237,6 +252,7 @@ CREATE POLICY tla_team_update ON task_label_assignments
     public.current_user_role() IN ('admin', 'team')
     OR task_id IN (SELECT id FROM tasks WHERE client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid()))
   );
+DROP POLICY IF EXISTS "tla_team_delete" ON task_label_assignments;
 CREATE POLICY tla_team_delete ON task_label_assignments
   FOR DELETE TO authenticated
   USING (
