@@ -21,6 +21,7 @@ export async function linkSubServiceAction(input: { client_id: string; sub_servi
     if (error) return fail(error.message, 'DB');
     revalidatePath(`/admin/clients/${input.client_id}`);
     revalidatePath(`/team/clients/${input.client_id}`);
+    revalidatePath(`/admin/services/sub-services/${input.sub_service_id}/clients`);
     return ok(undefined);
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');

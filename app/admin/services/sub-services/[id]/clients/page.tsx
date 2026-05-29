@@ -4,12 +4,13 @@ import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { listClientsBySubService } from '@/lib/repositories/services';
-import { listTeamUsers } from '@/lib/repositories/clients';
+import { listTeamUsers, listAccessibleClients } from '@/lib/repositories/clients';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, Building2, Users, Briefcase } from 'lucide-react';
 import BulkCreateTasksForm from './bulk-create-form';
+import LinkClientForm from './link-client-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,9 +29,10 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
   if (!subService) notFound();
   const serviceName = (subService as any).services?.name ?? (subService as any).services?.[0]?.name ?? 'Service';
 
-  const [links, team] = await Promise.all([
+  const [links, team, allClients] = await Promise.all([
     listClientsBySubService(params.id),
     listTeamUsers(),
+    listAccessibleClients({ limit: 500 }),
   ]);
 
   const activeLinks = links.filter((l: any) => l.is_active !== false);
@@ -47,6 +49,7 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
         actions={
           <>
             <Badge variant="outline" className="text-xs">{subService.frequency}</Badge>
+            <LinkClientForm subServiceId={subService.id} allClients={allClients as any} linkedClientIds={activeLinks.map((l: any) => l.clients?.id).filter(Boolean)} />
           </>
         }
       />
@@ -56,7 +59,7 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
           <Users className="h-8 w-8 text-zinc-300 mx-auto mb-3" />
           <h3 className="font-semibold text-zinc-900">No clients linked yet</h3>
           <p className="text-sm text-zinc-500 mt-1 max-w-md mx-auto">
-            Link clients to this sub-service from their profile page, or use the bulk create form below once clients are added.
+            Link clients to this sub-service using the button above, or from the client's profile page.
           </p>
         </div>
       ) : (

@@ -649,3 +649,23 @@ export async function loadTemplateStepsAction(input: { task_id: string; task_tem
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
   }
 }
+
+export async function loadSopStepsAction(input: { task_id: string; sub_service_id: string }): Promise<ActionResult<{ count: number }>> {
+  try {
+    const me = await requireRole(['admin', 'team']);
+    await requireCapability(me, 'tasks.create');
+
+    const task = await taskRepo.getTask(input.task_id);
+    if (!task) return fail('Task not found', 'NOT_FOUND');
+    if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+
+    const sb = createServiceClient();
+    const count = await seedTaskStepsFromSop(sb as any, { task_id: input.task_id, sub_service_id: input.sub_service_id });
+
+    revalidatePath(`/team/tasks/${input.task_id}`);
+    revalidatePath(`/admin/tasks/${input.task_id}`);
+    return ok({ count });
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  }
+}
