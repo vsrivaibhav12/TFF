@@ -1,10 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import BarChart from '@/components/charts/bar-chart';
-import LineChart from '@/components/charts/line-chart';
-import PieChart from '@/components/charts/pie-chart';
-import StackedBarChart from '@/components/charts/stacked-bar-chart';
+import { DynamicBarChart, DynamicLineChart, DynamicPieChart, DynamicStackedBarChart } from '@/components/charts/dynamic-charts';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface GstRow {
@@ -113,24 +110,24 @@ export default function GstCharts({ data, clientId }: Props) {
       <TabsContent value="turnover">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
-            <StackedBarChart categories={categories} series={turnoverSeries} title="Monthly turnover breakup" height={320} onClick={goToMonthlyData} />
+            <DynamicStackedBarChart categories={categories} series={turnoverSeries} title="Monthly turnover breakup" height={320} onClick={goToMonthlyData} />
           </div>
           <div>
-            <PieChart data={totalTurnoverPie} title={`Latest period turnover`} height={320} onClick={goToMonthlyData} />
+            <DynamicPieChart data={totalTurnoverPie} title={`Latest period turnover`} height={320} onClick={goToMonthlyData} />
           </div>
         </div>
       </TabsContent>
       <TabsContent value="output">
-        <StackedBarChart categories={categories} series={outputTaxSeries} title="Monthly output tax breakup" height={360} onClick={goToMonthlyData} />
+        <DynamicStackedBarChart categories={categories} series={outputTaxSeries} title="Monthly output tax breakup" height={360} onClick={goToMonthlyData} />
       </TabsContent>
       <TabsContent value="itc">
-        <LineChart categories={categories} series={[
+        <DynamicLineChart categories={categories} series={[
           { name: 'ITC as per 2B', data: itcCompareSeries[0].data, color: '#0D9488' },
           { name: 'ITC as per books', data: itcCompareSeries[1].data, color: '#F59E0B' },
         ]} title="ITC: 2B vs books" height={360} onClick={goToMonthlyData} />
       </TabsContent>
       <TabsContent value="cash">
-        <StackedBarChart categories={categories} series={cashPaidSeries} title="Tax paid in cash" height={360} onClick={goToMonthlyData} />
+        <DynamicStackedBarChart categories={categories} series={cashPaidSeries} title="Tax paid in cash" height={360} onClick={goToMonthlyData} />
       </TabsContent>
     </Tabs>
   );

@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrencyINR, formatDateIST } from '@/lib/utils';
 import { ChevronLeft, TrendingUp, Landmark, ShieldCheck, Zap, Lightbulb } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
-import LineChart from '@/components/charts/line-chart';
+import { DynamicLineChart } from '@/components/charts/dynamic-charts';
 import SolutionStatusUpdater from '@/components/operations/vcfo/solution-status-updater';
 
 export const dynamic = 'force-dynamic';
@@ -111,7 +111,7 @@ export default async function AdminVcfoClientPage({ params }: { params: { client
                 const burn = sorted.map((s: any) => s.monthly_burn || 0);
                 const runway = sorted.map((s: any) => (s.cash_in_bank && s.monthly_burn > 0 ? Math.round((s.cash_in_bank / s.monthly_burn) * 10) / 10 : 0));
                 return (
-                  <LineChart categories={labels} series={[
+                  <DynamicLineChart categories={labels} series={[
                     { name: 'Monthly burn', data: burn, color: '#EF4444' },
                     { name: 'Runway (months)', data: runway, color: '#0D9488' },
                   ]} height={240} />

@@ -1,8 +1,7 @@
 'use client';
 import { Card } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import LineChart from '@/components/charts/line-chart';
-import BarChart from '@/components/charts/bar-chart';
+import { DynamicLineChart, DynamicBarChart } from '@/components/charts/dynamic-charts';
 
 interface TrendDirection { pct: number; dir: 'up' | 'down' | 'flat' }
 interface TrendAnalysis {
@@ -72,7 +71,7 @@ export default function TrendsTab({ trends, projections }: Props) {
 
         {/* Sales & Profit Trend Chart */}
         <div className="mb-6">
-          <LineChart
+          <DynamicLineChart
             categories={trends.labels}
             series={[
               { name: 'Sales', data: trends.data.sales, color: '#0D9488' },
@@ -85,7 +84,7 @@ export default function TrendsTab({ trends, projections }: Props) {
 
         {/* CM% & Fixed Costs Chart */}
         <div className="mb-6">
-          <LineChart
+          <DynamicLineChart
             categories={trends.labels}
             series={[
               { name: 'CM %', data: trends.data.cmPct.map(v => Math.round(v * 1000) / 10), color: '#F59E0B' },
@@ -128,7 +127,7 @@ export default function TrendsTab({ trends, projections }: Props) {
           <p className="text-xs text-zinc-500 mb-4">Linear regression forecast based on historical data. Confidence (sales R²): {(projections.confidence.sales * 100).toFixed(0)}%</p>
 
           <div className="mb-6">
-            <BarChart
+            <DynamicBarChart
               categories={[...projections.historical.labels, ...projections.projections.map(p => p.period)]}
               series={[
                 { name: 'Sales', data: [...projections.historical.sales, ...projections.projections.map(p => p.sales)] },

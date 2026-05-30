@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { listTasks } from '@/lib/repositories/tasks';
 import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
-import { listSubServices } from '@/lib/repositories/services';
+import { listSubServicesCached } from '@/lib/repositories/services';
 import { listSavedViews } from '@/lib/actions/saved-views';
 import { getCurrentUser } from '@/lib/auth/require-role';
 import { PageHeader } from '@/components/ui/page-header';
@@ -36,7 +36,7 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
     listTasks({ status, priority, assignedTo, clientId: searchParams.client, subServiceId: searchParams.sub_service, dueFrom: searchParams.due_from, dueTo: searchParams.due_to }),
     listAccessibleClients(),
     listTeamUsers(),
-    listSubServices(),
+    listSubServicesCached(),
     listSavedViews('team.tasks'),
   ]);
 

@@ -2,7 +2,7 @@ import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { listTasks } from '@/lib/repositories/tasks';
 import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
-import { listSubServices } from '@/lib/repositories/services';
+import { listSubServicesCached } from '@/lib/repositories/services';
 import { listSavedViews } from '@/lib/actions/saved-views';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -47,7 +47,7 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
     }),
     listAccessibleClients(),
     listTeamUsers(),
-    listSubServices(),
+    listSubServicesCached(),
     listSavedViews('admin.tasks'),
   ]);
 

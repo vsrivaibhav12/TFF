@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrencyINR, formatDateIST } from '@/lib/utils';
 import { ChevronLeft, TrendingUp, Landmark, ShieldCheck, Zap, Lightbulb } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
-import LineChart from '@/components/charts/line-chart';
+import { DynamicLineChart } from '@/components/charts/dynamic-charts';
 import SolutionStatusUpdater from '@/components/operations/vcfo/solution-status-updater';
 
 export const dynamic = 'force-dynamic';
@@ -111,7 +111,7 @@ export default async function TeamVcfoClientPage({ params }: { params: { id: str
           {snapshots.length >= 2 ? (
             <div className="tff-card p-5 space-y-4">
               <h3 className="tff-subsection">Historical trend</h3>
-              <LineChart categories={chartLabels} series={[
+              <DynamicLineChart categories={chartLabels} series={[
                 { name: 'Monthly burn', data: burnData, color: '#EF4444' },
                 { name: 'Runway (months)', data: runwayData, color: '#0D9488' },
               ]} height={240} />

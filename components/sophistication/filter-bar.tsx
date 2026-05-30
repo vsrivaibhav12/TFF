@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,7 @@ export default function FilterBar({ selects = [], inputs = [] }: FilterBarProps)
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const debounceRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const [values, setValues] = useState<Record<string, string>>(() => {
     const v: Record<string, string> = {};
@@ -35,21 +36,28 @@ export default function FilterBar({ selects = [], inputs = [] }: FilterBarProps)
     return v;
   });
 
-  function update(key: string, val: string) {
-    const next = { ...values, [key]: val === '__none__' ? '' : val };
-    setValues(next);
-    apply(next);
-  }
-
-  function apply(next: Record<string, string>) {
+  const apply = useCallback((next: Record<string, string>) => {
     const sp = new URLSearchParams();
     for (const [k, val] of Object.entries(next)) {
       if (val !== '' && val !== '__none__') sp.set(k, val);
     }
     router.push(`${pathname}?${sp.toString()}`);
+  }, [router, pathname]);
+
+  function update(key: string, val: string, immediate = true) {
+    const next = { ...values, [key]: val === '__none__' ? '' : val };
+    setValues(next);
+    if (immediate) {
+      apply(next);
+    } else {
+      // Debounce text inputs (300ms)
+      if (debounceRef.current[key]) clearTimeout(debounceRef.current[key]);
+      debounceRef.current[key] = setTimeout(() => apply(next), 300);
+    }
   }
 
   function clear() {
+    Object.values(debounceRef.current).forEach(clearTimeout);
     setValues({});
     router.push(pathname);
   }
@@ -77,7 +85,7 @@ export default function FilterBar({ selects = [], inputs = [] }: FilterBarProps)
           type={i.type || 'text'}
           placeholder={i.placeholder}
           value={values[i.key] || ''}
-          onChange={(e) => update(i.key, e.target.value)}
+          onChange={(e) => update(i.key, e.target.value, i.type === 'date')}
           className="w-40 h-9 text-xs"
         />
       ))}

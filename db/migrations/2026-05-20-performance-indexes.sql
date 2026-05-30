@@ -1,5 +1,5 @@
 -- Performance indexes — 2026-05-20
--- Scope: task list filters, task detail tabs, client lookups, compliance calendar
+-- Scope: task list filters, task detail tabs, client lookups
 
 -- Task list hot paths (every /team/tasks and /admin/tasks load)
 CREATE INDEX IF NOT EXISTS idx_tasks_client_status_deleted ON tasks(client_id, status) WHERE is_deleted = false;
@@ -13,8 +13,5 @@ CREATE INDEX IF NOT EXISTS idx_task_activity_task_created ON task_activity(task_
 CREATE INDEX IF NOT EXISTS idx_task_notes_task_created ON task_notes(task_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_task_steps_task_order ON task_steps(task_id, step_order);
 
--- Client lookups
-CREATE INDEX IF NOT EXISTS idx_client_sub_services_client ON client_sub_services(client_id, is_active) WHERE is_deleted = false;
-
--- Compliance / calendar
-CREATE INDEX IF NOT EXISTS idx_compliance_events_due ON compliance_events(due_date, client_id) WHERE is_deleted = false;
+-- Client lookups (client_sub_services has no is_deleted column)
+CREATE INDEX IF NOT EXISTS idx_client_sub_services_client ON client_sub_services(client_id, is_active);
