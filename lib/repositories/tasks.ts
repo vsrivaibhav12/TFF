@@ -58,7 +58,8 @@ export async function listTasks(opts: {
     }
   }
 
-  if (opts.limit) q = q.limit(opts.limit);
+  const limit = opts.limit ?? 100;
+  q = q.limit(limit);
   const { data, error } = await q;
   if (error) throw error;
   for (const row of (data ?? []) as any[]) {

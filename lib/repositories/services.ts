@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
 
 export async function listServiceCategories() {
   const sb = createClient();
@@ -70,3 +71,22 @@ export async function listClientsBySubService(subServiceId: string) {
   if (error) throw error;
   return data ?? [];
 }
+
+// Cached versions for reference data (safe — changes infrequently)
+export const listServicesCached = unstable_cache(
+  async () => listServices(),
+  ['services-catalog'],
+  { revalidate: 300 }
+);
+
+export const listSubServicesCached = unstable_cache(
+  async (serviceId?: string) => listSubServices(serviceId),
+  ['sub-services-catalog'],
+  { revalidate: 300 }
+);
+
+export const listServiceCategoriesCached = unstable_cache(
+  async () => listServiceCategories(),
+  ['service-categories'],
+  { revalidate: 600 }
+);

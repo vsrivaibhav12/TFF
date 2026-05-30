@@ -34,10 +34,11 @@ export default async function PortalTaskDetail({ params }: { params: { id: strin
   const task = await getTask(params.id);
   if (!task) notFound();
   const sb = createClient();
-  const { data: client } = await sb.from('clients').select('business_name').eq('id', (task as any).client_id).single();
-  const [notes] = await Promise.all([
+  const [clientResult, notes] = await Promise.all([
+    sb.from('clients').select('business_name').eq('id', (task as any).client_id).single(),
     listTaskNotes(params.id),
   ]);
+  const client = clientResult.data;
   const cs = getClientVisibleStatus(task as any);
 
   return (

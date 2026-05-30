@@ -50,6 +50,7 @@
     "@supabase/ssr": "^0.5.1",
     "@supabase/supabase-js": "^2.45.4",
     "@tanstack/react-table": "^8.20.5",
+    "@tanstack/react-virtual": "^3.13.26",
     "@types/ws": "^8.18.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -74,6 +75,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.6",
     "@playwright/test": "^1.60.0",
     "@types/node": "^20",
     "@types/pg": "^8.11.10",
