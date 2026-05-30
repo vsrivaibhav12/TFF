@@ -440,7 +440,8 @@ CREATE TABLE IF NOT EXISTS task_workdone (
   entry_method  TEXT NOT NULL CHECK (entry_method IN ('timer','manual')),
   started_at    TIMESTAMPTZ,
   ended_at      TIMESTAMPTZ,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_workdone_task   ON task_workdone(task_id);

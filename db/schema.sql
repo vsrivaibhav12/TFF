@@ -189,6 +189,7 @@ CREATE TABLE service_categories (
   description TEXT,
   display_order INT,
   created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
   is_deleted BOOLEAN DEFAULT FALSE
 );
 
@@ -208,6 +209,7 @@ CREATE TABLE services (
   icon_url TEXT,
   display_order INT,
   created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
   is_deleted BOOLEAN DEFAULT FALSE
 );
 
