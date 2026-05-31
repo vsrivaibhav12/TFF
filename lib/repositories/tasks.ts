@@ -20,6 +20,7 @@ export async function listTasks(opts: {
   dueFrom?: string;
   dueTo?: string;
   limit?: number;
+  offset?: number;
 } = {}) {
   const sb = createClient();
   let q = sb
@@ -59,7 +60,8 @@ export async function listTasks(opts: {
   }
 
   const limit = opts.limit ?? 100;
-  q = q.limit(limit);
+  const offset = opts.offset ?? 0;
+  q = q.range(offset, offset + limit - 1);
   const { data, error } = await q;
   if (error) throw error;
   for (const row of (data ?? []) as any[]) {
@@ -67,6 +69,56 @@ export async function listTasks(opts: {
     normalizeFkArray(row, 'clients');
   }
   return data ?? [];
+}
+
+export async function countTasks(opts: {
+  clientId?: string;
+  assignedTo?: string;
+  status?: Array<TaskStatus | 'blocked' | 'stuck'>;
+  priority?: string[];
+  subServiceId?: string;
+  dueFrom?: string;
+  dueTo?: string;
+} = {}) {
+  const sb = createClient();
+  let q = sb
+    .from('tasks')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_deleted', false);
+  if (opts.clientId) q = q.eq('client_id', opts.clientId);
+  if (opts.assignedTo) q = q.eq('assigned_to', opts.assignedTo);
+  if (opts.subServiceId) q = q.eq('sub_service_id', opts.subServiceId);
+  if (opts.dueFrom) q = q.gte('due_date', opts.dueFrom);
+  if (opts.dueTo) q = q.lte('due_date', opts.dueTo);
+  if (opts.priority?.length) q = q.in('priority', opts.priority);
+
+  if (opts.status?.length) {
+    const hasBlocked = opts.status.includes('blocked');
+    const hasStuck = opts.status.includes('stuck');
+    const realStatuses = opts.status.filter((s): s is TaskStatus =>
+      s === 'pending' || s === 'in_progress' || s === 'completed' || s === 'cancelled',
+    );
+
+    if (hasBlocked && hasStuck && realStatuses.length === 0) {
+      q = q.or('is_blocked_on_client.eq.true,is_stuck.eq.true');
+    } else if (hasBlocked && hasStuck && realStatuses.length > 0) {
+      q = q.or(`is_blocked_on_client.eq.true,is_stuck.eq.true,status.in.(${realStatuses.join(',')})`);
+    } else if (hasBlocked && realStatuses.length > 0) {
+      q = q.or(`is_blocked_on_client.eq.true,status.in.(${realStatuses.join(',')})`);
+    } else if (hasStuck && realStatuses.length > 0) {
+      q = q.or(`is_stuck.eq.true,status.in.(${realStatuses.join(',')})`);
+    } else if (hasBlocked) {
+      q = q.eq('is_blocked_on_client', true);
+    } else if (hasStuck) {
+      q = q.eq('is_stuck', true);
+    } else if (realStatuses.length > 0) {
+      q = q.in('status', realStatuses);
+    }
+  }
+
+  const { count, error } = await q;
+  if (error) throw error;
+  return count ?? 0;
 }
 
 export async function getTask(id: string) {

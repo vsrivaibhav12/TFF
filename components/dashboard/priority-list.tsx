@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Clock, ArrowRight, Inbox } from 'lucide-react';
+import { Clock, ArrowRight, Inbox, Play, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Task {
   id: string;
@@ -97,11 +98,22 @@ export function PriorityList({ tasks, href = '/admin/tasks', emptyMessage = 'No 
                     {assigneeName(t) ? ` · ${assigneeName(t)}` : ''}
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
+                <div className="flex flex-col items-end gap-1 shrink-0 group-hover:hidden">
                   <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full border', priorityStyles[p] || priorityStyles.medium)}>
                     {p}
                   </span>
                   <span className="text-[10px] text-zinc-400">{dueLabel(t.due_date)}</span>
+                </div>
+                <div className="hidden group-hover:flex items-center shrink-0 animate-in fade-in zoom-in duration-200">
+                  {t.status === 'pending' ? (
+                    <Button variant="outline" size="sm" className="h-8 text-xs border-teal-200 text-teal-700 hover:bg-teal-50">
+                      <Play className="h-3 w-3 mr-1" /> Start
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" className="h-8 text-xs border-zinc-200 text-zinc-700 hover:bg-zinc-50">
+                      <CheckCircle2 className="h-3 w-3 mr-1" /> Complete
+                    </Button>
+                  )}
                 </div>
               </Link>
             );

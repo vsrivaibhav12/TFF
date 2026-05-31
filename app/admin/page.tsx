@@ -19,9 +19,11 @@ import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-conta
 import { PriorityList } from '@/components/dashboard/priority-list';
 import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
 import { ActivityFeed } from '@/components/dashboard/activity-feed';
-import { HealthScoreCard } from '@/components/dashboard/health-score-card';
+import { NeedsAttentionHub } from '@/components/dashboard/needs-attention-hub';
+import { BusinessPulse } from '@/components/dashboard/business-pulse';
 import { AdminQuickActions } from '@/components/dashboard/admin-quick-actions';
 import { enrichTasksWithProgress } from '@/lib/repositories/tasks';
+import { AdminPayrollPrompt } from '@/components/dashboard/smart-prompts';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,6 +112,7 @@ export default async function AdminDashboard() {
 
   return (
     <StaggerContainer className="space-y-6">
+      <AdminPayrollPrompt />
       {/* Header */}
       <StaggerItem>
         <div>
@@ -161,7 +164,7 @@ export default async function AdminDashboard() {
             <DeadlineTimeline deadlines={(upcomingDeadlines ?? []) as any} />
           </div>
           <div className="lg:col-span-5">
-            <ActivityFeed items={(recentActivity ?? []) as any} />
+            <NeedsAttentionHub items={(recentActivity ?? []) as any} />
           </div>
         </div>
       </StaggerItem>
@@ -201,67 +204,11 @@ export default async function AdminDashboard() {
         </StaggerItem>
       )}
 
-      {/* Bottom Row: Compliance + Health Score */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
-          <StaggerItem>
-            <div className="rounded-2xl bg-white p-6 md:p-8" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-base font-semibold text-zinc-900 tracking-tight">Compliance health</h2>
-                  <p className="text-sm text-zinc-500 mt-1">Filing status across all clients</p>
-                </div>
-                <Link href="/admin/tasks" className="text-sm text-teal-700 hover:underline inline-flex items-center gap-1 font-medium">
-                  Details <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-              {totalCompliance === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center py-10">
-                  <div className="h-10 w-10 rounded-full bg-zinc-50 flex items-center justify-center mb-3 border border-zinc-100">
-                    <CalendarX className="h-5 w-5 text-zinc-300" />
-                  </div>
-                  <p className="text-sm text-zinc-400 font-medium">No compliance data</p>
-                  <p className="text-xs text-zinc-400 mt-1">Compliance data will appear once filings begin.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium text-zinc-700">Filed</span>
-                      <span className="text-sm font-bold text-teal-600">{filedCount}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
-                      <div className="h-full rounded-full bg-teal-500 transition-all" style={{ width: `${totalCompliance > 0 ? (filedCount / totalCompliance) * 100 : 0}%` }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium text-zinc-700">Pending</span>
-                      <span className="text-sm font-bold text-amber-600">{pendingCount}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
-                      <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${totalCompliance > 0 ? (pendingCount / totalCompliance) * 100 : 0}%` }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium text-zinc-700">Overdue</span>
-                      <span className="text-sm font-bold text-red-600">{overdueCount}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
-                      <div className="h-full rounded-full bg-red-500 transition-all" style={{ width: `${totalCompliance > 0 ? (overdueCount / totalCompliance) * 100 : 0}%` }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </StaggerItem>
-        </div>
-        <div>
-          <StaggerItem>
-            <HealthScoreCard score={healthScore} metrics={healthMetrics} />
-          </StaggerItem>
-        </div>
+      {/* Bottom Row: Business Pulse */}
+      <div className="grid grid-cols-1 gap-6">
+        <StaggerItem>
+          <BusinessPulse />
+        </StaggerItem>
       </div>
     </StaggerContainer>
   );

@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, Pencil, Check, X, Loader2, CalendarDays } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { formatDateIST, timeAgo } from '@/lib/utils';
 import TaskActions from '@/app/team/tasks/[id]/task-actions';
 import TaskStepsPanel from '@/components/tasks/task-steps-panel';
@@ -20,7 +22,7 @@ import WorkDonePanel from '@/components/tasks/workdone-panel';
 import DeleteTaskButton from '@/components/tasks/delete-task-button';
 import VerifyTaskButton from '@/components/tasks/verify-task-button';
 import LoadTemplateStepsButton from '@/components/tasks/load-template-steps-button';
-import { updateTaskAction } from '@/lib/actions/tasks';
+import { updateTaskAction, addTaskNoteAction } from '@/lib/actions/tasks';
 import { toast } from 'sonner';
 
 interface Props {
@@ -59,6 +61,7 @@ export default function TaskDetailShell({
   const isClosed = task.status === 'completed' || task.status === 'cancelled';
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDesc, setEditingDesc] = useState(false);
+  const [editingBilling, setEditingBilling] = useState(false);
   const [editingPeriod, setEditingPeriod] = useState(false);
   const [editingPriority, setEditingPriority] = useState(false);
   const [editingDueDate, setEditingDueDate] = useState(false);
@@ -69,7 +72,28 @@ export default function TaskDetailShell({
   const [periodQuarter, setPeriodQuarter] = useState(task.period_quarter ?? '');
   const [priority, setPriority] = useState(task.priority);
   const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.slice(0, 10) : '');
+  
+  const [editingFinance, setEditingFinance] = useState(false);
+  const [billable, setBillable] = useState(task.is_billable ?? false);
+  const [billRef, setBillRef] = useState(task.bill_reference ?? '');
+  const [billAmount, setBillAmount] = useState(task.bill_amount ?? '');
+  const [arnRef, setArnRef] = useState(task.arn_reference ?? '');
+  const [arnVisible, setArnVisible] = useState(task.is_arn_client_visible ?? false);
+
   const [saving, setSaving] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const [addingNote, setAddingNote] = useState(false);
+
+  async function addNote() {
+    if (!newNote.trim()) return;
+    setAddingNote(true);
+    const r = await addTaskNoteAction({ task_id: task.id, body: newNote.trim() });
+    setAddingNote(false);
+    if (!r.success) { toast.error(r.error); return; }
+    toast.success('Note added');
+    setNewNote('');
+    // refresh handled by Next.js if action has revalidatePath, which addTaskNoteAction does.
+  }
 
   async function saveField(updates: any, onSuccess?: () => void) {
     setSaving(true);
@@ -231,13 +255,79 @@ export default function TaskDetailShell({
             <TabsList>
               <TabsTrigger value="steps">Steps ({steps.length})</TabsTrigger>
               <TabsTrigger value="work">Work done</TabsTrigger>
-              <TabsTrigger value="notes">Notes ({notes.length})</TabsTrigger>
+              <TabsTrigger value="notes">Notes & Billing ({notes.length})</TabsTrigger>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="activity">Activity ({activity.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="steps" className="space-y-4">
-              <LoadTemplateStepsButton taskId={task.id} subServiceId={task.sub_service_id} currentSteps={steps} />
+              {/* Moved from Overview tab */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3 tff-card p-4">
+                  <h3 className="text-sm font-semibold mb-2">Workflow Controls</h3>
+                  <TaskActions task={task} team={team} />
+                  {!isClosed && (
+                    <StuckToggle taskId={task.id} isStuck={!!task.is_stuck} reasonCode={task.stuck_reason_code} reasonNote={task.stuck_reason_note} />
+                  )}
+                  <BlockedOnClientToggle taskId={task.id} isBlocked={!!task.is_blocked_on_client} />
+                  {task.is_blocked_on_client && <SendReminderButton taskId={task.id} />}
+                </div>
+
+                {/* Moved ARN Reference from Notes tab */}
+                <div className="tff-card p-4 relative group">
+                  <h3 className="text-sm font-semibold mb-3">Reference Information</h3>
+                  {!isClosed && !editingFinance && (
+                    <Button size="sm" variant="ghost" className="absolute top-3 right-3 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingFinance(true)}>
+                      <Pencil className="h-3.5 w-3.5 text-zinc-400" />
+                    </Button>
+                  )}
+                  {editingFinance ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-1">
+                          <Label className="text-xs">ARN / Ref</Label>
+                          <Input value={arnRef} onChange={(e) => setArnRef(e.target.value)} placeholder="e.g. ARN12345678" className="text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">ARN client visible</Label>
+                          <div className="flex items-center gap-2 h-9">
+                            <Switch checked={arnVisible} onCheckedChange={setArnVisible} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 pt-2 border-t border-zinc-100">
+                        <Button size="sm" onClick={async () => {
+                          const ok = await saveField({ 
+                            arn_reference: arnRef || null, 
+                            is_arn_client_visible: arnVisible 
+                          });
+                          if (ok) setEditingFinance(false);
+                        }} disabled={saving}><Check className="h-3 w-3" /> Save</Button>
+                        <Button size="sm" variant="ghost" onClick={() => {
+                          setArnRef(task.arn_reference ?? '');
+                          setArnVisible(task.is_arn_client_visible ?? false);
+                          setEditingFinance(false);
+                        }} disabled={saving}><X className="h-3 w-3" /> Cancel</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-zinc-500 text-xs">ARN / Ref</span>
+                        <p className="font-medium">{task.arn_reference || '—'}</p>
+                      </div>
+                      {task.arn_reference && (
+                        <div>
+                          <span className="text-zinc-500 text-xs">Client visible</span>
+                          <p className="font-medium">{task.is_arn_client_visible ? 'Yes' : 'No'}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <LoadTemplateStepsButton taskId={task.id} subServiceId={task.sub_service_id} clientId={task.client_id} currentSteps={steps} />
               <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} />
             </TabsContent>
 
@@ -247,38 +337,80 @@ export default function TaskDetailShell({
 
             <TabsContent value="notes">
               <div className="space-y-4">
-                {/* Billing & ARN summary card */}
-                <div className="tff-card p-4">
-                  <h3 className="text-sm font-semibold mb-3">Financial & Reference</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-zinc-500 text-xs">Billable</span>
-                      <p className="font-medium">{task.is_billable ? 'Yes' : 'No'}</p>
-                    </div>
-                    <div>
-                      <span className="text-zinc-500 text-xs">Bill reference</span>
-                      <p className="font-medium">{task.bill_reference || '—'}</p>
-                    </div>
-                    <div>
-                      <span className="text-zinc-500 text-xs">Bill amount</span>
-                      <p className="font-medium">{task.bill_amount ? `₹${task.bill_amount}` : '—'}</p>
-                    </div>
-                    <div>
-                      <span className="text-zinc-500 text-xs">ARN / Ref</span>
-                      <p className="font-medium">{task.arn_reference || '—'}</p>
-                    </div>
-                    {task.arn_reference && (
-                      <div>
-                        <span className="text-zinc-500 text-xs">Client visible</span>
-                        <p className="font-medium">{task.is_arn_client_visible ? 'Yes' : 'No'}</p>
+                {/* Billing summary card */}
+                <div className="tff-card p-4 relative group">
+                  <h3 className="text-sm font-semibold mb-3">Billing details</h3>
+                  {!isClosed && !editingBilling && (
+                    <Button size="sm" variant="ghost" className="absolute top-3 right-3 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingBilling(true)}>
+                      <Pencil className="h-3.5 w-3.5 text-zinc-400" />
+                    </Button>
+                  )}
+                  {editingBilling ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Billable</Label>
+                          <div className="flex items-center gap-2 h-9">
+                            <Switch checked={billable} onCheckedChange={setBillable} />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Bill reference</Label>
+                          <Input value={billRef} onChange={(e) => setBillRef(e.target.value)} placeholder="e.g. INV-2026-01" className="text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Bill amount (₹)</Label>
+                          <Input type="number" value={billAmount} onChange={(e) => setBillAmount(e.target.value)} placeholder="0.00" className="text-sm" />
+                        </div>
                       </div>
-                    )}
-                  </div>
+                      <div className="flex items-center gap-2 pt-2 border-t border-zinc-100">
+                        <Button size="sm" onClick={async () => {
+                          const numAmount = parseFloat(billAmount as string);
+                          const ok = await saveField({ 
+                            is_billable: billable, 
+                            bill_reference: billRef || null, 
+                            bill_amount: isNaN(numAmount) ? null : numAmount
+                          });
+                          if (ok) setEditingBilling(false);
+                        }} disabled={saving}><Check className="h-3 w-3" /> Save Billing</Button>
+                        <Button size="sm" variant="ghost" onClick={() => {
+                          setBillable(task.is_billable ?? false);
+                          setBillRef(task.bill_reference ?? '');
+                          setBillAmount(task.bill_amount ?? '');
+                          setEditingBilling(false);
+                        }} disabled={saving}><X className="h-3 w-3" /> Cancel</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-zinc-500 text-xs">Billable</span>
+                        <p className="font-medium">{task.is_billable ? 'Yes' : 'No'}</p>
+                      </div>
+                      <div>
+                        <span className="text-zinc-500 text-xs">Bill reference</span>
+                        <p className="font-medium">{task.bill_reference || '—'}</p>
+                      </div>
+                      <div>
+                        <span className="text-zinc-500 text-xs">Bill amount</span>
+                        <p className="font-medium">{task.bill_amount ? `₹${task.bill_amount}` : '—'}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="tff-card p-6">
                   <h3 className="font-semibold mb-3">Notes ({notes.length})</h3>
                   <div className="space-y-4">
+                    <div className="border border-zinc-200 rounded-xl p-3 bg-white space-y-3">
+                      <Textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Add an internal note…" rows={3} className="border-0 focus-visible:ring-0 p-0 text-sm resize-none bg-transparent" />
+                      <div className="flex justify-end border-t border-zinc-100 pt-2">
+                        <Button size="sm" onClick={addNote} disabled={addingNote || !newNote.trim()}>
+                          {addingNote ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null} Save note
+                        </Button>
+                      </div>
+                    </div>
+                    
                     {notes.map((n: any) => (
                       <div key={n.id} className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
                         <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 flex justify-between">
@@ -321,15 +453,6 @@ export default function TaskDetailShell({
                   </p>
                 )}
               </div>
-
-              {!isClosed && (
-                <StuckToggle taskId={task.id} isStuck={!!task.is_stuck} reasonCode={task.stuck_reason_code} reasonNote={task.stuck_reason_note} />
-              )}
-
-              <BlockedOnClientToggle taskId={task.id} isBlocked={!!task.is_blocked_on_client} />
-              {task.is_blocked_on_client && <SendReminderButton taskId={task.id} />}
-
-              <TaskActions task={task} team={team} />
 
               <CustomFieldsPanel taskId={task.id} definitions={cfDefs} values={cfValues} allLabels={allLabels} assignedLabels={assignedLabels} />
             </TabsContent>

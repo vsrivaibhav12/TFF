@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { toast } from 'sonner';
 import { Pencil, Trash2, Loader2 } from 'lucide-react';
 import { updateWorkDoneAction, deleteWorkDoneAction } from '@/lib/actions/work-done';
+import { useConfirm } from '@/components/ui/use-confirm';
 
 interface WorkDoneEntry {
   id: string;
@@ -39,9 +40,11 @@ export function WorkDoneRowActions({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
+  const [ConfirmDialog, confirm] = useConfirm();
 
-  function onDelete() {
-    if (!confirm('Delete this work log entry?')) return;
+  async function onDelete() {
+    const ok = await confirm({ title: 'Delete Entry', description: 'Delete this work log entry?' });
+    if (!ok) return;
     startTransition(async () => {
       const r = await deleteWorkDoneAction(entry.id);
       if (r.success) {
@@ -57,6 +60,7 @@ export function WorkDoneRowActions({
 
   return (
     <>
+      <ConfirmDialog />
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditing(true)} disabled={pending}>
           <Pencil className="h-3.5 w-3.5 text-zinc-400" />

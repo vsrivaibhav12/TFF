@@ -9,17 +9,27 @@ import QueriesTable from './queries-table';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminQueriesPage() {
+export default async function AdminQueriesPage({ searchParams }: { searchParams: { page?: string, query?: string } }) {
   const sb = createClient();
+  const page = parseInt(searchParams.page || '1', 10);
+  const limit = 50;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
   const mePromise = requireRole(['admin', 'team']);
-  const queriesPromise = sb
+  let queryBuilder = sb
     .from('queries')
-    .select('id, subject, status, created_at, clients(business_name), users_profile:created_by(full_name)')
-    .order('created_at', { ascending: false })
-    .limit(100);
+    .select('id, subject, status, created_at, clients(business_name), users_profile:created_by(full_name)', { count: 'exact' });
 
-  const [me, { data: queries }] = await Promise.all([mePromise, queriesPromise]);
+  if (searchParams.query) {
+    queryBuilder = queryBuilder.ilike('subject', `%${searchParams.query}%`);
+  }
+
+  const queriesPromise = queryBuilder
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  const [me, { data: queries, count }] = await Promise.all([mePromise, queriesPromise]);
   await requireCapabilityOrRedirect(me, 'queries.assign');
 
   const exportData = (queries ?? []).map((q: any) => ({
@@ -45,7 +55,7 @@ export default async function AdminQueriesPage() {
           icon={<MessageSquare className="h-6 w-6 text-zinc-400" />}
         />
       ) : (
-        <QueriesTable queries={queries as any} />
+        <QueriesTable queries={queries as any} total={count || 0} page={page} limit={limit} />
       )}
     </div>
   );

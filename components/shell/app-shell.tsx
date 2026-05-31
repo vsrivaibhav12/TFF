@@ -21,6 +21,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import NotificationsBell from './notifications-bell';
 import CommandPalette from './command-palette';
 import ShortcutsHelp from '@/components/sophistication/shortcuts-help';
+import { QuickActionsDropdown } from './quick-actions';
+import { GlobalTimer } from './global-timer';
 
 import MobileBottomNavTeam from './mobile-bottom-nav-team';
 import { ICONS, type NavItem } from './nav-icons';
@@ -269,7 +271,9 @@ export default function AppShell({
             <span className="text-sm font-bold text-white">TFF</span>
           </Link>
           <div className="flex items-center gap-1">
+            <GlobalTimer role={role} />
             <NotificationsBell />
+            <QuickActionsDropdown role={role} />
             <button onClick={() => setMobileOpen((v) => !v)} className="p-2 text-teal-100" aria-label="menu">
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -413,7 +417,10 @@ export default function AppShell({
                   <span className="text-[10px]">Ctrl</span>K
                 </kbd>
               </button>
+              
+              <GlobalTimer role={role} />
               <NotificationsBell />
+              <QuickActionsDropdown role={role} />
 
               {/* User avatar dropdown */}
               <div className="relative">

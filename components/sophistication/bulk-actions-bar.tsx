@@ -24,9 +24,10 @@ interface BulkActionsBarProps {
   ids: string[];
   onClear: () => void;
   actions: BulkActionConfig[];
+  children?: React.ReactNode;
 }
 
-export default function BulkActionsBar({ ids, onClear, actions }: BulkActionsBarProps) {
+export default function BulkActionsBar({ ids, onClear, actions, children }: BulkActionsBarProps) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
 
@@ -107,6 +108,7 @@ export default function BulkActionsBar({ ids, onClear, actions }: BulkActionsBar
               </Button>
             );
           })}
+          {children}
         </div>
 
         <Button

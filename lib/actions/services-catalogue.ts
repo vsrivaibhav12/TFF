@@ -171,59 +171,37 @@ export async function upsertSopStepAction(input: z.infer<typeof sopStepSchema>):
     if (id) {
       const { error } = await sb.from('sub_service_sop_steps').update({ ...rest, updated_at: new Date().toISOString() }).eq('id', id);
       if (error) return fail(error.message, 'DB');
+
+      // Sync to open tasks
+      const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', rest.sub_service_id).not('status', 'in', '("completed","cancelled")');
+      if (openTasks && openTasks.length > 0) {
+        const taskIds = openTasks.map((t: any) => t.id);
+        await sb.from('task_steps')
+          .update({ title: rest.title, description: rest.description || null, is_required: rest.is_required })
+          .eq('source_sop_step_id', id)
+          .in('task_id', taskIds);
+      }
+
       revalidatePath('/admin/services');
       return ok({ id });
     }
-    // Check if this is the first SOP step for this sub-service ( triggers backfill )
-    const { count: priorCount } = await sb
-      .from('sub_service_sop_steps')
-      .select('*', { count: 'exact', head: true })
-      .eq('sub_service_id', rest.sub_service_id)
-      .eq('is_deleted', false);
-    const isFirstSopStep = (priorCount ?? 0) === 0;
 
+    // Insert new step
     const { data, error } = await sb.from('sub_service_sop_steps').insert(rest).select('id').single();
     if (error) return fail(error.message, 'DB');
 
-    if (isFirstSopStep) {
-      // Backfill: find non-completed tasks with zero steps for this sub-service
-      const { data: tasksToBackfill } = await sb
-        .from('tasks')
-        .select('id')
-        .eq('sub_service_id', rest.sub_service_id)
-        .not('status', 'in', '(completed,cancelled)');
-      if (tasksToBackfill && tasksToBackfill.length > 0) {
-        const taskIds = tasksToBackfill.map((t: any) => t.id);
-        // Filter to only those with zero steps
-        const { data: stepsData } = await sb
-          .from('task_steps')
-          .select('task_id')
-          .in('task_id', taskIds);
-        // Build a set of tasks that already have steps
-        const tasksWithSteps = new Set((stepsData ?? []).map((s: any) => s.task_id));
-        const tasksNeedingSteps = taskIds.filter((id: string) => !tasksWithSteps.has(id));
-        if (tasksNeedingSteps.length > 0) {
-          const { data: sopSteps } = await sb
-            .from('sub_service_sop_steps')
-            .select('id, step_order, title, description, is_required')
-            .eq('sub_service_id', rest.sub_service_id)
-            .eq('is_deleted', false)
-            .order('step_order', { ascending: true });
-          if (sopSteps && sopSteps.length > 0) {
-            const rows = tasksNeedingSteps.flatMap((taskId: string) =>
-              sopSteps.map((s: any) => ({
-                task_id: taskId,
-                step_order: s.step_order,
-                title: s.title,
-                description: s.description ?? null,
-                is_required: s.is_required ?? true,
-                source_sop_step_id: s.id,
-              }))
-            );
-            await sb.from('task_steps').insert(rows);
-          }
-        }
-      }
+    // Sync to open tasks (append)
+    const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', rest.sub_service_id).not('status', 'in', '("completed","cancelled")');
+    if (openTasks && openTasks.length > 0) {
+      const rows = openTasks.map((t: any) => ({
+        task_id: t.id,
+        step_order: rest.step_order,
+        title: rest.title,
+        description: rest.description ?? null,
+        is_required: rest.is_required ?? true,
+        source_sop_step_id: data.id,
+      }));
+      await sb.from('task_steps').insert(rows);
     }
 
     revalidatePath('/admin/services');
@@ -238,8 +216,19 @@ export async function deleteSopStepAction(id: string): Promise<ActionResult<void
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const sb = createClient();
+    const { data: step } = await sb.from('sub_service_sop_steps').select('sub_service_id').eq('id', id).single();
+    
     const { error } = await sb.from('sub_service_sop_steps').update({ is_deleted: true }).eq('id', id);
     if (error) return fail(error.message, 'DB');
+
+    if (step) {
+      const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', step.sub_service_id).not('status', 'in', '("completed","cancelled")');
+      if (openTasks && openTasks.length > 0) {
+        const taskIds = openTasks.map((t: any) => t.id);
+        await sb.from('task_steps').delete().eq('source_sop_step_id', id).in('task_id', taskIds);
+      }
+    }
+
     revalidatePath('/admin/services');
     return ok(undefined);
   } catch (e: any) {
@@ -259,6 +248,16 @@ export async function reorderSopStepsAction(input: { sub_service_id: string; ids
     for (let i = 0; i < input.ids_in_order.length; i++) {
       await sb.from('sub_service_sop_steps').update({ step_order: i + 1 }).eq('id', input.ids_in_order[i]);
     }
+
+    // Sync to open tasks
+    const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', input.sub_service_id).not('status', 'in', '("completed","cancelled")');
+    if (openTasks && openTasks.length > 0) {
+      const taskIds = openTasks.map((t: any) => t.id);
+      for (let i = 0; i < input.ids_in_order.length; i++) {
+        await sb.from('task_steps').update({ step_order: i + 1 }).eq('source_sop_step_id', input.ids_in_order[i]).in('task_id', taskIds);
+      }
+    }
+
     revalidatePath('/admin/services');
     return ok(undefined);
   } catch (e: any) {

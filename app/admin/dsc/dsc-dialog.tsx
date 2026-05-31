@@ -7,10 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { upsertDscAction, deleteDscAction } from '@/lib/actions/dsc';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/use-confirm';
 import { Trash2 } from 'lucide-react';
 
 export default function DscDialog({ clients, initial, children }: { clients: { id: string; business_name: string }[]; initial?: any; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [ConfirmDialog, confirm] = useConfirm();
   const [pending, startTransition] = useTransition();
   const [form, setForm] = useState({
     id: initial?.id ?? undefined,
@@ -40,9 +42,10 @@ export default function DscDialog({ clients, initial, children }: { clients: { i
     });
   }
 
-  function remove() {
+  async function remove() {
     if (!form.id) return;
-    if (!confirm('Delete this DSC record?')) return;
+    const ok = await confirm({ title: 'Delete DSC', description: 'Delete this DSC record?' });
+    if (!ok) return;
     startTransition(async () => {
       const r = await deleteDscAction(form.id!);
       if (r.success) { toast.success('Deleted'); setOpen(false); }
@@ -51,7 +54,9 @@ export default function DscDialog({ clients, initial, children }: { clients: { i
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <>
+      <ConfirmDialog />
+      <Dialog open={open} onOpenChange={(val) => {setOpen(val)}}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-xl">
         <DialogHeader><DialogTitle>{initial ? 'Edit DSC' : 'New DSC'}</DialogTitle></DialogHeader>
@@ -112,5 +117,6 @@ export default function DscDialog({ clients, initial, children }: { clients: { i
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

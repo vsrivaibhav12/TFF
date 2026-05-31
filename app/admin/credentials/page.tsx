@@ -13,15 +13,26 @@ import CredentialReveal from './credential-reveal';
 import { formatDateIST } from '@/lib/utils';
 import { ExternalLink, KeyRound } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
+import FilterBar from '@/components/sophistication/filter-bar';
 
 export const dynamic = 'force-dynamic';
 
-export default async function CredentialsPage() {
+export default async function CredentialsPage({ searchParams }: { searchParams: { query?: string } }) {
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'credentials.manage');
   const [items, clients] = await Promise.all([listCredentials(), listAccessibleClients()]);
 
-  const exportData = (items ?? []).map((c: any) => ({
+  let filteredItems = items;
+  if (searchParams.query) {
+    const q = searchParams.query.toLowerCase();
+    filteredItems = items.filter((c: any) =>
+      c.portal_name.toLowerCase().includes(q) ||
+      c.username.toLowerCase().includes(q) ||
+      (c.clients?.business_name ?? '').toLowerCase().includes(q)
+    );
+  }
+
+  const exportData = (filteredItems ?? []).map((c: any) => ({
     client: c.clients?.business_name ?? '',
     portal: c.portal_name,
     username: c.username,
@@ -41,7 +52,8 @@ export default async function CredentialsPage() {
           </>
         }
       />
-      {items.length === 0 ? (
+      <FilterBar inputs={[{ key: 'query', placeholder: 'Search portals, users, or clients...' }]} />
+      {filteredItems.length === 0 ? (
         <EmptyState
           title="No credentials yet"
           body="Add a portal login to start tracking firm-wide access. Every reveal is audited."
@@ -59,7 +71,7 @@ export default async function CredentialsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((c: any) => (
+              {filteredItems.map((c: any) => (
                 <TableRow key={c.id} data-testid={`cred-row-${c.id}`}>
                   <TableCell className="font-medium">{c.clients?.business_name}</TableCell>
                   <TableCell>

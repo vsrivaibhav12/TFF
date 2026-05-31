@@ -12,16 +12,26 @@ import EmptyState from '@/components/sophistication/empty-state';
 import { formatDateIST } from '@/lib/utils';
 import { differenceInDays, parseISO } from 'date-fns';
 import { KeyRound } from 'lucide-react';
+import FilterBar from '@/components/sophistication/filter-bar';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DscPage() {
+export default async function DscPage({ searchParams }: { searchParams: { query?: string } }) {
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'dsc.manage');
   const [items, clients] = await Promise.all([listDscRecords(), listAccessibleClients()]);
   const today = new Date();
 
-  const exportData = (items ?? []).map((d: any) => ({
+  let filteredItems = items;
+  if (searchParams.query) {
+    const q = searchParams.query.toLowerCase();
+    filteredItems = items.filter((d: any) =>
+      d.holder_name?.toLowerCase().includes(q) ||
+      (d.clients?.business_name ?? '').toLowerCase().includes(q)
+    );
+  }
+
+  const exportData = (filteredItems ?? []).map((d: any) => ({
     client: d.clients?.business_name ?? '',
     holder: d.holder_name,
     class: d.dsc_class,
@@ -43,7 +53,9 @@ export default async function DscPage() {
         }
       />
 
-      {items.length === 0 ? (
+      <FilterBar inputs={[{ key: 'query', placeholder: 'Search holder or client...' }]} />
+
+      {filteredItems.length === 0 ? (
         <EmptyState
           title="No DSCs registered"
           body="Add the first digital signature certificate to start tracking expiries."
@@ -61,7 +73,7 @@ export default async function DscPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((d: any) => {
+              {filteredItems.map((d: any) => {
                 const days = d.expiry_date ? differenceInDays(parseISO(d.expiry_date), today) : null;
                 let chip: 'success' | 'warning' | 'danger' | 'outline' = 'outline';
                 if (days !== null) {

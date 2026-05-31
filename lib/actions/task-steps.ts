@@ -79,6 +79,8 @@ export async function toggleTaskStepAction(input: z.infer<typeof toggleSchema>):
 const addSchema = z.object({
   task_id: z.string().uuid(),
   title: z.string().min(1).max(200),
+  description: z.string().max(1000).optional().nullable(),
+  guidance_notes: z.string().max(2000).optional().nullable(),
 });
 export async function addAdHocTaskStepAction(input: z.infer<typeof addSchema>): Promise<ActionResult<{ id: string }>> {
   try {
@@ -94,8 +96,11 @@ export async function addAdHocTaskStepAction(input: z.infer<typeof addSchema>): 
       task_id: parsed.data.task_id,
       step_order: next_order,
       title: parsed.data.title,
+      description: parsed.data.description ?? null,
+      guidance_notes: parsed.data.guidance_notes ?? null,
       is_required: false,
       source_sop_step_id: null,
+      source_template_step_id: null,
     }).select('id').single();
     if (error) return fail(error.message, 'DB');
     revalidatePath(`/team/tasks/${parsed.data.task_id}`);
@@ -110,6 +115,7 @@ const updateStepSchema = z.object({
   task_id: z.string().uuid(),
   title: z.string().min(1).max(200),
   description: z.string().max(1000).optional().nullable(),
+  guidance_notes: z.string().max(2000).optional().nullable(),
 });
 export async function updateTaskStepAction(input: z.infer<typeof updateStepSchema>): Promise<ActionResult<void>> {
   try {
@@ -121,6 +127,7 @@ export async function updateTaskStepAction(input: z.infer<typeof updateStepSchem
     const { error } = await sb.from('task_steps').update({
       title: parsed.data.title,
       description: parsed.data.description ?? null,
+      guidance_notes: parsed.data.guidance_notes ?? null,
     }).eq('id', parsed.data.step_id);
     if (error) return fail(error.message, 'DB');
     revalidatePath(`/team/tasks/${parsed.data.task_id}`);

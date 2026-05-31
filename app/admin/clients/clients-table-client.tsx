@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Building2, MapPin, Phone, Mail, Trash2 } from 'lucide-react';
+import { ArrowUpRight, Building2, MapPin, Phone, Mail, Trash2, Edit2, ShieldAlert, FolderOpen, MoreVertical, Link2, ExternalLink } from 'lucide-react';
+import { useConfirm } from '@/components/ui/use-confirm';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { bulkDeleteClients } from '@/lib/actions/clients';
 import BulkAssignSubService from '@/components/clients/bulk-assign-subservice';
+import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 
 interface EnrichedClient {
   id: string;
@@ -52,6 +54,7 @@ export default function ClientsTableClient({ clients, showBulkAssign = false }: 
   const [sortKey, setSortKey] = useState<'name' | 'engagements'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [ConfirmDialog, confirm] = useConfirm();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const sorted = [...clients].sort((a, b) => {
@@ -84,44 +87,50 @@ export default function ClientsTableClient({ clients, showBulkAssign = false }: 
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    if (!confirm(`Are you sure you want to delete ${selectedIds.size} client(s)?`)) return;
+    const ok = await confirm({ title: 'Delete Clients', description: `Are you sure you want to delete ${selectedIds.size} client(s)?` });
+    if (!ok) return;
 
     setIsDeleting(true);
     const result = await bulkDeleteClients({ clientIds: Array.from(selectedIds) });
     setIsDeleting(false);
 
     if (!result.success) {
-      toast.error(result.error);
+      return { success: 0, failed: selectedIds.size };
     } else {
-      toast.success(`Deleted ${selectedIds.size} client(s)`);
-      setSelectedIds(new Set());
+      return { success: selectedIds.size, failed: 0 };
     }
   };
 
   return (
-    <div className="space-y-3">
-      {/* Bulk Actions Bar */}
-      {selectedIds.size > 0 && (
-        <div className="bg-zinc-900 text-white px-4 py-3 rounded-xl flex items-center justify-between shadow-lg sticky top-4 z-10 animate-in slide-in-from-top-2">
-          <div className="text-sm font-medium">
-            {selectedIds.size} client(s) selected
-          </div>
-          <div className="flex gap-2">
-            {showBulkAssign && (
-              <BulkAssignSubService
-                selectedClientIds={Array.from(selectedIds)}
-                onDone={() => setSelectedIds(new Set())}
-              />
-            )}
-            <Button size="sm" variant="outline" className="text-zinc-900 bg-white hover:bg-zinc-100 border-none" onClick={() => setSelectedIds(new Set())}>
-              Cancel
-            </Button>
-            <Button size="sm" variant="destructive" onClick={handleBulkDelete} disabled={isDeleting}>
-              {isDeleting ? 'Deleting...' : <><Trash2 className="h-4 w-4 mr-2" /> Delete</>}
-            </Button>
-          </div>
-        </div>
-      )}
+    <div className="space-y-4">
+      <ConfirmDialog />
+      <BulkActionsBar
+        ids={Array.from(selectedIds)}
+        onClear={() => setSelectedIds(new Set())}
+        actions={[
+          {
+            type: 'button',
+            label: 'Delete clients',
+            icon: Trash2,
+            variant: 'danger',
+            onApply: async () => {
+              const ok = await confirm({ title: 'Delete Clients', description: `Are you sure you want to delete ${selectedIds.size} client(s)?` });
+              if (!ok) return { success: 0, failed: 0 };
+              
+              const result = await bulkDeleteClients({ clientIds: Array.from(selectedIds) });
+              if (!result.success) throw new Error(result.error);
+              return { success: selectedIds.size, failed: 0 };
+            }
+          }
+        ]}
+      >
+        {showBulkAssign && (
+          <BulkAssignSubService
+            selectedClientIds={Array.from(selectedIds)}
+            onDone={() => setSelectedIds(new Set())}
+          />
+        )}
+      </BulkActionsBar>
 
       {/* Table Header */}
       <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] md:grid-cols-12 gap-4 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">

@@ -8,6 +8,7 @@ import { ClipboardList, User, Calendar } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import ReviewLeave from '@/app/team/leave/review-leave';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pagination } from '@/components/ui/pagination';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,21 +23,34 @@ interface LeaveRow {
   users_profile: { full_name: string } | null;
 }
 
-export default async function AdminLeavePage() {
+export default async function AdminLeavePage({ searchParams }: { searchParams: { page?: string } }) {
   await requireRole('admin');
   const sb = createClient();
+  const page = parseInt(searchParams.page || '1', 10);
+  const limit = 50;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
-  const { data: requests } = await sb
+  // 1. Fetch pending requests (always fetch all pending to show at the top)
+  const { data: pendingData } = await sb
     .from('leave_requests')
     .select('id, leave_type, from_date, to_date, number_of_days, reason, status, users_profile:user_id(full_name)')
+    .eq('status', 'pending')
+    .order('from_date', { ascending: true });
+
+  // 2. Fetch paginated history (approved or rejected)
+  const { data: historyData, count } = await sb
+    .from('leave_requests')
+    .select('id, leave_type, from_date, to_date, number_of_days, reason, status, users_profile:user_id(full_name)', { count: 'exact' })
+    .neq('status', 'pending')
     .order('from_date', { ascending: false })
-    .limit(100);
+    .range(from, to);
 
-  const rows = (requests ?? []) as unknown as LeaveRow[];
-  const pendingRows = rows.filter((r) => r.status === 'pending');
-  const otherRows = rows.filter((r) => r.status !== 'pending');
+  const pendingRows = (pendingData ?? []) as unknown as LeaveRow[];
+  const historyRows = (historyData ?? []) as unknown as LeaveRow[];
+  const allRows = [...pendingRows, ...historyRows];
 
-  const exportData = (rows ?? []).map((r) => ({
+  const exportData = allRows.map((r) => ({
     member: r.users_profile?.full_name ?? '—',
     type: r.leave_type,
     from: r.from_date,
@@ -104,10 +118,10 @@ export default async function AdminLeavePage() {
         <h2 className="text-base font-semibold text-zinc-900">
           {pendingRows.length > 0 ? 'Request history' : 'All leave requests'}
         </h2>
-        {rows.length === 0 ? (
+        {historyRows.length === 0 ? (
           <EmptyState
-            title="No leave requests"
-            body="Team leave requests will appear here once submitted."
+            title="No request history"
+            body="Approved and rejected leave requests will appear here."
             icon={<ClipboardList className="h-6 w-6 text-zinc-400" />}
           />
         ) : (
@@ -124,7 +138,7 @@ export default async function AdminLeavePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(pendingRows.length > 0 ? otherRows : rows).map((r) => (
+                {historyRows.map((r) => (
                   <TableRow key={r.id} data-row>
                     <TableCell>
                       <div className="flex items-center gap-2 text-zinc-900 font-medium">
@@ -160,6 +174,7 @@ export default async function AdminLeavePage() {
             </Table>
           </div>
         )}
+        <Pagination page={page} total={count || 0} limit={limit} />
       </section>
     </div>
   );

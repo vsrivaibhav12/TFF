@@ -10,27 +10,41 @@ import EmptyState from '@/components/sophistication/empty-state';
 import BillingActions from './billing-actions';
 import { Receipt } from 'lucide-react';
 import ExportButton from '@/components/sophistication/export-button';
+import { Pagination } from '@/components/ui/pagination';
 
 export const dynamic = 'force-dynamic';
 
-export default async function BillingTrackerPage() {
+export default async function BillingTrackerPage({ searchParams }: { searchParams: { page?: string } }) {
   const sb = createClient();
+  const page = parseInt(searchParams.page || '1', 10);
+  const limit = 50;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
   const mePromise = requireRole(['admin', 'team']);
+  
+  // Get paginated data
   const tasksPromise = sb
     .from('tasks')
-    .select('id, task_number, title, status, bill_amount, bill_reference, billed, billed_date, completed_date, client_id, clients!tasks_client_id_fkey(business_name)')
+    .select('id, task_number, title, status, bill_amount, bill_reference, billed, billed_date, completed_date, client_id, clients!tasks_client_id_fkey(business_name)', { count: 'exact' })
     .eq('is_billable', true)
     .eq('is_deleted', false)
     .order('completed_date', { ascending: false })
-    .limit(200);
+    .range(from, to);
 
-  const [me, { data: tasks }] = await Promise.all([mePromise, tasksPromise]);
+  // Get aggregations for the KPIs
+  const aggPromise = sb
+    .from('tasks')
+    .select('billed, bill_amount')
+    .eq('is_billable', true)
+    .eq('is_deleted', false);
+
+  const [me, { data: tasks, count }, { data: aggData }] = await Promise.all([mePromise, tasksPromise, aggPromise]);
   await requireCapabilityOrRedirect(me, 'manage_billing_entities');
 
-  const pendingCount = (tasks ?? []).filter((t: any) => !t.billed).length;
-  const totalAmount = (tasks ?? []).reduce((sum: number, t: any) => sum + (t.bill_amount || 0), 0);
-  const pendingAmount = (tasks ?? []).filter((t: any) => !t.billed).reduce((sum: number, t: any) => sum + (t.bill_amount || 0), 0);
+  const pendingCount = (aggData ?? []).filter((t: any) => !t.billed).length;
+  const totalAmount = (aggData ?? []).reduce((sum: number, t: any) => sum + (t.bill_amount || 0), 0);
+  const pendingAmount = (aggData ?? []).filter((t: any) => !t.billed).reduce((sum: number, t: any) => sum + (t.bill_amount || 0), 0);
 
   const exportData = (tasks ?? []).map((t: any) => ({
     task_number: t.task_number ?? '',
@@ -53,7 +67,7 @@ export default async function BillingTrackerPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="tff-card p-5">
-          <div className="tff-kpi-value">{tasks?.length ?? 0}</div>
+          <div className="tff-kpi-value">{count ?? 0}</div>
           <div className="tff-kpi-label mt-1">Billable tasks</div>
         </div>
         <div className="tff-card p-5">
@@ -115,6 +129,7 @@ export default async function BillingTrackerPage() {
             </TableBody>
           </Table>
         </div>
+        <Pagination page={page} total={count || 0} limit={limit} />
       </div>
       )}
     </div>

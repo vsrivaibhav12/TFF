@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { upsertServiceCategoryAction, deleteServiceCategoryAction } from '@/lib/actions/services-catalogue';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/use-confirm';
 import { Trash2, Pencil, Plus } from 'lucide-react';
 
 interface Category {
@@ -18,6 +19,7 @@ interface Category {
 
 export function CategoryManager({ categories, onChange }: { categories: Category[]; onChange?: () => void }) {
   const [open, setOpen] = useState(false);
+  const [ConfirmDialog, confirm] = useConfirm();
   const [editing, setEditing] = useState<Category | null>(null);
   const [pending, startTransition] = useTransition();
   const [name, setName] = useState('');
@@ -52,8 +54,9 @@ export function CategoryManager({ categories, onChange }: { categories: Category
     });
   }
 
-  function remove(id: string) {
-    if (!confirm('Delete this category? Services in this category will become uncategorized.')) return;
+  async function remove(id: string) {
+    const ok = await confirm({ title: 'Delete Category', description: 'Delete this category? Services in this category will become uncategorized.' });
+    if (!ok) return;
     startTransition(async () => {
       const r = await deleteServiceCategoryAction(id);
       if (r.success) { toast.success('Deleted'); onChange?.(); }
@@ -62,14 +65,16 @@ export function CategoryManager({ categories, onChange }: { categories: Category
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) startNew(); }}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="text-xs border-zinc-200 text-zinc-600 hover:text-zinc-900">
-          Manage categories
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Service categories</DialogTitle></DialogHeader>
+    <>
+      <ConfirmDialog />
+      <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) startNew(); }}>
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline" className="text-xs border-zinc-200 text-zinc-600 hover:text-zinc-900">
+            Manage categories
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Service categories</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Name *</Label>
@@ -113,5 +118,6 @@ export function CategoryManager({ categories, onChange }: { categories: Category
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

@@ -144,11 +144,7 @@ export default function TaskActions({ task, team }: { task: any; team: any[] }) 
         </div>
       )}
 
-      <div className="border-t border-zinc-200 pt-5 space-y-3">
-        <Label>Add note</Label>
-        <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} data-testid="new-note" placeholder="Add an internal note…" />
-        <Button variant="outline" size="sm" onClick={addNote} disabled={!note.trim() || pending}>Save note only</Button>
-      </div>
+
     </div>
   );
 }

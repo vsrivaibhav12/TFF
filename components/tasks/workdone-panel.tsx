@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { addManualWorkDoneAction, logTimerWorkDoneAction, deleteWorkDoneAction } from '@/lib/actions/workdone';
 import { formatDateIST } from '@/lib/utils';
 import type { WorkDoneRow } from '@/lib/repositories/workdone';
+import { useConfirm } from '@/components/ui/use-confirm';
 
 const STORAGE_PREFIX = 'tff:workdone-timer:';
 
@@ -29,6 +30,7 @@ export default function WorkDonePanel({
   const [elapsedSec, setElapsedSec] = useState(0);
   const [timerNote, setTimerNote] = useState('');
   const tickRef = useRef<any>(null);
+  const [ConfirmDialog, confirm] = useConfirm();
 
   // Restore in-progress timer on mount
   useEffect(() => {
@@ -95,8 +97,9 @@ export default function WorkDonePanel({
     });
   }
 
-  function remove(id: string) {
-    if (!confirm('Delete this time entry?')) return;
+  async function remove(id: string) {
+    const ok = await confirm({ title: 'Delete Entry', description: 'Delete this time entry?' });
+    if (!ok) return;
     startTransition(async () => {
       const r = await deleteWorkDoneAction(id);
       if (!r.success) { toast.error(r.error); return; }
@@ -110,6 +113,7 @@ export default function WorkDonePanel({
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-5 space-y-4">
+      <ConfirmDialog />
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold flex items-center gap-1.5">

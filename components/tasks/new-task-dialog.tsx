@@ -42,15 +42,21 @@ export default function NewTaskDialog({ clients, team, defaultClientId, triggerL
 
   function set<K extends keyof typeof f>(k: K, v: any) { setF((p) => ({ ...p, [k]: v })); }
 
-  // Auto-generate title when client + sub-service are selected
+  // Auto-generate title when client + sub-service + period are selected
   useEffect(() => {
     if (!f.client_id || !f.sub_service_id) return;
     const clientName = clients.find((c) => c.id === f.client_id)?.business_name ?? '';
     const subName = clientSubServices.find((cs: any) => cs.sub_service_id === f.sub_service_id)?.sub_services?.name ?? '';
-    if (clientName && subName && !f.title) {
-      setF((p) => ({ ...p, title: `${subName} — ${clientName}` }));
+    if (clientName && subName) {
+      let newTitle = `${clientName} - ${subName}`;
+      if (f.period_year) {
+         newTitle += ` ${f.period_year}`;
+         if (f.period_month) newTitle += `-${String(f.period_month).padStart(2, '0')}`;
+         if (f.period_quarter) newTitle += ` Q${f.period_quarter}`;
+      }
+      setF((p) => ({ ...p, title: newTitle }));
     }
-  }, [f.client_id, f.sub_service_id, clientSubServices, clients]);
+  }, [f.client_id, f.sub_service_id, f.period_year, f.period_month, f.period_quarter, clientSubServices, clients]);
 
   // Load this client's sub-services when client changes
   useEffect(() => {

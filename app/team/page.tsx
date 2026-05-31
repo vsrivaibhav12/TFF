@@ -26,6 +26,7 @@ import EmptyState from '@/components/sophistication/empty-state';
 import { ClientsEmptyIllustration } from '@/components/ui/empty-illustrations';
 import { PriorityList } from '@/components/dashboard/priority-list';
 import { TeamQuickActions } from '@/components/dashboard/team-quick-actions';
+import { TeamAttendancePrompt } from '@/components/dashboard/smart-prompts';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,6 +66,7 @@ export default async function TeamWorkspace() {
 
   return (
     <StaggerContainer className="space-y-6">
+      <TeamAttendancePrompt />
       {/* Header */}
       <StaggerItem>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

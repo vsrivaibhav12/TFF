@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { saveSavedViewAction, deleteSavedViewAction } from '@/lib/actions/saved-views';
+import { useConfirm } from '@/components/ui/use-confirm';
 import { toast } from 'sonner';
 
 interface SavedView { id: string; name: string; is_default: boolean; filters: Record<string, string> }
@@ -17,6 +18,7 @@ export default function SavedViewsBar({ scope, views }: { scope: string; views: 
   const [name, setName] = useState('');
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [ConfirmDialog, confirm] = useConfirm();
 
   function applyView(v: SavedView) {
     const sp = new URLSearchParams();
@@ -37,8 +39,9 @@ export default function SavedViewsBar({ scope, views }: { scope: string; views: 
     });
   }
 
-  function remove(v: SavedView) {
-    if (!confirm(`Delete view "${v.name}"?`)) return;
+  async function remove(v: SavedView) {
+    const ok = await confirm({ title: 'Delete View', description: `Delete view "${v.name}"?` });
+    if (!ok) return;
     startTransition(async () => {
       const r = await deleteSavedViewAction(v.id);
       if (r.success) { toast.success('Deleted'); router.refresh(); }
@@ -47,7 +50,9 @@ export default function SavedViewsBar({ scope, views }: { scope: string; views: 
   }
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <>
+      <ConfirmDialog />
+      <div className="flex items-center gap-2 flex-wrap">
       {views.map((v) => (
         <span key={v.id} className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white pl-3 pr-1 py-1 text-xs hover:border-teal-400">
           <button onClick={() => applyView(v)} className="flex items-center gap-1" data-testid={`view-${v.id}`}>
@@ -70,5 +75,6 @@ export default function SavedViewsBar({ scope, views }: { scope: string; views: 
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 }

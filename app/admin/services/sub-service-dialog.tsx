@@ -8,11 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { upsertSubServiceAction, deleteSubServiceAction } from '@/lib/actions/services-catalogue';
+import { useConfirm } from '@/components/ui/use-confirm';
 import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react';
 
 export default function SubServiceDialog({ serviceId, serviceName, initial, children }: { serviceId: string; serviceName: string; initial?: any; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [ConfirmDialog, confirm] = useConfirm();
   const [pending, startTransition] = useTransition();
   const [f, setF] = useState({
     id: initial?.id,
@@ -41,8 +43,10 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
       else toast.error(r.error);
     });
   }
-  function remove() {
-    if (!f.id || !confirm('Disable this sub-service?')) return;
+  async function remove() {
+    if (!f.id) return;
+    const ok = await confirm({ title: 'Disable Sub Service', description: 'Disable this sub-service?' });
+    if (!ok) return;
     startTransition(async () => {
       const r = await deleteSubServiceAction(f.id!);
       if (r.success) { toast.success('Disabled'); setOpen(false); }
@@ -50,7 +54,9 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
     });
   }
   return (
-    <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild>{children}</DialogTrigger>
+    <>
+      <ConfirmDialog />
+      <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>{initial ? `Edit sub-service — ${serviceName}` : `New sub-service in ${serviceName}`}</DialogTitle></DialogHeader>
         <div className="space-y-3">
@@ -105,6 +111,8 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
           {initial && <Button variant="outline" onClick={remove} disabled={pending}><Trash2 className="h-4 w-4" /> Disable</Button>}
           <Button onClick={save} disabled={pending} data-testid="sub-svc-save">{pending ? 'Saving…' : 'Save'}</Button>
         </DialogFooter>
-      </DialogContent></Dialog>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

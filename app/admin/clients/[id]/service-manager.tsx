@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
-import { unlinkSubServiceAction, linkSubServiceAction, linkServiceToClientAction, updateClientServiceHeadAction } from '@/lib/actions/services';
+import { unlinkSubServiceAction, linkSubServiceAction, linkServiceToClientAction, updateClientServiceHeadAction, linkMultipleSubServicesToClientAction } from '@/lib/actions/services';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useConfirm } from '@/components/ui/use-confirm';
 
 interface Props {
   clientId: string;
@@ -21,9 +23,10 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
   const [pending, startTransition] = useTransition();
   const [openSub, setOpenSub] = useState(false);
   const [openService, setOpenService] = useState(false);
-  const [pickedSubServiceId, setPickedSubServiceId] = useState('');
+  const [pickedSubServiceIds, setPickedSubServiceIds] = useState<Set<string>>(new Set());
   const [pickedServiceId, setPickedServiceId] = useState('');
   const [pickedServiceHeadId, setPickedServiceHeadId] = useState('__none__');
+  const [ConfirmDialog, confirm] = useConfirm();
 
   const [allSubServices, setAllSubServices] = useState<any[]>([]);
   const [allServices, setAllServices] = useState<any[]>([]);
@@ -50,8 +53,9 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
     }
   }
 
-  function unlinkSub(linkId: string) {
-    if (!confirm('Remove this sub-service from the client?')) return;
+  async function unlinkSub(linkId: string) {
+    const ok = await confirm({ title: 'Remove sub-service', description: 'Remove this sub-service from the client?' });
+    if (!ok) return;
     startTransition(async () => {
       const r = await unlinkSubServiceAction({ id: linkId, client_id: clientId });
       if (!r.success) toast.error(r.error);
@@ -60,12 +64,19 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
   }
 
   function addSub() {
-    if (!pickedSubServiceId) return;
+    if (pickedSubServiceIds.size === 0) return;
     startTransition(async () => {
-      const r = await linkSubServiceAction({ client_id: clientId, sub_service_id: pickedSubServiceId });
+      const r = await linkMultipleSubServicesToClientAction({ client_id: clientId, sub_service_ids: Array.from(pickedSubServiceIds) });
       if (!r.success) toast.error(r.error);
-      else { toast.success('Added'); setOpenSub(false); setPickedSubServiceId(''); router.refresh(); }
+      else { toast.success(`Added ${r.data?.linked} sub-service(s)`); setOpenSub(false); setPickedSubServiceIds(new Set()); router.refresh(); }
     });
+  }
+
+  function toggleSubService(id: string) {
+    const next = new Set(pickedSubServiceIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setPickedSubServiceIds(next);
   }
 
   function addService() {
@@ -97,6 +108,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
 
   return (
     <div className="space-y-12">
+      <ConfirmDialog />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold tracking-tight">Main service subscriptions</h3>
@@ -183,20 +195,31 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
             <DialogTrigger asChild>
               <Button size="sm" variant="outline" data-testid="add-sub-service-btn"><Plus className="h-4 w-4" /> Add sub-service</Button>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Add sub-service</DialogTitle></DialogHeader>
+            <DialogContent className="max-w-xl">
+              <DialogHeader><DialogTitle>Add sub-services</DialogTitle></DialogHeader>
               <div className="space-y-3 py-4">
-                <Select value={pickedSubServiceId} onValueChange={setPickedSubServiceId}>
-                  <SelectTrigger data-testid="pick-sub-service"><SelectValue placeholder="Select sub-service..." /></SelectTrigger>
-                  <SelectContent>
-                    {availableSubs.map((s: any) => (
-                      <SelectItem key={s.id} value={s.id}>{s.code} — {s.name} ({s.frequency})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <p className="text-sm text-zinc-500">Select one or more sub-services to link.</p>
+                <div className="max-h-80 overflow-y-auto space-y-2 border border-zinc-100 rounded-md p-2">
+                  {availableSubs.length === 0 && <p className="text-sm text-zinc-500 text-center py-4">All sub-services already linked.</p>}
+                  {availableSubs.map((s: any) => (
+                    <label key={s.id} className="flex items-start gap-3 p-2 hover:bg-zinc-50 rounded-md cursor-pointer">
+                      <Checkbox 
+                        checked={pickedSubServiceIds.has(s.id)} 
+                        onCheckedChange={() => toggleSubService(s.id)} 
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-zinc-900">{s.name} ({s.code})</div>
+                        <div className="text-xs text-zinc-500">{s.services?.name} · {s.frequency}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </div>
               <DialogFooter>
-                <Button onClick={addSub} disabled={!pickedSubServiceId || pending}>Add</Button>
+                <Button onClick={addSub} disabled={pickedSubServiceIds.size === 0 || pending}>
+                  Add {pickedSubServiceIds.size > 0 ? `(${pickedSubServiceIds.size})` : ''}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

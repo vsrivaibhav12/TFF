@@ -58,10 +58,10 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
         const sb = createServiceClient();
         await seedTaskStepsFromTemplate(sb as any, { task_id: data.id, task_template_id: parsed.data.task_template_id });
       } catch (e) {
-        console.error('Template step seeding failed:', e);
+        console.error('Failed to seed template steps', e);
       }
     } else if (parsed.data.sub_service_id) {
-      // Fallback: copy SOP steps from sub-service for backward compatibility
+      // Auto-load SOP steps if no specific template is chosen
       try {
         const sb = createServiceClient();
         await seedTaskStepsFromSop(sb as any, { task_id: data.id, sub_service_id: parsed.data.sub_service_id });
@@ -579,7 +579,7 @@ export async function bulkCreateTasksAction(input: z.infer<typeof bulkCreateTask
         });
         created++;
       } catch (e: any) {
-        console.error('Bulk task creation failed for client', clientId, e);
+        console.error('Bulk task creation failed for client', e);
       }
     }
 
@@ -602,6 +602,12 @@ const updateTaskSchema = z.object({
   period_year: z.number().int().min(2000).max(2100).optional().nullable(),
   period_month: z.number().int().min(1).max(12).optional().nullable(),
   period_quarter: z.number().int().min(1).max(4).optional().nullable(),
+  sub_service_id: z.string().uuid().optional().nullable(),
+  arn_reference: z.string().max(100).optional().nullable(),
+  bill_reference: z.string().max(100).optional().nullable(),
+  bill_amount: z.number().optional().nullable(),
+  is_billable: z.boolean().optional(),
+  is_arn_client_visible: z.boolean().optional(),
 });
 
 export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>): Promise<ActionResult<void>> {

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/use-confirm';
 import { createClientGroup, updateClientGroup, deleteClientGroup } from '@/lib/actions/clients';
 import { Pencil, Trash2, Plus, Check, X } from 'lucide-react';
 
@@ -23,6 +24,7 @@ export default function ClientGroupsClient({ groups }: { groups: Group[] }) {
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [showAdd, setShowAdd] = useState(false);
+  const [ConfirmDialog, confirm] = useConfirm();
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
 
@@ -56,8 +58,9 @@ export default function ClientGroupsClient({ groups }: { groups: Group[] }) {
     });
   }
 
-  function onDelete(id: string) {
-    if (!confirm('Delete this group? Clients in this group will become ungrouped.')) return;
+  async function onDelete(id: string) {
+    const ok = await confirm({ title: 'Delete Group', description: 'Delete this group? Clients in this group will become ungrouped.' });
+    if (!ok) return;
     startTransition(async () => {
       const r = await deleteClientGroup(id);
       if (r.success) {
@@ -70,7 +73,8 @@ export default function ClientGroupsClient({ groups }: { groups: Group[] }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 max-w-4xl">
+      <ConfirmDialog />
       <div className="flex justify-end">
         {!showAdd ? (
           <Button variant="outline" size="sm" onClick={() => setShowAdd(true)}>

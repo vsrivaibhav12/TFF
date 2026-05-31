@@ -11,6 +11,9 @@ import {
   ClipboardList,
   BarChart3,
   Zap,
+  BellRing,
+  UserCircle,
+  Key,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -89,6 +92,15 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
         for (const t of j.tasks ?? []) {
           out.push({ id: `task-${t.id}`, label: t.title, group: 'Tasks', href: `${basePath}/tasks/${t.id}`, icon: <Briefcase className="h-3.5 w-3.5" />, keywords: t.client_name });
         }
+        for (const n of j.notices ?? []) {
+          out.push({ id: `notice-${n.id}`, label: n.subject, group: 'Notices', href: `${basePath}/notices`, icon: <BellRing className="h-3.5 w-3.5" />, keywords: `${n.client_name} ${n.notice_type}` });
+        }
+        for (const u of j.team ?? []) {
+          out.push({ id: `team-${u.id}`, label: u.full_name, group: 'Team', href: `/admin/team/${u.id}`, icon: <UserCircle className="h-3.5 w-3.5" />, keywords: u.email });
+        }
+        for (const c of j.credentials ?? []) {
+          out.push({ id: `cred-${c.id}`, label: c.portal_name, group: 'Credentials', href: `/admin/credentials?q=${encodeURIComponent(c.portal_name)}`, icon: <Key className="h-3.5 w-3.5" />, keywords: c.client_name });
+        }
         setItems(out);
       } catch {
         setItems([]);
@@ -108,7 +120,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
   }, {});
 
   // Order groups: Actions first, Navigation, then search results
-  const groupOrder = ['Actions', 'Navigation', 'Clients', 'Tasks', 'Notices'];
+  const groupOrder = ['Actions', 'Navigation', 'Clients', 'Tasks', 'Notices', 'Credentials', 'Team'];
   const orderedGroups = Object.entries(groups).sort(
     ([a], [b]) => (groupOrder.indexOf(a) === -1 ? 99 : groupOrder.indexOf(a)) - (groupOrder.indexOf(b) === -1 ? 99 : groupOrder.indexOf(b))
   );

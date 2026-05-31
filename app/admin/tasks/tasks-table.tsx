@@ -3,6 +3,8 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+
+import { useConfirm } from '@/components/ui/use-confirm';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -35,6 +37,8 @@ export default function TasksTable({ tasks, todayIso }: { tasks: Task[]; todayIs
   const [sortKey, setSortKey] = useState<string>('due_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [colSearch, setColSearch] = useState<Record<string, string>>({});
+  const [ConfirmDialog, confirm] = useConfirm();
 
   const assignees = useMemo(() => {
     const map = new Map<string, string>();
@@ -132,8 +136,8 @@ export default function TasksTable({ tasks, todayIso }: { tasks: Task[]; todayIs
   async function bulkDeleteTasks(ids: string[]) {
     let success = 0, failed = 0;
     
-    // We confirm before calling this, but let's confirm here for safety
-    if (!confirm(`Are you sure you want to delete ${ids.length} task(s)?`)) return { success, failed };
+    const ok = await confirm({ title: 'Delete Tasks', description: `Are you sure you want to delete ${ids.length} task(s)?` });
+    if (!ok) return { success: 0, failed: 0 };
 
     // Since bulkDeleteTasksAction takes the array and does Promise.all, we can just call it
     const { bulkDeleteTasksAction } = await import('@/lib/actions/tasks');
@@ -152,7 +156,8 @@ export default function TasksTable({ tasks, todayIso }: { tasks: Task[]; todayIs
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 flex-wrap">
+      <ConfirmDialog />
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
           <input

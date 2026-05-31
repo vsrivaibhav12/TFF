@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { listTasks } from '@/lib/repositories/tasks';
+import { listTasks, countTasks } from '@/lib/repositories/tasks';
 import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
-import { listSubServicesCached } from '@/lib/repositories/services';
+import { listSubServices } from '@/lib/repositories/services';
 import { listSavedViews } from '@/lib/actions/saved-views';
 import { getCurrentUser } from '@/lib/auth/require-role';
 import { PageHeader } from '@/components/ui/page-header';
@@ -12,9 +12,11 @@ import FilterBar from '@/components/sophistication/filter-bar';
 import NewTaskDialog from '@/components/tasks/new-task-dialog';
 import TasksTableClient from './tasks-table-client';
 import { TaskViewWrapper } from '@/components/tasks/task-view-wrapper';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
+
+const PAGE_SIZE = 50;
 
 function buildTaskUrl(base: string, sp: Record<string, string | undefined>, overrides: Record<string, string | undefined>) {
   const params = new URLSearchParams();
@@ -25,21 +27,27 @@ function buildTaskUrl(base: string, sp: Record<string, string | undefined>, over
   return qs ? `${base}?${qs}` : base;
 }
 
-export default async function TeamTasksList({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string } }) {
+export default async function TeamTasksList({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string; page?: string } }) {
   const me = await getCurrentUser();
   const status = searchParams.status?.split(',').filter(Boolean) as any;
   const priority = searchParams.priority?.split(',').filter(Boolean) as any;
   // Default to showing the current user's assigned tasks unless a specific filter is set
   const assignedTo = searchParams.assigned ?? me?.id ?? undefined;
+  const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
+  const offset = (currentPage - 1) * PAGE_SIZE;
 
-  const [tasks, clients, team, subServices, views] = await Promise.all([
-    listTasks({ status, priority, assignedTo, clientId: searchParams.client, subServiceId: searchParams.sub_service, dueFrom: searchParams.due_from, dueTo: searchParams.due_to }),
+  const filterOpts = { status, priority, assignedTo, clientId: searchParams.client, subServiceId: searchParams.sub_service, dueFrom: searchParams.due_from, dueTo: searchParams.due_to };
+
+  const [tasks, clients, team, subServices, views, totalCount] = await Promise.all([
+    listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
     listAccessibleClients(),
     listTeamUsers(),
-    listSubServicesCached(),
+    listSubServices(),
     listSavedViews('team.tasks'),
+    countTasks(filterOpts),
   ]);
 
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const filteredTasks = tasks;
 
   const filters = [
@@ -125,9 +133,49 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
           icon={<Briefcase className="h-6 w-6 text-zinc-400" />}
         />
       ) : (
-        <TaskViewWrapper tasks={filteredTasks as any} hrefPrefix="/team/tasks">
-          <TasksTableClient tasks={filteredTasks as any} />
-        </TaskViewWrapper>
+        <>
+          <TaskViewWrapper tasks={filteredTasks as any} hrefPrefix="/team/tasks">
+            <TasksTableClient tasks={filteredTasks as any} />
+          </TaskViewWrapper>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-sm text-zinc-500">
+                Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, totalCount)} of {totalCount}
+              </p>
+              <div className="flex items-center gap-1">
+                {currentPage > 1 ? (
+                  <Link
+                    href={buildTaskUrl('/team/tasks', searchParams, { page: String(currentPage - 1) })}
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-100 text-zinc-300">
+                    <ChevronLeft className="h-4 w-4" />
+                  </span>
+                )}
+                <span className="px-3 text-sm font-medium text-zinc-700">
+                  Page {currentPage} of {totalPages}
+                </span>
+                {currentPage < totalPages ? (
+                  <Link
+                    href={buildTaskUrl('/team/tasks', searchParams, { page: String(currentPage + 1) })}
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-100 text-zinc-300">
+                    <ChevronRight className="h-4 w-4" />
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

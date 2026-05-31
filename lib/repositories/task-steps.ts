@@ -12,6 +12,8 @@ export interface TaskStepRow {
   completed_by: string | null;
   completion_note: string | null;
   source_sop_step_id: string | null;
+  source_template_step_id: string | null;
+  guidance_notes: string | null;
   users_profile?: { full_name: string | null; email: string | null } | null;
 }
 
@@ -23,7 +25,7 @@ export async function listTaskSteps(taskId: string): Promise<TaskStepRow[]> {
   const { data, error } = await sb
     .from('task_steps')
     .select(
-      'id, task_id, step_order, title, description, is_required, completed_at, completed_by, completion_note, source_sop_step_id, users_profile:completed_by(full_name, email)',
+      'id, task_id, step_order, title, description, is_required, completed_at, completed_by, completion_note, source_sop_step_id, source_template_step_id, guidance_notes, users_profile:completed_by(full_name, email)',
     )
     .eq('task_id', taskId)
     .order('step_order', { ascending: true });

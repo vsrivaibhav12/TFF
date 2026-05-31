@@ -23,6 +23,7 @@ import {
   deleteRoleTemplateAction,
 } from '@/lib/actions/role-templates';
 import EmptyState from '@/components/sophistication/empty-state';
+import { useConfirm } from '@/components/ui/use-confirm';
 import type { RoleTemplate } from '@/lib/repositories/role-templates';
 import BackButton from '@/components/sophistication/back-button';
 
@@ -42,6 +43,7 @@ export default function RoleTemplatesAdmin({ templates }: { templates: RoleTempl
   const router = useRouter();
   const [editing, setEditing] = useState<RoleTemplate | 'new' | null>(null);
   const [pending, startTransition] = useTransition();
+  const [ConfirmDialog, confirm] = useConfirm();
 
   function openNew() {
     setEditing('new');
@@ -50,8 +52,9 @@ export default function RoleTemplatesAdmin({ templates }: { templates: RoleTempl
     setEditing(t);
   }
 
-  function remove(id: string) {
-    if (!confirm('Delete this role template? Staff with this role keep their current capabilities.')) return;
+  async function remove(id: string) {
+    const ok = await confirm({ title: 'Delete Role Template', description: 'Delete this role template? Staff with this role keep their current capabilities.' });
+    if (!ok) return;
     startTransition(async () => {
       const r = await deleteRoleTemplateAction(id);
       if (!r.success) toast.error(r.error);
@@ -64,6 +67,7 @@ export default function RoleTemplatesAdmin({ templates }: { templates: RoleTempl
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog />
       <BackButton href="/admin/team" />
       <div className="flex items-center justify-between">
         <div>

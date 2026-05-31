@@ -32,7 +32,7 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
   const [links, team, allClients] = await Promise.all([
     listClientsBySubService(params.id),
     listTeamUsers(),
-    listAccessibleClients({ limit: 500 }),
+    listAccessibleClients({ limit: 5000 }),
   ]);
 
   const activeLinks = links.filter((l: any) => l.is_active !== false);

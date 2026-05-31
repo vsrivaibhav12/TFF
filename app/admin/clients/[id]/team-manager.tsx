@@ -7,6 +7,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { assignTeamMember, unassignTeamMember } from '@/lib/actions/clients';
+import { useConfirm } from '@/components/ui/use-confirm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 
 export default function ClientTeamManager({
@@ -22,6 +23,7 @@ export default function ClientTeamManager({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [ConfirmDialog, confirm] = useConfirm();
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState('');
   const [role, setRole] = useState<'lead' | 'support' | 'reviewer'>('lead');
@@ -35,10 +37,11 @@ export default function ClientTeamManager({
     });
   }
 
-  function unassign(id: string) {
-    if (!confirm('End this assignment?')) return;
+  async function remove(linkId: string) {
+    const ok = await confirm({ title: 'Remove assignment', description: 'End this assignment?' });
+    if (!ok) return;
     startTransition(async () => {
-      const r = await unassignTeamMember(id, clientId);
+      const r = await unassignTeamMember(linkId, clientId);
       if (!r.success) toast.error(r.error);
       else { toast.success('Unassigned'); router.refresh(); }
     });
@@ -48,7 +51,8 @@ export default function ClientTeamManager({
   const pastAssignments = assignments.filter((a) => a.assigned_to);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 max-w-4xl">
+      <ConfirmDialog />
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold">Team assigned to this client</h3>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -82,7 +86,7 @@ export default function ClientTeamManager({
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="teal">{a.role}</Badge>
-                <Button variant="ghost" size="sm" onClick={() => unassign(a.id)} disabled={pending}><Trash2 className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="sm" onClick={() => remove(a.id)} disabled={pending}><Trash2 className="h-4 w-4" /></Button>
               </div>
             </div>
           ))}

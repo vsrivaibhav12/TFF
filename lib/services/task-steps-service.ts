@@ -31,6 +31,7 @@ export async function seedTaskStepsFromTemplate(
     title: s.title,
     description: s.description ?? null,
     is_required: s.is_required ?? true,
+    guidance_notes: s.guidance_notes ?? null,
     source_template_step_id: s.id,
   }));
   const { error } = await sb.from('task_steps').insert(rows);
@@ -61,7 +62,7 @@ export async function seedTaskStepsFromSop(
   // Pull SOP
   const { data: sop } = await sb
     .from('sub_service_sop_steps')
-    .select('id, step_order, title, description, is_required')
+    .select('id, step_order, title, description, is_required, guidance_notes')
     .eq('sub_service_id', args.sub_service_id)
     .eq('is_deleted', false)
     .order('step_order', { ascending: true });
@@ -74,6 +75,7 @@ export async function seedTaskStepsFromSop(
     title: s.title,
     description: s.description ?? null,
     is_required: s.is_required ?? true,
+    guidance_notes: s.guidance_notes ?? null,
     source_sop_step_id: s.id,
   }));
   const { error } = await sb.from('task_steps').insert(rows);

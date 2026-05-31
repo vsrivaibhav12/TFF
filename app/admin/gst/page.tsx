@@ -1,8 +1,8 @@
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { listAccessibleClients } from '@/lib/repositories/clients';
-import { listGstFilings } from '@/lib/repositories/compliance';
-import { getGstMonthlyDataForClient } from '@/lib/repositories/gst';
+import { listGstFilingsForClients } from '@/lib/repositories/compliance';
+import { getGstMonthlyDataForClients } from '@/lib/repositories/gst';
 import { formatCurrencyINR, formatDateIST } from '@/lib/utils';
 import { FileText, ArrowRight, Calculator, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
@@ -20,15 +20,28 @@ export default async function AdminGstPage() {
   await requireCapabilityOrRedirect(me, 'compliance.enter');
   const clients = await listAccessibleClients();
 
-  const clientGstData = await Promise.all(
-    clients.map(async (client: any) => {
-      const [filings, monthlyData] = await Promise.all([
-        listGstFilings(client.id),
-        getGstMonthlyDataForClient(client.id),
-      ]);
-      return { client, filings, monthlyData };
-    }),
-  );
+  const clientIds = clients.map((c: any) => c.id);
+
+  const [allFilings, allMonthlyData] = await Promise.all([
+    listGstFilingsForClients(clientIds),
+    getGstMonthlyDataForClients(clientIds),
+  ]);
+
+  const filingsByClient = allFilings.reduce((acc: any, f: any) => {
+    (acc[f.client_id] = acc[f.client_id] || []).push(f);
+    return acc;
+  }, {});
+
+  const monthlyDataByClient = allMonthlyData.reduce((acc: any, d: any) => {
+    (acc[d.client_id] = acc[d.client_id] || []).push(d);
+    return acc;
+  }, {});
+
+  const clientGstData = clients.map((client: any) => ({
+    client,
+    filings: filingsByClient[client.id] || [],
+    monthlyData: monthlyDataByClient[client.id] || [],
+  }));
 
   const totalFilings = clientGstData.reduce((sum, c) => sum + c.filings.length, 0);
 

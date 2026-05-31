@@ -91,8 +91,40 @@ export async function upsertTaskTemplateStepAction(input: z.infer<typeof stepSch
     }
     const { data, error } = await sb.from('task_template_steps').upsert(payload, { onConflict: 'id' }).select('id').single();
     if (error) return fail(error.message, 'DB');
+
+    // Smart Sync
+    const stepId = data.id;
+    const isUpdate = !!parsed.data.id;
+    const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', parsed.data.task_template_id).not('status', 'in', '("completed","cancelled")');
+    
+    if (openTasks && openTasks.length > 0) {
+      const taskIds = openTasks.map((t: any) => t.id);
+      if (isUpdate) {
+        await sb.from('task_steps')
+          .update({
+            title: payload.title,
+            description: payload.description || null,
+            guidance_notes: payload.guidance_notes || null,
+            is_required: payload.is_required
+          })
+          .eq('source_template_step_id', stepId)
+          .in('task_id', taskIds);
+      } else {
+        const rows = taskIds.map((tid: string) => ({
+          task_id: tid,
+          step_order: payload.step_order,
+          title: payload.title,
+          description: payload.description || null,
+          guidance_notes: payload.guidance_notes || null,
+          is_required: payload.is_required ?? true,
+          source_template_step_id: stepId,
+        }));
+        await sb.from('task_steps').insert(rows);
+      }
+    }
+
     revalidatePath('/admin/services');
-    return ok({ id: (data as any).id });
+    return ok({ id: stepId });
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
   }
@@ -103,8 +135,20 @@ export async function deleteTaskTemplateStepAction(id: string): Promise<ActionRe
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.manage');
     const sb = createClient();
+    const { data: step } = await sb.from('task_template_steps').select('task_template_id').eq('id', id).single();
+    
     const { error } = await sb.from('task_template_steps').update({ is_deleted: true, updated_at: new Date().toISOString() }).eq('id', id);
     if (error) return fail(error.message, 'DB');
+
+    // Smart Sync
+    if (step) {
+      const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', step.task_template_id).not('status', 'in', '("completed","cancelled")');
+      if (openTasks && openTasks.length > 0) {
+        const taskIds = openTasks.map((t: any) => t.id);
+        await sb.from('task_steps').delete().eq('source_template_step_id', id).in('task_id', taskIds);
+      }
+    }
+
     revalidatePath('/admin/services');
     return ok(undefined);
   } catch (e: any) {
@@ -138,6 +182,19 @@ export async function reorderTaskTemplateStepsAction({
         .eq('id', ids_in_order[i])
         .eq('task_template_id', task_template_id);
     }
+
+    // Smart Sync
+    const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', task_template_id).not('status', 'in', '("completed","cancelled")');
+    if (openTasks && openTasks.length > 0) {
+      const taskIds = openTasks.map((t: any) => t.id);
+      for (let i = 0; i < ids_in_order.length; i++) {
+        await sb.from('task_steps')
+          .update({ step_order: i + 1 })
+          .eq('source_template_step_id', ids_in_order[i])
+          .in('task_id', taskIds);
+      }
+    }
+
     revalidatePath('/admin/services');
     return ok(undefined);
   } catch (e: any) {

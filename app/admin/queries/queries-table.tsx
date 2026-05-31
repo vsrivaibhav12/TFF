@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,6 +11,8 @@ import { ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, Building2, User } from '
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 import { updateQueryStatusAction } from '@/lib/actions/queries';
 import { toast } from 'sonner';
+import { Pagination } from '@/components/ui/pagination';
+import { Search } from 'lucide-react';
 
 interface Query {
   id: string;
@@ -20,10 +23,14 @@ interface Query {
   users_profile?: { full_name: string | null } | null;
 }
 
-export default function QueriesTable({ queries }: { queries: Query[] }) {
+export default function QueriesTable({ queries, total, page, limit }: { queries: Query[]; total: number; page: number; limit: number }) {
   const [sortKey, setSortKey] = useState<string>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [searchInput, setSearchInput] = useState(searchParams.get('query') || '');
 
   const sorted = useMemo(() => {
     const data = [...queries];
@@ -90,8 +97,30 @@ export default function QueriesTable({ queries }: { queries: Query[] }) {
     return { success, failed };
   }
 
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const params = new URLSearchParams(searchParams.toString());
+    if (searchInput) {
+      params.set('query', searchInput);
+    } else {
+      params.delete('query');
+    }
+    params.set('page', '1');
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
   return (
     <>
+      <form onSubmit={handleSearch} className="flex mb-4 relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+        <input
+          type="text"
+          placeholder="Search queries..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="pl-9 pr-3 h-9 w-full rounded-md border border-zinc-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500"
+        />
+      </form>
       <div className="tff-card overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
@@ -155,6 +184,7 @@ export default function QueriesTable({ queries }: { queries: Query[] }) {
           </Table>
         </div>
       </div>
+      <Pagination page={page} total={total} limit={limit} />
       <BulkActionsBar
         ids={[...selected]}
         onClear={() => setSelected(new Set())}

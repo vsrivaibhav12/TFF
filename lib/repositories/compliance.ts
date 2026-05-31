@@ -70,6 +70,24 @@ export async function listGstFilings(clientId: string) {
   return data ?? [];
 }
 
+export async function listGstFilingsForClients(clientIds: string[]) {
+  if (clientIds.length === 0) return [];
+  const sb = createClient();
+  const result: any[] = [];
+  for (let i = 0; i < clientIds.length; i += BATCH_SIZE) {
+    const batch = clientIds.slice(i, i + BATCH_SIZE);
+    const { data, error } = await sb
+      .from('gst_filings')
+      .select('*')
+      .in('client_id', batch)
+      .order('period_year', { ascending: false })
+      .order('period_month', { ascending: false });
+    if (error) throw error;
+    result.push(...(data ?? []));
+  }
+  return result;
+}
+
 export async function listTdsFilings(clientId: string) {
   const sb = createClient();
   const { data, error } = await sb.from('tds_filings').select('*').eq('client_id', clientId).order('period_year', { ascending: false }).order('period_quarter', { ascending: false });
