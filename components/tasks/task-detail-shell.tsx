@@ -21,7 +21,6 @@ import CustomFieldsPanel from '@/components/tasks/custom-fields-panel';
 import WorkDonePanel from '@/components/tasks/workdone-panel';
 import DeleteTaskButton from '@/components/tasks/delete-task-button';
 import VerifyTaskButton from '@/components/tasks/verify-task-button';
-import LoadTemplateStepsButton from '@/components/tasks/load-template-steps-button';
 import { updateTaskAction, addTaskNoteAction } from '@/lib/actions/tasks';
 import { toast } from 'sonner';
 
@@ -260,7 +259,9 @@ export default function TaskDetailShell({
               <TabsTrigger value="activity">Activity ({activity.length})</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="steps" className="space-y-4">
+            <TabsContent value="steps" className="space-y-6">
+              <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} />
+
               {/* Moved from Overview tab */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-3 tff-card p-4">
@@ -326,9 +327,6 @@ export default function TaskDetailShell({
                   )}
                 </div>
               </div>
-
-              <LoadTemplateStepsButton taskId={task.id} subServiceId={task.sub_service_id} clientId={task.client_id} currentSteps={steps} />
-              <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} />
             </TabsContent>
 
             <TabsContent value="work">
