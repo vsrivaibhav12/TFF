@@ -1,12 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 export default function AdminError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  useEffect(() => {
-    console.error('Admin error:', error);
-  }, [error]);
+  const router = useRouter();
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
@@ -15,7 +13,7 @@ export default function AdminError({ error, reset }: { error: Error & { digest?:
         <p className="text-zinc-500 text-sm">An error occurred while loading this admin page. Try refreshing.</p>
         <div className="flex gap-2 justify-center">
           <Button onClick={() => reset()} variant="outline" className="rounded-xl">Try again</Button>
-          <Button onClick={() => window.location.href = '/admin'} variant="ghost" className="rounded-xl">Go to dashboard</Button>
+          <Button onClick={() => router.push('/admin')} variant="ghost" className="rounded-xl">Go to dashboard</Button>
         </div>
       </div>
     </div>

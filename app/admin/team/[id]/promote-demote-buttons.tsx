@@ -6,6 +6,7 @@ import { promoteToAdminAction, demoteAdminAction } from "@/lib/actions/admin-hie
 import { toast } from "sonner";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { useConfirm } from '@/components/ui/use-confirm';
+import { useRouter } from "next/navigation";
 
 interface Props {
   userId: string;
@@ -18,13 +19,14 @@ interface Props {
 export default function PromoteDemoteButtons({ userId, currentRole, isPrimeAdmin, canPromote, canDemote }: Props) {
   const [pending, startTransition] = useTransition();
   const [ConfirmDialog, confirm] = useConfirm();
+  const router = useRouter();
 
   async function promote() {
     const ok = await confirm({ title: 'Promote', description: 'Promote this team member to admin? They will gain full admin access.', confirmText: 'Promote' });
     if (!ok) return;
     startTransition(async () => {
       const r = await promoteToAdminAction(userId);
-      if (r.success) { toast.success("Promoted to admin"); window.location.reload(); }
+      if (r.success) { toast.success("Promoted to admin"); router.refresh(); }
       else toast.error(r.error);
     });
   }
@@ -34,7 +36,7 @@ export default function PromoteDemoteButtons({ userId, currentRole, isPrimeAdmin
     if (!ok) return;
     startTransition(async () => {
       const r = await demoteAdminAction(userId);
-      if (r.success) { toast.success("Demoted to team"); window.location.reload(); }
+      if (r.success) { toast.success("Demoted to team"); router.refresh(); }
       else toast.error(r.error);
     });
   }

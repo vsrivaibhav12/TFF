@@ -32,8 +32,8 @@ export default function SummaryTab({ summary, score, insights, opportunities, wc
           </CardHeader>
           <CardContent className="p-8">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-              {summary.keyMetrics?.map((m: any, i: number) => (
-                <div key={i} className="p-5 rounded-xl bg-zinc-50 border border-zinc-100 space-y-2">
+              {summary.keyMetrics?.map((m: any) => (
+                <div key={m.label} className="p-5 rounded-xl bg-zinc-50 border border-zinc-100 space-y-2">
                   <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">{m.label}</p>
                   <div className="flex items-center gap-2">
                     <p className="tff-section-title">{m.value}</p>
@@ -49,8 +49,8 @@ export default function SummaryTab({ summary, score, insights, opportunities, wc
               <div className="mt-8">
                 <h4 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-4">Operating Highlights</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {summary.operatingHighlights.map((m: any, i: number) => (
-                    <div key={i} className="flex justify-between items-center p-3 bg-zinc-50/50 rounded-xl border border-zinc-100">
+                  {summary.operatingHighlights.map((m: any) => (
+                    <div key={m.label} className="flex justify-between items-center p-3 bg-zinc-50/50 rounded-xl border border-zinc-100">
                       <span className="text-xs font-bold text-zinc-500">{m.label}</span>
                       <span className={`text-sm font-semibold ${m.status === 'good' ? 'text-teal-600' : m.status === 'bad' ? 'text-rose-600' : 'text-zinc-900'}`}>{m.value}</span>
                     </div>
@@ -63,32 +63,32 @@ export default function SummaryTab({ summary, score, insights, opportunities, wc
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-3">
                 <h4 className="text-base font-semibold text-rose-600 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Red Flags ({rf.length})</h4>
-                {rf.length === 0 ? <p className="text-xs text-zinc-400 italic">No critical threats</p> : rf.map((f: any, i: number) => (
-                  <div key={i} className="p-3 bg-rose-50/50 border border-rose-100 rounded-xl text-xs text-rose-800 font-medium">
+                {rf.length === 0 ? <p className="text-xs text-zinc-400 italic">No critical threats</p> : rf.map((f: any) => (
+                  <div key={f.title} className="p-3 bg-rose-50/50 border border-rose-100 rounded-xl text-xs text-rose-800 font-medium">
                     <span className="font-bold">{f.title}</span> ({f.metric}): {f.body}
                   </div>
                 ))}
               </div>
               <div className="space-y-3">
                 <h4 className="text-base font-semibold text-teal-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Strengths ({st.length})</h4>
-                {st.length === 0 ? <p className="text-xs text-zinc-400 italic">None identified</p> : st.map((s: any, i: number) => (
-                  <div key={i} className="p-3 bg-teal-50/50 border border-teal-100 rounded-xl text-xs text-teal-800 font-medium">
+                {st.length === 0 ? <p className="text-xs text-zinc-400 italic">None identified</p> : st.map((s: any) => (
+                  <div key={s.title} className="p-3 bg-teal-50/50 border border-teal-100 rounded-xl text-xs text-teal-800 font-medium">
                     <span className="font-bold">{s.title}</span> ({s.metric}): {s.body}
                   </div>
                 ))}
               </div>
               <div className="space-y-3">
                 <h4 className="text-base font-semibold text-amber-600 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> Watch Areas ({wa.length})</h4>
-                {wa.length === 0 ? <p className="text-xs text-zinc-400 italic">None</p> : wa.map((w: any, i: number) => (
-                  <div key={i} className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl text-xs text-amber-800 font-medium">
+                {wa.length === 0 ? <p className="text-xs text-zinc-400 italic">None</p> : wa.map((w: any) => (
+                  <div key={w.title} className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl text-xs text-amber-800 font-medium">
                     <span className="font-bold">{w.title}</span> ({w.metric}): {w.body}
                   </div>
                 ))}
               </div>
               <div className="space-y-3">
                 <h4 className="text-base font-semibold text-blue-600 flex items-center gap-2"><Lightbulb className="w-4 h-4" /> Opportunities ({opps.length})</h4>
-                {opps.length === 0 ? <p className="text-xs text-zinc-400 italic">None identified</p> : opps.map((o: any, i: number) => (
-                  <div key={i} className="p-3 bg-blue-50/50 border border-blue-100 rounded-xl text-xs text-blue-800 font-medium">{o.text}</div>
+                {opps.length === 0 ? <p className="text-xs text-zinc-400 italic">None identified</p> : opps.map((o: any) => (
+                  <div key={o.text} className="p-3 bg-blue-50/50 border border-blue-100 rounded-xl text-xs text-blue-800 font-medium">{o.text}</div>
                 ))}
               </div>
             </div>
@@ -98,8 +98,8 @@ export default function SummaryTab({ summary, score, insights, opportunities, wc
               <div>
                 <h4 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-3">Priority Actions</h4>
                 <div className="space-y-2">
-                  {pa.length === 0 ? <p className="text-xs text-zinc-400 italic">No urgent actions</p> : pa.map((a: any, i: number) => (
-                    <div key={i} className={`flex items-start gap-2 p-3 rounded-xl border text-xs font-medium ${a.urgency === 'urgent' ? 'bg-rose-50 border-rose-100 text-rose-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`}>
+                  {pa.length === 0 ? <p className="text-xs text-zinc-400 italic">No urgent actions</p> : pa.map((a: any) => (
+                    <div key={a.text} className={`flex items-start gap-2 p-3 rounded-xl border text-xs font-medium ${a.urgency === 'urgent' ? 'bg-rose-50 border-rose-100 text-rose-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`}>
                       <span className={`w-2 h-2 mt-1 rounded-full flex-shrink-0 ${a.urgency === 'urgent' ? 'bg-rose-500' : 'bg-amber-500'}`} />
                       {a.text}
                     </div>
@@ -110,7 +110,7 @@ export default function SummaryTab({ summary, score, insights, opportunities, wc
                 <h4 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-3">Next Steps</h4>
                 <div className="space-y-2">
                   {ns.map((s: string, i: number) => (
-                    <div key={i} className="flex items-start gap-2 p-3 bg-zinc-50 border border-zinc-100 rounded-xl text-xs text-zinc-700 font-medium">
+                    <div key={s} className="flex items-start gap-2 p-3 bg-zinc-50 border border-zinc-100 rounded-xl text-xs text-zinc-700 font-medium">
                       <span className="text-xs font-semibold text-zinc-400 flex-shrink-0">{i + 1}.</span> {s}
                     </div>
                   ))}
@@ -123,8 +123,8 @@ export default function SummaryTab({ summary, score, insights, opportunities, wc
               <div className="mt-8">
                 <h4 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-3">Health Snapshot</h4>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                  {summary.healthSnapshot.map((h: any, i: number) => (
-                    <div key={i} className="p-4 rounded-xl bg-zinc-50 border border-zinc-100 space-y-1">
+                  {summary.healthSnapshot.map((h: any) => (
+                    <div key={h.indicator} className="p-4 rounded-xl bg-zinc-50 border border-zinc-100 space-y-1">
                       <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">{h.indicator}</div>
                       <div className="text-sm font-semibold text-zinc-900">{h.value}</div>
                       <div className="text-[10px] text-zinc-500">{h.details}</div>

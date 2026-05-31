@@ -1,13 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
 export default function AccountError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  useEffect(() => {
-    console.error('Account error:', error);
-  }, [error]);
-
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="text-center space-y-4 max-w-md px-6">

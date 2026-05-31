@@ -6,6 +6,7 @@
  */
 
 import { motion } from 'framer-motion';
+import { useId } from 'react';
 
 interface MiniSparklineProps {
   data: number[];
@@ -40,7 +41,7 @@ export function MiniSparkline({
   // Area fill: same points + bottom corners
   const areaPoints = `${padding},${height - padding} ${polylinePoints} ${width - padding},${height - padding}`;
 
-  const gradientId = `sparkline-grad-${Math.random().toString(36).slice(2, 8)}`;
+  const gradientId = useId();
 
   return (
     <svg

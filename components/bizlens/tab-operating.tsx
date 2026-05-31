@@ -28,8 +28,8 @@ export default function OperatingTab({ report, breakEven }: any) {
         </CardHeader>
         <CardContent className="p-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {kpis.map((k, i) => (
-              <div key={i} className="p-4 rounded-xl bg-zinc-50 border border-zinc-100 space-y-2 relative">
+            {kpis.map((k) => (
+              <div key={k.label} className="p-4 rounded-xl bg-zinc-50 border border-zinc-100 space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{k.label}</p>
                   {k.tag && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-200 text-zinc-600">{k.tag}</span>}

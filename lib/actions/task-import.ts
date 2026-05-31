@@ -64,7 +64,7 @@ export async function commitTaskImportAction(input: {
     // Pre-load data for matching
     const { data: clients } = await sb.from('clients').select('id, pan, business_name').eq('is_deleted', false);
     const { data: subServices } = await sb.from('sub_services').select('id, code, name').eq('is_deleted', false).eq('is_active', true);
-    const { data: teamMembers } = await sb.from('team_profiles').select('id, full_name').eq('is_active', true);
+    const { data: teamMembers } = await sb.from('users_profile').select('id, full_name').eq('role', 'team').eq('is_active', true);
     
     // Pre-load active task templates to automatically assign the first one
     const { data: templates } = await sb.from('task_templates').select('id, sub_service_id').eq('is_deleted', false).eq('is_active', true);

@@ -41,9 +41,9 @@ export function QuickActionsDropdown({ role }: { role: string }) {
             <div className="px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-zinc-500 bg-zinc-50/50 border-b border-zinc-100">
               Quick Create
             </div>
-            {links.map((link, i) => (
+            {links.map((link) => (
               <Link
-                key={i}
+                key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
                 className="block px-4 py-2 text-sm text-zinc-700 hover:bg-teal-50 hover:text-teal-700 transition-colors"

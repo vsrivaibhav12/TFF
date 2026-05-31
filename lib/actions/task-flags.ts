@@ -27,7 +27,7 @@ export async function setTaskStuckAction(input: z.infer<typeof stuckSchema>): Pr
     }
 
     const sb = createClient();
-    const { data: task } = await sb.from('tasks').select('status').eq('id', parsed.data.task_id).maybeSingle();
+    const { data: task } = await sb.from('tasks').select('status').eq('id', parsed.data.task_id).eq('is_deleted', false).maybeSingle();
     if (!task) return fail('Task not found', 'NOT_FOUND');
     if ((task as any).status === 'completed' || (task as any).status === 'cancelled') {
       return fail('Completed or cancelled tasks cannot be marked as stuck', 'IMMUTABLE');

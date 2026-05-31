@@ -95,7 +95,7 @@ export async function upsertTaskTemplateStepAction(input: z.infer<typeof stepSch
     // Smart Sync
     const stepId = data.id;
     const isUpdate = !!parsed.data.id;
-    const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', parsed.data.task_template_id).not('status', 'in', '("completed","cancelled")');
+    const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', parsed.data.task_template_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
     
     if (openTasks && openTasks.length > 0) {
       const taskIds = openTasks.map((t: any) => t.id);
@@ -142,7 +142,7 @@ export async function deleteTaskTemplateStepAction(id: string): Promise<ActionRe
 
     // Smart Sync
     if (step) {
-      const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', step.task_template_id).not('status', 'in', '("completed","cancelled")');
+      const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', step.task_template_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
       if (openTasks && openTasks.length > 0) {
         const taskIds = openTasks.map((t: any) => t.id);
         await sb.from('task_steps').delete().eq('source_template_step_id', id).in('task_id', taskIds);
@@ -184,7 +184,7 @@ export async function reorderTaskTemplateStepsAction({
     }
 
     // Smart Sync
-    const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', task_template_id).not('status', 'in', '("completed","cancelled")');
+    const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', task_template_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
     if (openTasks && openTasks.length > 0) {
       const taskIds = openTasks.map((t: any) => t.id);
       for (let i = 0; i < ids_in_order.length; i++) {

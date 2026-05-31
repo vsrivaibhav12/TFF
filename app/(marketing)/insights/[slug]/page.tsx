@@ -26,7 +26,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
         <p className="mt-8 text-xs uppercase tracking-[0.2em] text-[#0D9488] font-bold">{a.category}</p>
         <h1 className="mt-3 text-[40px] sm:text-[56px] font-bold text-[#18181B] tracking-tight leading-[1.05]">{a.title}</h1>
         <p className="mt-3 text-[14px] text-[#A1A1AA]">{a.date}</p>
-        <div className="mt-10 prose prose-lg text-[#71717A] leading-[1.7]" dangerouslySetInnerHTML={{ __html: a.body }} />
+        <div className="mt-10 prose prose-lg text-[#71717A] leading-[1.7]">{a.body}</div>
       </div>
     </article>
   )

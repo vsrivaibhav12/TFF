@@ -173,7 +173,7 @@ export async function upsertSopStepAction(input: z.infer<typeof sopStepSchema>):
       if (error) return fail(error.message, 'DB');
 
       // Sync to open tasks
-      const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', rest.sub_service_id).not('status', 'in', '("completed","cancelled")');
+      const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', rest.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
       if (openTasks && openTasks.length > 0) {
         const taskIds = openTasks.map((t: any) => t.id);
         await sb.from('task_steps')
@@ -222,7 +222,7 @@ export async function deleteSopStepAction(id: string): Promise<ActionResult<void
     if (error) return fail(error.message, 'DB');
 
     if (step) {
-      const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', step.sub_service_id).not('status', 'in', '("completed","cancelled")');
+      const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', step.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
       if (openTasks && openTasks.length > 0) {
         const taskIds = openTasks.map((t: any) => t.id);
         await sb.from('task_steps').delete().eq('source_sop_step_id', id).in('task_id', taskIds);
@@ -250,7 +250,7 @@ export async function reorderSopStepsAction(input: { sub_service_id: string; ids
     }
 
     // Sync to open tasks
-    const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', input.sub_service_id).not('status', 'in', '("completed","cancelled")');
+    const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', input.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
     if (openTasks && openTasks.length > 0) {
       const taskIds = openTasks.map((t: any) => t.id);
       for (let i = 0; i < input.ids_in_order.length; i++) {

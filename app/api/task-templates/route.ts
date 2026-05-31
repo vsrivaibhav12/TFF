@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listTaskTemplates } from '@/lib/repositories/task-templates';
+import { getCurrentUser } from '@/lib/auth/require-role';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const me = await getCurrentUser();
+  if (!me) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const subServiceId = request.nextUrl.searchParams.get('sub_service_id');
   if (!subServiceId) {
     return NextResponse.json({ error: 'sub_service_id is required' }, { status: 400 });

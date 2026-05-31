@@ -38,7 +38,7 @@ export async function listDefinitionsForSubService(subServiceId: string): Promis
   // Pull both sub-service-scoped and service-scoped definitions (the latter need a join).
   const { data: subDefs } = await sb
     .from('task_custom_field_definitions')
-    .select('*')
+    .select('id, service_id, sub_service_id, field_key, display_label, field_type, options_json, is_required, display_order')
     .eq('sub_service_id', subServiceId);
   const { data: sub } = await sb
     .from('sub_services')
@@ -62,7 +62,7 @@ export async function listAllDefinitions(): Promise<CustomFieldDefinition[]> {
   const sb = createClient();
   const { data } = await sb
     .from('task_custom_field_definitions')
-    .select('*')
+    .select('id, service_id, sub_service_id, field_key, display_label, field_type, options_json, is_required, display_order')
     .order('display_order', { ascending: true });
   return (data ?? []) as CustomFieldDefinition[];
 }
@@ -71,7 +71,7 @@ export async function listValuesForTask(taskId: string): Promise<CustomFieldValu
   const sb = createClient();
   const { data } = await sb
     .from('task_custom_field_values')
-    .select('*')
+    .select('id, task_id, definition_id, value_text, value_number, value_date, value_bool')
     .eq('task_id', taskId);
   return (data ?? []) as CustomFieldValue[];
 }
@@ -80,7 +80,7 @@ export async function listLabels(): Promise<TaskLabel[]> {
   const sb = createClient();
   const { data } = await sb
     .from('task_labels')
-    .select('*')
+    .select('code, display_name, color_hex, is_active')
     .eq('is_active', true)
     .order('display_name');
   return (data ?? []) as TaskLabel[];

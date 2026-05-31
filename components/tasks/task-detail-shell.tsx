@@ -250,88 +250,28 @@ export default function TaskDetailShell({
       {/* Tabs + Sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <Tabs defaultValue="steps">
+          <Tabs defaultValue="execution">
             <TabsList>
-              <TabsTrigger value="steps">Steps ({steps.length})</TabsTrigger>
-              <TabsTrigger value="work">Work done</TabsTrigger>
+              <TabsTrigger value="execution">Execution</TabsTrigger>
               <TabsTrigger value="notes">Notes & Billing ({notes.length})</TabsTrigger>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="activity">Activity ({activity.length})</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="steps" className="space-y-6">
-              <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} />
-
-              {/* Moved from Overview tab */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3 tff-card p-4">
-                  <h3 className="text-sm font-semibold mb-2">Workflow Controls</h3>
-                  <TaskActions task={task} team={team} />
-                  {!isClosed && (
-                    <StuckToggle taskId={task.id} isStuck={!!task.is_stuck} reasonCode={task.stuck_reason_code} reasonNote={task.stuck_reason_note} />
-                  )}
-                  <BlockedOnClientToggle taskId={task.id} isBlocked={!!task.is_blocked_on_client} />
-                  {task.is_blocked_on_client && <SendReminderButton taskId={task.id} />}
+            <TabsContent value="execution" className="space-y-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+                <div>
+                  <h3 className="font-semibold text-stone-900 mb-3 tracking-tight">Step-by-step Plan</h3>
+                  <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} />
                 </div>
-
-                {/* Moved ARN Reference from Notes tab */}
-                <div className="tff-card p-4 relative group">
-                  <h3 className="text-sm font-semibold mb-3">Reference Information</h3>
-                  {!isClosed && !editingFinance && (
-                    <Button size="sm" variant="ghost" className="absolute top-3 right-3 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingFinance(true)}>
-                      <Pencil className="h-3.5 w-3.5 text-zinc-400" />
-                    </Button>
-                  )}
-                  {editingFinance ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-1">
-                          <Label className="text-xs">ARN / Ref</Label>
-                          <Input value={arnRef} onChange={(e) => setArnRef(e.target.value)} placeholder="e.g. ARN12345678" className="text-sm" />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">ARN client visible</Label>
-                          <div className="flex items-center gap-2 h-9">
-                            <Switch checked={arnVisible} onCheckedChange={setArnVisible} />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 pt-2 border-t border-zinc-100">
-                        <Button size="sm" onClick={async () => {
-                          const ok = await saveField({ 
-                            arn_reference: arnRef || null, 
-                            is_arn_client_visible: arnVisible 
-                          });
-                          if (ok) setEditingFinance(false);
-                        }} disabled={saving}><Check className="h-3 w-3" /> Save</Button>
-                        <Button size="sm" variant="ghost" onClick={() => {
-                          setArnRef(task.arn_reference ?? '');
-                          setArnVisible(task.is_arn_client_visible ?? false);
-                          setEditingFinance(false);
-                        }} disabled={saving}><X className="h-3 w-3" /> Cancel</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-zinc-500 text-xs">ARN / Ref</span>
-                        <p className="font-medium">{task.arn_reference || '—'}</p>
-                      </div>
-                      {task.arn_reference && (
-                        <div>
-                          <span className="text-zinc-500 text-xs">Client visible</span>
-                          <p className="font-medium">{task.is_arn_client_visible ? 'Yes' : 'No'}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                <div>
+                  <h3 className="font-semibold text-stone-900 mb-3 tracking-tight">Work Done Checklist</h3>
+                  <WorkDonePanel taskId={task.id} initial={workdone} currentUserId={currentUserId} />
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value="work">
-              <WorkDonePanel taskId={task.id} initial={workdone} currentUserId={currentUserId} />
-            </TabsContent>
+            {/* Workflow Controls and Reference Info moved to sidebar */}
 
             <TabsContent value="notes">
               <div className="space-y-4">
@@ -483,8 +423,18 @@ export default function TaskDetailShell({
 
         {/* Sidebar */}
         <aside className="space-y-6">
-          <div className="tff-card p-6">
-            <h3 className="font-semibold mb-3">Details</h3>
+          <div className="space-y-3 tff-card p-5">
+            <h3 className="font-semibold mb-1 text-stone-900 tracking-tight">Workflow Controls</h3>
+            <TaskActions task={task} team={team} />
+            {!isClosed && (
+              <StuckToggle taskId={task.id} isStuck={!!task.is_stuck} reasonCode={task.stuck_reason_code} reasonNote={task.stuck_reason_note} />
+            )}
+            <BlockedOnClientToggle taskId={task.id} isBlocked={!!task.is_blocked_on_client} />
+            {task.is_blocked_on_client && <SendReminderButton taskId={task.id} />}
+          </div>
+
+          <div className="tff-card p-5">
+            <h3 className="font-semibold mb-3 text-stone-900 tracking-tight">Details</h3>
             <dl className="space-y-2 text-sm">
               <DetailItem label="Due" value={formatDateIST(task.due_date)} />
               <DetailItem label="Created" value={formatDateIST(task.created_date) || '—'} />
@@ -501,10 +451,59 @@ export default function TaskDetailShell({
               {task.is_billable && (
                 <DetailItem label="Billing" value={`Billable · ${task.bill_reference || 'No ref'} · ₹${task.bill_amount ?? 0}`} />
               )}
-              {task.arn_reference && (
-                <DetailItem label="ARN / Ref" value={`${task.arn_reference}${task.is_arn_client_visible ? ' (client visible)' : ''}`} />
-              )}
             </dl>
+          </div>
+
+          <div className="tff-card p-5 relative group">
+            <h3 className="font-semibold mb-3 text-stone-900 tracking-tight">Reference Information</h3>
+            {!isClosed && !editingFinance && (
+              <Button size="sm" variant="ghost" className="absolute top-3 right-3 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingFinance(true)}>
+                <Pencil className="h-3.5 w-3.5 text-stone-400" />
+              </Button>
+            )}
+            {editingFinance ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-stone-500">ARN / Ref</Label>
+                    <Input value={arnRef} onChange={(e) => setArnRef(e.target.value)} placeholder="e.g. ARN12345678" className="text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-stone-500">ARN client visible</Label>
+                    <div className="flex items-center gap-2 h-9">
+                      <Switch checked={arnVisible} onCheckedChange={setArnVisible} />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
+                  <Button size="sm" onClick={async () => {
+                    const ok = await saveField({ 
+                      arn_reference: arnRef || null, 
+                      is_arn_client_visible: arnVisible 
+                    });
+                    if (ok) setEditingFinance(false);
+                  }} disabled={saving}><Check className="h-3 w-3" /> Save</Button>
+                  <Button size="sm" variant="ghost" onClick={() => {
+                    setArnRef(task.arn_reference ?? '');
+                    setArnVisible(task.is_arn_client_visible ?? false);
+                    setEditingFinance(false);
+                  }} disabled={saving}><X className="h-3 w-3" /> Cancel</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-stone-500 text-xs">ARN / Ref</span>
+                  <p className="font-medium text-stone-900">{task.arn_reference || '—'}</p>
+                </div>
+                {task.arn_reference && (
+                  <div>
+                    <span className="text-stone-500 text-xs">Client visible</span>
+                    <p className="font-medium text-stone-900">{task.is_arn_client_visible ? 'Yes' : 'No'}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {task.status === 'completed' && (
@@ -526,13 +525,13 @@ export default function TaskDetailShell({
           )}
 
           {task.custom_fields && Object.keys(task.custom_fields).length > 0 && (
-            <div className="tff-card p-6">
-              <h3 className="font-semibold mb-3">Custom Fields</h3>
+            <div className="tff-card p-5">
+              <h3 className="font-semibold mb-3 text-stone-900 tracking-tight">Custom Fields</h3>
               <dl className="space-y-3 text-sm">
                 {Object.entries(task.custom_fields as Record<string, any>).map(([key, value]) => (
                   <div key={key}>
-                    <dt className="text-zinc-500 mb-1 capitalize">{key.replace(/_/g, ' ')}</dt>
-                    <dd className="font-medium text-zinc-900">{String(value)}</dd>
+                    <dt className="text-stone-500 mb-1 capitalize text-xs">{key.replace(/_/g, ' ')}</dt>
+                    <dd className="font-medium text-stone-900">{String(value)}</dd>
                   </div>
                 ))}
               </dl>

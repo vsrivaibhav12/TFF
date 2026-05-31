@@ -26,10 +26,12 @@ export async function GET(req: NextRequest) {
       .limit(8),
     sb.from('tasks')
       .select('id, title, status, clients(business_name)')
+      .eq('is_deleted', false)
       .ilike('title', like)
       .limit(8),
     sb.from('notices')
       .select('id, subject, notice_type, status, clients(business_name)')
+      .eq('is_deleted', false)
       .or(`subject.ilike.${like},notice_type.ilike.${like}`)
       .limit(8)
   ];

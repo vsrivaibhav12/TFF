@@ -65,6 +65,9 @@ const config: Config = {
           800: '#115E59',
           900: '#134E4A',
         },
+        // Warm minimal
+        'warm-bg': '#F7F6F3',
+        'warm-surface': '#F5F4F2',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -74,13 +77,10 @@ const config: Config = {
       },
       boxShadow: {
         'xs': '0 1px 2px 0 rgb(0 0 0 / 0.03)',
-        'teal-xs': '0 1px 2px 0 rgb(13 148 136 / 0.04)',
-        'teal-sm': '0 1px 3px 0 rgb(13 148 136 / 0.08), 0 1px 2px -1px rgb(13 148 136 / 0.08)',
-        'teal': '0 4px 6px -1px rgb(13 148 136 / 0.08), 0 2px 4px -2px rgb(13 148 136 / 0.08)',
-        'teal-md': '0 6px 10px -2px rgb(13 148 136 / 0.1), 0 2px 4px -2px rgb(13 148 136 / 0.1)',
-        'teal-lg': '0 10px 15px -3px rgb(13 148 136 / 0.1), 0 4px 6px -4px rgb(13 148 136 / 0.1)',
-        'teal-xl': '0 20px 25px -5px rgb(13 148 136 / 0.1), 0 8px 10px -6px rgb(13 148 136 / 0.1)',
-        'glow-teal': '0 0 20px -5px rgb(13 148 136 / 0.3)',
+        'card': '0 1px 3px rgba(28, 25, 23, 0.04), 0 1px 2px rgba(28, 25, 23, 0.03)',
+        'card-hover': '0 4px 12px rgba(28, 25, 23, 0.06)',
+        'floating': '0 10px 25px rgba(28, 25, 23, 0.08)',
+        'sidebar': '0 4px 20px rgba(28, 25, 23, 0.06)',
       },
       animation: {
         'fade-in-up': 'fade-in-up 0.4s ease-out',

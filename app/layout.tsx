@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
 
@@ -9,12 +9,7 @@ const inter = Inter({
   display: 'swap',
 });
 
-const display = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  variable: '--font-display',
-  weight: ['400', '500', '600', '700', '800'],
-  display: 'swap',
-});
+
 
 export const metadata: Metadata = {
   title: { default: 'The Fiscal Fulcrum | Finance Partner | Coimbatore', template: '%s | The Fiscal Fulcrum' },
@@ -26,7 +21,7 @@ export const viewport = { themeColor: '#0D9488', width: 'device-width', initialS
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${display.variable} scroll-smooth`}>
+    <html lang="en" className={`${inter.variable} scroll-smooth`}>
       <body className="min-h-screen antialiased">
         {children}
         <Toaster
@@ -34,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           richColors
           closeButton
           toastOptions={{
-            className: 'border-zinc-200 rounded-xl shadow-lg',
+            className: 'border-stone-200 rounded-xl shadow-lg',
           }}
         />
       </body>

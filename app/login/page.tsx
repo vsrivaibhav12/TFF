@@ -15,7 +15,7 @@ export default function LoginPage() {
 
         <div className="relative z-10 flex flex-col items-center text-center">
           <div className="flex items-center gap-3 mb-6">
-            <img src="/logo.svg" className="h-10 w-auto brightness-0 invert" alt="The Fiscal Fulcrum" />
+            <img src="/logo.png" className="h-10 w-auto" alt="The Fiscal Fulcrum" />
             <div>
               <div className="text-lg font-bold tracking-tight">The Fiscal Fulcrum</div>
             </div>
@@ -29,7 +29,7 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <div className="inline-flex items-center gap-2">
-              <img src="/logo.svg" className="h-8 w-auto" alt="The Fiscal Fulcrum" />
+              <img src="/logo.png" className="h-8 w-auto" alt="The Fiscal Fulcrum" />
               <span className="text-lg font-bold text-zinc-900">The Fiscal Fulcrum</span>
             </div>
           </div>

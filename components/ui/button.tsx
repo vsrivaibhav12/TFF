@@ -4,17 +4,17 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97]',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]',
   {
     variants: {
       variant: {
         default:
-          'bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-teal-sm hover:shadow-teal hover:-translate-y-0.5',
+          'bg-teal-600 text-white shadow-sm hover:bg-teal-700 hover:shadow-md hover:-translate-y-0.5',
         destructive: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
         outline:
-          'border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-teal-300 hover:text-teal-700 shadow-xs',
-        secondary: 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200 shadow-xs',
-        ghost: 'hover:bg-zinc-100 hover:text-zinc-900',
+          'border border-stone-200 bg-white hover:bg-stone-50 hover:border-teal-300 hover:text-teal-700 shadow-xs',
+        secondary: 'bg-stone-100 text-stone-900 hover:bg-stone-200 shadow-xs',
+        ghost: 'hover:bg-stone-100 hover:text-stone-900',
         link: 'text-teal-700 underline-offset-4 hover:underline',
         teal: 'bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100 hover:border-teal-300',
       },

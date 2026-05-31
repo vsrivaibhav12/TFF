@@ -16,7 +16,7 @@ export async function getTodayAttendance(userId: string) {
   const { todayIST } = await import('@/lib/utils');
   const { data, error } = await sb
     .from('attendance_logs')
-    .select('*')
+    .select('id, user_id, attendance_date, check_in_time, check_out_time, status, leave_type, is_manually_created, override_reason, overridden_by, created_at, updated_at')
     .eq('user_id', userId)
     .eq('attendance_date', todayIST())
     .maybeSingle();
@@ -30,7 +30,7 @@ export async function listAttendanceForUser(userId: string, year: number, month:
   const end = `${year}-${String(month).padStart(2, '0')}-31`;
   const { data, error } = await sb
     .from('attendance_logs')
-    .select('*')
+    .select('id, user_id, attendance_date, check_in_time, check_out_time, status, leave_type, is_manually_created, override_reason, overridden_by, created_at, updated_at')
     .eq('user_id', userId)
     .gte('attendance_date', start)
     .lte('attendance_date', end)

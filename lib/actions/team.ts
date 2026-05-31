@@ -183,8 +183,8 @@ export async function removeTeamMemberAction(
     await sb.from('notification_preferences').delete().eq('user_id', targetId);
 
     // 2. Nullify references where possible
-    await sb.from('tasks').update({ assigned_to: null }).eq('assigned_to', targetId);
-    await sb.from('tasks').update({ reviewer_id: null }).eq('reviewer_id', targetId);
+    await sb.from('tasks').update({ assigned_to: null }).eq('assigned_to', targetId).eq('is_deleted', false);
+    await sb.from('tasks').update({ reviewer_id: null }).eq('reviewer_id', targetId).eq('is_deleted', false);
 
     // 3. Soft-delete profile so they vanish from all listings and cannot log in
     await sb.from('users_profile')

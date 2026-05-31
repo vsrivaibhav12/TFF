@@ -69,17 +69,17 @@ export default function TasksTableClient({ tasks }: { tasks: TaskRow[] }) {
           <TableBody>{tasks.map((t) => (
             <TableRow key={t.id} className={selected.has(t.id) ? 'bg-teal-50/40' : ''}>
               <TableCell><Checkbox checked={selected.has(t.id)} onCheckedChange={() => toggle(t.id)} aria-label={`Select task ${t.title}`} data-testid={`task-select-${t.id}`} /></TableCell>
-              <TableCell><span className="text-xs font-mono text-zinc-500">{t.task_number ?? '—'}</span></TableCell>
+              <TableCell><span className="text-xs font-mono text-stone-500">{t.task_number ?? '—'}</span></TableCell>
               <TableCell><Link href={`/team/tasks/${t.id}`} className="font-medium hover:text-teal-700">{t.title}</Link></TableCell>
               <TableCell>{t.clients?.business_name}</TableCell>
               <TableCell>
                 {t.users_profile?.full_name ? (
-                  <span className="text-sm text-zinc-700">{t.users_profile.full_name}</span>
+                  <span className="text-sm text-stone-700">{t.users_profile.full_name}</span>
                 ) : (
-                  <span className="text-sm text-zinc-400">Unassigned</span>
+                  <span className="text-sm text-stone-400">Unassigned</span>
                 )}
               </TableCell>
-              <TableCell className="text-zinc-500">{t.period_month && t.period_year ? `${t.period_month}/${t.period_year}` : '—'}</TableCell>
+              <TableCell className="text-stone-500">{t.period_month && t.period_year ? `${t.period_month}/${t.period_year}` : '—'}</TableCell>
               <TableCell>{formatDateIST(t.due_date)}</TableCell>
               <TableCell><Badge variant={t.status === 'completed' ? 'success' : t.status === 'in_progress' ? 'teal' : 'warning'}>{t.status.replace(/_/g, ' ')}</Badge></TableCell>
               <TableCell><Badge variant="outline">{t.priority}</Badge></TableCell>

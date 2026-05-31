@@ -17,7 +17,7 @@ export default function ForgotPage() {
 
         <div className="relative z-10">
           <div className="flex items-center gap-3">
-            <img src="/logo.svg" className="h-10 w-auto brightness-0 invert" alt="The Fiscal Fulcrum" />
+            <img src="/logo.png" className="h-10 w-auto" alt="The Fiscal Fulcrum" />
             <div className="text-lg font-bold tracking-tight">The Fiscal Fulcrum</div>
           </div>
         </div>
@@ -41,7 +41,7 @@ export default function ForgotPage() {
         <div className="w-full max-w-sm">
           <div className="lg:hidden text-center mb-8">
             <div className="inline-flex items-center gap-2">
-              <img src="/logo.svg" className="h-8 w-auto" alt="The Fiscal Fulcrum" />
+              <img src="/logo.png" className="h-8 w-auto" alt="The Fiscal Fulcrum" />
               <span className="text-lg font-bold text-zinc-900">The Fiscal Fulcrum</span>
             </div>
           </div>

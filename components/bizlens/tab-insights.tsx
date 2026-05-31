@@ -18,8 +18,8 @@ export default function InsightsTab({ insights }: any) {
       amber: <AlertCircle className="h-4 w-4 text-amber-500" />,
       green: <CheckCircle2 className="h-4 w-4 text-teal-500" />,
     };
-    return items.map((item: any, i: number) => (
-      <Card key={i} className={`border rounded-2xl p-5 ${styles[level]} shadow-sm`}>
+    return items.map((item: any) => (
+      <Card key={item.title} className={`border rounded-2xl p-5 ${styles[level]} shadow-sm`}>
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center gap-2">
             {icons[level]}
@@ -64,8 +64,8 @@ export default function InsightsTab({ insights }: any) {
         <div className="space-y-3">
           <h3 className="text-lg font-semibold text-zinc-900">Priority Actions</h3>
           <div className="space-y-2">
-            {priorityActions.map((a: any, i: number) => (
-              <div key={i} className={`flex items-start gap-3 p-4 rounded-xl border text-xs font-medium ${a.urgency === 'urgent' ? 'bg-rose-50 border-rose-100 text-rose-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`}>
+            {priorityActions.map((a: any) => (
+              <div key={a.text} className={`flex items-start gap-3 p-4 rounded-xl border text-xs font-medium ${a.urgency === 'urgent' ? 'bg-rose-50 border-rose-100 text-rose-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`}>
                 <span className={`w-2.5 h-2.5 mt-0.5 rounded-full flex-shrink-0 ${a.urgency === 'urgent' ? 'bg-rose-500' : 'bg-amber-500'}`} />
                 {a.text}
               </div>
@@ -80,7 +80,7 @@ export default function InsightsTab({ insights }: any) {
           <h3 className="text-lg font-semibold text-zinc-900">Recommended Next Steps</h3>
           <div className="space-y-2">
             {nextSteps.map((s: string, i: number) => (
-              <div key={i} className="flex items-start gap-3 p-4 bg-zinc-50 border border-zinc-100 rounded-xl text-xs text-zinc-700 font-medium">
+              <div key={s} className="flex items-start gap-3 p-4 bg-zinc-50 border border-zinc-100 rounded-xl text-xs text-zinc-700 font-medium">
                 <span className="text-sm font-semibold text-teal-600 flex-shrink-0">{i + 1}.</span> {s}
               </div>
             ))}

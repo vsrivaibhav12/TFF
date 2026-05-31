@@ -35,7 +35,7 @@ function CollapsibleSection({ label, children, defaultOpen = true }: { label: st
     <div>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-2.5 pt-5 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-teal-200/50 hover:text-teal-100/70 transition-colors"
+        className="w-full flex items-center justify-between px-2.5 pt-5 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors"
         aria-expanded={open}
       >
         {label}
@@ -121,25 +121,25 @@ export default function AppShell({
     .slice(1); // Skip role prefix (admin/team/portal)
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F9FA]">
+    <div className="flex flex-col min-h-screen bg-[#F7F6F3]">
       {/* R-6: Skip-to-content for keyboard accessibility */}
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-teal-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm">Skip to content</a>
       <div className="flex flex-1">
-        {/* Sidebar (desktop) — fixed, does not scroll with page */}
+        {/* Sidebar (desktop) — floating bento style */}
         <aside className={cn(
-          "hidden md:flex fixed left-0 top-0 bottom-0 flex-col border-r border-white/10 bg-teal-900 z-30 transition-all duration-300",
-          sidebarCollapsed ? "w-16" : "w-64"
+          "hidden md:flex fixed left-3 top-3 bottom-3 flex-col rounded-[20px] shadow-sidebar border border-stone-200/50 bg-white z-30 transition-all duration-300",
+          sidebarCollapsed ? "w-[64px]" : "w-[240px]"
         )} aria-label="Main navigation">
           {/* Logo + collapse toggle */}
           <div className={cn("flex items-center justify-between", sidebarCollapsed ? "px-2 py-4" : "px-5 py-5")}>
             <Link href={`/${role}`} className="flex items-center gap-2.5">
-              <img src="/logo.svg" className="h-8 w-auto brightness-0 invert" alt="The Fiscal Fulcrum" />
+              <img src="/logo.png" className="h-8 w-auto" alt="The Fiscal Fulcrum" />
               {!sidebarCollapsed && (
                 <div>
-                  <div className="text-sm font-bold tracking-tight text-white leading-none">
-                    The <span className="text-teal-300">Fiscal</span>
+                  <div className="text-sm font-bold tracking-tight text-stone-900 leading-none">
+                    The <span className="text-teal-600">Fiscal</span>
                   </div>
-                  <div className="text-sm font-bold tracking-tight text-white leading-none">
+                  <div className="text-sm font-bold tracking-tight text-stone-900 leading-none">
                     Fulcrum
                   </div>
                 </div>
@@ -148,7 +148,7 @@ export default function AppShell({
             {!sidebarCollapsed && (
               <button
                 onClick={() => setSidebarCollapsed(true)}
-                className="text-white/40 hover:text-white/80 transition-colors p-1"
+                className="text-stone-400 hover:text-stone-600 transition-colors p-1"
                 title="Collapse sidebar"
                 aria-label="Collapse sidebar"
               >
@@ -160,7 +160,7 @@ export default function AppShell({
             <div className="flex justify-center pb-2">
               <button
                 onClick={() => setSidebarCollapsed(false)}
-                className="text-white/40 hover:text-white/80 transition-colors p-1"
+                className="text-stone-400 hover:text-stone-600 transition-colors p-1"
                 title="Expand sidebar"
                 aria-label="Expand sidebar"
               >
@@ -185,21 +185,21 @@ export default function AppShell({
                     href={n.href}
                     data-testid={`nav-${n.label.toLowerCase().replace(/ /g, '-')}`}
                     className={cn(
-                      'group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200',
+                      'group flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-200',
                       active
-                        ? 'bg-white/10 text-white'
-                        : 'text-white/70 hover:bg-white/8 hover:text-white'
+                        ? 'bg-teal-50 text-teal-700'
+                        : 'text-stone-500 hover:bg-stone-50 hover:text-stone-800'
                     )}
                   >
                     <Icon
                       className={cn(
                         'h-4 w-4 shrink-0 transition-colors',
-                        active ? 'text-teal-300' : 'text-white/50 group-hover:text-white/80'
+                        active ? 'text-teal-600' : 'text-stone-400 group-hover:text-stone-600'
                       )}
                     />
                     {!sidebarCollapsed && <span className="truncate">{n.label}</span>}
                     {!sidebarCollapsed && active && (
-                      <ChevronRight className="ml-auto h-3.5 w-3.5 text-teal-300/60" />
+                      <ChevronRight className="ml-auto h-3.5 w-3.5 text-teal-600/60" />
                     )}
                   </Link>
                 );
@@ -238,14 +238,14 @@ export default function AppShell({
           </nav>
 
           {/* User profile */}
-          <div className={cn("mb-3 rounded-xl border border-white/10 bg-white/5", sidebarCollapsed ? "mx-1.5 p-2 flex justify-center" : "mx-3 p-3")}>
+          <div className={cn("mb-3 rounded-xl border border-stone-100 bg-stone-50", sidebarCollapsed ? "mx-1.5 p-2 flex justify-center" : "mx-3 p-3")}>
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {getInitials(user.full_name)}
               </div>
               {!sidebarCollapsed && (
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium text-teal-50 truncate">
+                  <div className="text-sm font-medium text-stone-800 truncate">
                     {user.full_name || user.email}
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
@@ -267,7 +267,7 @@ export default function AppShell({
         {/* Mobile header */}
         <div className="md:hidden fixed top-0 inset-x-0 z-30 flex items-center justify-between border-b border-white/10 bg-teal-900/95 backdrop-blur-lg px-4 py-3">
           <Link href={`/${role}`} className="flex items-center gap-2">
-            <img src="/logo.svg" className="h-7 w-auto brightness-0 invert" alt="The Fiscal Fulcrum" />
+            <img src="/logo.png" className="h-7 w-auto" alt="The Fiscal Fulcrum" />
             <span className="text-sm font-bold text-white">TFF</span>
           </Link>
           <div className="flex items-center gap-1">
@@ -304,7 +304,7 @@ export default function AppShell({
               >
                 <div className="px-5 py-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
-                    <img src="/logo.svg" className="h-9 w-auto brightness-0 invert" alt="The Fiscal Fulcrum" />
+                    <img src="/logo.png" className="h-9 w-auto" alt="The Fiscal Fulcrum" />
                     <div>
                       <div className="text-sm font-bold text-white">The Fiscal Fulcrum</div>
                       <div className="text-[10px] text-teal-200/60 uppercase tracking-wider font-semibold">
@@ -372,23 +372,23 @@ export default function AppShell({
         </AnimatePresence>
 
         {/* Main content */}
-        <main className={cn("flex-1 min-w-0 transition-all duration-300", sidebarCollapsed ? "md:ml-16" : "md:ml-64")}>
+        <main className={cn("flex-1 min-w-0 transition-all duration-300", sidebarCollapsed ? "md:ml-[88px]" : "md:ml-[264px]")}>
           {/* Desktop top bar */}
-          <div className="hidden md:flex items-center justify-between gap-4 px-8 py-4 sticky top-0 z-20 bg-white/80 backdrop-blur-2xl border-b border-zinc-200/60">
+          <div className="hidden md:flex items-center justify-between gap-4 px-8 pt-8 pb-4 sticky top-0 z-20 bg-[#F7F6F3]/80 backdrop-blur-xl">
             {/* Breadcrumbs */}
-            <div className="flex items-center gap-1.5 text-sm text-zinc-500">
-              <Link href={`/${role}`} className="hover:text-zinc-900 transition-colors capitalize">
+            <div className="flex items-center gap-1.5 text-sm text-stone-500">
+              <Link href={`/${role}`} className="hover:text-stone-900 transition-colors capitalize">
                 {role === 'client' ? 'Portal' : role}
               </Link>
               {breadcrumbSegments.map((segment, i) => (
                 <span key={i} className="flex items-center gap-1.5">
-                  <ChevronRight className="h-3.5 w-3.5 text-zinc-300" />
+                  <ChevronRight className="h-3.5 w-3.5 text-stone-300" />
                   <span
                     className={cn(
                       'capitalize',
                       i === breadcrumbSegments.length - 1
-                        ? 'text-zinc-900 font-medium'
-                        : 'hover:text-zinc-900 transition-colors'
+                        ? 'text-stone-900 font-medium'
+                        : 'hover:text-stone-900 transition-colors'
                     )}
                   >
                     {segment.replace(/-/g, ' ')}
@@ -399,8 +399,8 @@ export default function AppShell({
 
             <div className="flex items-center gap-3">
               {/* Date pill */}
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-500 bg-zinc-50/80 border border-zinc-200/80 rounded-lg">
-                <Calendar className="h-3.5 w-3.5 text-zinc-400" />
+              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-sm text-stone-500 bg-white/60 backdrop-blur-lg border border-stone-200/80 rounded-xl shadow-sm">
+                <Calendar className="h-3.5 w-3.5 text-stone-400" />
                 <span>{formatToday()}</span>
               </div>
 
@@ -409,51 +409,53 @@ export default function AppShell({
                 onClick={() =>
                   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))
                 }
-                className="flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-500 bg-zinc-50/80 border border-zinc-200/80 rounded-lg hover:border-zinc-300 hover:bg-white transition-all group"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-stone-500 bg-white/60 backdrop-blur-lg border border-stone-200/80 rounded-xl hover:border-stone-300 hover:bg-white shadow-sm transition-all group"
               >
-                <Search className="h-3.5 w-3.5 text-zinc-400 group-hover:text-zinc-600" />
-                <span className="text-zinc-400 hidden xl:inline">Search...</span>
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-white px-1.5 font-mono text-[10px] font-medium text-zinc-400">
+                <Search className="h-3.5 w-3.5 text-stone-400 group-hover:text-stone-600" />
+                <span className="text-stone-400 hidden xl:inline">Search...</span>
+                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded-md border bg-white px-1.5 font-mono text-[10px] font-medium text-stone-400">
                   <span className="text-[10px]">Ctrl</span>K
                 </kbd>
               </button>
               
-              <GlobalTimer role={role} />
-              <NotificationsBell />
-              <QuickActionsDropdown role={role} />
+              <div className="bg-white/60 backdrop-blur-lg border border-stone-200/80 rounded-xl shadow-sm flex items-center p-1">
+                <GlobalTimer role={role} />
+                <NotificationsBell />
+                <QuickActionsDropdown role={role} />
+              </div>
 
               {/* User avatar dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen((v) => !v)}
-                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-zinc-100 transition-colors"
+                  className="flex items-center gap-2 rounded-xl px-1.5 py-1.5 hover:bg-stone-100 transition-colors"
                 >
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
+                  <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden shadow-sm">
                     {getInitials(user.full_name)}
                   </div>
                 </button>
                 {userMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-zinc-200 bg-white shadow-lg z-50 py-2">
-                      <div className="px-4 py-3 border-b border-zinc-100">
-                        <div className="text-sm font-medium text-zinc-900 truncate">{user.full_name || user.email}</div>
-                        <div className="text-xs text-zinc-500 mt-0.5">{user.email}</div>
+                    <div className="absolute right-0 top-full mt-2 w-56 rounded-[20px] border border-stone-200 bg-white shadow-floating z-50 py-2">
+                      <div className="px-4 py-3 border-b border-stone-100">
+                        <div className="text-sm font-medium text-stone-900 truncate">{user.full_name || user.email}</div>
+                        <div className="text-xs text-stone-500 mt-0.5">{user.email}</div>
                       </div>
                       <Link
-                        href="/account/notifications"
+                         href="/account/notifications"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
                       >
-                        <User className="h-4 w-4 text-zinc-400" />
+                        <User className="h-4 w-4 text-stone-400" />
                         Account
                       </Link>
                       <button
                         onClick={() => { setUserMenuOpen(false); logout(); }}
                         data-testid="logout-btn"
-                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
                       >
-                        <LogOut className="h-4 w-4 text-zinc-400" />
+                        <LogOut className="h-4 w-4 text-stone-400" />
                         Sign out
                       </button>
                     </div>
@@ -464,7 +466,7 @@ export default function AppShell({
           </div>
 
           {/* Content area */}
-          <div id="main-content" className="px-6 md:px-8 py-6 md:py-8 pt-20 md:pt-6 pb-24 md:pb-8 bg-[#F8F9FA] min-h-screen">
+          <div id="main-content" className="px-6 md:px-8 py-6 md:py-8 pt-20 md:pt-2 pb-24 md:pb-8 bg-[#F7F6F3] min-h-screen">
             <div className="mx-auto w-full max-w-7xl">{children}</div>
           </div>
         </main>

@@ -99,8 +99,8 @@ export default function TrendsTab({ trends, projections }: Props) {
         {trends.keyInsights.length > 0 && (
           <div className="space-y-2 mb-6">
             <h4 className="text-sm font-semibold text-zinc-900">Key insights</h4>
-            {trends.keyInsights.map((ins, i) => (
-              <div key={i} className={`p-3 rounded-xl border text-xs font-medium ${ins.type === 'good' ? 'bg-teal-50 border-teal-100 text-teal-800' : ins.type === 'bad' ? 'bg-rose-50 border-rose-100 text-rose-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`}>
+            {trends.keyInsights.map((ins) => (
+              <div key={ins.text} className={`p-3 rounded-xl border text-xs font-medium ${ins.type === 'good' ? 'bg-teal-50 border-teal-100 text-teal-800' : ins.type === 'bad' ? 'bg-rose-50 border-rose-100 text-rose-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`}>
                 {ins.text}
               </div>
             ))}
@@ -111,8 +111,8 @@ export default function TrendsTab({ trends, projections }: Props) {
         {trends.healthInsights && trends.healthInsights.length > 0 && (
           <div className="space-y-2">
             <h4 className="text-sm font-semibold text-zinc-900">Health trend</h4>
-            {trends.healthInsights.map((ins, i) => (
-              <div key={i} className={`p-3 rounded-xl border text-xs font-medium ${ins.type === 'good' ? 'bg-teal-50 border-teal-100 text-teal-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`}>
+            {trends.healthInsights.map((ins) => (
+              <div key={ins.text} className={`p-3 rounded-xl border text-xs font-medium ${ins.type === 'good' ? 'bg-teal-50 border-teal-100 text-teal-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`}>
                 {ins.text}
               </div>
             ))}
@@ -139,8 +139,8 @@ export default function TrendsTab({ trends, projections }: Props) {
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-            {projections.projections.map((p, i) => (
-              <div key={i} className="p-4 rounded-xl bg-zinc-50 border border-zinc-100">
+            {projections.projections.map((p) => (
+              <div key={p.period} className="p-4 rounded-xl bg-zinc-50 border border-zinc-100">
                 <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">{p.period}</div>
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between"><span className="text-zinc-500">Sales</span><span className="font-medium">₹{(p.sales / 1e5).toFixed(1)}L</span></div>
