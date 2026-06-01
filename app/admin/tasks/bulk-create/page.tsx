@@ -12,10 +12,11 @@ export default async function BulkTaskCreatePage() {
   await requireCapabilityOrRedirect(me, 'tasks.create');
   const sb = createClient();
 
-  const [clients, { data: team }, { data: groups }] = await Promise.all([
+  const [clients, { data: team }, { data: groups }, { data: templates }] = await Promise.all([
     listAccessibleClients(),
     sb.from('users_profile').select('id, full_name').eq('role', 'team').eq('is_active', true).order('full_name'),
     sb.from('client_groups').select('id, name').order('name'),
+    sb.from('task_templates').select('id, name, description').eq('is_deleted', false).eq('is_active', true).order('name'),
   ]);
 
   return (
@@ -31,6 +32,7 @@ export default async function BulkTaskCreatePage() {
         clients={clients ?? []}
         team={team ?? []}
         groups={groups ?? []}
+        templates={templates ?? []}
       />
     </div>
   );

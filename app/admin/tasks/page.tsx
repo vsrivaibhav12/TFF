@@ -4,6 +4,7 @@ import { listTasks, countTasks } from '@/lib/repositories/tasks';
 import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
 import { listSubServices } from '@/lib/repositories/services';
 import { listSavedViews } from '@/lib/actions/saved-views';
+import AdvancedTaskFilters from '@/components/tasks/advanced-task-filters';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Briefcase, AlertTriangle, Clock, Layers, Inbox, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -30,7 +31,7 @@ function buildTaskUrl(base: string, sp: Record<string, string | undefined>, over
   return qs ? `${base}?${qs}` : base;
 }
 
-export default async function AdminTasksPage({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string; page?: string } }) {
+export default async function AdminTasksPage({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string; page?: string; period_year?: string; is_billable?: string; is_stuck?: string; is_verified?: string } }) {
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'tasks.create');
 
@@ -47,6 +48,10 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
     subServiceId: searchParams.sub_service,
     dueFrom: searchParams.due_from,
     dueTo: searchParams.due_to,
+    periodYear: searchParams.period_year ? parseInt(searchParams.period_year, 10) : undefined,
+    isBillable: searchParams.is_billable === 'true' ? true : searchParams.is_billable === 'false' ? false : undefined,
+    isStuck: searchParams.is_stuck === 'true' ? true : searchParams.is_stuck === 'false' ? false : undefined,
+    isVerified: searchParams.is_verified === 'true' ? true : searchParams.is_verified === 'false' ? false : undefined,
   };
 
   const [tasks, clients, team, subServices, views, totalCount] = await Promise.all([
@@ -65,23 +70,6 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
   const total = totalCount;
   const stuck = tasks?.filter((t: any) => t.is_stuck || t.priority === 'high').length ?? 0;
   const dueToday = tasks?.filter((t: any) => t.due_date === todayIso).length ?? 0;
-
-  const statusFilters = [
-    { value: '', label: 'All' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'in_progress', label: 'In progress' },
-    { value: 'blocked', label: 'Awaiting client' },
-    { value: 'stuck', label: 'Stuck' },
-    { value: 'completed', label: 'Completed' },
-  ];
-
-  const priorityFilters = [
-    { value: '', label: 'All priorities' },
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-    { value: 'urgent', label: 'Urgent' },
-  ];
 
   const exportData = (tasks ?? []).map((t: any) => ({
     task_number: t.task_number ?? '',
@@ -118,46 +106,11 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
         <StatCard label="Due today" value={dueToday} icon={<Clock className="h-4 w-4" />} tone="amber" />
       </div>
 
-      {/* Filters */}
       <div className="space-y-3">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {statusFilters.map((f) => (
-            <Link
-              key={f.value}
-              href={buildTaskUrl('/admin/tasks', searchParams, { status: f.value || undefined })}
-              className={cn(
-                'rounded-md border px-3 py-1.5 text-xs',
-                (searchParams.status ?? '') === f.value
-                  ? 'border-teal-500 bg-teal-50 text-teal-800'
-                  : 'border-zinc-200 hover:bg-zinc-50'
-              )}
-            >{f.label}</Link>
-          ))}
-        </div>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {priorityFilters.map((f) => (
-            <Link
-              key={f.value}
-              href={buildTaskUrl('/admin/tasks', searchParams, { priority: f.value || undefined })}
-              className={cn(
-                'rounded-md border px-3 py-1.5 text-xs',
-                (searchParams.priority ?? '') === f.value
-                  ? 'border-amber-500 bg-amber-50 text-amber-800'
-                  : 'border-zinc-200 hover:bg-zinc-50'
-              )}
-            >{f.label}</Link>
-          ))}
-        </div>
-        <FilterBar
-          selects={[
-            { key: 'assigned', placeholder: 'All assignees', options: team.map((u: any) => ({ value: u.id, label: u.full_name })) },
-            { key: 'client', placeholder: 'All clients', options: clients.map((c: any) => ({ value: c.id, label: c.business_name })) },
-            { key: 'sub_service', placeholder: 'All sub-services', options: subServices.map((s: any) => ({ value: s.id, label: `${s.services?.name ?? ''} › ${s.name}` })) },
-          ]}
-          inputs={[
-            { key: 'due_from', placeholder: 'Due from', type: 'date' },
-            { key: 'due_to', placeholder: 'Due to', type: 'date' },
-          ]}
+        <AdvancedTaskFilters 
+          clients={clients ?? []} 
+          team={team ?? []} 
+          subServices={subServices ?? []} 
         />
         <SavedViewsBar scope="admin.tasks" views={views as any} />
       </div>
@@ -171,7 +124,7 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
       ) : (
         <>
           <TaskViewWrapper tasks={tasks as any} hrefPrefix="/admin/tasks">
-            <TasksTable tasks={tasks as any} todayIso={todayIso} />
+            <TasksTable tasks={tasks as any} todayIso={todayIso} team={team ?? []} />
           </TaskViewWrapper>
 
           {/* Pagination */}

@@ -597,6 +597,69 @@ export async function bulkCreateTasksAction(input: z.infer<typeof bulkCreateTask
 }
 
 
+const bulkUpdateTasksSchema = z.object({
+  task_ids: z.array(z.string().uuid()).min(1),
+  updates: z.object({
+    assigned_to: z.string().uuid().optional().nullable(),
+    reviewer_id: z.string().uuid().optional().nullable(),
+    priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
+    due_date: z.string().date().optional(),
+    is_billable: z.boolean().optional(),
+  }).refine(data => Object.keys(data).length > 0, 'At least one field to update must be provided'),
+});
+
+export async function bulkUpdateTasksAction(input: z.infer<typeof bulkUpdateTasksSchema>): Promise<ActionResult<{ success: number; failed: number }>> {
+  try {
+    const me = await requireRole(['admin', 'team']);
+    await requireCapability(me, 'tasks.assign');
+    const parsed = bulkUpdateTasksSchema.safeParse(input);
+    if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
+
+    let successCount = 0;
+    let failedCount = 0;
+    
+    // We update one by one to ensure we don't bypass any logic checks, though we could do a direct SQL UPDATE if performance requires.
+    // For a few dozen tasks, this loop is fine.
+    for (const taskId of parsed.data.task_ids) {
+      const task = await taskRepo.getTask(taskId);
+      if (!task || !canModifyTask(task as any)) {
+        failedCount++;
+        continue;
+      }
+      
+      const payload: any = { updated_at: new Date().toISOString() };
+      if ('assigned_to' in parsed.data.updates) payload.assigned_to = parsed.data.updates.assigned_to;
+      if ('reviewer_id' in parsed.data.updates) payload.reviewer_id = parsed.data.updates.reviewer_id;
+      if ('priority' in parsed.data.updates) payload.priority = parsed.data.updates.priority;
+      if ('due_date' in parsed.data.updates) payload.due_date = parsed.data.updates.due_date;
+      if ('is_billable' in parsed.data.updates) payload.is_billable = parsed.data.updates.is_billable;
+
+      try {
+        await taskRepo.updateTaskRecord(taskId, payload);
+        successCount++;
+        
+        await taskRepo.addTaskActivity({
+          task_id: taskId,
+          action: 'bulk_updated',
+          field_name: Object.keys(parsed.data.updates).join(', '),
+          new_value: 'updated via bulk action',
+          changed_by: me.id,
+        });
+      } catch (e) {
+        failedCount++;
+      }
+    }
+
+    await writeAudit({ action: 'task.bulk_update', entity_type: 'task', performed_by: me.id, details: { count: successCount, fields: Object.keys(parsed.data.updates) } });
+    revalidatePath('/team/tasks');
+    revalidatePath('/admin/tasks');
+    revalidatePath('/portal/tasks');
+    return ok({ success: successCount, failed: failedCount });
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  }
+}
+
 const updateTaskSchema = z.object({
   task_id: z.string().uuid(),
   title: z.string().min(2).max(200).optional(),

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,30 +10,29 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/date-picker';
 import { createTaskAction } from '@/lib/actions/tasks';
 import { toast } from 'sonner';
-import { Check, Loader2 } from 'lucide-react';
+import { Loader2, Users } from 'lucide-react';
 
 interface Props {
   clients: { id: string; business_name: string; group_id: string | null }[];
   team: { id: string; full_name: string }[];
   groups: { id: string; name: string }[];
+  templates?: { id: string; name: string; description: string | null }[];
 }
 
-export default function BulkTaskForm({ clients, team, groups }: Props) {
+export default function BulkTaskForm({ clients, team, groups, templates = [] }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [step, setStep] = useState<'clients' | 'details' | 'preview'>('clients');
+  const [step, setStep] = useState<'clients' | 'details' | 'assignees' | 'preview'>('clients');
 
-  // Client selection
+  // 1. Client selection
   const [groupFilter, setGroupFilter] = useState<string>('all');
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
 
-  // Task details
+  // 2. Task details
   const [f, setF] = useState({
     title: '',
     description: '',
     priority: 'medium' as const,
-    assigned_to: '',
-    reviewer_id: '',
     due_date: '',
     period_year: '',
     period_month: '',
@@ -44,6 +43,12 @@ export default function BulkTaskForm({ clients, team, groups }: Props) {
     sub_service_id: '',
     task_template_id: '',
   });
+
+  // 3. Assignees
+  const [assigneeMap, setAssigneeMap] = useState<Record<string, { assignee?: string; reviewer?: string }>>({});
+  const [selectedForAssign, setSelectedForAssign] = useState<Set<string>>(new Set());
+  const [bulkAssignee, setBulkAssignee] = useState<string>('');
+  const [bulkReviewer, setBulkReviewer] = useState<string>('');
 
   const filteredClients = groupFilter === 'all'
     ? clients
@@ -69,6 +74,50 @@ export default function BulkTaskForm({ clients, team, groups }: Props) {
 
   function set<K extends keyof typeof f>(k: K, v: any) { setF((p) => ({ ...p, [k]: v })); }
 
+  // Assignees step helpers
+  const selectedClientsList = useMemo(() => {
+    return clients.filter((c) => selectedClients.has(c.id));
+  }, [clients, selectedClients]);
+
+  const allSelectedForAssign = selectedClientsList.length > 0 && selectedForAssign.size === selectedClientsList.length;
+
+  function toggleAssignRow(id: string) {
+    const ns = new Set(selectedForAssign);
+    ns.has(id) ? ns.delete(id) : ns.add(id);
+    setSelectedForAssign(ns);
+  }
+
+  function toggleAllAssignRows() {
+    if (allSelectedForAssign) setSelectedForAssign(new Set());
+    else setSelectedForAssign(new Set(selectedClientsList.map((c) => c.id)));
+  }
+
+  function applyBulkAssignees() {
+    if (selectedForAssign.size === 0) return;
+    setAssigneeMap((prev) => {
+      const next = { ...prev };
+      selectedForAssign.forEach((id) => {
+        next[id] = {
+          ...next[id],
+          assignee: bulkAssignee || next[id]?.assignee,
+          reviewer: bulkReviewer || next[id]?.reviewer,
+        };
+      });
+      return next;
+    });
+    toast.success(`Applied to ${selectedForAssign.size} clients`);
+    setSelectedForAssign(new Set()); // clear selection after apply
+    setBulkAssignee('');
+    setBulkReviewer('');
+  }
+
+  function setSingleAssignee(clientId: string, field: 'assignee' | 'reviewer', val: string) {
+    setAssigneeMap((prev) => ({
+      ...prev,
+      [clientId]: { ...prev[clientId], [field]: val === 'unassigned' ? undefined : val }
+    }));
+  }
+
   const [progress, setProgress] = useState({ done: 0, total: 0 });
 
   function doCreate() {
@@ -82,13 +131,14 @@ export default function BulkTaskForm({ clients, team, groups }: Props) {
       let failed = 0;
 
       for (const clientId of selectedClients) {
+        const mapping = assigneeMap[clientId] || {};
         const payload: any = {
           client_id: clientId,
           title: f.title.trim(),
           description: f.description || undefined,
           priority: f.priority,
-          assigned_to: f.assigned_to || undefined,
-          reviewer_id: f.reviewer_id || undefined,
+          assigned_to: mapping.assignee || undefined,
+          reviewer_id: mapping.reviewer || undefined,
           due_date: f.due_date,
           sub_service_id: f.sub_service_id || undefined,
           task_template_id: f.task_template_id || undefined,
@@ -117,12 +167,16 @@ export default function BulkTaskForm({ clients, team, groups }: Props) {
   return (
     <div className="space-y-6">
       {/* Step indicator */}
-      <div className="flex items-center gap-2 text-sm">
-        {(['clients', 'details', 'preview'] as const).map((s, i) => (
+      <div className="flex items-center gap-2 text-sm overflow-x-auto pb-2">
+        {(['clients', 'details', 'assignees', 'preview'] as const).map((s, i) => (
           <button
             key={s}
-            onClick={() => setStep(s)}
-            className={`px-3 py-1.5 rounded-md border ${step === s ? 'border-teal-500 bg-teal-50 text-teal-800' : 'border-zinc-200 text-zinc-500 hover:bg-zinc-50'}`}
+            onClick={() => {
+              if (s === 'assignees' && step === 'clients') setStep('details');
+              else if (s === 'preview' && (step === 'clients' || step === 'details')) setStep('assignees');
+              else setStep(s);
+            }}
+            className={`px-3 py-1.5 rounded-md border whitespace-nowrap ${step === s ? 'border-teal-500 bg-teal-50 text-teal-800' : 'border-zinc-200 text-zinc-500 hover:bg-zinc-50'}`}
           >
             {i + 1}. {s.charAt(0).toUpperCase() + s.slice(1)}
           </button>
@@ -197,28 +251,27 @@ export default function BulkTaskForm({ clients, team, groups }: Props) {
             </div>
             <div className="space-y-2"><Label>Due date *</Label><DatePicker value={f.due_date} onChange={(v) => set('due_date', v)} /></div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Assignee</Label>
-              <Select value={f.assigned_to} onValueChange={(v) => set('assigned_to', v)}>
-                <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
-                <SelectContent>{team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}</SelectContent>
+
+          {templates.length > 0 && (
+            <div className="space-y-2 border-t border-zinc-100 pt-3 mt-1">
+              <Label>Allocate Task Template / SOP</Label>
+              <Select value={f.task_template_id} onValueChange={(v) => set('task_template_id', v)}>
+                <SelectTrigger><SelectValue placeholder="No template selected" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">None</SelectItem>
+                  {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
               </Select>
+              <p className="text-[11px] text-zinc-500">Selecting a template will copy its SOP steps to all created tasks.</p>
             </div>
-            <div className="space-y-2">
-              <Label>Reviewer</Label>
-              <Select value={f.reviewer_id} onValueChange={(v) => set('reviewer_id', v)}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-                <SelectContent>{team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
+          )}
+
+          <div className="grid grid-cols-3 gap-3 border-t border-zinc-100 pt-3 mt-1">
             <div className="space-y-2"><Label>Period year</Label><Input type="number" min={2000} max={2100} value={f.period_year} onChange={(e) => set('period_year', e.target.value)} placeholder="2026" /></div>
             <div className="space-y-2"><Label>Period month</Label><Input type="number" min={1} max={12} value={f.period_month} onChange={(e) => set('period_month', e.target.value)} placeholder="1-12" /></div>
             <div className="space-y-2"><Label>Quarter</Label><Input type="number" min={1} max={4} value={f.period_quarter} onChange={(e) => set('period_quarter', e.target.value)} placeholder="1-4" /></div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 border-t border-zinc-100 pt-3 mt-1">
             <Checkbox id="billable" checked={f.is_billable} onCheckedChange={(v) => set('is_billable', v === true)} />
             <Label htmlFor="billable" className="cursor-pointer">Billable</Label>
             {f.is_billable && (
@@ -231,6 +284,91 @@ export default function BulkTaskForm({ clients, team, groups }: Props) {
 
           <div className="flex items-center gap-2 pt-2">
             <Button variant="outline" onClick={() => setStep('clients')}>Back</Button>
+            <Button onClick={() => setStep('assignees')}>Next: Assignees</Button>
+          </div>
+        </div>
+      )}
+
+      {step === 'assignees' && (
+        <div className="space-y-4">
+          <div className="tff-card p-4 space-y-4 bg-zinc-50 border-dashed border-2">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-zinc-500" />
+              <h3 className="text-sm font-semibold">Bulk apply assignees</h3>
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="space-y-1.5 w-48">
+                <Label className="text-xs text-zinc-500">Assignee</Label>
+                <Select value={bulkAssignee} onValueChange={setBulkAssignee}>
+                  <SelectTrigger className="h-8 text-sm bg-white"><SelectValue placeholder="Select..." /></SelectTrigger>
+                  <SelectContent>{team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 w-48">
+                <Label className="text-xs text-zinc-500">Reviewer</Label>
+                <Select value={bulkReviewer} onValueChange={setBulkReviewer}>
+                  <SelectTrigger className="h-8 text-sm bg-white"><SelectValue placeholder="Select..." /></SelectTrigger>
+                  <SelectContent>{team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <Button size="sm" className="h-8" disabled={selectedForAssign.size === 0 || (!bulkAssignee && !bulkReviewer)} onClick={applyBulkAssignees}>
+                Apply to {selectedForAssign.size} selected
+              </Button>
+            </div>
+          </div>
+
+          <div className="tff-card overflow-hidden">
+            <div className="bg-white border-b border-zinc-200">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-zinc-50 text-xs text-zinc-500 border-b border-zinc-200 uppercase tracking-wider">
+                  <tr>
+                    <th className="px-4 py-2 w-10 text-center"><Checkbox checked={allSelectedForAssign} onCheckedChange={toggleAllAssignRows} /></th>
+                    <th className="px-4 py-2">Client Task</th>
+                    <th className="px-4 py-2 w-48">Assignee</th>
+                    <th className="px-4 py-2 w-48">Reviewer</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 max-h-[25rem] overflow-y-auto">
+                  {selectedClientsList.map((c) => {
+                    const currentMap = assigneeMap[c.id] || {};
+                    return (
+                      <tr key={c.id} className="hover:bg-zinc-50/50">
+                        <td className="px-4 py-2 text-center">
+                          <Checkbox checked={selectedForAssign.has(c.id)} onCheckedChange={() => toggleAssignRow(c.id)} />
+                        </td>
+                        <td className="px-4 py-2 font-medium text-zinc-900">{c.business_name}</td>
+                        <td className="px-4 py-2">
+                          <Select value={currentMap.assignee || 'unassigned'} onValueChange={(v) => setSingleAssignee(c.id, 'assignee', v)}>
+                            <SelectTrigger className="h-8 text-xs border-transparent hover:border-zinc-200 bg-transparent hover:bg-white shadow-none">
+                              <SelectValue placeholder="Unassigned" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="unassigned" className="text-zinc-400">Unassigned</SelectItem>
+                              {team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="px-4 py-2">
+                          <Select value={currentMap.reviewer || 'unassigned'} onValueChange={(v) => setSingleAssignee(c.id, 'reviewer', v)}>
+                            <SelectTrigger className="h-8 text-xs border-transparent hover:border-zinc-200 bg-transparent hover:bg-white shadow-none">
+                              <SelectValue placeholder="None" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="unassigned" className="text-zinc-400">None</SelectItem>
+                              {team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 pt-2">
+            <Button variant="outline" onClick={() => setStep('details')}>Back</Button>
             <Button onClick={() => setStep('preview')}>Next: Preview</Button>
           </div>
         </div>
@@ -241,21 +379,35 @@ export default function BulkTaskForm({ clients, team, groups }: Props) {
           <div className="tff-card tff-card-pad space-y-3">
             <h3 className="font-semibold text-zinc-900">Preview</h3>
             <div className="text-sm text-zinc-600 space-y-1">
-              <p><strong>Clients:</strong> {selectedClients.size}</p>
+              <p><strong>Total Tasks:</strong> {selectedClients.size}</p>
               <p><strong>Title:</strong> {f.title}</p>
               <p><strong>Due:</strong> {f.due_date || '—'}</p>
               <p><strong>Priority:</strong> {f.priority}</p>
+              <p><strong>Template:</strong> {f.task_template_id && f.task_template_id !== 'unassigned' ? templates.find(t => t.id === f.task_template_id)?.name || 'Yes' : 'None'}</p>
               <p><strong>Billable:</strong> {f.is_billable ? `Yes · ${f.bill_reference || 'No ref'} · ₹${f.bill_amount || 0}` : 'No'}</p>
             </div>
+            
+            <div className="mt-4 pt-4 border-t border-zinc-100">
+              <h4 className="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-2">Assignment Overview</h4>
+              <div className="max-h-32 overflow-y-auto text-xs text-zinc-500 space-y-1">
+                {selectedClientsList.slice(0, 5).map(c => {
+                  const m = assigneeMap[c.id];
+                  const aName = m?.assignee ? team.find(t => t.id === m.assignee)?.full_name : 'Unassigned';
+                  return <div key={c.id} className="flex justify-between border-b border-zinc-50 pb-1"><span className="truncate pr-2">{c.business_name}</span><span className="font-medium shrink-0">{aName}</span></div>;
+                })}
+                {selectedClientsList.length > 5 && <div className="pt-1 italic">...and {selectedClientsList.length - 5} more</div>}
+              </div>
+            </div>
+
             {pending && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-teal-700">
+              <div className="space-y-2 mt-4 pt-4 border-t border-zinc-100">
+                <div className="flex items-center gap-2 text-sm text-teal-700 font-medium">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Creating {progress.done} of {progress.total} tasks…
                 </div>
                 <div className="h-2 bg-zinc-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-teal-500 transition-all"
+                    className="h-full bg-teal-500 transition-all duration-300 ease-out"
                     style={{ width: `${progress.total > 0 ? (progress.done / progress.total) * 100 : 0}%` }}
                   />
                 </div>
@@ -263,9 +415,9 @@ export default function BulkTaskForm({ clients, team, groups }: Props) {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setStep('details')} disabled={pending}>Back</Button>
+            <Button variant="outline" onClick={() => setStep('assignees')} disabled={pending}>Back</Button>
             <Button onClick={doCreate} disabled={pending}>
-              {pending ? 'Creating…' : `Create ${selectedClients.size} tasks`}
+              {pending ? 'Creating…' : `Confirm & Create ${selectedClients.size} tasks`}
             </Button>
           </div>
         </div>

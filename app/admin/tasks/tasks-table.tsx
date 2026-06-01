@@ -13,7 +13,7 @@ import {
   Search, Filter, AlertTriangle, Building2, ArrowUpRight, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck,
 } from 'lucide-react';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
-import { transitionTaskAction } from '@/lib/actions/tasks';
+import { transitionTaskAction, bulkDeleteTasksAction, bulkUpdateTasksAction } from '@/lib/actions/tasks';
 import { toast } from 'sonner';
 
 type Task = {
@@ -29,11 +29,8 @@ type Task = {
   users_profile?: { full_name: string } | null;
 };
 
-export default function TasksTable({ tasks, todayIso }: { tasks: Task[]; todayIso: string }) {
+export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task[]; todayIso: string; team?: { id: string; full_name: string }[] }) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<string>('due_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -59,15 +56,6 @@ export default function TasksTable({ tasks, todayIso }: { tasks: Task[]; todayIs
         (t.clients as any)?.business_name?.toLowerCase().includes(q)
       );
     }
-    if (statusFilter !== 'all') {
-      data = data.filter((t) => t.status === statusFilter);
-    }
-    if (priorityFilter !== 'all') {
-      data = data.filter((t) => t.priority === priorityFilter);
-    }
-    if (assigneeFilter !== 'all') {
-      data = data.filter((t) => (t.users_profile as any)?.full_name === assigneeFilter);
-    }
     data.sort((a, b) => {
       let va: any = a[sortKey as keyof Task];
       let vb: any = b[sortKey as keyof Task];
@@ -88,7 +76,7 @@ export default function TasksTable({ tasks, todayIso }: { tasks: Task[]; todayIs
       return 0;
     });
     return data;
-  }, [tasks, search, statusFilter, priorityFilter, assigneeFilter, sortKey, sortDir]);
+  }, [tasks, search, sortKey, sortDir]);
 
   const allSelected = filtered.length > 0 && selected.size === filtered.length;
 
@@ -154,6 +142,33 @@ export default function TasksTable({ tasks, todayIso }: { tasks: Task[]; todayIs
     return { success, failed };
   }
 
+  async function bulkUpdateAssignee(ids: string[], val?: string) {
+    const r = await bulkUpdateTasksAction({ task_ids: ids, updates: { assigned_to: val === 'unassigned' ? null : val } });
+    if (!r.success) {
+      toast.error(r.error);
+      return { success: 0, failed: ids.length };
+    }
+    return { success: r.data.success, failed: r.data.failed };
+  }
+
+  async function bulkUpdatePriority(ids: string[], val?: string) {
+    const r = await bulkUpdateTasksAction({ task_ids: ids, updates: { priority: val as any } });
+    if (!r.success) {
+      toast.error(r.error);
+      return { success: 0, failed: ids.length };
+    }
+    return { success: r.data.success, failed: r.data.failed };
+  }
+
+  async function bulkUpdateBillable(ids: string[], val?: string) {
+    const r = await bulkUpdateTasksAction({ task_ids: ids, updates: { is_billable: val === 'true' } });
+    if (!r.success) {
+      toast.error(r.error);
+      return { success: 0, failed: ids.length };
+    }
+    return { success: r.data.success, failed: r.data.failed };
+  }
+
   return (
     <div className="space-y-4">
       <ConfirmDialog />
@@ -167,43 +182,6 @@ export default function TasksTable({ tasks, todayIso }: { tasks: Task[]; todayIs
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 pr-3 h-9 rounded-md border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 w-60"
           />
-        </div>
-        <div className="flex items-center gap-1">
-          <Filter className="h-4 w-4 text-stone-400" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-9 px-2 rounded-md border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500"
-          >
-            {statuses.map((s) => (
-              <option key={s} value={s}>{s === 'all' ? 'All statuses' : s.replace('_', ' ')}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex items-center gap-1">
-          <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
-            className="h-9 px-2 rounded-md border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500"
-          >
-            <option value="all">All priorities</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-1">
-          <select
-            value={assigneeFilter}
-            onChange={(e) => setAssigneeFilter(e.target.value)}
-            className="h-9 px-2 rounded-md border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500"
-          >
-            <option value="all">All assignees</option>
-            {assignees.map((a) => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
         </div>
         <div className="ml-auto text-sm text-stone-500">
           {filtered.length} of {tasks.length} tasks
@@ -321,6 +299,35 @@ export default function TasksTable({ tasks, todayIso }: { tasks: Task[]; todayIs
               { value: 'cancelled', label: 'Cancelled' },
             ],
             onApply: bulkChangeStatus,
+          },
+          {
+            type: 'select',
+            label: 'Assignee',
+            options: [
+              { value: 'unassigned', label: 'Unassigned' },
+              ...team.map(t => ({ value: t.id, label: t.full_name }))
+            ],
+            onApply: bulkUpdateAssignee,
+          },
+          {
+            type: 'select',
+            label: 'Priority',
+            options: [
+              { value: 'low', label: 'Low' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'high', label: 'High' },
+              { value: 'urgent', label: 'Urgent' },
+            ],
+            onApply: bulkUpdatePriority,
+          },
+          {
+            type: 'select',
+            label: 'Billable',
+            options: [
+              { value: 'true', label: 'Mark as billable' },
+              { value: 'false', label: 'Mark non-billable' },
+            ],
+            onApply: bulkUpdateBillable,
           },
           {
             type: 'button',

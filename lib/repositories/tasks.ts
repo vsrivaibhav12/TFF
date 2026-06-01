@@ -19,6 +19,10 @@ export async function listTasks(opts: {
   subServiceId?: string;
   dueFrom?: string;
   dueTo?: string;
+  periodYear?: number;
+  isBillable?: boolean;
+  isStuck?: boolean;
+  isVerified?: boolean;
   limit?: number;
   offset?: number;
 } = {}) {
@@ -29,11 +33,20 @@ export async function listTasks(opts: {
     .eq('is_deleted', false)
     .order('due_date', { ascending: true, nullsFirst: false });
   if (opts.clientId) q = q.eq('client_id', opts.clientId);
-  if (opts.assignedTo) q = q.eq('assigned_to', opts.assignedTo);
   if (opts.subServiceId) q = q.eq('sub_service_id', opts.subServiceId);
   if (opts.dueFrom) q = q.gte('due_date', opts.dueFrom);
   if (opts.dueTo) q = q.lte('due_date', opts.dueTo);
+  if (opts.periodYear) q = q.eq('period_year', opts.periodYear);
+  if (opts.isBillable !== undefined) q = q.eq('is_billable', opts.isBillable);
+  if (opts.isStuck !== undefined) q = q.eq('is_stuck', opts.isStuck);
+  if (opts.isVerified !== undefined) q = q.eq('is_verified', opts.isVerified);
   if (opts.priority?.length) q = q.in('priority', opts.priority);
+  
+  if (opts.assignedTo === 'unassigned') {
+    q = q.is('assigned_to', null);
+  } else if (opts.assignedTo) {
+    q = q.eq('assigned_to', opts.assignedTo);
+  }
 
   if (opts.status?.length) {
     const hasBlocked = opts.status.includes('blocked');
@@ -79,6 +92,10 @@ export async function countTasks(opts: {
   subServiceId?: string;
   dueFrom?: string;
   dueTo?: string;
+  periodYear?: number;
+  isBillable?: boolean;
+  isStuck?: boolean;
+  isVerified?: boolean;
 } = {}) {
   const sb = createClient();
   let q = sb
@@ -86,11 +103,20 @@ export async function countTasks(opts: {
     .select('id', { count: 'exact', head: true })
     .eq('is_deleted', false);
   if (opts.clientId) q = q.eq('client_id', opts.clientId);
-  if (opts.assignedTo) q = q.eq('assigned_to', opts.assignedTo);
   if (opts.subServiceId) q = q.eq('sub_service_id', opts.subServiceId);
   if (opts.dueFrom) q = q.gte('due_date', opts.dueFrom);
   if (opts.dueTo) q = q.lte('due_date', opts.dueTo);
+  if (opts.periodYear) q = q.eq('period_year', opts.periodYear);
+  if (opts.isBillable !== undefined) q = q.eq('is_billable', opts.isBillable);
+  if (opts.isStuck !== undefined) q = q.eq('is_stuck', opts.isStuck);
+  if (opts.isVerified !== undefined) q = q.eq('is_verified', opts.isVerified);
   if (opts.priority?.length) q = q.in('priority', opts.priority);
+
+  if (opts.assignedTo === 'unassigned') {
+    q = q.is('assigned_to', null);
+  } else if (opts.assignedTo) {
+    q = q.eq('assigned_to', opts.assignedTo);
+  }
 
   if (opts.status?.length) {
     const hasBlocked = opts.status.includes('blocked');
