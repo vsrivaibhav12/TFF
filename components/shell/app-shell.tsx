@@ -97,15 +97,6 @@ export default function AppShell({
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('tff_sidebar_collapsed') === 'true';
-    }
-    return false;
-  });
-  useEffect(() => {
-    localStorage.setItem('tff_sidebar_collapsed', String(sidebarCollapsed));
-  }, [sidebarCollapsed]);
 
   async function logout() {
     const sb = createClient();
@@ -128,16 +119,12 @@ export default function AppShell({
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-teal-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm">Skip to content</a>
       <div className="flex flex-1">
         {/* Sidebar (desktop) — floating bento style */}
-        <aside className={cn(
-          "hidden md:flex fixed left-3 top-3 bottom-3 flex-col rounded-[20px] shadow-sidebar border border-stone-200/50 bg-white z-30 transition-all duration-300",
-          sidebarCollapsed ? "w-[64px]" : "w-[240px]"
-        )} aria-label="Main navigation">
+        <aside className="hidden md:flex fixed left-3 top-3 bottom-3 flex-col rounded-[20px] shadow-sidebar border border-stone-200/50 bg-white z-30 transition-all duration-300 w-[64px] hover:w-[240px] group/aside overflow-hidden" aria-label="Main navigation">
           {/* Logo + collapse toggle */}
-          <div className={cn("flex items-center justify-between", sidebarCollapsed ? "px-2 py-4" : "px-5 py-5")}>
+          <div className="flex items-center justify-between px-2 py-4 group-hover/aside:px-5 group-hover/aside:py-5 transition-all">
             <Link href={`/${role}`} className="flex items-center gap-2.5">
-              <Image src="/logo.png" width={160} height={32} className="h-8 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
-              {!sidebarCollapsed && (
-                <div>
+              <Image src="/logo.png" width={160} height={32} className="h-8 w-auto object-contain shrink-0" alt="The Fiscal Fulcrum" priority />
+              <div className="opacity-0 group-hover/aside:opacity-100 transition-opacity whitespace-nowrap overflow-hidden">
                   <div className="text-sm font-bold tracking-tight text-stone-900 leading-none">
                     The <span className="text-teal-600">Fiscal</span>
                   </div>
@@ -145,34 +132,13 @@ export default function AppShell({
                     Fulcrum
                   </div>
                 </div>
-              )}
             </Link>
-            {!sidebarCollapsed && (
-              <button
-                onClick={() => setSidebarCollapsed(true)}
-                className="text-stone-400 hover:text-stone-600 transition-colors p-1"
-                title="Collapse sidebar"
-                aria-label="Collapse sidebar"
-              >
-                <PanelLeftClose className="h-4 w-4" />
-              </button>
-            )}
+            
           </div>
-          {sidebarCollapsed && (
-            <div className="flex justify-center pb-2">
-              <button
-                onClick={() => setSidebarCollapsed(false)}
-                className="text-stone-400 hover:text-stone-600 transition-colors p-1"
-                title="Expand sidebar"
-                aria-label="Expand sidebar"
-              >
-                <PanelLeft className="h-4 w-4" />
-              </button>
-            </div>
-          )}
+          
 
           {/* Nav */}
-          <nav className={cn("flex-1 py-2 space-y-0.5 overflow-y-auto", sidebarCollapsed ? "px-1.5" : "px-3")} aria-label="Sidebar">
+          <nav className="flex-1 py-2 space-y-0.5 overflow-y-auto px-1.5 group-hover/aside:px-3 transition-all" aria-label="Sidebar">
             {(() => {
               let currentSection: string | undefined = undefined;
               let sectionItems: React.ReactNode[] = [];
@@ -199,26 +165,16 @@ export default function AppShell({
                         active ? 'text-teal-600' : 'text-stone-400 group-hover:text-stone-600'
                       )}
                     />
-                    {!sidebarCollapsed && <span className="truncate">{n.label}</span>}
-                    {!sidebarCollapsed && active && (
-                      <ChevronRight className="ml-auto h-3.5 w-3.5 text-teal-600/60" />
-                    )}
+                    <span className="opacity-0 group-hover/aside:opacity-100 whitespace-nowrap transition-opacity truncate">{n.label}</span>
+                    <ChevronRight className="ml-auto h-3.5 w-3.5 text-teal-600/60 opacity-0 group-hover/aside:opacity-100 transition-opacity" />
                   </Link>
                 );
               };
 
               const flushSection = () => {
                 if (currentSection && sectionItems.length > 0) {
-                  if (sidebarCollapsed) {
-                    // When collapsed, render section items flat without headers
+                  elements.push(<div key={currentSection} className="px-2.5 pt-5 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-stone-400 opacity-0 group-hover/aside:opacity-100 transition-opacity whitespace-nowrap overflow-hidden">{currentSection}</div>);
                     elements.push(...sectionItems);
-                  } else {
-                    elements.push(
-                      <CollapsibleSection key={currentSection} label={currentSection}>
-                        {sectionItems}
-                      </CollapsibleSection>
-                    );
-                  }
                   sectionItems = [];
                 }
               };
@@ -240,13 +196,12 @@ export default function AppShell({
           </nav>
 
           {/* User profile */}
-          <div className={cn("mb-3 rounded-xl border border-stone-100 bg-stone-50", sidebarCollapsed ? "mx-1.5 p-2 flex justify-center" : "mx-3 p-3")}>
+          <div className="mb-3 rounded-xl border border-stone-100 bg-stone-50 mx-1.5 p-2 group-hover/aside:mx-3 group-hover/aside:p-3 flex items-center transition-all overflow-hidden">
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {getInitials(user.full_name)}
               </div>
-              {!sidebarCollapsed && (
-                <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 opacity-0 group-hover/aside:opacity-100 transition-opacity whitespace-nowrap overflow-hidden ml-3">
                   <div className="text-sm font-medium text-stone-800 truncate">
                     {user.full_name || user.email}
                   </div>
@@ -261,7 +216,6 @@ export default function AppShell({
                     </span>
                   </div>
                 </div>
-              )}
             </div>
           </div>
         </aside>
@@ -376,7 +330,7 @@ export default function AppShell({
         </AnimatePresence>
 
         {/* Main content */}
-        <main className={cn("flex-1 min-w-0 transition-all duration-300", sidebarCollapsed ? "md:ml-[88px]" : "md:ml-[264px]")}>
+        <main className="flex-1 min-w-0 transition-all duration-300 md:ml-[88px]">
           {/* Desktop top bar */}
           <div className="hidden md:flex items-center justify-between gap-4 px-8 pt-8 pb-4 sticky top-0 z-20 bg-[#F7F6F3]/80 backdrop-blur-xl">
             {/* Breadcrumbs */}

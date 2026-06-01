@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Play, Square, Plus, Trash2, Loader2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { addManualWorkDoneAction, logTimerWorkDoneAction, deleteWorkDoneAction } from '@/lib/actions/workdone';
@@ -25,6 +26,7 @@ export default function WorkDonePanel({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [showManual, setShowManual] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const [manual, setManual] = useState({ work_date: new Date().toISOString().slice(0, 10), hours: '', minutes: '', note: '' });
   const [timerStart, setTimerStart] = useState<number | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);

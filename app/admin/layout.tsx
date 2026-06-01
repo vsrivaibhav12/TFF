@@ -3,7 +3,7 @@ import { listGrantedCapabilities } from '@/lib/repositories/staff-capabilities';
 import { filterNavByCapabilities } from '@/lib/auth/nav-capabilities';
 import AppShell from '@/components/shell/app-shell';
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children, modal }: { children: React.ReactNode, modal: React.ReactNode }) {
   const user = await requireRole(['admin', 'team']);
   const capabilities = user.role === 'admin'
     ? []
@@ -54,7 +54,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       role="admin"
       nav={nav}
     >
-      <div data-admin-only>{children}</div>
+      <div data-admin-only>
+        {children}
+        {modal}
+      </div>
     </AppShell>
   );
 }

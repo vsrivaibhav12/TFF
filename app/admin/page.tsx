@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-container';
 import { PriorityList } from '@/components/dashboard/priority-list';
-import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
 import { ActivityFeed } from '@/components/dashboard/activity-feed';
 import { NeedsAttentionHub } from '@/components/dashboard/needs-attention-hub';
 import { FirmPulse } from '@/components/dashboard/business-pulse';
@@ -183,13 +182,10 @@ export default async function AdminDashboard() {
       {/* Widget Grid */}
       <StaggerItem>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-5">
             <PriorityList tasks={recentTasks as any} href="/admin/tasks" />
           </div>
-          <div className="lg:col-span-3">
-            <DeadlineTimeline deadlines={(upcomingDeadlines ?? []) as any} />
-          </div>
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-7">
             <NeedsAttentionHub items={attentionItems as any} />
           </div>
         </div>
