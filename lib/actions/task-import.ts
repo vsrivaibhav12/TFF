@@ -1,4 +1,5 @@
 'use server';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
@@ -61,13 +62,13 @@ export async function commitTaskImportAction(input: {
     }
     const sb = createClient();
 
-    // Pre-load data for matching
-    const { data: clients } = await sb.from('clients').select('id, pan, business_name').eq('is_deleted', false);
-    const { data: subServices } = await sb.from('sub_services').select('id, code, name').eq('is_deleted', false).eq('is_active', true);
-    const { data: teamMembers } = await sb.from('users_profile').select('id, full_name').eq('role', 'team').eq('is_active', true);
+    // Pre-load data for matching using fetchAll to bypass 1000 row limit
+    const clients = await fetchAll<any>(() => sb.from('clients').select('id, pan, business_name').eq('is_deleted', false));
+    const subServices = await fetchAll<any>(() => sb.from('sub_services').select('id, code, name').eq('is_deleted', false).eq('is_active', true));
+    const teamMembers = await fetchAll<any>(() => sb.from('users_profile').select('id, full_name').eq('role', 'team').eq('is_active', true));
     
     // Pre-load active task templates to automatically assign the first one
-    const { data: templates } = await sb.from('task_templates').select('id, sub_service_id').eq('is_deleted', false).eq('is_active', true);
+    const templates = await fetchAll<any>(() => sb.from('task_templates').select('id, sub_service_id').eq('is_deleted', false).eq('is_active', true));
 
     const clientPanMap = new Map<string, string>();
     const clientNameMap = new Map<string, string>();

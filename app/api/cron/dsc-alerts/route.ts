@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { sendEmail } from '@/lib/email/resend';
 import { notify } from '@/lib/services/notification-service';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -21,13 +22,19 @@ export async function GET(request: NextRequest) {
   const today = new Date();
   const horizon = new Date(today.getTime() + 30 * 86_400_000);
 
-  const { data: rows } = await sb
-    .from('dsc_records')
-    .select('id, client_id, holder_name, holder_contact_email, expiry_date, expiry_alert_sent, clients(business_name, primary_contact_email, primary_owner_id)')
-    .eq('is_deleted', false)
-    .eq('status', 'active')
-    .gte('expiry_date', today.toISOString().slice(0, 10))
-    .lte('expiry_date', horizon.toISOString().slice(0, 10));
+  let rows: any[] = [];
+  try {
+    rows = await fetchAll<any>(() => 
+      sb.from('dsc_records')
+        .select('id, client_id, holder_name, holder_contact_email, expiry_date, expiry_alert_sent, clients(business_name, primary_contact_email, primary_owner_id)')
+        .eq('is_deleted', false)
+        .eq('status', 'active')
+        .gte('expiry_date', today.toISOString().slice(0, 10))
+        .lte('expiry_date', horizon.toISOString().slice(0, 10))
+    );
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   const sent: string[] = [];
   for (const d of rows ?? []) {

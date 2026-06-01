@@ -1,6 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 
 export async function listAccessibleClients(opts: {
   groupId?: string;
@@ -11,21 +12,23 @@ export async function listAccessibleClients(opts: {
   offset?: number;
 } = {}) {
   const sb = createClient();
-  let q = sb
-    .from('clients')
-    .select('id, business_name, pan, gstin, category, primary_contact_person, primary_contact_email, primary_owner_id, group_id, portal_enabled, city, created_at, updated_at, client_groups!clients_group_id_fkey(name)')
-    .eq('is_deleted', false);
-  if (opts.groupId) q = q.eq('group_id', opts.groupId);
-
-  if (opts.city) q = q.ilike('city', `%${opts.city}%`);
-  if (opts.q) q = q.or(`business_name.ilike.%${opts.q}%,pan.ilike.%${opts.q}%`);
-  // H-6: Pagination support
-  const limit = opts.limit ?? 500;
+  const limit = opts.limit ?? 50000;
   const offset = opts.offset ?? 0;
-  q = q.range(offset, offset + limit - 1);
-  const { data, error } = await q.order('business_name', { ascending: true });
-  if (error) throw error;
-  return data ?? [];
+
+  const buildQuery = () => {
+    let query = sb
+      .from('clients')
+      .select('id, business_name, pan, gstin, category, primary_contact_person, primary_contact_email, primary_owner_id, group_id, portal_enabled, city, created_at, updated_at, client_groups!clients_group_id_fkey(name)')
+      .eq('is_deleted', false);
+    if (opts.groupId) query = query.eq('group_id', opts.groupId);
+    if (opts.city) query = query.ilike('city', `%${opts.city}%`);
+    if (opts.q) query = query.or(`business_name.ilike.%${opts.q}%,pan.ilike.%${opts.q}%`);
+    return query.order('business_name', { ascending: true });
+  };
+
+  const allData = await fetchAll<any>(buildQuery, limit);
+  // Apply manual offset if provided, though typically pagination isn't used deeply with fetchAll
+  return allData.slice(offset);
 }
 
 export async function countAccessibleClients(opts: {

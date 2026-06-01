@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
 import BulkTaskForm from './bulk-task-form';
 import BackButton from '@/components/sophistication/back-button';
+import { listAccessibleClients } from '@/lib/repositories/clients';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,8 +12,8 @@ export default async function BulkTaskCreatePage() {
   await requireCapabilityOrRedirect(me, 'tasks.create');
   const sb = createClient();
 
-  const [{ data: clients }, { data: team }, { data: groups }] = await Promise.all([
-    sb.from('clients').select('id, business_name, group_id').eq('is_deleted', false).order('business_name').limit(5000),
+  const [clients, { data: team }, { data: groups }] = await Promise.all([
+    listAccessibleClients(),
     sb.from('users_profile').select('id, full_name').eq('role', 'team').eq('is_active', true).order('full_name'),
     sb.from('client_groups').select('id, name').order('name'),
   ]);

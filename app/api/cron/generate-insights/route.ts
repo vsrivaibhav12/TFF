@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { computeInsightsForClient } from '@/lib/services/insight-service';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
   const sb = createServiceClient();
-  const { data: clients } = await sb.from('clients').select('id').eq('is_deleted', false);
+  const clients = await fetchAll<any>(() => sb.from('clients').select('id').eq('is_deleted', false));
   let total = 0;
   for (const c of clients ?? []) {
     const insights = await computeInsightsForClient((c as any).id);

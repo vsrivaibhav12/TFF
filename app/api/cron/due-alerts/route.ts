@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { sendEmail } from '@/lib/email/resend';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -21,14 +22,19 @@ export async function GET(request: NextRequest) {
   const cutoff = new Date(today);
   cutoff.setDate(cutoff.getDate() + 3);
 
-  const { data: tasks, error } = await sb
-    .from('tasks')
-    .select('id, title, due_date, assigned_to, client_id, status, clients(business_name), users_profile!tasks_assigned_to_fkey(email, full_name)')
-    .eq('is_deleted', false)
-    .in('status', ['pending', 'in_progress'])
-    .gte('due_date', today.toISOString().slice(0, 10))
-    .lte('due_date', cutoff.toISOString().slice(0, 10));
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  let tasks: any[] = [];
+  try {
+    tasks = await fetchAll<any>(() => 
+      sb.from('tasks')
+        .select('id, title, due_date, assigned_to, client_id, status, clients(business_name), users_profile!tasks_assigned_to_fkey(email, full_name)')
+        .eq('is_deleted', false)
+        .in('status', ['pending', 'in_progress'])
+        .gte('due_date', today.toISOString().slice(0, 10))
+        .lte('due_date', cutoff.toISOString().slice(0, 10))
+    );
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   // Group by assignee email
   const byEmail = new Map<string, any[]>();

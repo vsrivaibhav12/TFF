@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { seedTaskStepsFromSop } from '@/lib/services/task-steps-service';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 
 /**
  * Vercel Cron: Generate recurring tasks from client_sub_services.
@@ -59,12 +60,17 @@ export async function GET(request: NextRequest) {
   const periodYear = today.getFullYear();
   const periodQuarter = getQuarter(periodMonth);
 
-  // Pull all active client_sub_services where sub_service is recurring
-  const { data: links, error } = await sb
-    .from('client_sub_services')
-    .select('client_id, sub_service_id, sub_services(id, code, name, frequency, due_day_of_month, due_day_of_quarter, due_month, is_recurring)')
-    .eq('is_active', true);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // Pull all active client_sub_services where sub_service is recurring using fetchAll
+  let links: any[] = [];
+  try {
+    links = await fetchAll<any>(() => 
+      sb.from('client_sub_services')
+        .select('client_id, sub_service_id, sub_services(id, code, name, frequency, due_day_of_month, due_day_of_quarter, due_month, is_recurring)')
+        .eq('is_active', true)
+    );
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   let created = 0;
   let skipped = 0;
