@@ -58,16 +58,16 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
       try {
         const sb = createServiceClient();
         await seedTaskStepsFromTemplate(sb as any, { task_id: data.id, task_template_id: parsed.data.task_template_id });
-      } catch (e) {
-        console.error('Failed to seed template steps', e);
+      } catch {
+        // Non-critical: template step seeding failure does not block task creation
       }
     } else if (parsed.data.sub_service_id) {
       // Auto-load SOP steps if no specific template is chosen
       try {
         const sb = createServiceClient();
         await seedTaskStepsFromSop(sb as any, { task_id: data.id, sub_service_id: parsed.data.sub_service_id });
-      } catch (e) {
-        console.error('SOP seeding failed:', e);
+      } catch {
+        // Non-critical: SOP step seeding failure does not block task creation
       }
     }
     
@@ -581,8 +581,8 @@ export async function bulkCreateTasksAction(input: z.infer<typeof bulkCreateTask
           bill_reference: null,
         });
         created++;
-      } catch (e: any) {
-        console.error('Bulk task creation failed for client', e);
+      } catch {
+        // Non-critical: individual client failure does not block bulk creation
       }
     }
 

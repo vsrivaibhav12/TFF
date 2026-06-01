@@ -12,12 +12,12 @@ export default function NoticesLoading() {
       </div>
       <div className="flex gap-1.5 flex-wrap">
         {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-7 w-24" />
+          <Skeleton key={`sk-${i}`} className="h-7 w-24" />
         ))}
       </div>
       <div className="tff-card tff-card-pad space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" />
+          <Skeleton key={`sk-${i}`} className="h-12 w-full" />
         ))}
       </div>
     </div>

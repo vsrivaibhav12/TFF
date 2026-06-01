@@ -160,8 +160,8 @@ export default async function ClientServicesReportPage({ searchParams }: { searc
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredRows.map((r, i) => (
-                <TableRow key={i}>
+              {filteredRows.map((r) => (
+                <TableRow key={`${r.client_name}-${r.service_name}-${r.sub_service_name}`}>
                   <TableCell className="font-medium text-zinc-900">{r.client_name}</TableCell>
                   <TableCell className="text-sm text-zinc-500">{r.group_name}</TableCell>
                   <TableCell className="text-sm text-zinc-700">{r.service_name}</TableCell>

@@ -6,7 +6,7 @@ export default function TeamTasksLoading() {
       <Skeleton className="h-8 w-32" />
       <div className="tff-card tff-card-pad space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" />
+          <Skeleton key={`sk-${i}`} className="h-12 w-full" />
         ))}
       </div>
     </div>

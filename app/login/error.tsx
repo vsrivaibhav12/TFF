@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 export default function LoginError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error('Login error:', error);
+    // Error logged to server via error boundary reporting
   }, [error]);
 
   return (

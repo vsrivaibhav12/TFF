@@ -27,9 +27,9 @@ export function NeedsAttentionHub({ items = [] }: { items?: any[] }) {
       </div>
 
       <div className="space-y-3">
-        {mockItems.map((item, i) => (
+        {mockItems.map((item) => (
           <div
-            key={i}
+            key={item.title}
             className="group flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-zinc-100 p-4 hover:border-zinc-200 bg-zinc-50/50 transition-all"
           >
             <div className={`h-10 w-10 rounded-full bg-${item.color}-100 text-${item.color}-600 flex items-center justify-center shrink-0`}>

@@ -51,8 +51,8 @@ export default function CBAMPage() {
                   'If your buyer asks for your embedded emissions data today, can you provide it?',
                   'If your product is exported to Europe, do you know its carbon cost per tonne?',
                   'If a competitor provides verified low-carbon data and you provide nothing - who gets the next order?',
-                ].map((q, i) => (
-                  <p key={i} className="text-[15px] sm:text-[16px] text-[#0F172A] leading-snug border-l-2 border-[#E4E4E7] hover:border-[#0D9488] transition pl-5 py-1.5">
+                ].map((q) => (
+                  <p key={q} className="text-[15px] sm:text-[16px] text-[#0F172A] leading-snug border-l-2 border-[#E4E4E7] hover:border-[#0D9488] transition pl-5 py-1.5">
                     {q}
                   </p>
                 ))}
@@ -214,7 +214,7 @@ export default function CBAMPage() {
             <div className="absolute left-3 top-2 bottom-2 w-px bg-[#E4E4E7]" aria-hidden />
             <div className="space-y-6">
               {timeline.map((t, i) => (
-                <ScrollReveal key={i} delay={i * 80}>
+                <ScrollReveal key={t.date} delay={i * 80}>
                   <div className="relative pl-12">
                     <span className="absolute left-0 top-1.5 w-7 h-7 rounded-full bg-white border-2 border-[#0D9488] flex items-center justify-center">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#0D9488]" />

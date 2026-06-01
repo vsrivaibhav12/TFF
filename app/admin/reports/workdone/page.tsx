@@ -94,8 +94,8 @@ export default async function WorkDoneReportsPage({ searchParams }: { searchPara
             <Table>
               <TableHeader><TableRow><TableHead>Member</TableHead><TableHead className="text-right">Time</TableHead></TableRow></TableHeader>
               <TableBody>
-                {Object.values(byUser).sort((a, b) => b.minutes - a.minutes).map((u, i) => (
-                  <TableRow key={i}>
+                {Object.values(byUser).sort((a, b) => b.minutes - a.minutes).map((u) => (
+                  <TableRow key={u.name}>
                     <TableCell className="font-medium">{u.name}</TableCell>
                     <TableCell className="text-right tabular-nums">{fmtHM(u.minutes)}</TableCell>
                   </TableRow>
@@ -115,8 +115,8 @@ export default async function WorkDoneReportsPage({ searchParams }: { searchPara
             <Table>
               <TableHeader><TableRow><TableHead>Client</TableHead><TableHead className="text-right">Time</TableHead></TableRow></TableHeader>
               <TableBody>
-                {Object.values(byClient).sort((a, b) => b.minutes - a.minutes).map((c, i) => (
-                  <TableRow key={i}>
+                {Object.values(byClient).sort((a, b) => b.minutes - a.minutes).map((c) => (
+                  <TableRow key={c.name}>
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell className="text-right tabular-nums">{fmtHM(c.minutes)}</TableCell>
                   </TableRow>
@@ -137,8 +137,8 @@ export default async function WorkDoneReportsPage({ searchParams }: { searchPara
           <Table>
             <TableHeader><TableRow><TableHead>Member</TableHead><TableHead>Client</TableHead><TableHead className="text-right">Time</TableHead></TableRow></TableHeader>
             <TableBody>
-              {summary.map((r, i) => (
-                <TableRow key={i}>
+              {summary.map((r) => (
+                <TableRow key={`${r.user_name}-${r.client_name}`}>
                   <TableCell>{r.user_name}</TableCell>
                   <TableCell>{r.client_name}</TableCell>
                   <TableCell className="text-right tabular-nums">{fmtHM(r.total_minutes)}</TableCell>

@@ -18,12 +18,12 @@ interface QuickActionBarProps {
 export function QuickActionBar({ actions, className }: QuickActionBarProps) {
   return (
     <div className={cn('flex items-center gap-2 flex-wrap', className)}>
-      {actions.map((action, i) => {
+      {actions.map((action) => {
         const Icon = action.icon;
         const isDefault = action.variant === 'default' || !action.variant;
         return (
           <button
-            key={i}
+            key={action.label}
             onClick={action.onClick}
             className={cn(
               'flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-semibold transition-all duration-200',

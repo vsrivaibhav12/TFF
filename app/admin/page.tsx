@@ -130,9 +130,9 @@ export default async function AdminDashboard() {
       {pulseAlerts.length > 0 && (
         <StaggerItem>
           <div className="flex items-center gap-3 flex-wrap">
-            {pulseAlerts.map((a, i) => (
+            {pulseAlerts.map((a) => (
               <Link
-                key={i}
+                key={a.href}
                 href={a.href}
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border ${a.color} hover:shadow-sm transition-all`}
               >

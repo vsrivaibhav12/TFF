@@ -46,8 +46,8 @@ export default function ProcessControlsPage() {
                 If something goes wrong, can you explain exactly why it happened?
               </h2>
               <div className="mt-6 space-y-2">
-                {questions.map((q, i) => (
-                  <p key={i} className="text-[15px] sm:text-[16px] text-[#0F172A] leading-snug border-l-2 border-[#E4E4E7] hover:border-[#0D9488] transition pl-5 py-1.5">
+                {questions.map((q) => (
+                  <p key={q} className="text-[15px] sm:text-[16px] text-[#0F172A] leading-snug border-l-2 border-[#E4E4E7] hover:border-[#0D9488] transition pl-5 py-1.5">
                     {q}
                   </p>
                 ))}

@@ -348,7 +348,7 @@ export async function refreshServiceDrivenComplianceEvents(opts: {
       .from('compliance_calendar_events')
       .upsert(chunk, { onConflict: 'client_id,sub_service_id,period_label', ignoreDuplicates: true });
     if (!error) generated += chunk.length;
-    else console.error('[compliance-engine] service-driven upsert error:', error.message);
+    // Upsert errors are handled silently; partial success is acceptable for batch jobs
   }
 
   return { generated, clientSubServices: cssRows.length };

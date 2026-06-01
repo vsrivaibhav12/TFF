@@ -55,8 +55,8 @@ export default function VirtualCFOPage() {
                 Are you actually in control of your numbers?
               </h2>
               <div className="mt-6 space-y-2">
-                {questions.map((q, i) => (
-                  <p key={i} className="text-[15px] sm:text-[16px] text-[#0F172A] leading-snug border-l-2 border-[#E4E4E7] hover:border-[#0D9488] transition pl-5 py-1.5">
+                {questions.map((q) => (
+                  <p key={q} className="text-[15px] sm:text-[16px] text-[#0F172A] leading-snug border-l-2 border-[#E4E4E7] hover:border-[#0D9488] transition pl-5 py-1.5">
                     {q}
                   </p>
                 ))}
@@ -168,8 +168,8 @@ export default function VirtualCFOPage() {
                   'Manufacturing companies where working capital, inventory, and receivables are the difference between growth and cash crunch.',
                   'Export-oriented businesses navigating CBAM, foreign exchange, and multi-market complexity.',
                   'Family-run businesses preparing for the next stage — institutional funding, second generation, or disciplined operations.',
-                ].map((t, i) => (
-                  <div key={i} className="rounded-xl border border-[#E4E4E7] bg-white p-4 text-[14px] text-[#71717A] leading-[1.6]">{t}</div>
+                ].map((t) => (
+                  <div key={t} className="rounded-xl border border-[#E4E4E7] bg-white p-4 text-[14px] text-[#71717A] leading-[1.6]">{t}</div>
                 ))}
               </div>
             </ScrollReveal>

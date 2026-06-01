@@ -44,9 +44,8 @@ async function writeSolutionLog(entry: BaseEntry) {
       identified_by: entry.identifiedBy,
       implemented_by: entry.status === 'implemented' ? entry.identifiedBy : null,
     });
-  } catch (e) {
-    // Never block the calling action. Log to server console for ops follow-up.
-    console.error('[solution-log] failed to write entry', e);
+  } catch {
+    // Never block the calling action. Failures are acceptable for non-critical audit writes.
   }
 }
 

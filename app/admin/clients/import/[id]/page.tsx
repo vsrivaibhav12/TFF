@@ -75,8 +75,8 @@ export default async function ImportBatchDetail({ params }: { params: { id: stri
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {errors.map((e: any, i: number) => (
-                  <TableRow key={i} data-row>
+                {errors.map((e: any) => (
+                  <TableRow key={e.row_index} data-row>
                     <TableCell className="text-zinc-400">{e.row_index}</TableCell>
                     <TableCell>{e.business_name}</TableCell>
                     <TableCell className="text-amber-700 text-xs">{e.error}</TableCell>

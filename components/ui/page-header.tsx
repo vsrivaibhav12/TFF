@@ -25,7 +25,7 @@ export function PageHeader({ title, subtitle, actions, showBreadcrumbs = true }:
             {role === 'client' ? 'Portal' : role}
           </Link>
           {segments.map((segment, i) => (
-            <span key={i} className="flex items-center gap-1.5">
+            <span key={`${segment}-${i}`} className="flex items-center gap-1.5">
               <ChevronRight className="h-3.5 w-3.5 text-zinc-300" />
               <span
                 className={cn(

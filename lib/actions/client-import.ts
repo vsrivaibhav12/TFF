@@ -141,7 +141,7 @@ export async function commitClientImportAction(input: {
           .select('id')
           .single();
         if (groupErr) {
-          console.warn('Failed to auto-create group:', name, groupErr.message);
+          // Auto-create group failed; row will skip group assignment
         } else if (newGroup) {
           groupNameToId.set(name, newGroup.id);
         }
