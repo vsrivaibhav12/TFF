@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LogOut,
@@ -60,9 +61,9 @@ function getInitials(name: string | null): string {
 
 function getRoleBadge(role: string) {
   const styles: Record<string, string> = {
-    admin: 'bg-teal-500/20 text-teal-100 border-teal-400/30',
-    team: 'bg-blue-500/20 text-blue-100 border-blue-400/30',
-    client: 'bg-white/10 text-teal-100/70 border-white/10',
+    admin: 'bg-teal-100 text-teal-800 border-teal-200',
+    team: 'bg-stone-200 text-stone-800 border-stone-300',
+    client: 'bg-zinc-100 text-zinc-700 border-zinc-200',
   };
   const labels: Record<string, string> = {
     admin: 'Admin',
@@ -134,7 +135,7 @@ export default function AppShell({
           {/* Logo + collapse toggle */}
           <div className={cn("flex items-center justify-between", sidebarCollapsed ? "px-2 py-4" : "px-5 py-5")}>
             <Link href={`/${role}`} className="flex items-center gap-2.5">
-              <img src="/logo.png" className="h-8 w-auto" alt="The Fiscal Fulcrum" />
+              <Image src="/logo.png" width={160} height={32} className="h-8 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
               {!sidebarCollapsed && (
                 <div>
                   <div className="text-sm font-bold tracking-tight text-stone-900 leading-none">
@@ -268,7 +269,7 @@ export default function AppShell({
         {/* Mobile header */}
         <div className="md:hidden fixed top-0 inset-x-0 z-30 flex items-center justify-between border-b border-white/10 bg-teal-900/95 backdrop-blur-lg px-4 py-3">
           <Link href={`/${role}`} className="flex items-center gap-2">
-            <img src="/logo.png" className="h-7 w-auto" alt="The Fiscal Fulcrum" />
+            <Image src="/logo.png" width={140} height={28} className="h-7 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
             <span className="text-sm font-bold text-white">TFF</span>
           </Link>
           <div className="flex items-center gap-1">
@@ -307,7 +308,7 @@ export default function AppShell({
               >
                 <div className="px-5 py-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
-                    <img src="/logo.png" className="h-9 w-auto" alt="The Fiscal Fulcrum" />
+                    <Image src="/logo.png" width={180} height={36} className="h-9 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
                     <div>
                       <div className="text-sm font-bold text-white">The Fiscal Fulcrum</div>
                       <div className="text-[10px] text-teal-200/60 uppercase tracking-wider font-semibold">

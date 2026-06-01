@@ -6,7 +6,7 @@ import { listSubServices } from '@/lib/repositories/services';
 import { listSavedViews } from '@/lib/actions/saved-views';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Briefcase, AlertTriangle, Clock, Layers, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Briefcase, AlertTriangle, Clock, Layers, Inbox, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import ExportButton from '@/components/sophistication/export-button';
 import TasksTable from './tasks-table';
@@ -102,6 +102,9 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
           <>
             <ExportButton data={exportData} filename="tasks-export" format="csv" />
             <NewTaskDialog clients={(clients ?? []) as any} team={team as any} triggerLabel="New task" triggerVariant="default" mode="admin" />
+            <Link href="/admin/tasks/import">
+              <Button variant="outline" size="sm"><Inbox className="h-4 w-4 mr-1" /> Import</Button>
+            </Link>
             <Link href="/admin/tasks/bulk-create">
               <Button variant="outline" size="sm"><Layers className="h-4 w-4 mr-1" /> Bulk create</Button>
             </Link>

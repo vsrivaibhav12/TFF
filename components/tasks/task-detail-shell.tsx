@@ -259,12 +259,12 @@ export default function TaskDetailShell({
             </TabsList>
 
             <TabsContent value="execution" className="space-y-6">
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-                <div>
+              <div className="flex flex-col gap-6 items-start">
+                <div className="w-full">
                   <h3 className="font-semibold text-stone-900 mb-3 tracking-tight">Step-by-step Plan</h3>
-                  <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} />
+                  <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} currentUserName={team.find(u => u.id === currentUserId)?.full_name ?? 'You'} />
                 </div>
-                <div>
+                <div className="w-full">
                   <h3 className="font-semibold text-stone-900 mb-3 tracking-tight">Work Done Checklist</h3>
                   <WorkDonePanel taskId={task.id} initial={workdone} currentUserId={currentUserId} />
                 </div>

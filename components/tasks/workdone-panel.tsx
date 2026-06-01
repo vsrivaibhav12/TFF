@@ -195,7 +195,7 @@ export default function WorkDonePanel({
       {/* History */}
       {initial.length > 0 && (
         <div className="border-t border-zinc-100 pt-3">
-          <ul className="space-y-2">
+          <ul className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
             {initial.slice(0, 10).map((e) => (
               <li key={e.id} className="flex items-center justify-between gap-2 text-sm">
                 <div className="flex-1 min-w-0">

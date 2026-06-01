@@ -20,8 +20,7 @@ import { PriorityList } from '@/components/dashboard/priority-list';
 import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
 import { ActivityFeed } from '@/components/dashboard/activity-feed';
 import { NeedsAttentionHub } from '@/components/dashboard/needs-attention-hub';
-import { BusinessPulse } from '@/components/dashboard/business-pulse';
-import { AdminQuickActions } from '@/components/dashboard/admin-quick-actions';
+import { FirmPulse } from '@/components/dashboard/business-pulse';
 import { enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import { AdminPayrollPrompt } from '@/components/dashboard/smart-prompts';
 
@@ -35,6 +34,9 @@ export default async function AdminDashboard() {
   const weekAhead = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
   }).format(new Date(Date.now() + 7 * 86_400_000));
+  const weekAgo = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date(Date.now() - 7 * 86_400_000));
 
   // Core firm metrics
   const [
@@ -46,6 +48,9 @@ export default async function AdminDashboard() {
     { data: recentActivity },
     { count: activeEngagements },
     { data: upcomingNotices },
+    { data: recentWorkDone },
+    { data: recentCompletedTasks },
+    { data: attentionTasks },
   ] = await Promise.all([
     sb.from('clients').select('id', { head: true, count: 'exact' }).eq('is_deleted', false),
     sb.from('tasks').select('id', { head: true, count: 'exact' }).eq('is_deleted', false).in('status', ['pending', 'in_progress']),
@@ -55,6 +60,9 @@ export default async function AdminDashboard() {
     sb.from('global_audit_log').select('id, action, entity_type, entity_id, details, performed_at, performed_by:global_audit_log_performed_by_fkey(full_name, email)').order('performed_at', { ascending: false }).limit(6),
     sb.from('client_sub_services').select('id', { head: true, count: 'exact' }).eq('is_active', true),
     sb.from('notices').select('id, subject, notice_type, status, due_date, clients!notices_client_id_fkey(business_name)').gte('due_date', todayIso).order('due_date', { ascending: true }).limit(6),
+    sb.from('work_done').select('work_date, duration_minutes').gte('work_date', weekAgo),
+    sb.from('tasks').select('completed_at').eq('status', 'completed').gte('completed_at', weekAgo),
+    sb.from('tasks').select('id, title, status, priority, is_stuck, clients!tasks_client_id_fkey(business_name)').eq('is_deleted', false).or('status.eq.awaiting_client,is_stuck.eq.true').limit(3),
   ]);
 
   const recentTasks = await enrichTasksWithProgress(rawRecentTasks ?? []);
@@ -73,13 +81,13 @@ export default async function AdminDashboard() {
 
   // Pending approvals (leave + permission + timesheet)
   const [
-    { count: pendingLeaveCount },
+    { count: pendingLeaveCount, data: pendingLeaves },
     { count: pendingPermissionCount },
     { count: pendingTimesheetCount },
   ] = await Promise.all([
-    sb.from('leave_requests').select('id', { head: true, count: 'exact' }).eq('status', 'pending'),
-    sb.from('permission_requests').select('id', { head: true, count: 'exact' }).eq('status', 'pending'),
-    sb.from('weekly_timesheet_submissions').select('id', { head: true, count: 'exact' }).eq('status', 'submitted'),
+    sb.from('leave_requests').select('id, status, users_profile!leave_requests_user_id_fkey(full_name)', { count: 'exact' }).eq('status', 'pending').limit(2),
+    sb.from('permission_requests').select('id', { count: 'exact' }).eq('status', 'pending'),
+    sb.from('weekly_timesheet_submissions').select('id', { count: 'exact' }).eq('status', 'submitted'),
   ]);
   const totalPendingApprovals = (pendingLeaveCount ?? 0) + (pendingPermissionCount ?? 0) + (pendingTimesheetCount ?? 0);
 
@@ -110,6 +118,27 @@ export default async function AdminDashboard() {
     ...(upcomingDeadlines ?? []).length > 0 ? [{ text: `${upcomingDeadlines?.length} deadline${(upcomingDeadlines?.length ?? 0) !== 1 ? 's' : ''} this week`, href: '/admin/tasks', color: 'bg-blue-50 text-blue-700 border-blue-200' }] : [],
   ];
 
+  const attentionItems = [
+    ...(attentionTasks ?? []).map((t: any) => ({
+      id: `task-${t.id}`,
+      type: 'blocked' as const,
+      title: t.title,
+      client: t.clients?.business_name ?? 'Unknown client',
+      reason: t.is_stuck ? 'Marked as stuck' : 'Awaiting client',
+      color: 'amber' as const,
+      href: `/admin/tasks/${t.id}`,
+    })),
+    ...(pendingLeaves ?? []).map((l: any) => ({
+      id: `leave-${l.id}`,
+      type: 'approval' as const,
+      title: 'Leave Request',
+      client: 'Internal',
+      reason: l.users_profile?.full_name ?? 'Unknown user',
+      color: 'blue' as const,
+      href: '/admin/approvals',
+    })),
+  ];
+
   return (
     <StaggerContainer className="space-y-6">
       <AdminPayrollPrompt />
@@ -121,10 +150,7 @@ export default async function AdminDashboard() {
         </div>
       </StaggerItem>
 
-      {/* Quick Actions */}
-      <StaggerItem>
-        <AdminQuickActions />
-      </StaggerItem>
+
 
       {/* Today's Pulse */}
       {pulseAlerts.length > 0 && (
@@ -164,7 +190,7 @@ export default async function AdminDashboard() {
             <DeadlineTimeline deadlines={(upcomingDeadlines ?? []) as any} />
           </div>
           <div className="lg:col-span-5">
-            <NeedsAttentionHub items={(recentActivity ?? []) as any} />
+            <NeedsAttentionHub items={attentionItems as any} />
           </div>
         </div>
       </StaggerItem>
@@ -204,10 +230,10 @@ export default async function AdminDashboard() {
         </StaggerItem>
       )}
 
-      {/* Bottom Row: Business Pulse */}
+      {/* Bottom Row: Firm Pulse */}
       <div className="grid grid-cols-1 gap-6">
         <StaggerItem>
-          <BusinessPulse />
+          <FirmPulse workDone={recentWorkDone ?? []} completedTasks={recentCompletedTasks ?? []} />
         </StaggerItem>
       </div>
     </StaggerContainer>

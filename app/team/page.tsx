@@ -25,7 +25,6 @@ import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-conta
 import EmptyState from '@/components/sophistication/empty-state';
 import { ClientsEmptyIllustration } from '@/components/ui/empty-illustrations';
 import { PriorityList } from '@/components/dashboard/priority-list';
-import { TeamQuickActions } from '@/components/dashboard/team-quick-actions';
 import { TeamAttendancePrompt } from '@/components/dashboard/smart-prompts';
 
 export const dynamic = 'force-dynamic';
@@ -79,10 +78,7 @@ export default async function TeamWorkspace() {
         </div>
       </StaggerItem>
 
-      {/* Quick Actions */}
-      <StaggerItem>
-        <TeamQuickActions />
-      </StaggerItem>
+
 
       {/* Metrics */}
       <StaggerItem>

@@ -70,6 +70,8 @@ export async function toggleTaskStepAction(input: z.infer<typeof toggleSchema>):
       changed_by: me.id,
     });
     revalidatePath(`/team/tasks/${parsed.data.task_id}`);
+    revalidatePath(`/admin/tasks/${parsed.data.task_id}`);
+    revalidatePath(`/portal/tasks/${parsed.data.task_id}`);
     return ok(undefined);
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');

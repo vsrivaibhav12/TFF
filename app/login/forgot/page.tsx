@@ -1,4 +1,6 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
+import Image from 'next/image';
 import ForgotForm from './forgot-form';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -17,7 +19,7 @@ export default function ForgotPage() {
 
         <div className="relative z-10">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" className="h-10 w-auto" alt="The Fiscal Fulcrum" />
+            <Image src="/logo.png" width={200} height={40} className="h-10 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
             <div className="text-lg font-bold tracking-tight">The Fiscal Fulcrum</div>
           </div>
         </div>
@@ -41,7 +43,7 @@ export default function ForgotPage() {
         <div className="w-full max-w-sm">
           <div className="lg:hidden text-center mb-8">
             <div className="inline-flex items-center gap-2">
-              <img src="/logo.png" className="h-8 w-auto" alt="The Fiscal Fulcrum" />
+              <Image src="/logo.png" width={160} height={32} className="h-8 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
               <span className="text-lg font-bold text-zinc-900">The Fiscal Fulcrum</span>
             </div>
           </div>

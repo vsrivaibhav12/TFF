@@ -36,6 +36,7 @@ export default function TaskStepsPanel({
   allowAddStep?: boolean;
   enforceSequence?: boolean;
   status?: string;
+  currentUserName?: string;
 }) {
   const [steps, setSteps] = useState<Step[]>(initial);
   const [showHelp, setShowHelp] = useState(false);
@@ -73,7 +74,7 @@ export default function TaskStepsPanel({
       }
     }
 
-    setSteps((arr) => arr.map((x) => x.id === s.id ? { ...x, completed_at: next ? new Date().toISOString() : null } : x));
+    setSteps((arr) => arr.map((x) => x.id === s.id ? { ...x, completed_at: next ? new Date().toISOString() : null, users_profile: next ? { full_name: currentUserName ?? 'You' } : x.users_profile } : x));
     startTransition(async () => {
       const r = await toggleTaskStepAction({ step_id: s.id, task_id: taskId, completed: next });
       if (!r.success) {
@@ -117,7 +118,7 @@ export default function TaskStepsPanel({
           <p className="text-xs text-zinc-400">If this task is linked to a sub-service, steps will appear here.</p>
         </div>
       ) : (
-        <ul className="space-y-2">{sortedSteps.map((s, idx) => {
+        <ul className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">{sortedSteps.map((s, idx) => {
           const done = !!s.completed_at;
           return (
             <li key={s.id} className={cn('flex items-start gap-2 rounded-lg border border-zinc-200 p-3', done && 'bg-teal-50/30 border-teal-200')}>
