@@ -16,15 +16,17 @@ interface Props {
   clients: { id: string; business_name: string; group_id: string | null }[];
   team: { id: string; full_name: string }[];
   groups: { id: string; name: string }[];
-  templates?: { id: string; name: string; description: string | null }[];
+  templates?: { id: string; title: string; description: string | null }[];
+  initialSubServiceId?: string;
 }
 
-export default function BulkTaskForm({ clients, team, groups, templates = [] }: Props) {
+export default function BulkTaskForm({ clients, team, groups, templates = [], initialSubServiceId }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [step, setStep] = useState<'clients' | 'details' | 'assignees' | 'preview'>('clients');
 
   // 1. Client selection
+  const [clientSearch, setClientSearch] = useState<string>('');
   const [groupFilter, setGroupFilter] = useState<string>('all');
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
 
@@ -40,7 +42,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [] }: 
     is_billable: false,
     bill_reference: '',
     bill_amount: '',
-    sub_service_id: '',
+    sub_service_id: initialSubServiceId || '',
     task_template_id: '',
   });
 
@@ -50,9 +52,11 @@ export default function BulkTaskForm({ clients, team, groups, templates = [] }: 
   const [bulkAssignee, setBulkAssignee] = useState<string>('');
   const [bulkReviewer, setBulkReviewer] = useState<string>('');
 
-  const filteredClients = groupFilter === 'all'
-    ? clients
-    : clients.filter((c) => c.group_id === groupFilter);
+  const filteredClients = clients.filter((c) => {
+    if (groupFilter !== 'all' && c.group_id !== groupFilter) return false;
+    if (clientSearch.trim() && !c.business_name.toLowerCase().includes(clientSearch.toLowerCase())) return false;
+    return true;
+  });
 
   const allFilteredSelected = filteredClients.length > 0 && filteredClients.every((c) => selectedClients.has(c.id));
 
@@ -185,15 +189,25 @@ export default function BulkTaskForm({ clients, team, groups, templates = [] }: 
 
       {step === 'clients' && (
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <Label>Filter by group</Label>
-            <Select value={groupFilter} onValueChange={setGroupFilter}>
-              <SelectTrigger className="w-48"><SelectValue placeholder="All groups" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All groups</SelectItem>
-                {groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-1">
+              <Label className="sr-only">Search clients</Label>
+              <Input
+                placeholder="Search clients..."
+                value={clientSearch}
+                onChange={(e) => setClientSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="whitespace-nowrap">Filter by group</Label>
+              <Select value={groupFilter} onValueChange={setGroupFilter}>
+                <SelectTrigger className="w-40"><SelectValue placeholder="All groups" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All groups</SelectItem>
+                  {groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <span className="text-sm text-zinc-500 ml-auto">{selectedClients.size} selected</span>
           </div>
 
@@ -259,7 +273,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [] }: 
                 <SelectTrigger><SelectValue placeholder="No template selected" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">None</SelectItem>
-                  {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                  {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-zinc-500">Selecting a template will copy its SOP steps to all created tasks.</p>
