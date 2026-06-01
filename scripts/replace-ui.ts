@@ -1,110 +1,11 @@
-'use client';
+import * as fs from 'fs';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { ChevronLeft, Pencil, Check, X, Loader2, CalendarDays } from 'lucide-react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { formatDateIST, timeAgo } from '@/lib/utils';
-import TaskActions from '@/app/team/tasks/[id]/task-actions';
-import TaskStepsPanel from '@/components/tasks/task-steps-panel';
-import SendReminderButton from '@/components/tasks/send-reminder-button';
-import StuckToggle from '@/components/tasks/stuck-toggle';
-import BlockedOnClientToggle from '@/components/tasks/blocked-on-client-toggle';
-import CustomFieldsPanel from '@/components/tasks/custom-fields-panel';
-import WorkDonePanel from '@/components/tasks/workdone-panel';
-import DeleteTaskButton from '@/components/tasks/delete-task-button';
-import VerifyTaskButton from '@/components/tasks/verify-task-button';
-import { updateTaskAction, addTaskNoteAction } from '@/lib/actions/tasks';
-import { toast } from 'sonner';
+const path = 'app/admin/tasks/[id]/task-actions.tsx'; // Wait, target is components/tasks/task-detail-shell.tsx
 
-interface Props {
-  task: any;
-  activity: any[];
-  notes: any[];
-  team: any[];
-  steps: any[];
-  cfDefs: any[];
-  cfValues: any[];
-  allLabels: any[];
-  assignedLabels: any[];
-  workdone: any[];
-  currentUserId: string;
-  canEditSteps: boolean;
-  basePath: string;
-  clientPath: string;
-}
+const targetPath = 'components/tasks/task-detail-shell.tsx';
+let content = fs.readFileSync(targetPath, 'utf8');
 
-export default function TaskDetailShell({
-  task,
-  activity,
-  notes,
-  team,
-  steps,
-  cfDefs,
-  cfValues,
-  allLabels,
-  assignedLabels,
-  workdone,
-  currentUserId,
-  canEditSteps,
-  basePath,
-  clientPath,
-}: Props) {
-  const isClosed = task.status === 'completed' || task.status === 'cancelled';
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [editingDesc, setEditingDesc] = useState(false);
-  const [editingBilling, setEditingBilling] = useState(false);
-  const [editingPeriod, setEditingPeriod] = useState(false);
-  const [editingPriority, setEditingPriority] = useState(false);
-  const [editingDueDate, setEditingDueDate] = useState(false);
-  const [title, setTitle] = useState(task.title);
-  const [description, setDescription] = useState(task.description || '');
-  const [periodYear, setPeriodYear] = useState(task.period_year ?? '');
-  const [periodMonth, setPeriodMonth] = useState(task.period_month ?? '');
-  const [periodQuarter, setPeriodQuarter] = useState(task.period_quarter ?? '');
-  const [priority, setPriority] = useState(task.priority);
-  const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.slice(0, 10) : '');
-  
-  const [editingFinance, setEditingFinance] = useState(false);
-  const [billable, setBillable] = useState(task.is_billable ?? false);
-  const [billRef, setBillRef] = useState(task.bill_reference ?? '');
-  const [billAmount, setBillAmount] = useState(task.bill_amount ?? '');
-  const [arnRef, setArnRef] = useState(task.arn_reference ?? '');
-  const [arnVisible, setArnVisible] = useState(task.is_arn_client_visible ?? false);
-
-  const [saving, setSaving] = useState(false);
-  const [newNote, setNewNote] = useState('');
-  const [addingNote, setAddingNote] = useState(false);
-
-  async function addNote() {
-    if (!newNote.trim()) return;
-    setAddingNote(true);
-    const r = await addTaskNoteAction({ task_id: task.id, body: newNote.trim() });
-    setAddingNote(false);
-    if (!r.success) { toast.error(r.error); return; }
-    toast.success('Note added');
-    setNewNote('');
-    // refresh handled by Next.js if action has revalidatePath, which addTaskNoteAction does.
-  }
-
-  async function saveField(updates: any, onSuccess?: () => void) {
-    setSaving(true);
-    const r = await updateTaskAction({ task_id: task.id, ...updates });
-    setSaving(false);
-    if (!r.success) { toast.error(r.error); return false; }
-    toast.success('Updated');
-    onSuccess?.();
-    return true;
-  }
-
-  return (
+const replacement = `  return (
     <div className="flex flex-col h-[calc(100vh-6.5rem)] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
       <div className="flex-none mb-4">
         <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 font-medium">
@@ -122,7 +23,7 @@ export default function TaskDetailShell({
               <span className="text-xs font-mono text-zinc-400">{task.task_number ?? '—'}</span>
               {task.is_billable && (
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
-                  Billable{task.bill_reference ? ` · ${task.bill_reference}` : ''}
+                  Billable{task.bill_reference ? \` · \${task.bill_reference}\` : ''}
                 </span>
               )}
             </div>
@@ -189,7 +90,7 @@ export default function TaskDetailShell({
                       <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(task.period_year ?? ''); setPeriodMonth(task.period_month ?? ''); setPeriodQuarter(task.period_quarter ?? ''); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                     </div>
                   ) : (
-                    task.period_month && task.period_year ? `${task.period_month}/${task.period_year}${task.period_quarter ? ` · Q${task.period_quarter}` : ''}` : '—'
+                    task.period_month && task.period_year ? \`\${task.period_month}/\${task.period_year}\${task.period_quarter ? \` · Q\${task.period_quarter}\` : ''}\` : '—'
                   )}
                 </dd>
               </div>
@@ -229,7 +130,7 @@ export default function TaskDetailShell({
 
               <DetailItem label="Assignee" value={task.assignee?.full_name || '—'} />
               <DetailItem label="Reviewer" value={task.reviewer?.full_name || '—'} />
-              <DetailItem label="Service" value={task.sub_services ? `${task.sub_services.services?.name ?? ''} › ${task.sub_services.name}` : '—'} />
+              <DetailItem label="Service" value={task.sub_services ? \`\${task.sub_services.services?.name ?? ''} › \${task.sub_services.name}\` : '—'} />
               <DetailItem label="Created" value={formatDateIST(task.created_date) || '—'} />
               <DetailItem label="Completed" value={formatDateIST(task.completed_date) || 'Not completed'} />
 
@@ -323,7 +224,7 @@ export default function TaskDetailShell({
               <div className="space-y-3 text-sm">
                 <div>
                   <span className="text-stone-500 text-xs">Billing</span>
-                  <p className="font-medium text-stone-900">{task.is_billable ? `Yes · ${task.bill_reference || 'No ref'} · ₹${task.bill_amount ?? 0}` : 'No'}</p>
+                  <p className="font-medium text-stone-900">{task.is_billable ? \`Yes · \${task.bill_reference || 'No ref'} · ₹\${task.bill_amount ?? 0}\` : 'No'}</p>
                 </div>
                 <div>
                   <span className="text-stone-500 text-xs">ARN / Ref</span>
@@ -465,3 +366,14 @@ function turnaroundDays(created: string, completed: string): number {
   const diff = d.getTime() - c.getTime();
   return Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
 }
+`;
+
+const startIndex = content.indexOf('  return (\n');
+if (startIndex === -1) {
+  console.error("Could not find start index");
+  process.exit(1);
+}
+
+const newContent = content.substring(0, startIndex) + replacement;
+fs.writeFileSync(targetPath, newContent, 'utf8');
+console.log("Successfully updated layout!");

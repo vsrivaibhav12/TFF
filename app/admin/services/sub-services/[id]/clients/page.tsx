@@ -107,7 +107,7 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
               <p className="text-xs text-zinc-500 leading-relaxed">
                 Use the new 4-step Task Wizard to easily create tasks for all these linked clients in one go, complete with assignee mapping and template selection.
               </p>
-              <Link href={`/admin/tasks/bulk-create`} className="w-full flex">
+              <Link href={`/admin/tasks/bulk-create?sub_service_id=${subService.id}`} className="w-full flex">
                 <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">
                   Launch Task Wizard
                 </Button>
