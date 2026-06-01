@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, Building2, Users, Briefcase } from 'lucide-react';
-import BulkCreateTasksForm from './bulk-create-form';
+
 import LinkClientForm from './link-client-form';
 
 export const dynamic = 'force-dynamic';
@@ -105,14 +105,13 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
                 <h3 className="font-semibold text-sm">Bulk create tasks</h3>
               </div>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                Create tasks for all linked clients in one go. Task names auto-generate as <span className="font-mono text-zinc-600">Client — Sub-service — Period</span>.
+                Use the new 4-step Task Wizard to easily create tasks for all these linked clients in one go, complete with assignee mapping and template selection.
               </p>
-              <BulkCreateTasksForm
-                subServiceId={subService.id}
-                subServiceName={subService.name}
-                clients={activeLinks.map((l: any) => l.clients) as any}
-                team={team as any}
-              />
+              <Link href={`/admin/tasks/bulk-create`} className="w-full flex">
+                <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">
+                  Launch Task Wizard
+                </Button>
+              </Link>
             </div>
           </aside>
         </div>

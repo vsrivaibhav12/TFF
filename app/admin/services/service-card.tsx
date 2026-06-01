@@ -18,6 +18,7 @@ import Link from 'next/link';
 import ServiceDialog from './service-dialog';
 import SubServiceDialog from './sub-service-dialog';
 import TaskTemplatePanel from './task-template-panel';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export function serviceKindIcon(kind: string) {
   const map: Record<string, React.ReactNode> = {
@@ -211,9 +212,63 @@ export default function ServiceCard({
               </div>
             ))}
             {subs.length > 3 && (
-              <div className="text-[11px] text-zinc-400 pl-1">
-                + {subs.length - 3} more sub-services
-              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="text-[11px] text-teal-700 hover:text-teal-800 hover:underline font-medium pl-1 text-left">
+                    View all {subs.length} sub-services...
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>{s.name} Sub-services</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-2">
+                    {subs.map((ss: any) => (
+                      <div
+                        key={ss.id}
+                        className="rounded-xl bg-zinc-50/70 p-3 border border-zinc-100"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Footprints className="h-4 w-4 text-zinc-400 shrink-0" />
+                            <span className="text-[14px] font-semibold text-zinc-900 truncate">
+                              {ss.name}
+                            </span>
+                            {!ss.is_active && (
+                              <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded shrink-0">
+                                inactive
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Link
+                              href={`/admin/services/sub-services/${ss.id}/clients`}
+                              className="inline-flex items-center gap-1 text-[12px] text-teal-700 hover:text-teal-800 font-medium transition-colors"
+                            >
+                              <Users className="h-3.5 w-3.5" /> Manage Clients
+                            </Link>
+                            <SubServiceDialog
+                              serviceId={ss.service_id}
+                              serviceName={ss.services?.name ?? ''}
+                              initial={ss}
+                            >
+                              <button className="text-[12px] text-zinc-500 hover:text-teal-700 font-medium transition-colors shrink-0">
+                                Edit Settings
+                              </button>
+                            </SubServiceDialog>
+                          </div>
+                        </div>
+                        <p className="text-xs text-zinc-500 mb-3">{ss.description || 'No description provided.'}</p>
+                        <TaskTemplatePanel
+                          subService={ss}
+                          templates={templatesBySub[ss.id] ?? []}
+                          stepsByTemplate={stepsByTemplate}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
             )}
           </div>
         </div>

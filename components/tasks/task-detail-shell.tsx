@@ -253,6 +253,7 @@ export default function TaskDetailShell({
           <Tabs defaultValue="execution">
             <TabsList>
               <TabsTrigger value="execution">Execution</TabsTrigger>
+              <TabsTrigger value="workdone">Work Done</TabsTrigger>
               <TabsTrigger value="notes">Notes & Billing ({notes.length})</TabsTrigger>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="activity">Activity ({activity.length})</TabsTrigger>
@@ -264,10 +265,13 @@ export default function TaskDetailShell({
                   <h3 className="font-semibold text-stone-900 mb-3 tracking-tight">Step-by-step Plan</h3>
                   <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} currentUserName={team.find(u => u.id === currentUserId)?.full_name ?? 'You'} />
                 </div>
-                <div className="w-full">
-                  <h3 className="font-semibold text-stone-900 mb-3 tracking-tight">Work Done Checklist</h3>
-                  <WorkDonePanel taskId={task.id} initial={workdone} currentUserId={currentUserId} />
-                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="workdone" className="space-y-6">
+              <div className="w-full">
+                <h3 className="font-semibold text-stone-900 mb-3 tracking-tight">Work Done Checklist</h3>
+                <WorkDonePanel taskId={task.id} initial={workdone} currentUserId={currentUserId} />
               </div>
             </TabsContent>
 
