@@ -8,10 +8,11 @@ import { listEntityAuditLogs } from '@/lib/repositories/audit';
 import { getCurrentUser } from '@/lib/auth/require-role';
 import { hasCapability } from '@/lib/auth/require-capability';
 import TeamClientDetailShell from '@/components/clients/team-client-detail-shell';
+import ModalWrapper from '@/components/shell/modal-wrapper';
 
 export const dynamic = 'force-dynamic';
 
-export default async function TeamClientDetail({ params }: { params: { id: string } }) {
+export default async function TeamClientModalIntercept({ params }: { params: { id: string } }) {
   const me = await getCurrentUser();
   const canEdit = me ? await hasCapability(me, 'clients.edit') : false;
   const client = await getClientById(params.id);
@@ -32,15 +33,20 @@ export default async function TeamClientDetail({ params }: { params: { id: strin
   const openQueries = queries.filter((q: any) => q.status !== 'resolved' && q.status !== 'closed');
 
   return (
-    <TeamClientDetailShell
-      client={client}
-      subs={subs}
-      auditLogs={auditLogs}
-      openTasks={openTasks}
-      openNotices={openNotices}
-      openQueries={openQueries}
-      canEdit={canEdit}
-      basePath="/team/clients"
-    />
+    <ModalWrapper>
+      <div className="pt-8 px-2 md:px-4 h-full">
+        <TeamClientDetailShell
+          client={client}
+          subs={subs}
+          auditLogs={auditLogs}
+          openTasks={openTasks}
+          openNotices={openNotices}
+          openQueries={openQueries}
+          canEdit={canEdit}
+          basePath="/team/clients"
+          isModal={true}
+        />
+      </div>
+    </ModalWrapper>
   );
 }

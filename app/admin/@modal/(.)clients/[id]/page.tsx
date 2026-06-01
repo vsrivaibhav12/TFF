@@ -1,6 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect, hasCapability } from '@/lib/auth/require-capability';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getClientById, listClientUsers, listTeamAssignments, listTeamUsers, listClientGroups } from '@/lib/repositories/clients';
 import { listClientServices, listClientSubServices } from '@/lib/repositories/services';
@@ -9,10 +8,11 @@ import { listTasks, enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import { listAllNotices } from '@/lib/repositories/notices';
 import { listQueries } from '@/lib/repositories/queries';
 import ClientDetailShell from '@/components/clients/client-detail-shell';
+import ModalWrapper from '@/components/shell/modal-wrapper';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminClientDetail({ params }: { params: { id: string } }) {
+export default async function AdminClientModalIntercept({ params }: { params: { id: string } }) {
   const me = await requireRole(['admin', 'team']);
   const canReadAll = await hasCapability(me, 'clients.read.all');
   const canEdit = await hasCapability(me, 'clients.edit');
@@ -42,19 +42,24 @@ export default async function AdminClientDetail({ params }: { params: { id: stri
   const openQueries = queries.filter((q: any) => q.status !== 'resolved' && q.status !== 'closed');
 
   return (
-    <ClientDetailShell
-      client={client}
-      groups={groups}
-      owners={owners}
-      clientServices={clientServices}
-      clientSubServices={clientSubServices}
-      clientUsers={clientUsers}
-      teamAssignments={teamAssignments}
-      auditLogs={auditLogs}
-      openTasks={openTasks}
-      openNotices={openNotices}
-      openQueries={openQueries}
-      basePath="/admin/clients"
-    />
+    <ModalWrapper>
+      <div className="pt-8 px-2 md:px-4 h-full">
+        <ClientDetailShell
+          client={client}
+          groups={groups}
+          owners={owners}
+          clientServices={clientServices}
+          clientSubServices={clientSubServices}
+          clientUsers={clientUsers}
+          teamAssignments={teamAssignments}
+          auditLogs={auditLogs}
+          openTasks={openTasks}
+          openNotices={openNotices}
+          openQueries={openQueries}
+          basePath="/admin/clients"
+          isModal={true}
+        />
+      </div>
+    </ModalWrapper>
   );
 }

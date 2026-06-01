@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useState } from 'react';
 
-export default function TaskModalWrapper({ children }: { children: React.ReactNode }) {
+export default function ModalWrapper({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [open, setOpen] = useState(true);
 

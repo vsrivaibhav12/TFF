@@ -1,14 +1,14 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listGrantedCapabilities } from "@/lib/repositories/staff-capabilities";
 import { listRoleTemplates } from "@/lib/repositories/role-templates";
 import { getCurrentUser } from "@/lib/auth/require-role";
 import TeamDetailShell from "@/components/team/team-detail-shell";
+import ModalWrapper from "@/components/shell/modal-wrapper";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminTeamMemberPage({ params }: { params: { id: string } }) {
+export default async function AdminTeamModalIntercept({ params }: { params: { id: string } }) {
   const sb = createClient();
   const currentUser = await getCurrentUser();
   const { data: user } = await sb
@@ -27,7 +27,6 @@ export default async function AdminTeamMemberPage({ params }: { params: { id: st
 
   const activeTemplate = templates.find((t) => t.id === (user as any).active_role_template_id);
 
-  // Divergence detection: does the user's capability set differ from their active template?
   const isDiverged = activeTemplate
     ? (() => {
         const current = new Set<string>(caps);
@@ -42,17 +41,22 @@ export default async function AdminTeamMemberPage({ params }: { params: { id: st
   const canDemote = (currentUser?.is_prime_admin ?? false) && user.role === "admin" && !user.is_prime_admin;
 
   return (
-    <TeamDetailShell
-      user={user}
-      caps={caps}
-      templates={templates}
-      teamList={teamList.data ?? []}
-      payroll={payroll.data}
-      activeTemplate={activeTemplate}
-      isDiverged={isDiverged}
-      canPromote={canPromote}
-      canDemote={canDemote}
-      basePath="/admin/team"
-    />
+    <ModalWrapper>
+      <div className="pt-8 px-2 md:px-4 h-full">
+        <TeamDetailShell
+          user={user}
+          caps={caps}
+          templates={templates}
+          teamList={teamList.data ?? []}
+          payroll={payroll.data}
+          activeTemplate={activeTemplate}
+          isDiverged={isDiverged}
+          canPromote={canPromote}
+          canDemote={canDemote}
+          basePath="/admin/team"
+          isModal={true}
+        />
+      </div>
+    </ModalWrapper>
   );
 }

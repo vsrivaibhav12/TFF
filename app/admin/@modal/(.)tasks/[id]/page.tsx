@@ -12,7 +12,7 @@ import {
 } from '@/lib/repositories/task-custom-fields';
 import { listWorkDoneForTask } from '@/lib/repositories/workdone';
 import TaskDetailShell from '@/components/tasks/task-detail-shell';
-import TaskModalWrapper from '@/components/tasks/task-modal-wrapper';
+import ModalWrapper from '@/components/shell/modal-wrapper';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +36,7 @@ export default async function AdminTaskModalIntercept({ params }: { params: { id
   ]);
 
   return (
-    <TaskModalWrapper>
+    <ModalWrapper>
       <div className="pt-8 px-2 md:px-4 h-full">
         <TaskDetailShell
           task={task}
@@ -56,6 +56,6 @@ export default async function AdminTaskModalIntercept({ params }: { params: { id
           isModal={true}
         />
       </div>
-    </TaskModalWrapper>
+    </ModalWrapper>
   );
 }
