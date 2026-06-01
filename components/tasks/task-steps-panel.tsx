@@ -29,6 +29,7 @@ export default function TaskStepsPanel({
   allowAddStep = true,
   enforceSequence = false,
   status,
+  currentUserName,
 }: {
   taskId: string;
   initial: Step[];
