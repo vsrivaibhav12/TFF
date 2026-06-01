@@ -3,6 +3,17 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireRole, requireUser } from '@/lib/auth/require-role';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
+import { listNotifications, type NotificationRow } from '@/lib/repositories/notifications';
+
+export async function listNotificationsAction(limit = 30): Promise<ActionResult<NotificationRow[]>> {
+  try {
+    const me = await requireUser();
+    const rows = await listNotifications(me.id, limit);
+    return ok(rows);
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  }
+}
 
 export async function markNotificationReadAction(id: string): Promise<ActionResult<void>> {
   try {

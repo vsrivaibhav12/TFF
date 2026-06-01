@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listTaskTemplates } from '@/lib/repositories/task-templates';
 import { getCurrentUser } from '@/lib/auth/require-role';
+import { rateLimitByUser } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const me = await getCurrentUser();
   if (!me) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const rl = rateLimitByUser(me.id, 'api:task-templates', { maxRequests: 60, windowMs: 60_000 });
+  if (!rl.allowed) return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
   const subServiceId = request.nextUrl.searchParams.get('sub_service_id');
   if (!subServiceId) {
     return NextResponse.json({ error: 'sub_service_id is required' }, { status: 400 });

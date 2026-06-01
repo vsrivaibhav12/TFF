@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { seedTaskStepsFromSop, seedTaskStepsFromTemplate } from '@/lib/services/task-steps-service';
 import { notify } from '@/lib/services/notification-service';
+import { writeAudit } from '@/lib/services/audit-service';
 
 export async function createTaskAction(input: CreateTaskInput): Promise<ActionResult<{ id: string }>> {
   try {
@@ -70,6 +71,7 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
       }
     }
     
+    await writeAudit({ action: 'task.create', entity_type: 'task', entity_id: data.id, performed_by: me.id, details: { client_id: parsed.data.client_id, title: parsed.data.title } });
     revalidatePath('/team/tasks');
     revalidatePath('/admin/tasks');
     revalidatePath('/portal/tasks');
@@ -339,6 +341,7 @@ export async function softDeleteTaskAction(taskId: string): Promise<ActionResult
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'tasks.assign');
     await taskRepo.softDeleteTaskRecord(taskId, me.id);
+    await writeAudit({ action: 'task.delete', entity_type: 'task', entity_id: taskId, performed_by: me.id });
     revalidatePath('/admin/tasks');
     revalidatePath('/team/tasks');
     revalidatePath('/portal/tasks');
@@ -358,7 +361,7 @@ export async function bulkDeleteTasksAction(taskIds: string[]): Promise<ActionRe
     }
     
     await Promise.all(taskIds.map(id => taskRepo.softDeleteTaskRecord(id, me.id)));
-    
+    await writeAudit({ action: 'task.bulk_delete', entity_type: 'task', performed_by: me.id, details: { count: taskIds.length, ids: taskIds } });
     revalidatePath('/admin/tasks');
     revalidatePath('/team/tasks');
     revalidatePath('/portal/tasks');
@@ -583,6 +586,7 @@ export async function bulkCreateTasksAction(input: z.infer<typeof bulkCreateTask
       }
     }
 
+    await writeAudit({ action: 'task.bulk_create', entity_type: 'task', performed_by: me.id, details: { created, sub_service_id: parsed.data.sub_service_id } });
     revalidatePath('/team/tasks');
     revalidatePath('/admin/tasks');
     revalidatePath('/portal/tasks');

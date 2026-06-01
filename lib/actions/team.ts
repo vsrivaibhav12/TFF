@@ -6,6 +6,7 @@ import { requireCapability } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
+import { writeAudit } from '@/lib/services/audit-service';
 
 const createSchema = z.object({
   full_name: z.string().trim().min(1, 'Name is required'),
@@ -74,6 +75,7 @@ export async function createTeamMemberAction(
     }, { onConflict: 'id' });
     if (profErr) return fail(`Auth user created but profile upsert failed: ${profErr.message}`, 'DB');
 
+    await writeAudit({ action: 'team.create', entity_type: 'user', entity_id: authUserId, performed_by: me.id, details: { email: v.email, role: v.role } });
     revalidatePath('/admin/team');
     return ok({ user_id: authUserId });
   } catch (e: any) {
@@ -105,6 +107,7 @@ export async function updateTeamMemberManagerAction(
       .update({ reports_to: parsed.data.manager_id ?? null })
       .eq('id', parsed.data.user_id);
     if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'team.update_manager', entity_type: 'user', entity_id: parsed.data.user_id, performed_by: me.id, details: { manager_id: parsed.data.manager_id } });
     revalidatePath('/admin/team');
     revalidatePath(`/admin/team/${parsed.data.user_id}`);
     return ok(undefined);
@@ -130,6 +133,7 @@ export async function toggleTeamMemberActiveAction(
       .update({ is_active: parsed.data.is_active })
       .eq('id', parsed.data.user_id);
     if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'team.toggle_active', entity_type: 'user', entity_id: parsed.data.user_id, performed_by: me.id, details: { is_active: parsed.data.is_active } });
     revalidatePath('/admin/team');
     revalidatePath(`/admin/team/${parsed.data.user_id}`);
     return ok(undefined);
@@ -200,6 +204,7 @@ export async function removeTeamMemberAction(
       // but profile is already deactivated so they cannot log in.
     }
 
+    await writeAudit({ action: 'team.remove', entity_type: 'user', entity_id: targetId, performed_by: me.id, details: { email: (profile as any)?.email } });
     revalidatePath('/admin/team');
     return ok(undefined);
   } catch (e: any) {

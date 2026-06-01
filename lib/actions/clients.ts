@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import * as clientService from '@/lib/services/client-service';
+import { writeAudit } from '@/lib/services/audit-service';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 
 // Helper: normalises null/undefined/empty-string to '' so Zod unions don't fail with "Invalid input"
@@ -69,7 +70,7 @@ export async function createClient(input: CreateClientInput): Promise<ActionResu
       ...parsedData.data,
       created_by: me.id
     });
-    
+    await writeAudit({ action: 'client.create', entity_type: 'client', entity_id: newClient.id, performed_by: me.id, details: { business_name: parsedData.data.business_name } });
     revalidatePath('/admin/clients');
     revalidatePath('/team/clients');
     return ok({ id: newClient.id });
@@ -92,7 +93,7 @@ export async function updateClient(input: UpdateClientInput): Promise<ActionResu
 
     const { id, ...data } = parsedData.data;
     await clientService.updateClientRecord(id, data);
-    
+    await writeAudit({ action: 'client.update', entity_type: 'client', entity_id: id, performed_by: me.id, details: { fields: Object.keys(data || {}) } });
     revalidatePath('/admin/clients');
     revalidatePath(`/admin/clients/${id}`);
     revalidatePath('/team/clients');
@@ -113,7 +114,7 @@ export async function softDeleteClient(id: string): Promise<ActionResult<void>> 
       deleted_at: new Date().toISOString(), 
       deleted_by: me.id 
     });
-    
+    await writeAudit({ action: 'client.delete', entity_type: 'client', entity_id: id, performed_by: me.id });
     revalidatePath('/admin/clients');
     revalidatePath('/team/clients');
     return ok(undefined);
@@ -144,7 +145,7 @@ export async function bulkDeleteClients(input: z.infer<typeof BulkDeleteClientsS
       deleted_at: deletedAt,
       deleted_by: me.id
     })));
-    
+    await writeAudit({ action: 'client.bulk_delete', entity_type: 'client', performed_by: me.id, details: { count: clientIds.length, ids: clientIds } });
     revalidatePath('/admin/clients');
     revalidatePath('/team/clients');
     return ok(undefined);
@@ -159,7 +160,7 @@ export async function assignTeamMember(input: { clientId: string; teamUserId: st
     await requireCapability(me, 'clients.assign_team');
 
     await clientService.assignTeamMember(input.clientId, input.teamUserId, input.role);
-    
+    await writeAudit({ action: 'client.assign_team', entity_type: 'client', entity_id: input.clientId, performed_by: me.id, details: { team_user_id: input.teamUserId, role: input.role } });
     revalidatePath(`/admin/clients/${input.clientId}`);
     revalidatePath(`/team/clients/${input.clientId}`);
     return ok(undefined);
@@ -174,7 +175,7 @@ export async function unassignTeamMember(assignmentId: string, clientId: string)
     await requireCapability(me, 'clients.assign_team');
 
     await clientService.unassignTeamMember(assignmentId);
-    
+    await writeAudit({ action: 'client.unassign_team', entity_type: 'client', entity_id: clientId, performed_by: me.id, details: { assignment_id: assignmentId } });
     revalidatePath(`/admin/clients/${clientId}`);
     revalidatePath(`/team/clients/${clientId}`);
     return ok(undefined);

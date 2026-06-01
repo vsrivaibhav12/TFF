@@ -7,6 +7,7 @@ import { ok, fail, type ActionResult } from '@/lib/actions/result';
 import { z } from 'zod';
 import { createQuerySchema, replyQuerySchema, type CreateQueryInput } from '@/lib/validation/schemas';
 import { logQueryResolved } from '@/lib/services/solution-log-service';
+import { writeAudit } from '@/lib/services/audit-service';
 
 export async function createQueryAction(input: CreateQueryInput): Promise<ActionResult<{ id: string }>> {
   try {
@@ -49,6 +50,7 @@ export async function createQueryAction(input: CreateQueryInput): Promise<Action
       .select('id')
       .single();
     if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'query.create', entity_type: 'query', entity_id: data.id, performed_by: me.id, details: { client_id: parsed.data.client_id, subject: parsed.data.subject } });
     revalidatePath('/team/queries');
     revalidatePath('/portal/queries');
     return ok({ id: data.id });
@@ -111,6 +113,7 @@ export async function closeQueryAction(input: { query_id: string; resolution_not
         subject: (prior as any).subject ?? 'Client query',
       });
     }
+    await writeAudit({ action: 'query.close', entity_type: 'query', entity_id: input.query_id, performed_by: me.id });
     revalidatePath(`/team/queries/${input.query_id}`);
     return ok(undefined);
   } catch (e: any) {
@@ -136,6 +139,7 @@ export async function updateQueryStatusAction(input: z.infer<typeof updateStatus
     }
     const { error } = await sb.from('queries').update(updates).eq('id', parsed.data.query_id);
     if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'query.status_change', entity_type: 'query', entity_id: parsed.data.query_id, performed_by: me.id, details: { status: parsed.data.status } });
     revalidatePath(`/team/queries/${parsed.data.query_id}`);
     revalidatePath('/team/queries');
     return ok(undefined);

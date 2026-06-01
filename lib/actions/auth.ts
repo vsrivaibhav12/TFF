@@ -2,10 +2,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { requireRole } from '@/lib/auth/require-role';
+import { rateLimitByUser } from '@/lib/rate-limit';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 
 export async function sendPasswordResetAction(email: string): Promise<ActionResult<void>> {
   try {
+    const rl = rateLimitByUser(email, 'auth:password-reset', { maxRequests: 3, windowMs: 300_000 });
+    if (!rl.allowed) return fail('Too many requests. Please try again later.', 'RATE_LIMITED');
     const sb = createClient();
     const { error } = await sb.auth.resetPasswordForEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/login/reset`,

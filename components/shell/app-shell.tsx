@@ -23,6 +23,7 @@ import CommandPalette from './command-palette';
 import ShortcutsHelp from '@/components/sophistication/shortcuts-help';
 import { QuickActionsDropdown } from './quick-actions';
 import { GlobalTimer } from './global-timer';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 import MobileBottomNavTeam from './mobile-bottom-nav-team';
 import { ICONS, type NavItem } from './nav-icons';
@@ -272,7 +273,9 @@ export default function AppShell({
           </Link>
           <div className="flex items-center gap-1">
             <GlobalTimer role={role} />
-            <NotificationsBell />
+            <ErrorBoundary>
+              <NotificationsBell />
+            </ErrorBoundary>
             <QuickActionsDropdown role={role} />
             <button onClick={() => setMobileOpen((v) => !v)} className="p-2 text-teal-100" aria-label="menu">
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -381,7 +384,7 @@ export default function AppShell({
                 {role === 'client' ? 'Portal' : role}
               </Link>
               {breadcrumbSegments.map((segment, i) => (
-                <span key={i} className="flex items-center gap-1.5">
+                <span key={`bc-${segment}-${i}`} className="flex items-center gap-1.5">
                   <ChevronRight className="h-3.5 w-3.5 text-stone-300" />
                   <span
                     className={cn(
@@ -420,7 +423,9 @@ export default function AppShell({
               
               <div className="bg-white/60 backdrop-blur-lg border border-stone-200/80 rounded-xl shadow-sm flex items-center p-1">
                 <GlobalTimer role={role} />
-                <NotificationsBell />
+                <ErrorBoundary>
+                  <NotificationsBell />
+                </ErrorBoundary>
                 <QuickActionsDropdown role={role} />
               </div>
 
@@ -475,7 +480,9 @@ export default function AppShell({
         {(role === 'team' || role === 'admin') && <MobileBottomNavTeam nav={nav} role={role} />}
 
         {/* Global overlays */}
-        <CommandPalette role={role} />
+        <ErrorBoundary>
+          <CommandPalette role={role} />
+        </ErrorBoundary>
         <ShortcutsHelp role={role} />
 
       </div>

@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/require-role";
 import { requireCapability } from "@/lib/auth/require-capability";
 import { revalidatePath } from "next/cache";
 import { ok, fail, type ActionResult } from "@/lib/actions/result";
+import { writeAudit } from "@/lib/services/audit-service";
 
 export async function promoteToAdminAction(userId: string): Promise<ActionResult<void>> {
   try {
@@ -29,6 +30,8 @@ export async function promoteToAdminAction(userId: string): Promise<ActionResult
       .eq("id", userId);
     if (error) return fail(error.message, "DB");
 
+    await writeAudit({ action: 'admin.promote', entity_type: 'user', entity_id: userId, performed_by: me.id });
+    await writeAudit({ action: 'admin.demote', entity_type: 'user', entity_id: userId, performed_by: me.id });
     revalidatePath("/admin/team");
     revalidatePath(`/admin/team/${userId}`);
     return ok(undefined);

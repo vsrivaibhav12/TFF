@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/require-role';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimitByUser } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,8 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const me = await getCurrentUser();
   if (!me) return NextResponse.json({ clients: [], tasks: [], notices: [] }, { status: 401 });
+  const rl = rateLimitByUser(me.id, 'api:cmdk', { maxRequests: 30, windowMs: 60_000 });
+  if (!rl.allowed) return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
   const q = (new URL(req.url)).searchParams.get('q') ?? '';
   if (q.length < 2) return NextResponse.json({ clients: [], tasks: [], notices: [] });
   const sb = createClient();

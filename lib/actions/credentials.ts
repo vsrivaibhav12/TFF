@@ -6,6 +6,7 @@ import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { encryptString, decryptString } from '@/lib/services/encryption';
 import { writeAudit } from '@/lib/services/audit-service';
+import { rateLimitByUser } from '@/lib/rate-limit';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 
 const credSchema = z.object({
@@ -39,6 +40,7 @@ export async function upsertCredentialAction(input: CredentialInput): Promise<Ac
       const payload = { ...updateFields, ...encFields, updated_at: new Date().toISOString() };
       const { error } = await sb.from('credentials').update(payload).eq('id', id);
       if (error) return fail(error.message, 'DB');
+      await writeAudit({ action: 'credential.update', entity_type: 'credential', entity_id: id, performed_by: me.id, details: { client_id: rest.client_id, portal_name: rest.portal_name } });
       revalidatePath('/admin/credentials');
       return ok({ id });
     }
@@ -46,6 +48,7 @@ export async function upsertCredentialAction(input: CredentialInput): Promise<Ac
     const payload = { ...rest, ...encFields, updated_at: new Date().toISOString() };
     const { data, error } = await sb.from('credentials').insert(payload).select('id').single();
     if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'credential.create', entity_type: 'credential', entity_id: data.id, performed_by: me.id, details: { client_id: rest.client_id, portal_name: rest.portal_name } });
     revalidatePath('/admin/credentials');
     return ok({ id: data.id });
   } catch (e: any) {
@@ -60,6 +63,7 @@ export async function deleteCredentialAction(id: string): Promise<ActionResult<v
     const sb = createClient();
     const { error } = await sb.from('credentials').update({ is_deleted: true, updated_at: new Date().toISOString() }).eq('id', id);
     if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'credential.delete', entity_type: 'credential', entity_id: id, performed_by: me.id });
     revalidatePath('/admin/credentials');
     return ok(undefined);
   } catch (e: any) {
@@ -75,6 +79,8 @@ export async function revealCredentialAction(id: string): Promise<ActionResult<{
   try {
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'credentials.manage');
+    const rl = rateLimitByUser(me.id, 'credential:reveal', { maxRequests: 10, windowMs: 60_000 });
+    if (!rl.allowed) return fail('Too many credential reveals. Please try again later.', 'RATE_LIMITED');
     const sb = createClient();
     const { data, error } = await sb
       .from('credentials')

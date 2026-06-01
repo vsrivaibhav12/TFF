@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { encryptString } from '@/lib/services/encryption';
+import { writeAudit } from '@/lib/services/audit-service';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 
 const dscSchema = z.object({
@@ -51,12 +52,14 @@ export async function upsertDscAction(input: DscInput): Promise<ActionResult<{ i
     if (id) {
       const { error } = await sb.from('dsc_records').update(payload).eq('id', id);
       if (error) return fail(error.message, 'DB');
+      await writeAudit({ action: 'dsc.update', entity_type: 'dsc', entity_id: id, performed_by: me.id, details: { client_id: rest.client_id, holder_name: rest.holder_name } });
       revalidatePath('/admin/dsc');
       return ok({ id });
     }
     payload.created_by = me.id;
     const { data, error } = await sb.from('dsc_records').insert(payload).select('id').single();
     if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'dsc.create', entity_type: 'dsc', entity_id: data.id, performed_by: me.id, details: { client_id: rest.client_id, holder_name: rest.holder_name } });
     revalidatePath('/admin/dsc');
     return ok({ id: data.id });
   } catch (e: any) {
@@ -71,6 +74,7 @@ export async function deleteDscAction(id: string): Promise<ActionResult<void>> {
     const sb = createClient();
     const { error } = await sb.from('dsc_records').update({ is_deleted: true, updated_at: new Date().toISOString() }).eq('id', id);
     if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'dsc.delete', entity_type: 'dsc', entity_id: id, performed_by: me.id });
     revalidatePath('/admin/dsc');
     return ok(undefined);
   } catch (e: any) {
