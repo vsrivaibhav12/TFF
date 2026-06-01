@@ -22,7 +22,7 @@ export default function TaskModalWrapper({ children }: { children: React.ReactNo
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent 
         side="right" 
-        className="w-full sm:w-[90vw] sm:max-w-[1200px] p-0 border-l border-zinc-200 bg-[#FAFAFA] sm:rounded-l-2xl shadow-2xl z-[100]"
+        className="w-full sm:w-[calc(100vw-88px)] sm:max-w-[1800px] p-0 border-l border-zinc-200 bg-[#FAFAFA] sm:rounded-l-2xl shadow-2xl z-[100]"
       >
         {children}
       </SheetContent>

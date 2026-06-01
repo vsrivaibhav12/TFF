@@ -39,6 +39,7 @@ interface Props {
   canEditSteps: boolean;
   basePath: string;
   clientPath: string;
+  isModal?: boolean;
 }
 
 export default function TaskDetailShell({
@@ -56,6 +57,7 @@ export default function TaskDetailShell({
   canEditSteps,
   basePath,
   clientPath,
+  isModal,
 }: Props) {
   const isClosed = task.status === 'completed' || task.status === 'cancelled';
   const [editingTitle, setEditingTitle] = useState(false);
@@ -106,11 +108,13 @@ export default function TaskDetailShell({
 
   return (
     <div className="flex flex-col h-[calc(100vh-6.5rem)] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
-      <div className="flex-none mb-4">
-        <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 font-medium">
-          <ChevronLeft className="h-4 w-4" /> Back to Tasks
-        </Link>
-      </div>
+      {!isModal && (
+        <div className="flex-none mb-4">
+          <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 font-medium">
+            <ChevronLeft className="h-4 w-4" /> Back to Tasks
+          </Link>
+        </div>
+      )}
 
       <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 pb-6">
         
@@ -236,31 +240,7 @@ export default function TaskDetailShell({
             </dl>
           </div>
 
-          <div className="tff-card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-stone-900 tracking-tight text-sm">Description</h3>
-              {!isClosed && !editingDesc && (
-                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setEditingDesc(true)}>
-                  <Pencil className="h-3.5 w-3.5 text-zinc-400" />
-                </Button>
-              )}
-            </div>
-            {editingDesc ? (
-              <div className="space-y-2">
-                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} autoFocus className="text-sm" />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={async () => { if (await saveField({ description: description || null })) setEditingDesc(false); }} disabled={saving}>
-                    {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => { setDescription(task.description || ''); setEditingDesc(false); }}>Cancel</Button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-xs text-zinc-600 whitespace-pre-wrap leading-relaxed">
-                {task.description || <span className="text-zinc-400 italic">No description provided.</span>}
-              </p>
-            )}
-          </div>
+          {/* Description moved to center column */}
 
           <div className="tff-card p-5 relative group">
             <h3 className="font-semibold mb-3 text-stone-900 tracking-tight text-sm">Finance & Ref</h3>
@@ -345,6 +325,32 @@ export default function TaskDetailShell({
         {/* CENTER COLUMN: Workspace */}
         <div className="lg:col-span-6 flex flex-col gap-8 overflow-y-auto pr-4 pl-2 lg:px-6 lg:border-x lg:border-zinc-100 pb-12" style={{ scrollbarWidth: 'thin' }}>
           
+          <div className="tff-card p-5 w-full">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-stone-900 tracking-tight text-sm">Description</h3>
+              {!isClosed && !editingDesc && (
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setEditingDesc(true)}>
+                  <Pencil className="h-3.5 w-3.5 text-zinc-400" />
+                </Button>
+              )}
+            </div>
+            {editingDesc ? (
+              <div className="space-y-2">
+                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} autoFocus className="text-sm" />
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={async () => { if (await saveField({ description: description || null })) setEditingDesc(false); }} disabled={saving}>
+                    {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setDescription(task.description || ''); setEditingDesc(false); }}>Cancel</Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-600 whitespace-pre-wrap leading-relaxed">
+                {task.description || <span className="text-zinc-400 italic">No description provided.</span>}
+              </p>
+            )}
+          </div>
+
           <div className="w-full">
             <h3 className="font-semibold text-stone-900 mb-4 tracking-tight">Step-by-step Execution</h3>
             <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} currentUserName={team.find(u => u.id === currentUserId)?.full_name ?? 'You'} />

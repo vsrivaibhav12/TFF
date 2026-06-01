@@ -53,6 +53,7 @@ export default async function AdminTaskModalIntercept({ params }: { params: { id
           canEditSteps={true}
           basePath="/admin/tasks"
           clientPath={`/admin/clients/${(task as any).client_id}`}
+          isModal={true}
         />
       </div>
     </TaskModalWrapper>
