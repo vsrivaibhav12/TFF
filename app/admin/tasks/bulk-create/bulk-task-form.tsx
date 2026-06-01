@@ -397,7 +397,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
               <p><strong>Title:</strong> {f.title}</p>
               <p><strong>Due:</strong> {f.due_date || '—'}</p>
               <p><strong>Priority:</strong> {f.priority}</p>
-              <p><strong>Template:</strong> {f.task_template_id && f.task_template_id !== 'unassigned' ? templates.find(t => t.id === f.task_template_id)?.name || 'Yes' : 'None'}</p>
+              <p><strong>Template:</strong> {f.task_template_id && f.task_template_id !== 'unassigned' ? templates.find(t => t.id === f.task_template_id)?.title || 'Yes' : 'None'}</p>
               <p><strong>Billable:</strong> {f.is_billable ? `Yes · ${f.bill_reference || 'No ref'} · ₹${f.bill_amount || 0}` : 'No'}</p>
             </div>
             
