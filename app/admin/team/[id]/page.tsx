@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listGrantedCapabilities } from "@/lib/repositories/staff-capabilities";
@@ -9,6 +10,7 @@ import TeamDetailShell from "@/components/team/team-detail-shell";
 export const dynamic = "force-dynamic";
 
 export default async function AdminTeamMemberPage({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const sb = createClient();
   const currentUser = await getCurrentUser();
   const { data: user } = await sb

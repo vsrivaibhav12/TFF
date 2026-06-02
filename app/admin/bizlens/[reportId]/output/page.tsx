@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { parseParams, ReportIdParamSchema } from '@/lib/validation/params';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { getBizlensReport } from '@/lib/actions/bizlens-actions';

@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { notFound } from 'next/navigation';
+import { requireRole } from '@/lib/auth/require-role';
 import { getTask, listTaskNotes } from '@/lib/repositories/tasks';
 // SOP steps hidden from client portal per Group D.
 
@@ -31,12 +33,14 @@ const STUCK_REASON_FRIENDLY: Record<string, string> = {
 export const dynamic = 'force-dynamic';
 
 export default async function PortalTaskDetail({ params }: { params: { id: string } }) {
-  const task = await getTask(params.id);
+  const { id } = parseParams(params, IdParamSchema);
+  await requireRole('client');
+  const task = await getTask(id);
   if (!task) notFound();
   const sb = createClient();
   const [clientResult, notes] = await Promise.all([
     sb.from('clients').select('business_name').eq('id', (task as any).client_id).single(),
-    listTaskNotes(params.id),
+    listTaskNotes(id),
   ]);
   const client = clientResult.data;
   const cs = getClientVisibleStatus(task as any);

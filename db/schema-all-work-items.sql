@@ -100,7 +100,7 @@ SELECT
   NULL::text AS service_name
 FROM queries q
 LEFT JOIN clients c ON c.id = q.client_id
-WHERE q.status != 'closed'
+WHERE q.status != 'closed' AND q.is_deleted = false
 
 UNION ALL
 

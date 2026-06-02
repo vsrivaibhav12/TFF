@@ -344,17 +344,16 @@ export async function getSubServiceRequiresVerification(subServiceId: string) {
 
 /**
  * Enrich a list of tasks with progress_pct from task_steps.
- * Efficiently batches progress lookups.
+ * Efficiently batches progress lookups (single query for all tasks).
  */
 export async function enrichTasksWithProgress(tasks: any[]): Promise<any[]> {
   if (tasks.length === 0) return tasks;
-  const { getTaskStepCompletion } = await import('./task-steps');
-  const enriched = await Promise.all(
-    tasks.map(async (t) => {
-      const { total, completed } = await getTaskStepCompletion(t.id);
-      const progress_pct = total === 0 ? 0 : Math.round((completed / total) * 100);
-      return { ...t, progress_pct, step_total: total, step_completed: completed };
-    })
-  );
-  return enriched;
+  const { getTaskStepCompletionBatch } = await import('./task-steps');
+  const taskIds = tasks.map((t) => t.id);
+  const completions = await getTaskStepCompletionBatch(taskIds);
+  return tasks.map((t) => {
+    const { total, completed } = completions.get(t.id) ?? { total: 0, completed: 0 };
+    const progress_pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+    return { ...t, progress_pct, step_total: total, step_completed: completed };
+  });
 }

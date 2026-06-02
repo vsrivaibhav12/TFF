@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { getTask, listTaskActivity, listTaskNotes } from '@/lib/repositories/tasks';
 import { listTeamUsers } from '@/lib/repositories/clients';
 import { listTaskSteps } from '@/lib/repositories/task-steps';
@@ -16,6 +17,7 @@ import TaskDetailShell from '@/components/tasks/task-detail-shell';
 export const dynamic = 'force-dynamic';
 
 export default async function TeamTaskDetail({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const me = await requireRole(['admin', 'team']);
   const capabilities = me.role === 'admin' ? [] : await listGrantedCapabilities(me.id);
   const capSet = new Set(capabilities);

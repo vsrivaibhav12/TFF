@@ -52,7 +52,7 @@ h1, h2, h3, h4, h5, h6 {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-main { animation: pageIn 0.4s ease-out; }
+/* main { animation: pageIn 0.4s ease-out; }  — removed: causes layout shift on every route change */
 
 /* === Hero atmosphere === */
 .hero-mesh {

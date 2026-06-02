@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { getClientById } from '@/lib/repositories/clients';
 import { listClientSubServices } from '@/lib/repositories/services';
 import { listTasks, enrichTasksWithProgress } from '@/lib/repositories/tasks';
@@ -12,6 +13,7 @@ import TeamClientDetailShell from '@/components/clients/team-client-detail-shell
 export const dynamic = 'force-dynamic';
 
 export default async function TeamClientDetail({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const me = await getCurrentUser();
   const canEdit = me ? await hasCapability(me, 'clients.edit') : false;
   const client = await getClientById(params.id);

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getCurrentUser } from '@/lib/auth/require-role';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const me = await getCurrentUser();
+    if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const sb = createClient();
     const { data, error } = await sb
       .from('sub_service_sop_steps')

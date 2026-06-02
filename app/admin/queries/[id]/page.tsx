@@ -1,4 +1,5 @@
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/lib/auth/require-role';
@@ -12,6 +13,7 @@ import QueryDetailShell from '@/components/queries/query-detail-shell';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminQueryDetail({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'queries.assign');
   const data = await getQueryWithMessages(params.id);

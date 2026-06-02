@@ -132,7 +132,7 @@ export async function addTaskNoteAction(input: { task_id: string; body: string }
     if (!input.body || input.body.trim().length < 1) return fail('Note cannot be empty', 'VALIDATION');
     
     await taskService.addTaskNote(input.task_id, input.body.trim(), me.id);
-    
+    await writeAudit({ action: 'task.add_note', entity_type: 'task', entity_id: input.task_id, performed_by: me.id });
     revalidatePath(`/team/tasks/${input.task_id}`);
     revalidatePath(`/admin/tasks/${input.task_id}`);
     revalidatePath(`/portal/tasks/${input.task_id}`);
@@ -164,7 +164,7 @@ export async function assignTaskAction(input: { task_id: string; assigned_to?: s
       new_value: `assigned_to=${input.assigned_to ?? '-'} reviewer=${input.reviewer_id ?? '-'}`,
       changed_by: me.id,
     });
-    
+    await writeAudit({ action: 'task.assign', entity_type: 'task', entity_id: input.task_id, performed_by: me.id, details: { assigned_to: input.assigned_to, reviewer_id: input.reviewer_id } });
     revalidatePath(`/team/tasks/${input.task_id}`);
     revalidatePath(`/admin/tasks/${input.task_id}`);
     return ok(undefined);
@@ -270,7 +270,7 @@ export async function updateTaskLabelsAction(taskId: string, labels: string[]): 
       new_value: labels.join(', '),
       changed_by: me.id,
     });
-
+    await writeAudit({ action: 'task.update_labels', entity_type: 'task', entity_id: taskId, performed_by: me.id, details: { labels } });
     revalidatePath(`/team/tasks/${taskId}`);
     revalidatePath(`/admin/tasks/${taskId}`);
     return ok(undefined);

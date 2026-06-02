@@ -13,7 +13,7 @@ export interface AuditEntry {
 }
 
 export async function writeAudit(entry: AuditEntry) {
-  const sb = entry.serviceRole ? createServiceClient() : createClient();
+  const sb = entry.serviceRole ? createServiceClient() : createServiceClient();
   await sb.from('global_audit_log').insert({
     action: entry.action,
     entity_type: entry.entity_type,

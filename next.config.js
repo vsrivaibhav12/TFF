@@ -48,6 +48,8 @@ const nextConfig = {
               "font-src 'self' fonts.gstatic.com",
               "img-src 'self' data: blob: *.supabase.co",
               "connect-src 'self' *.supabase.co *.supabase.in wss://*.supabase.co",
+              "base-uri 'self'",
+              "form-action 'self'",
               "frame-ancestors 'none'",
             ].join('; '),
           },

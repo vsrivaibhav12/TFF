@@ -80,6 +80,7 @@ export async function replyQueryAction(input: { query_id: string; message: strin
       .from('queries')
       .update({ updated_at: new Date().toISOString(), status: nextStatus })
       .eq('id', parsed.data.query_id);
+    await writeAudit({ action: 'query.reply', entity_type: 'query', entity_id: parsed.data.query_id, performed_by: me.id, details: { next_status: nextStatus } });
     revalidatePath(`/portal/queries/${parsed.data.query_id}`);
     revalidatePath(`/team/queries/${parsed.data.query_id}`);
     return ok(undefined);

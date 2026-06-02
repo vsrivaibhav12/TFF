@@ -46,19 +46,18 @@ export async function deleteSavedViewAction(id: string): Promise<ActionResult<vo
   }
 }
 
-export async function listSavedViews(scope: string): Promise<any[]> {
+export async function listSavedViews(scope: string): Promise<ActionResult<any[]>> {
   try {
+    const me = await requireUser();
     const sb = createClient();
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) return [];
     const { data } = await sb
       .from('saved_views')
       .select('id, name, is_default, filters')
-      .eq('user_id', user.id)
+      .eq('user_id', me.id)
       .eq('scope', scope)
       .order('name', { ascending: true });
-    return data ?? [];
-  } catch {
-    return [];
+    return ok(data ?? []);
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
   }
 }

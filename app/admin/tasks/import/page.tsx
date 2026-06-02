@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import TaskImportForm from './task-import-form';

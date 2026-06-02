@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { notFound } from 'next/navigation';
 import { getTask, listTaskActivity, listTaskNotes } from '@/lib/repositories/tasks';
@@ -16,6 +17,7 @@ import TaskDetailShell from '@/components/tasks/task-detail-shell';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminTaskDetail({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'tasks.create');
 

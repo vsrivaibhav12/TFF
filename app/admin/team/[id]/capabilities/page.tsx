@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ALL_CAPABILITIES } from '@/lib/auth/capabilities';
@@ -9,6 +10,7 @@ import { ChevronLeft } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 export default async function CapabilitiesPage({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const sb = createClient();
   const { data: user } = await sb
     .from('users_profile')

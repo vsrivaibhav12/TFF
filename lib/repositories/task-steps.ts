@@ -58,6 +58,45 @@ export async function getTaskStepCompletion(
 }
 
 /**
+ * Batch version of getTaskStepCompletion for multiple tasks.
+ * Returns a Map<taskId, {total, completed, allRequiredDone}>.
+ */
+export async function getTaskStepCompletionBatch(
+  taskIds: string[],
+): Promise<Map<string, { total: number; completed: number; allRequiredDone: boolean }>> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from('task_steps')
+    .select('task_id, is_required, completed_at')
+    .in('task_id', taskIds);
+  if (error) throw error;
+
+  const byTask = new Map<string, { total: number; completed: number; allRequiredDone: boolean }>();
+  // Initialize all tasks with zero state
+  for (const id of taskIds) {
+    byTask.set(id, { total: 0, completed: 0, allRequiredDone: true });
+  }
+
+  const grouped = new Map<string, any[]>();
+  for (const row of (data ?? [])) {
+    if (!grouped.has(row.task_id)) grouped.set(row.task_id, []);
+    grouped.get(row.task_id)!.push(row);
+  }
+
+  for (const [taskId, rows] of grouped) {
+    const required = rows.filter((r: any) => r.is_required);
+    const completed = required.filter((r: any) => !!r.completed_at).length;
+    byTask.set(taskId, {
+      total: required.length,
+      completed,
+      allRequiredDone: required.length === 0 || completed === required.length,
+    });
+  }
+
+  return byTask;
+}
+
+/**
  * Returns percentage completion (0-100) based on required steps.
  */
 export async function getTaskProgressPct(taskId: string): Promise<number> {

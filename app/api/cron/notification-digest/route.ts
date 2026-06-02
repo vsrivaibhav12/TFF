@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { sendEmail } from '@/lib/email/resend';
+import { escapeHtml } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -42,11 +43,12 @@ export async function GET(request: NextRequest) {
     if (!items || items.length === 0) continue;
     const { data: profile } = await sb.from('users_profile').select('email, full_name').eq('id', (p as any).user_id).maybeSingle();
     if (!(profile as any)?.email) continue;
+    const safeName = escapeHtml((profile as any).full_name ?? 'there');
     const html = `<div style="font-family:Inter,Arial;color:#18181b">
       <h2 style="color:#0f766e">The Fiscal Fulcrum</h2>
-      <p>Hi ${(profile as any).full_name ?? ''},</p>
+      <p>Hi ${safeName},</p>
       <p>Here’s your ${freq} digest — ${items.length} update${items.length === 1 ? '' : 's'}:</p>
-      <ul style="padding-left:18px">${items.map((i: any) => `<li><strong>${i.title}</strong><br>${i.message}</li>`).join('')}</ul>
+      <ul style="padding-left:18px">${items.map((i: any) => `<li><strong>${escapeHtml(i.title)}</strong><br>${escapeHtml(i.message)}</li>`).join('')}</ul>
     </div>`;
     await sendEmail({ to: (profile as any).email, subject: `[TFF] ${freq === 'daily' ? 'Daily' : 'Weekly'} digest · ${items.length} update(s)`, html });
     // Mark these as emailed

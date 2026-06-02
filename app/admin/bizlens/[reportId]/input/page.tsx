@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+import { parseParams, ReportIdParamSchema } from '@/lib/validation/params';
+
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
@@ -7,6 +10,7 @@ import BizlensStudioInputForm from '@/components/operations/bizlens/input-form';
 import BackButton from '@/components/sophistication/back-button';
 
 export default async function BizlensInputPage({ params }: { params: { reportId: string } }) {
+  const { reportId } = parseParams(params, ReportIdParamSchema);
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'bizlens.enter');
   const report = await getBizlensReport(params.reportId);

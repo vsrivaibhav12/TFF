@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { requireCapabilityOrRedirect, hasCapability } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -13,6 +14,7 @@ import ClientDetailShell from '@/components/clients/client-detail-shell';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminClientDetail({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const me = await requireRole(['admin', 'team']);
   const canReadAll = await hasCapability(me, 'clients.read.all');
   const canEdit = await hasCapability(me, 'clients.edit');

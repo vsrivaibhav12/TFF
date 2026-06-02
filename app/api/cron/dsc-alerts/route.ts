@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/service-role';
 import { sendEmail } from '@/lib/email/resend';
 import { notify } from '@/lib/services/notification-service';
 import { fetchAll } from '@/lib/supabase/fetch-all';
+import { escapeHtml } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -39,9 +40,11 @@ export async function GET(request: NextRequest) {
   const sent: string[] = [];
   for (const d of rows ?? []) {
     if ((d as any).expiry_alert_sent) continue;
-    const businessName = (d as any).clients?.business_name ?? 'Client';
-    const subject = `DSC expiring soon — ${businessName} · ${(d as any).holder_name}`;
-    const html = `<div style="font-family:Inter,Arial,sans-serif;color:#18181b"><h2>The Fiscal Fulcrum</h2><p>The DSC for <strong>${(d as any).holder_name}</strong> at <strong>${businessName}</strong> expires on <strong>${(d as any).expiry_date}</strong>.</p><p>Renew before expiry to avoid filing disruptions.</p></div>`;
+    const businessName = escapeHtml((d as any).clients?.business_name ?? 'Client');
+    const holderName = escapeHtml((d as any).holder_name ?? '');
+    const expiryDate = escapeHtml((d as any).expiry_date ?? '');
+    const subject = `DSC expiring soon — ${businessName} · ${holderName}`;
+    const html = `<div style="font-family:Inter,Arial,sans-serif;color:#18181b"><h2>The Fiscal Fulcrum</h2><p>The DSC for <strong>${holderName}</strong> at <strong>${businessName}</strong> expires on <strong>${expiryDate}</strong>.</p><p>Renew before expiry to avoid filing disruptions.</p></div>`;
 
     if ((d as any).holder_contact_email) {
       await sendEmail({ to: (d as any).holder_contact_email, subject, html });

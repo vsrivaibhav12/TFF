@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
+import { writeAudit } from '@/lib/services/audit-service';
 import * as workDoneRepo from '@/lib/repositories/work-done';
 import { canModifyTask } from '@/lib/services/task-modify-guard';
 
@@ -25,12 +26,12 @@ export async function addWorkDoneAction(input: z.infer<typeof workDoneSchema>): 
     const parsed = workDoneSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
 
-    await workDoneRepo.addWorkDoneRecord({
+    const record = await workDoneRepo.addWorkDoneRecord({
       ...parsed.data,
       user_id: me.id,
       entry_method: 'manual',
     });
-
+    await writeAudit({ action: 'workdone.create', entity_type: 'work_done', entity_id: record.id, performed_by: me.id, details: { task_id: parsed.data.task_id, client_id: parsed.data.client_id, duration_minutes: parsed.data.duration_minutes } });
     revalidatePath('/team/work-done');
     revalidatePath('/admin/work-done');
     return ok(undefined);
@@ -70,6 +71,7 @@ export async function addManualWorkDoneAction(input: any): Promise<ActionResult<
       .select('id')
       .single();
     if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'workdone.create', entity_type: 'work_done', entity_id: data.id, performed_by: me.id, details: { task_id: parsed.data.task_id, duration_minutes: parsed.data.duration_minutes } });
     revalidatePath(`/team/tasks/${parsed.data.task_id}`);
     return ok({ id: data.id });
   } catch (e: any) {
@@ -114,6 +116,7 @@ export async function logTimerWorkDoneAction(input: any): Promise<ActionResult<{
       .select('id')
       .single();
     if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'workdone.create', entity_type: 'work_done', entity_id: data.id, performed_by: me.id, details: { task_id: parsed.data.task_id, duration_minutes: minutes } });
     revalidatePath(`/team/tasks/${parsed.data.task_id}`);
     return ok({ id: data.id, duration_minutes: minutes });
   } catch (e: any) {
@@ -139,6 +142,7 @@ export async function deleteWorkDoneAction(id: string): Promise<ActionResult<voi
     }
     const { error } = await sb.from('task_workdone').delete().eq('id', id);
     if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'workdone.delete', entity_type: 'work_done', entity_id: id, performed_by: me.id });
     revalidatePath('/team/work-done');
     revalidatePath('/admin/work-done');
     revalidatePath(`/team/tasks/${(row as any).task_id}`);

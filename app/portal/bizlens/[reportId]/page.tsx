@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { parseParams, ReportIdParamSchema } from '@/lib/validation/params';
 import { ChevronLeft } from 'lucide-react';
 import { getBizlensReport } from '@/lib/actions/bizlens-actions';
 import {

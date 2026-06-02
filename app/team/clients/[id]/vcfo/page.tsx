@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import Link from 'next/link';
 import { getClientById } from '@/lib/repositories/clients';
 import { listVcfoSnapshots, listSolutionLog } from '@/lib/repositories/vcfo';
@@ -18,6 +19,7 @@ import SolutionStatusUpdater from '@/components/operations/vcfo/solution-status-
 export const dynamic = 'force-dynamic';
 
 export default async function TeamVcfoClientPage({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'vcfo.enter');
 

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ import {
 export const dynamic = 'force-dynamic';
 
 export default async function ImportBatchDetail({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const sb = createClient();
   const { data: batch } = await sb
     .from('client_import_batches')

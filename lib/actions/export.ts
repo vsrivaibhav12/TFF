@@ -1,6 +1,6 @@
 'use server';
 
-import { requireUser } from '@/lib/auth/require-role';
+import { requireRole } from '@/lib/auth/require-role';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 
 /**
@@ -12,7 +12,7 @@ export async function exportTableDataAction(
   headers?: string[]
 ): Promise<ActionResult<{ csv: string; count: number }>> {
   try {
-    await requireUser();
+    await requireRole(['admin', 'team']);
     if (!rows.length) return fail('No data to export', 'EMPTY_DATASET');
 
     const cols = headers ?? Object.keys(rows[0]);
