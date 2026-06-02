@@ -13,7 +13,7 @@ export default async function BizlensInputPage({ params }: { params: { reportId:
   const { reportId } = parseParams(params, ReportIdParamSchema);
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'bizlens.enter');
-  const report = await getBizlensReport(params.reportId);
+  const report = await getBizlensReport(reportId);
   if (!report) notFound();
 
   const snapshots = await listBizlensSnapshots(report.client_id);

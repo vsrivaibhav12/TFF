@@ -24,7 +24,7 @@ export default async function ImportBatchDetail({ params }: { params: { id: stri
     .select(
       'id, source_filename, total_rows, successful_rows, skipped_rows, error_rows, errors, status, uploaded_at, users_profile:uploaded_by(full_name, email)',
     )
-    .eq('id', params.id)
+    .eq('id', id)
     .maybeSingle();
   if (!batch) notFound();
   const errors = (batch as any).errors ?? [];

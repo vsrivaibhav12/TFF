@@ -18,7 +18,7 @@ export async function listAccessibleClients(opts: {
   const buildQuery = () => {
     let query = sb
       .from('clients')
-      .select('id, business_name, pan, gstin, category, primary_contact_person, primary_contact_email, primary_owner_id, group_id, portal_enabled, city, created_at, updated_at, client_groups!clients_group_id_fkey(name)')
+      .select('id, business_name, pan, gstin, category, primary_contact_person, primary_contact_email, primary_contact_phone, primary_owner_id, group_id, portal_enabled, city, created_at, updated_at, client_groups!clients_group_id_fkey(name)')
       .eq('is_deleted', false);
     if (opts.groupId) query = query.eq('group_id', opts.groupId);
     if (opts.city) query = query.ilike('city', `%${opts.city}%`);

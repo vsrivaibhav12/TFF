@@ -106,7 +106,7 @@ const overrideSchema = z.object({
 });
 const upsertSchema = z.object({
   attendance_date: z.string(),
-  status: z.enum(['present', 'leave', 'half_day', 'permission']),
+  status: z.enum(['present', 'absent', 'leave', 'work_from_home']),
   check_in_time: z.string().optional(),
   check_out_time: z.string().optional(),
 });

@@ -24,7 +24,7 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
   const { data: subService } = await sb
     .from('sub_services')
     .select('id, name, code, frequency, service_id, services!inner(name, code)')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('is_deleted', false)
     .maybeSingle();
 
@@ -32,7 +32,7 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
   const serviceName = (subService as any).services?.name ?? (subService as any).services?.[0]?.name ?? 'Service';
 
   const [links, team, allClients] = await Promise.all([
-    listClientsBySubService(params.id),
+    listClientsBySubService(id),
     listTeamUsers(),
     listAccessibleClients({ limit: 5000 }),
   ]);

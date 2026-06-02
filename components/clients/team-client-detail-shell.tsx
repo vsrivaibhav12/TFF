@@ -65,8 +65,8 @@ export default function TeamClientDetailShell({
                   </div>
                   <div className="flex items-center gap-3 mt-2 text-[12px] text-zinc-400">
                     {client.city && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{client.city}{client.state ? `, ${client.state}` : ''}</span>}
-                    {client.contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{client.contact_phone}</span>}
-                    {client.contact_email && <span className="flex items-center gap-0.5"><Mail className="h-3 w-3" />{client.contact_email}</span>}
+                    {client.primary_contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{client.primary_contact_phone}</span>}
+                    {client.primary_contact_email && <span className="flex items-center gap-0.5"><Mail className="h-3 w-3" />{client.primary_contact_email}</span>}
                   </div>
                 </div>
               </div>

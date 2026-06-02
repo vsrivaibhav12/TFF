@@ -11,7 +11,17 @@ import { toast } from 'sonner';
 
 interface SavedView { id: string; name: string; is_default: boolean; filters: Record<string, string> }
 
-export default function SavedViewsBar({ scope, views }: { scope: string; views: SavedView[] }) {
+type ActionResult<T> = { success: true; data: T } | { success: false; error: string; code?: string };
+
+function unwrapViews(views: SavedView[] | ActionResult<any[]>): SavedView[] {
+  if (Array.isArray(views)) return views;
+  if (views && typeof views === 'object' && 'success' in views && views.success === true && Array.isArray(views.data)) {
+    return views.data as SavedView[];
+  }
+  return [];
+}
+
+export default function SavedViewsBar({ scope, views }: { scope: string; views: SavedView[] | ActionResult<any[]> }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -53,7 +63,7 @@ export default function SavedViewsBar({ scope, views }: { scope: string; views: 
     <>
       <ConfirmDialog />
       <div className="flex items-center gap-2 flex-wrap">
-      {views.map((v) => (
+      {unwrapViews(views).map((v) => (
         <span key={v.id} className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white pl-3 pr-1 py-1 text-xs hover:border-teal-400">
           <button onClick={() => applyView(v)} className="flex items-center gap-1" data-testid={`view-${v.id}`}>
             <Bookmark className="h-3 w-3 text-teal-600" /> {v.name}

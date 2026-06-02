@@ -1,6 +1,7 @@
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { notFound } from 'next/navigation';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { getTask, listTaskActivity, listTaskNotes } from '@/lib/repositories/tasks';
 import { listTeamUsers } from '@/lib/repositories/clients';
 import { listTaskSteps } from '@/lib/repositories/task-steps';
@@ -17,22 +18,23 @@ import ModalWrapper from '@/components/shell/modal-wrapper';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminTaskModalIntercept({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'tasks.create');
 
-  const task = await getTask(params.id);
+  const task = await getTask(id);
   if (!task) notFound();
 
   const [activity, notes, team, steps, cfDefs, cfValues, allLabels, assignedLabels, workdone] = await Promise.all([
-    listTaskActivity(params.id),
-    listTaskNotes(params.id),
+    listTaskActivity(id),
+    listTaskNotes(id),
     listTeamUsers(),
-    listTaskSteps(params.id),
+    listTaskSteps(id),
     (task as any).sub_service_id ? listDefinitionsForSubService((task as any).sub_service_id) : Promise.resolve([]),
-    listValuesForTask(params.id),
+    listValuesForTask(id),
     listLabels(),
-    listLabelsForTask(params.id),
-    listWorkDoneForTask(params.id),
+    listLabelsForTask(id),
+    listWorkDoneForTask(id),
   ]);
 
   return (

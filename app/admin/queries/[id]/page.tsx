@@ -16,7 +16,7 @@ export default async function AdminQueryDetail({ params }: { params: { id: strin
   const { id } = parseParams(params, IdParamSchema);
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'queries.assign');
-  const data = await getQueryWithMessages(params.id);
+  const data = await getQueryWithMessages(id);
   if (!data) notFound();
   return <QueryDetailShell data={data} basePath="/admin/queries" canActAsTeam={true} />;
 }

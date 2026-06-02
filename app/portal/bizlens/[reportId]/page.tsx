@@ -19,6 +19,7 @@ export default async function PortalBizlensReportPage({
 }: {
   params: { reportId: string };
 }) {
+  const { reportId } = parseParams(params, ReportIdParamSchema);
   await requireRole('client');
   const sb = createClient();
   const { data: cu } = await sb
@@ -31,7 +32,7 @@ export default async function PortalBizlensReportPage({
   const clientId = (cu as any)?.client_id ?? null;
   if (!clientId) notFound();
 
-  const data = await getBizlensReport(params.reportId);
+  const data = await getBizlensReport(reportId);
   
   // Security check: ensure report belongs to client
   if (data.client_id !== clientId) notFound();

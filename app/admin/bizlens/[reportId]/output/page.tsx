@@ -21,9 +21,10 @@ export default async function BizlensOutputPage({
 }: {
   params: { reportId: string };
 }) {
+  const { reportId } = parseParams(params, ReportIdParamSchema);
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'bizlens.enter');
-  const data = await getBizlensReport(params.reportId);
+  const data = await getBizlensReport(reportId);
   if (!data) notFound();
 
   const client = await getClientById(data.client_id);
@@ -42,7 +43,7 @@ export default async function BizlensOutputPage({
           The diagnostic needs financial inputs. Complete the P&amp;L and balance sheet sections to generate insights.
         </p>
         <Link
-          href={`/admin/bizlens/${params.reportId}/input`}
+          href={`/admin/bizlens/${reportId}/input`}
           className="inline-flex items-center mt-5 h-9 px-4 rounded-md bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 transition-colors tff-focus"
         >
           Enter financials
@@ -82,7 +83,7 @@ export default async function BizlensOutputPage({
         </Link>
         <div className="text-right">
           <div className="text-sm font-medium text-zinc-900">{(client as any).business_name}</div>
-          <div className="tff-caption">Report {params.reportId.slice(0, 8)}</div>
+          <div className="tff-caption">Report {reportId.slice(0, 8)}</div>
         </div>
       </div>
 

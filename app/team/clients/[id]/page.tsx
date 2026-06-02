@@ -16,15 +16,15 @@ export default async function TeamClientDetail({ params }: { params: { id: strin
   const { id } = parseParams(params, IdParamSchema);
   const me = await getCurrentUser();
   const canEdit = me ? await hasCapability(me, 'clients.edit') : false;
-  const client = await getClientById(params.id);
+  const client = await getClientById(id);
   if (!client) notFound();
 
   const [subs, rawTasks, notices, queries, auditLogs] = await Promise.all([
-    listClientSubServices(params.id),
-    listTasks({ clientId: params.id, limit: 20 }),
-    listAllNotices({ clientId: params.id }),
-    listQueries({ clientId: params.id }),
-    listEntityAuditLogs('client', params.id),
+    listClientSubServices(id),
+    listTasks({ clientId: id, limit: 20 }),
+    listAllNotices({ clientId: id }),
+    listQueries({ clientId: id }),
+    listEntityAuditLogs('client', id),
   ]);
 
   const tasks = await enrichTasksWithProgress(rawTasks);

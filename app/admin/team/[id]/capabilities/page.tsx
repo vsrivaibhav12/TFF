@@ -15,23 +15,23 @@ export default async function CapabilitiesPage({ params }: { params: { id: strin
   const { data: user } = await sb
     .from('users_profile')
     .select('id, full_name, email, role')
-    .eq('id', params.id)
+    .eq('id', id)
     .maybeSingle();
   if (!user) notFound();
   if ((user as any).role === 'admin') {
     return (
       <div className="space-y-6">
-        <Link href={`/admin/team/${params.id}`} className="inline-flex items-center gap-1 text-sm text-zinc-500"><ChevronLeft className="h-4 w-4" /> Back</Link>
+        <Link href={`/admin/team/${id}`} className="inline-flex items-center gap-1 text-sm text-zinc-500"><ChevronLeft className="h-4 w-4" /> Back</Link>
         <h1 className="tff-page-title">{(user as any).full_name}</h1>
         <div className="tff-card tff-card-pad bg-zinc-50 text-sm text-zinc-600">Admins implicitly hold every capability. There is nothing to grant.</div>
       </div>
     );
   }
-  const granted = await listGrantedCapabilities(params.id);
+  const granted = await listGrantedCapabilities(id);
 
   return (
     <div className="space-y-8 max-w-3xl">
-      <Link href={`/admin/team/${params.id}`} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={`/admin/team/${id}`} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
         <ChevronLeft className="h-4 w-4" /> Back to {(user as any).full_name}
       </Link>
       <div>
@@ -39,7 +39,7 @@ export default async function CapabilitiesPage({ params }: { params: { id: strin
         <p className="tff-page-subtitle">Grant {(user as any).full_name} explicit rights. Every change is audited.</p>
       </div>
       <CapabilitiesForm
-        userId={params.id}
+        userId={id}
         userName={(user as any).full_name}
         all={ALL_CAPABILITIES as unknown as string[]}
         granted={granted}

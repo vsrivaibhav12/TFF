@@ -11,7 +11,7 @@ export default async function PayrollDetail({ params }: { params: { id: string }
   const { id } = parseParams(params, IdParamSchema);
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'payroll.run');
-  const run = await getPayrollRun(params.id);
+  const run = await getPayrollRun(id);
   if (!run) notFound();
   return <PayrollDetailShell run={run} basePath="/admin/payroll" />;
 }

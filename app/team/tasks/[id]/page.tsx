@@ -23,19 +23,19 @@ export default async function TeamTaskDetail({ params }: { params: { id: string 
   const capSet = new Set(capabilities);
   const canEditSteps = me.role === 'admin' || capSet.has('tasks.complete');
 
-  const task = await getTask(params.id);
+  const task = await getTask(id);
   if (!task) notFound();
 
   const [activity, notes, team, steps, cfDefs, cfValues, allLabels, assignedLabels, workdone] = await Promise.all([
-    listTaskActivity(params.id),
-    listTaskNotes(params.id),
+    listTaskActivity(id),
+    listTaskNotes(id),
     listTeamUsers(),
-    listTaskSteps(params.id),
+    listTaskSteps(id),
     (task as any).sub_service_id ? listDefinitionsForSubService((task as any).sub_service_id) : Promise.resolve([]),
-    listValuesForTask(params.id),
+    listValuesForTask(id),
     listLabels(),
-    listLabelsForTask(params.id),
-    listWorkDoneForTask(params.id),
+    listLabelsForTask(id),
+    listWorkDoneForTask(id),
   ]);
 
   return (

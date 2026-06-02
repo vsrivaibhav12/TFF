@@ -41,7 +41,6 @@ export async function listAllUpcomingDueDates(days: number) {
   const { data, error } = await sb
     .from('compliance_calendar_events')
     .select('due_date, status, period_label, clients!compliance_calendar_events_client_id_fkey(business_name), compliance_calendar_rules!compliance_calendar_events_rule_id_fkey(display_name, service_kind)')
-    .eq('is_deleted', false)
     .gte('due_date', from)
     .lte('due_date', toStr)
     .order('due_date');

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { getPayrollRun } from '@/lib/repositories/payroll';
@@ -8,9 +9,10 @@ import ModalWrapper from '@/components/shell/modal-wrapper';
 export const dynamic = 'force-dynamic';
 
 export default async function PayrollModalIntercept({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'payroll.run');
-  const run = await getPayrollRun(params.id);
+  const run = await getPayrollRun(id);
   if (!run) notFound();
 
   return (

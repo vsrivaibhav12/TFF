@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { getClientById } from '@/lib/repositories/clients';
 import { listClientSubServices } from '@/lib/repositories/services';
 import { listTasks, enrichTasksWithProgress } from '@/lib/repositories/tasks';
@@ -13,17 +14,18 @@ import ModalWrapper from '@/components/shell/modal-wrapper';
 export const dynamic = 'force-dynamic';
 
 export default async function TeamClientModalIntercept({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const me = await getCurrentUser();
   const canEdit = me ? await hasCapability(me, 'clients.edit') : false;
-  const client = await getClientById(params.id);
+  const client = await getClientById(id);
   if (!client) notFound();
 
   const [subs, rawTasks, notices, queries, auditLogs] = await Promise.all([
-    listClientSubServices(params.id),
-    listTasks({ clientId: params.id, limit: 20 }),
-    listAllNotices({ clientId: params.id }),
-    listQueries({ clientId: params.id }),
-    listEntityAuditLogs('client', params.id),
+    listClientSubServices(id),
+    listTasks({ clientId: id, limit: 20 }),
+    listAllNotices({ clientId: id }),
+    listQueries({ clientId: id }),
+    listEntityAuditLogs('client', id),
   ]);
 
   const tasks = await enrichTasksWithProgress(rawTasks);

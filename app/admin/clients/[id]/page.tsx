@@ -21,20 +21,20 @@ export default async function AdminClientDetail({ params }: { params: { id: stri
   if (!canReadAll && !canEdit) {
     await requireCapabilityOrRedirect(me, 'clients.read.all');
   }
-  const client = await getClientById(params.id);
+  const client = await getClientById(id);
   if (!client) notFound();
 
   const [groups, owners, clientServices, clientSubServices, clientUsers, teamAssignments, auditLogs, rawTasks, notices, queries] = await Promise.all([
     listClientGroups(),
     listTeamUsers(),
-    listClientServices(params.id),
-    listClientSubServices(params.id),
-    listClientUsers(params.id),
-    listTeamAssignments(params.id),
-    listEntityAuditLogs('client', params.id),
-    listTasks({ clientId: params.id, limit: 20 }),
-    listAllNotices({ clientId: params.id }),
-    listQueries({ clientId: params.id }),
+    listClientServices(id),
+    listClientSubServices(id),
+    listClientUsers(id),
+    listTeamAssignments(id),
+    listEntityAuditLogs('client', id),
+    listTasks({ clientId: id, limit: 20 }),
+    listAllNotices({ clientId: id }),
+    listQueries({ clientId: id }),
   ]);
 
   const tasks = await enrichTasksWithProgress(rawTasks);

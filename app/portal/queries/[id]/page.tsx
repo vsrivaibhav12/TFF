@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export default async function PortalQueryDetail({ params }: { params: { id: string } }) {
   const { id } = parseParams(params, IdParamSchema);
   await requireRole('client');
-  const data = await getQueryWithMessages(params.id);
+  const data = await getQueryWithMessages(id);
   if (!data) notFound();
   return <QueryDetailShell data={data} basePath="/portal/queries" canActAsTeam={false} />;
 }

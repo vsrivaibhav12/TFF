@@ -10,14 +10,14 @@ import { toast } from 'sonner';
 interface EnrichedClient {
   id: string;
   business_name: string;
-  contact_name: string | null;
-  contact_email: string | null;
-  contact_phone: string | null;
+  primary_contact_person: string | null;
+  primary_contact_email: string | null;
+  primary_contact_phone: string | null;
   pan: string | null;
   gstin: string | null;
   city: string | null;
   state: string | null;
-  portal_access_enabled: boolean;
+  portal_enabled: boolean;
   created_at: string;
   group_name: string | null;
   engagements: number;
@@ -124,8 +124,8 @@ export default function ClientsTable({
                 </Link>
                 <div className="flex items-center gap-2 text-[11px] text-zinc-400 mt-0.5">
                   {c.city && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{c.city}</span>}
-                  {c.contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{c.contact_phone}</span>}
-                  {c.contact_email && <span className="flex items-center gap-0.5"><Mail className="h-3 w-3" />{c.contact_email}</span>}
+                  {c.primary_contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{c.primary_contact_phone}</span>}
+                  {c.primary_contact_email && <span className="flex items-center gap-0.5"><Mail className="h-3 w-3" />{c.primary_contact_email}</span>}
                 </div>
               </div>
             </div>

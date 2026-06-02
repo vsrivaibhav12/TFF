@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { createClient } from "@/lib/supabase/server";
 import { listGrantedCapabilities } from "@/lib/repositories/staff-capabilities";
 import { listRoleTemplates } from "@/lib/repositories/role-templates";
@@ -9,20 +10,21 @@ import ModalWrapper from "@/components/shell/modal-wrapper";
 export const dynamic = "force-dynamic";
 
 export default async function AdminTeamModalIntercept({ params }: { params: { id: string } }) {
+  const { id } = parseParams(params, IdParamSchema);
   const sb = createClient();
   const currentUser = await getCurrentUser();
   const { data: user } = await sb
     .from("users_profile")
     .select("id, full_name, email, role, is_active, phone_number, job_title, department, active_role_template_id, is_prime_admin, reports_to")
-    .eq("id", params.id)
+    .eq("id", id)
     .maybeSingle();
   if (!user) notFound();
 
   const [caps, templates, teamList, payroll] = await Promise.all([
-    listGrantedCapabilities(params.id),
+    listGrantedCapabilities(id),
     listRoleTemplates(),
     sb.from("users_profile").select("id, full_name, email").in("role", ["team", "admin"]).eq("is_active", true).order("full_name"),
-    sb.from("staff_payroll_settings").select("monthly_salary, paid_leaves_per_month, deduction_applicable, salary_adjustment_for_leaves").eq("user_id", params.id).maybeSingle(),
+    sb.from("staff_payroll_settings").select("monthly_salary, paid_leaves_per_month, deduction_applicable, salary_adjustment_for_leaves").eq("user_id", id).maybeSingle(),
   ]);
 
   const activeTemplate = templates.find((t) => t.id === (user as any).active_role_template_id);

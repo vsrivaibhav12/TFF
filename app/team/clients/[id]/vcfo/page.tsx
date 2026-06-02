@@ -23,22 +23,22 @@ export default async function TeamVcfoClientPage({ params }: { params: { id: str
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'vcfo.enter');
 
-  const client = await getClientById(params.id);
+  const client = await getClientById(id);
   if (!client) notFound();
 
-  const allowed = await clientHasServiceKind(params.id, 'vcfo');
+  const allowed = await clientHasServiceKind(id, 'vcfo');
   if (!allowed) {
     return (
       <div className="tff-stack">
         <Link href="/team/clients" className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
           <ChevronLeft className="h-4 w-4" /> Back to clients
         </Link>
-        <ServiceLocked kind="vcfo" clientId={params.id} clientName={(client as any).business_name} moduleLabel="vCFO Advisory" />
+        <ServiceLocked kind="vcfo" clientId={id} clientName={(client as any).business_name} moduleLabel="vCFO Advisory" />
       </div>
     );
   }
 
-  const [snapshots, solutions] = await Promise.all([listVcfoSnapshots(params.id), listSolutionLog(params.id)]);
+  const [snapshots, solutions] = await Promise.all([listVcfoSnapshots(id), listSolutionLog(id)]);
   const latest: any = snapshots[0];
   const runwayMonths = latest?.cash_in_bank && latest?.monthly_burn ? Math.round((latest.cash_in_bank / latest.monthly_burn) * 10) / 10 : null;
   const variance = latest?.budgeted_revenue && latest?.actual_revenue ? Math.round(((latest.actual_revenue - latest.budgeted_revenue) / latest.budgeted_revenue) * 100) : null;
@@ -55,13 +55,13 @@ export default async function TeamVcfoClientPage({ params }: { params: { id: str
     <div className="tff-stack-lg">
       <div className="tff-page-header">
         <div>
-          <Link href={`/team/clients/${params.id}`} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 mb-3">
+          <Link href={`/team/clients/${id}`} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 mb-3">
             <ChevronLeft className="h-4 w-4" /> Back to client
           </Link>
           <h1 className="tff-page-title">vCFO advisory</h1>
           <p className="tff-page-subtitle">Financial health, cash runway and strategic recommendations.</p>
         </div>
-        <VcfoForm clientId={params.id} latest={latest} />
+        <VcfoForm clientId={id} latest={latest} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -75,7 +75,7 @@ export default async function TeamVcfoClientPage({ params }: { params: { id: str
         <div className="lg:col-span-2 tff-stack">
           <div className="flex items-center justify-between">
             <h2 className="tff-section-title">Solution log</h2>
-            <SolutionForm clientId={params.id} />
+            <SolutionForm clientId={id} />
           </div>
 
           {solutions.length === 0 ? (

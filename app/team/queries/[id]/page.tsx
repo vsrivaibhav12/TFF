@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function TeamQueryDetail({ params }: { params: { id: string } }) {
   const { id } = parseParams(params, IdParamSchema);
-  const data = await getQueryWithMessages(params.id);
+  const data = await getQueryWithMessages(id);
   if (!data) notFound();
   return <QueryDetailShell data={data} basePath="/team/queries" canActAsTeam={true} />;
 }
