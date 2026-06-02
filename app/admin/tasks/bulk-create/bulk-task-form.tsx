@@ -145,7 +145,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
           reviewer_id: mapping.reviewer || undefined,
           due_date: f.due_date,
           sub_service_id: f.sub_service_id || undefined,
-          task_template_id: f.task_template_id || undefined,
+          task_template_id: (f.task_template_id && f.task_template_id !== 'unassigned') ? f.task_template_id : undefined,
           period_year: f.period_year ? parseInt(f.period_year, 10) : undefined,
           period_month: f.period_month ? parseInt(f.period_month, 10) : undefined,
           period_quarter: f.period_quarter ? parseInt(f.period_quarter, 10) : undefined,
