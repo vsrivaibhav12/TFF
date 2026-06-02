@@ -59,7 +59,6 @@ export default function ClientForm({ groups, owners, initial }: ClientFormProps)
     }
     toast.success(isEdit ? 'Client updated' : 'Client created');
     router.push(isEdit ? `/admin/clients/${initial.id}` : `/admin/clients/${(result as any).data.id}`);
-    router.refresh();
   }
 
   async function onDelete() {
@@ -73,7 +72,6 @@ export default function ClientForm({ groups, owners, initial }: ClientFormProps)
     }
     toast.success('Client deleted');
     router.push('/admin/clients');
-    router.refresh();
   }
 
   return (

@@ -1,6 +1,5 @@
-import 'server-only';
-import { createClient } from '@/lib/supabase/server';
-import { createServiceClient } from '@/lib/supabase/service-role';
+// Pure calculation engine — no 'server-only' marker so tests can import generateEventsForRule.
+// Supabase clients are dynamically imported inside the async persistence functions only.
 
 /**
  * Compliance Calendar Rules Engine (v3 #3).
@@ -252,6 +251,7 @@ export async function refreshComplianceEvents(opts: {
   toIso?: string;
   clientId?: string;
 } = {}): Promise<{ generated: number; rules: number; clients: number }> {
+  const { createClient } = await import('@/lib/supabase/server');
   const sb = createClient();
   // Default window: today minus 1 month → today + 12 months.
   const today = new Date();
@@ -308,6 +308,7 @@ export async function refreshServiceDrivenComplianceEvents(opts: {
   toIso?: string;
   clientId?: string;
 } = {}): Promise<{ generated: number; clientSubServices: number }> {
+  const { createServiceClient } = await import('@/lib/supabase/service-role');
   const sb = createServiceClient();
   const today = new Date();
   const fromIso = opts.fromIso ?? new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().slice(0, 10);

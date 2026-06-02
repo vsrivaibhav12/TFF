@@ -1,4 +1,6 @@
-import * as bizlensRepo from '@/lib/repositories/bizlens';
+// Data-operation helpers below dynamically import the repository so that the pure math
+// engine (computeReport, assessRisk, etc.) can be imported by tests without pulling
+// in server-only dependencies.
 
 // ============================================================================
 // BizLens Math Engine — full TypeScript port of legacy /Tool/finance.js
@@ -1136,6 +1138,7 @@ export function generateExecutiveSummary(report: BizlensReport, insights: Insigh
 
 // ---------- Data operations ----------
 export async function createReport(payload: { clientId: string; periodMonth: number; periodYear: number; monthsCovered: number; actorId: string }) {
+  const bizlensRepo = await import('@/lib/repositories/bizlens');
   return await bizlensRepo.createReportRecord({
     client_id: payload.clientId,
     period_month: payload.periodMonth,
@@ -1148,10 +1151,12 @@ export async function createReport(payload: { clientId: string; periodMonth: num
 }
 
 export async function updateReport(reportId: string, updates: Partial<BizlensData>) {
+  const bizlensRepo = await import('@/lib/repositories/bizlens');
   await bizlensRepo.updateReportRecord(reportId, updates);
 }
 
 export async function publishReport(reportId: string, clientId: string, actorId: string) {
+  const bizlensRepo = await import('@/lib/repositories/bizlens');
   const existing = await bizlensRepo.getReportById(reportId);
   if (!existing) throw new Error('Report not found');
   const hasPL = Number(existing.sales_revenue ?? 0) > 0

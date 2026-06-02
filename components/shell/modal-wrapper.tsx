@@ -22,7 +22,7 @@ export default function ModalWrapper({ children }: { children: React.ReactNode }
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent 
         side="right" 
-        className="w-full sm:w-[calc(100vw-88px)] !max-w-[calc(100vw-88px)] p-0 border-l border-zinc-200 bg-[#FAFAFA] sm:rounded-l-2xl shadow-2xl z-[100] flex flex-col h-full overflow-hidden"
+        className="w-full sm:w-[calc(100vw-88px)] !max-w-[calc(100vw-88px)] p-0 border-l border-zinc-200 bg-[#FAFAFA] sm:rounded-l-2xl shadow-2xl flex flex-col h-full overflow-hidden"
       >
         {children}
       </SheetContent>

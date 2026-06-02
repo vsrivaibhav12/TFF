@@ -427,7 +427,7 @@ export default function AppShell({
 
           {/* Content area */}
           <div id="main-content" className="px-6 md:px-8 py-6 md:py-8 pt-20 md:pt-2 pb-24 md:pb-8 bg-[#F7F6F3] min-h-screen">
-            <div className="mx-auto w-full max-w-7xl">{children}</div>
+            <div className="mx-auto w-full">{children}</div>
           </div>
         </main>
 

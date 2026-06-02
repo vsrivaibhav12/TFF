@@ -21,7 +21,7 @@ const ClientBaseSchema = z.object({
   business_name: z.string().min(1, "Business name is required"),
   pan: optionalStr(z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, 'Invalid PAN format (e.g. ABCDE1234F)').transform(v => v.toUpperCase())),
   gstin: optionalStr(z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, 'Invalid GSTIN format').transform(v => v.toUpperCase())),
-  category: optionalStr(z.string()),
+  category: z.enum(['sole_proprietor', 'partnership', 'llp', 'pvt_ltd', 'public_ltd', 'huf', 'aop', 'ngo', 'other']).optional().nullable(),
   industry: optionalStr(z.string()),
   primary_contact_person: optionalStr(z.string()),
   primary_contact_phone: optionalStr(z.string()),
