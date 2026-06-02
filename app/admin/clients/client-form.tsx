@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { createClient, updateClient } from '@/lib/actions/clients';
+import { createClient, updateClient, softDeleteClient } from '@/lib/actions/clients';
 import { Loader2 } from 'lucide-react';
 
 interface ClientFormProps {
@@ -59,6 +59,20 @@ export default function ClientForm({ groups, owners, initial }: ClientFormProps)
     }
     toast.success(isEdit ? 'Client updated' : 'Client created');
     router.push(isEdit ? `/admin/clients/${initial.id}` : `/admin/clients/${(result as any).data.id}`);
+    router.refresh();
+  }
+
+  async function onDelete() {
+    if (!confirm('Are you sure you want to delete this client? This action cannot be undone.')) return;
+    setLoading(true);
+    const result = await softDeleteClient(initial.id);
+    if (!result.success) {
+      toast.error(result.error);
+      setLoading(false);
+      return;
+    }
+    toast.success('Client deleted');
+    router.push('/admin/clients');
     router.refresh();
   }
 
@@ -126,6 +140,11 @@ export default function ClientForm({ groups, owners, initial }: ClientFormProps)
         <Button type="submit" disabled={loading} data-testid="client-submit">
           {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving</> : isEdit ? 'Save changes' : 'Create client'}
         </Button>
+        {isEdit && (
+          <Button type="button" variant="destructive" disabled={loading} onClick={onDelete} data-testid="client-delete">
+            Delete client
+          </Button>
+        )}
       </div>
     </form>
   );
