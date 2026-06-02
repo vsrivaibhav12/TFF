@@ -26,7 +26,7 @@ export default async function BulkTaskCreatePage({ searchParams }: { searchParam
     const { data: sub } = await sb.from('sub_services').select('name').eq('id', searchParams.sub_service_id).single();
     if (sub) subServiceName = sub.name;
 
-    const { data: links } = await sb.from('client_services').select('client_id').eq('sub_service_id', searchParams.sub_service_id).eq('is_active', true);
+    const { data: links } = await sb.from('client_sub_services').select('client_id').eq('sub_service_id', searchParams.sub_service_id).eq('is_active', true);
     if (links) {
       const validIds = new Set(links.map(l => l.client_id));
       clients = allClients.filter((c: any) => validIds.has(c.id));
