@@ -37,7 +37,7 @@ function CollapsibleSection({ label, children, defaultOpen = true }: { label: st
     <div>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-2.5 pt-5 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors"
+        className="w-full flex items-center justify-between px-2.5 pt-5 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-zinc-600 transition-colors"
         aria-expanded={open}
       >
         {label}
@@ -62,7 +62,7 @@ function getInitials(name: string | null): string {
 function getRoleBadge(role: string) {
   const styles: Record<string, string> = {
     admin: 'bg-teal-100 text-teal-800 border-teal-200',
-    team: 'bg-stone-200 text-stone-800 border-stone-300',
+    team: 'bg-zinc-200 text-zinc-800 border-zinc-300',
     client: 'bg-zinc-100 text-zinc-700 border-zinc-200',
   };
   const labels: Record<string, string> = {
@@ -119,16 +119,16 @@ export default function AppShell({
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-teal-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm">Skip to content</a>
       <div className="flex flex-1">
         {/* Sidebar (desktop) — floating bento style */}
-        <aside className="hidden md:flex fixed left-3 top-3 bottom-3 flex-col rounded-[20px] shadow-sidebar border border-stone-200/50 bg-white z-30 transition-all duration-300 w-[64px] hover:w-[240px] group/aside overflow-hidden" aria-label="Main navigation">
+        <aside className="hidden md:flex fixed left-3 top-3 bottom-3 flex-col rounded-[20px] shadow-sidebar border border-zinc-200/50 bg-white z-30 transition-all duration-300 w-[64px] hover:w-[240px] group/aside overflow-hidden" aria-label="Main navigation">
           {/* Logo + collapse toggle */}
           <div className="flex items-center justify-between px-2 py-4 group-hover/aside:px-5 group-hover/aside:py-5 transition-all">
             <Link href={`/${role}`} className="flex items-center gap-2.5">
               <Image src="/logo.png" width={160} height={32} className="h-8 w-auto object-contain shrink-0" alt="The Fiscal Fulcrum" priority />
               <div className="opacity-0 group-hover/aside:opacity-100 transition-opacity whitespace-nowrap overflow-hidden">
-                  <div className="text-sm font-bold tracking-tight text-stone-900 leading-none">
+                  <div className="text-sm font-bold tracking-tight text-zinc-900 leading-none">
                     The <span className="text-teal-600">Fiscal</span>
                   </div>
-                  <div className="text-sm font-bold tracking-tight text-stone-900 leading-none">
+                  <div className="text-sm font-bold tracking-tight text-zinc-900 leading-none">
                     Fulcrum
                   </div>
                 </div>
@@ -156,13 +156,13 @@ export default function AppShell({
                       'group flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-200',
                       active
                         ? 'bg-teal-50 text-teal-700'
-                        : 'text-stone-500 hover:bg-stone-50 hover:text-stone-800'
+                        : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
                     )}
                   >
                     <Icon
                       className={cn(
                         'h-4 w-4 shrink-0 transition-colors',
-                        active ? 'text-teal-600' : 'text-stone-400 group-hover:text-stone-600'
+                        active ? 'text-teal-600' : 'text-zinc-400 group-hover:text-zinc-600'
                       )}
                     />
                     <span className="opacity-0 group-hover/aside:opacity-100 whitespace-nowrap transition-opacity truncate">{n.label}</span>
@@ -173,7 +173,7 @@ export default function AppShell({
 
               const flushSection = () => {
                 if (currentSection && sectionItems.length > 0) {
-                  elements.push(<div key={currentSection} className="px-2.5 pt-5 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-stone-400 opacity-0 group-hover/aside:opacity-100 transition-opacity whitespace-nowrap overflow-hidden">{currentSection}</div>);
+                  elements.push(<div key={currentSection} className="px-2.5 pt-5 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-400 opacity-0 group-hover/aside:opacity-100 transition-opacity whitespace-nowrap overflow-hidden">{currentSection}</div>);
                     elements.push(...sectionItems);
                   sectionItems = [];
                 }
@@ -196,13 +196,13 @@ export default function AppShell({
           </nav>
 
           {/* User profile */}
-          <div className="mb-3 rounded-xl border border-stone-100 bg-stone-50 mx-1.5 p-2 group-hover/aside:mx-3 group-hover/aside:p-3 flex items-center transition-all overflow-hidden">
+          <div className="mb-3 rounded-xl border border-zinc-100 bg-zinc-50 mx-1.5 p-2 group-hover/aside:mx-3 group-hover/aside:p-3 flex items-center transition-all overflow-hidden">
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {getInitials(user.full_name)}
               </div>
               <div className="min-w-0 flex-1 opacity-0 group-hover/aside:opacity-100 transition-opacity whitespace-nowrap overflow-hidden ml-3">
-                  <div className="text-sm font-medium text-stone-800 truncate">
+                  <div className="text-sm font-medium text-zinc-800 truncate">
                     {user.full_name || user.email}
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
@@ -334,19 +334,19 @@ export default function AppShell({
           {/* Desktop top bar */}
           <div className="hidden md:flex items-center justify-between gap-4 px-8 pt-8 pb-4 sticky top-0 z-20 bg-[#F7F6F3]/80 backdrop-blur-xl">
             {/* Breadcrumbs */}
-            <div className="flex items-center gap-1.5 text-sm text-stone-500">
-              <Link href={`/${role}`} className="hover:text-stone-900 transition-colors capitalize">
+            <div className="flex items-center gap-1.5 text-sm text-zinc-500">
+              <Link href={`/${role}`} className="hover:text-zinc-900 transition-colors capitalize">
                 {role === 'client' ? 'Portal' : role}
               </Link>
               {breadcrumbSegments.map((segment, i) => (
                 <span key={`bc-${segment}-${i}`} className="flex items-center gap-1.5">
-                  <ChevronRight className="h-3.5 w-3.5 text-stone-300" />
+                  <ChevronRight className="h-3.5 w-3.5 text-zinc-300" />
                   <span
                     className={cn(
                       'capitalize',
                       i === breadcrumbSegments.length - 1
-                        ? 'text-stone-900 font-medium'
-                        : 'hover:text-stone-900 transition-colors'
+                        ? 'text-zinc-900 font-medium'
+                        : 'hover:text-zinc-900 transition-colors'
                     )}
                   >
                     {segment.replace(/-/g, ' ')}
@@ -357,8 +357,8 @@ export default function AppShell({
 
             <div className="flex items-center gap-3">
               {/* Date pill */}
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-sm text-stone-500 bg-white/60 backdrop-blur-lg border border-stone-200/80 rounded-xl shadow-sm">
-                <Calendar className="h-3.5 w-3.5 text-stone-400" />
+              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-500 bg-white/60 backdrop-blur-lg border border-zinc-200/80 rounded-xl shadow-sm">
+                <Calendar className="h-3.5 w-3.5 text-zinc-400" />
                 <span>{formatToday()}</span>
               </div>
 
@@ -367,16 +367,16 @@ export default function AppShell({
                 onClick={() =>
                   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))
                 }
-                className="flex items-center gap-2 px-3 py-1.5 text-sm text-stone-500 bg-white/60 backdrop-blur-lg border border-stone-200/80 rounded-xl hover:border-stone-300 hover:bg-white shadow-sm transition-all group"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-500 bg-white/60 backdrop-blur-lg border border-zinc-200/80 rounded-xl hover:border-zinc-300 hover:bg-white shadow-sm transition-all group"
               >
-                <Search className="h-3.5 w-3.5 text-stone-400 group-hover:text-stone-600" />
-                <span className="text-stone-400 hidden xl:inline">Search...</span>
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded-md border bg-white px-1.5 font-mono text-[10px] font-medium text-stone-400">
+                <Search className="h-3.5 w-3.5 text-zinc-400 group-hover:text-zinc-600" />
+                <span className="text-zinc-400 hidden xl:inline">Search...</span>
+                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded-md border bg-white px-1.5 font-mono text-[10px] font-medium text-zinc-400">
                   <span className="text-[10px]">Ctrl</span>K
                 </kbd>
               </button>
               
-              <div className="bg-white/60 backdrop-blur-lg border border-stone-200/80 rounded-xl shadow-sm flex items-center p-1">
+              <div className="bg-white/60 backdrop-blur-lg border border-zinc-200/80 rounded-xl shadow-sm flex items-center p-1">
                 <GlobalTimer role={role} />
                 <ErrorBoundary>
                   <NotificationsBell />
@@ -388,7 +388,7 @@ export default function AppShell({
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen((v) => !v)}
-                  className="flex items-center gap-2 rounded-xl px-1.5 py-1.5 hover:bg-stone-100 transition-colors"
+                  className="flex items-center gap-2 rounded-xl px-1.5 py-1.5 hover:bg-zinc-100 transition-colors"
                 >
                   <div className="h-9 w-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden shadow-sm">
                     {getInitials(user.full_name)}
@@ -397,25 +397,25 @@ export default function AppShell({
                 {userMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-2 w-56 rounded-[20px] border border-stone-200 bg-white shadow-floating z-50 py-2">
-                      <div className="px-4 py-3 border-b border-stone-100">
-                        <div className="text-sm font-medium text-stone-900 truncate">{user.full_name || user.email}</div>
-                        <div className="text-xs text-stone-500 mt-0.5">{user.email}</div>
+                    <div className="absolute right-0 top-full mt-2 w-56 rounded-[20px] border border-zinc-200 bg-white shadow-floating z-50 py-2">
+                      <div className="px-4 py-3 border-b border-zinc-100">
+                        <div className="text-sm font-medium text-zinc-900 truncate">{user.full_name || user.email}</div>
+                        <div className="text-xs text-zinc-500 mt-0.5">{user.email}</div>
                       </div>
                       <Link
                          href="/account/notifications"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
                       >
-                        <User className="h-4 w-4 text-stone-400" />
+                        <User className="h-4 w-4 text-zinc-400" />
                         Account
                       </Link>
                       <button
                         onClick={() => { setUserMenuOpen(false); logout(); }}
                         data-testid="logout-btn"
-                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
                       >
-                        <LogOut className="h-4 w-4 text-stone-400" />
+                        <LogOut className="h-4 w-4 text-zinc-400" />
                         Sign out
                       </button>
                     </div>

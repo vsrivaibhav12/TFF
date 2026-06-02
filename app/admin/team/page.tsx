@@ -35,9 +35,9 @@ export default async function AdminTeamPage() {
           <>
             <ExportButton data={exportData} filename="team-export" format="csv" />
             <Button variant="outline" asChild data-testid="manage-roles-btn">
-              <Link href="/admin/team/roles">
+              <a href="/admin/team/roles">
                 <ShieldCheck className="h-4 w-4 mr-1" /> Role templates
-              </Link>
+              </a>
             </Button>
             <NewTeamMemberDialog team={team.map((u: any) => ({ id: u.id, full_name: u.full_name, email: u.email }))} />
           </>

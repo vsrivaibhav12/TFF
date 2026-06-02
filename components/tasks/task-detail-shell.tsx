@@ -178,7 +178,7 @@ export default function TaskDetailShell({
           </div>
 
           <div className="tff-card p-5">
-            <h3 className="font-semibold mb-3 text-stone-900 tracking-tight text-sm">Key Details</h3>
+            <h3 className="font-semibold mb-3 text-zinc-900 tracking-tight text-sm">Key Details</h3>
             <dl className="space-y-2 text-sm">
               
               <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
@@ -243,41 +243,41 @@ export default function TaskDetailShell({
           {/* Description moved to center column */}
 
           <div className="tff-card p-5 relative group">
-            <h3 className="font-semibold mb-3 text-stone-900 tracking-tight text-sm">Finance & Ref</h3>
+            <h3 className="font-semibold mb-3 text-zinc-900 tracking-tight text-sm">Finance & Ref</h3>
             {!isClosed && !editingFinance && (
               <Button size="sm" variant="ghost" className="absolute top-4 right-4 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingFinance(true)}>
-                <Pencil className="h-3.5 w-3.5 text-stone-400" />
+                <Pencil className="h-3.5 w-3.5 text-zinc-400" />
               </Button>
             )}
             {editingFinance ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-3 text-sm">
                   <div className="space-y-1 flex items-center justify-between">
-                    <Label className="text-xs text-stone-500">Billable</Label>
+                    <Label className="text-xs text-zinc-500">Billable</Label>
                     <Switch checked={billable} onCheckedChange={setBillable} />
                   </div>
                   {billable && (
                     <>
                       <div className="space-y-1">
-                        <Label className="text-xs text-stone-500">Bill reference</Label>
+                        <Label className="text-xs text-zinc-500">Bill reference</Label>
                         <Input value={billRef} onChange={(e) => setBillRef(e.target.value)} placeholder="e.g. INV-2026-01" className="h-7 text-xs" />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-stone-500">Bill amount (₹)</Label>
+                        <Label className="text-xs text-zinc-500">Bill amount (₹)</Label>
                         <Input type="number" value={billAmount} onChange={(e) => setBillAmount(e.target.value)} placeholder="0.00" className="h-7 text-xs" />
                       </div>
                     </>
                   )}
                   <div className="space-y-1 mt-2">
-                    <Label className="text-xs text-stone-500">ARN / Ref</Label>
+                    <Label className="text-xs text-zinc-500">ARN / Ref</Label>
                     <Input value={arnRef} onChange={(e) => setArnRef(e.target.value)} placeholder="e.g. ARN12345678" className="h-7 text-xs" />
                   </div>
                   <div className="space-y-1 flex items-center justify-between">
-                    <Label className="text-xs text-stone-500">ARN client visible</Label>
+                    <Label className="text-xs text-zinc-500">ARN client visible</Label>
                     <Switch checked={arnVisible} onCheckedChange={setArnVisible} />
                   </div>
                 </div>
-                <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
+                <div className="flex items-center gap-2 pt-2 border-t border-zinc-100">
                   <Button size="sm" className="h-7 px-2 text-xs" onClick={async () => {
                     const numAmount = parseFloat(billAmount as string);
                     const ok = await saveField({ 
@@ -302,17 +302,17 @@ export default function TaskDetailShell({
             ) : (
               <div className="space-y-3 text-sm">
                 <div>
-                  <span className="text-stone-500 text-xs">Billing</span>
-                  <p className="font-medium text-stone-900">{task.is_billable ? `Yes · ${task.bill_reference || 'No ref'} · ₹${task.bill_amount ?? 0}` : 'No'}</p>
+                  <span className="text-zinc-500 text-xs">Billing</span>
+                  <p className="font-medium text-zinc-900">{task.is_billable ? `Yes · ${task.bill_reference || 'No ref'} · ₹${task.bill_amount ?? 0}` : 'No'}</p>
                 </div>
                 <div>
-                  <span className="text-stone-500 text-xs">ARN / Ref</span>
-                  <p className="font-medium text-stone-900">{task.arn_reference || '—'}</p>
+                  <span className="text-zinc-500 text-xs">ARN / Ref</span>
+                  <p className="font-medium text-zinc-900">{task.arn_reference || '—'}</p>
                 </div>
                 {task.arn_reference && (
                   <div>
-                    <span className="text-stone-500 text-xs">Client visible</span>
-                    <p className="font-medium text-stone-900">{task.is_arn_client_visible ? 'Yes' : 'No'}</p>
+                    <span className="text-zinc-500 text-xs">Client visible</span>
+                    <p className="font-medium text-zinc-900">{task.is_arn_client_visible ? 'Yes' : 'No'}</p>
                   </div>
                 )}
               </div>
@@ -327,7 +327,7 @@ export default function TaskDetailShell({
           
           <div className="tff-card p-5 w-full">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-stone-900 tracking-tight text-sm">Description</h3>
+              <h3 className="font-semibold text-zinc-900 tracking-tight text-sm">Description</h3>
               {!isClosed && !editingDesc && (
                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setEditingDesc(true)}>
                   <Pencil className="h-3.5 w-3.5 text-zinc-400" />
@@ -352,12 +352,12 @@ export default function TaskDetailShell({
           </div>
 
           <div className="w-full">
-            <h3 className="font-semibold text-stone-900 mb-4 tracking-tight">Step-by-step Execution</h3>
+            <h3 className="font-semibold text-zinc-900 mb-4 tracking-tight">Step-by-step Execution</h3>
             <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} currentUserName={team.find(u => u.id === currentUserId)?.full_name ?? 'You'} />
           </div>
           
           <div className="w-full">
-            <h3 className="font-semibold text-stone-900 mb-4 tracking-tight">Work Done Summary</h3>
+            <h3 className="font-semibold text-zinc-900 mb-4 tracking-tight">Work Done Summary</h3>
             <WorkDonePanel taskId={task.id} initial={workdone} currentUserId={currentUserId} />
           </div>
 
@@ -367,7 +367,7 @@ export default function TaskDetailShell({
         <div className="lg:col-span-3 flex flex-col gap-6 overflow-y-auto pl-2 pr-2 pb-12" style={{ scrollbarWidth: 'thin' }}>
           
           <div className="space-y-3 tff-card p-5">
-            <h3 className="font-semibold mb-1 text-stone-900 tracking-tight text-sm">Workflow Controls</h3>
+            <h3 className="font-semibold mb-1 text-zinc-900 tracking-tight text-sm">Workflow Controls</h3>
             <TaskActions task={task} team={team} />
             {!isClosed && (
               <StuckToggle taskId={task.id} isStuck={!!task.is_stuck} reasonCode={task.stuck_reason_code} reasonNote={task.stuck_reason_note} />

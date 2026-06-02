@@ -31,7 +31,6 @@ export async function promoteToAdminAction(userId: string): Promise<ActionResult
     if (error) return fail(error.message, "DB");
 
     await writeAudit({ action: 'admin.promote', entity_type: 'user', entity_id: userId, performed_by: me.id });
-    await writeAudit({ action: 'admin.demote', entity_type: 'user', entity_id: userId, performed_by: me.id });
     revalidatePath("/admin/team");
     revalidatePath(`/admin/team/${userId}`);
     return ok(undefined);
@@ -64,6 +63,7 @@ export async function demoteAdminAction(userId: string): Promise<ActionResult<vo
       .eq("id", userId);
     if (error) return fail(error.message, "DB");
 
+    await writeAudit({ action: 'admin.demote', entity_type: 'user', entity_id: userId, performed_by: me.id });
     revalidatePath("/admin/team");
     revalidatePath(`/admin/team/${userId}`);
     return ok(undefined);

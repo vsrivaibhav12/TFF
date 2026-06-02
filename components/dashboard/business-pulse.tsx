@@ -44,25 +44,25 @@ export function FirmPulse({
     <div className="tff-card tff-card-pad">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-base font-semibold text-stone-900 tracking-tight">Firm Pulse</h2>
-          <p className="text-sm text-stone-500 mt-1">Work output over the last 7 days</p>
+          <h2 className="text-base font-semibold text-zinc-900 tracking-tight">Firm Pulse</h2>
+          <p className="text-sm text-zinc-500 mt-1">Work output over the last 7 days</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        <div className="p-4 rounded-xl border border-stone-100 bg-stone-50/50">
-          <div className="flex items-center gap-2 mb-2 text-stone-500">
+        <div className="p-4 rounded-xl border border-zinc-100 bg-zinc-50/50">
+          <div className="flex items-center gap-2 mb-2 text-zinc-500">
             <Clock className="h-4 w-4" />
             <span className="text-xs font-semibold uppercase tracking-wider">Time Tracked (7d)</span>
           </div>
-          <div className="text-2xl font-bold tracking-tight text-stone-900">{totalHours.toFixed(1)}h</div>
+          <div className="text-2xl font-bold tracking-tight text-zinc-900">{totalHours.toFixed(1)}h</div>
         </div>
-        <div className="p-4 rounded-xl border border-stone-100 bg-stone-50/50">
-          <div className="flex items-center gap-2 mb-2 text-stone-500">
+        <div className="p-4 rounded-xl border border-zinc-100 bg-zinc-50/50">
+          <div className="flex items-center gap-2 mb-2 text-zinc-500">
             <CheckSquare className="h-4 w-4" />
             <span className="text-xs font-semibold uppercase tracking-wider">Tasks Completed (7d)</span>
           </div>
-          <div className="text-2xl font-bold tracking-tight text-stone-900">{totalTasks}</div>
+          <div className="text-2xl font-bold tracking-tight text-zinc-900">{totalTasks}</div>
         </div>
       </div>
 

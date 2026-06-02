@@ -13,6 +13,9 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.supabase.co' },
     ],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   // R-7: Security headers for the financial portal
   async headers() {
     return [

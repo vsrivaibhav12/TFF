@@ -90,12 +90,12 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
           <>
             <ExportButton data={exportData} filename="tasks-export" format="csv" />
             <NewTaskDialog clients={(clients ?? []) as any} team={team as any} triggerLabel="New task" triggerVariant="default" mode="admin" />
-            <Link href="/admin/tasks/import">
+            <a href="/admin/tasks/import">
               <Button variant="outline" size="sm"><Inbox className="h-4 w-4 mr-1" /> Import</Button>
-            </Link>
-            <Link href="/admin/tasks/bulk-create">
+            </a>
+            <a href="/admin/tasks/bulk-create">
               <Button variant="outline" size="sm"><Layers className="h-4 w-4 mr-1" /> Bulk create</Button>
-            </Link>
+            </a>
           </>
         }
       />

@@ -86,13 +86,13 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
         <div className="flex gap-2">
           <ExportButton data={exportData} filename="clients" format="excel" />
           <Button variant="outline" asChild>
-            <Link href="/admin/clients/groups"><Users className="h-4 w-4 mr-1" /> Groups</Link>
+            <a href="/admin/clients/groups"><Users className="h-4 w-4 mr-1" /> Groups</a>
           </Button>
           <Button variant="outline" asChild data-testid="bulk-import-btn">
-            <Link href="/admin/clients/import"><Upload className="h-4 w-4 mr-1" /> Bulk import</Link>
+            <a href="/admin/clients/import"><Upload className="h-4 w-4 mr-1" /> Bulk import</a>
           </Button>
           <Button asChild data-testid="new-client-btn">
-            <Link href="/admin/clients/new"><Plus className="h-4 w-4 mr-1" /> New client</Link>
+            <a href="/admin/clients/new"><Plus className="h-4 w-4 mr-1" /> New client</a>
           </Button>
         </div>
       </div>

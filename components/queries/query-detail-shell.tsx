@@ -44,7 +44,7 @@ export default function QueryDetailShell({
           </div>
 
           <div className="w-full space-y-4 mt-4">
-            <h3 className="font-semibold text-stone-900 tracking-tight text-sm">Conversation</h3>
+            <h3 className="font-semibold text-zinc-900 tracking-tight text-sm">Conversation</h3>
             <div className="space-y-3">
               {messages.length === 0 ? (
                 <div className="bg-zinc-50/50 border-dashed border border-zinc-200 text-center text-sm text-zinc-500 rounded-xl p-8">
@@ -54,7 +54,7 @@ export default function QueryDetailShell({
                 messages.map((m: any) => (
                   <div key={m.id} className={`p-4 ${m.users_profile?.role === 'client' ? 'rounded-xl border border-teal-100 bg-teal-50' : 'tff-card'}`}>
                     <div className="flex justify-between items-baseline mb-2">
-                      <span className="text-sm font-medium text-stone-900">{m.users_profile?.full_name}</span>
+                      <span className="text-sm font-medium text-zinc-900">{m.users_profile?.full_name}</span>
                       <span className="text-xs text-zinc-500">{formatDateIST(m.created_at)}</span>
                     </div>
                     <p className="text-sm text-zinc-700 whitespace-pre-wrap leading-relaxed">{m.message_text}</p>
@@ -65,7 +65,7 @@ export default function QueryDetailShell({
           </div>
 
           <div className="w-full mt-4">
-            <h3 className="font-semibold text-stone-900 tracking-tight text-sm mb-4">Reply</h3>
+            <h3 className="font-semibold text-zinc-900 tracking-tight text-sm mb-4">Reply</h3>
             <QueryReply queryId={q.id} canClose={q.status !== 'resolved'} canActAsTeam={canActAsTeam} />
           </div>
 
@@ -75,7 +75,7 @@ export default function QueryDetailShell({
         <div className="lg:col-span-4 flex flex-col gap-6 overflow-y-auto pl-2 pb-12" style={{ scrollbarWidth: 'thin' }}>
           
           <div className="tff-card p-5">
-            <h3 className="font-semibold mb-3 text-stone-900 tracking-tight text-sm">Query Details</h3>
+            <h3 className="font-semibold mb-3 text-zinc-900 tracking-tight text-sm">Query Details</h3>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
                 <dt className="text-zinc-500 text-xs">Status</dt>

@@ -12,9 +12,9 @@ const buttonVariants = cva(
           'bg-teal-600 text-white shadow-sm hover:bg-teal-700 hover:shadow-md hover:-translate-y-0.5',
         destructive: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
         outline:
-          'border border-stone-200 bg-white hover:bg-stone-50 hover:border-teal-300 hover:text-teal-700 shadow-xs',
-        secondary: 'bg-stone-100 text-stone-900 hover:bg-stone-200 shadow-xs',
-        ghost: 'hover:bg-stone-100 hover:text-stone-900',
+          'border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-teal-300 hover:text-teal-700 shadow-xs',
+        secondary: 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200 shadow-xs',
+        ghost: 'hover:bg-zinc-100 hover:text-zinc-900',
         link: 'text-teal-700 underline-offset-4 hover:underline',
         teal: 'bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100 hover:border-teal-300',
       },

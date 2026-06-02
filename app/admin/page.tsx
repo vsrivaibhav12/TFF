@@ -144,8 +144,8 @@ export default async function AdminDashboard() {
       {/* Header */}
       <StaggerItem>
         <div>
-          <h1 className="text-[24px] font-semibold tracking-tight text-stone-900">Firm overview</h1>
-          <p className="text-sm text-stone-500 mt-1">Everything you need to run the firm — at a glance.</p>
+          <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Firm overview</h1>
+          <p className="text-sm text-zinc-500 mt-1">Everything you need to run the firm — at a glance.</p>
         </div>
       </StaggerItem>
 
@@ -197,8 +197,8 @@ export default async function AdminDashboard() {
           <div className="tff-card tff-card-pad">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-base font-semibold text-stone-900 tracking-tight">Notice deadlines</h3>
-                <p className="text-xs text-stone-500 mt-0.5">Upcoming notice due dates</p>
+                <h3 className="text-base font-semibold text-zinc-900 tracking-tight">Notice deadlines</h3>
+                <p className="text-xs text-zinc-500 mt-0.5">Upcoming notice due dates</p>
               </div>
               <Link href="/admin/notices" className="text-xs text-teal-700 hover:underline font-medium inline-flex items-center gap-1">
                 View all <ArrowRight className="h-3 w-3" />
@@ -209,15 +209,15 @@ export default async function AdminDashboard() {
                 <Link
                   key={n.id}
                   href={`/admin/notices/${n.id}`}
-                  className="flex items-center gap-3 rounded-xl border border-stone-100 p-3 hover:border-teal-200 hover:bg-teal-50/30 transition-all"
+                  className="flex items-center gap-3 rounded-xl border border-zinc-100 p-3 hover:border-teal-200 hover:bg-teal-50/30 transition-all"
                 >
-                  <div className="h-10 w-10 rounded-lg flex flex-col items-center justify-center shrink-0 border text-stone-600 bg-stone-50 border-stone-200">
+                  <div className="h-10 w-10 rounded-lg flex flex-col items-center justify-center shrink-0 border text-zinc-600 bg-zinc-50 border-zinc-200">
                     <span className="text-[9px] font-bold leading-none">{new Date(n.due_date).toLocaleString('en-GB', { month: 'short' }).toUpperCase()}</span>
                     <span className="text-sm font-bold leading-tight">{new Date(n.due_date).getDate()}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate">{n.subject ?? 'Untitled notice'}</div>
-                    <div className="text-xs text-stone-500">{n.clients?.business_name} · {n.notice_type}</div>
+                    <div className="text-xs text-zinc-500">{n.clients?.business_name} · {n.notice_type}</div>
                   </div>
                 </Link>
               ))}
@@ -239,12 +239,12 @@ export default async function AdminDashboard() {
 function StatCard({ label, value, icon, href, tone = 'default' }: { label: string; value: number; icon: React.ReactNode; href?: string; tone?: 'default' | 'warning' }) {
   const content = (
     <>
-      <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${tone === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-stone-100 text-stone-500'}`}>
+      <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${tone === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-zinc-100 text-zinc-500'}`}>
         {icon}
       </div>
       <div className="mt-3">
-        <div className={`text-2xl font-bold tabular-nums tracking-tight ${tone === 'warning' ? 'text-amber-600' : 'text-stone-900'}`}>{value}</div>
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 mt-1">{label}</div>
+        <div className={`text-2xl font-bold tabular-nums tracking-tight ${tone === 'warning' ? 'text-amber-600' : 'text-zinc-900'}`}>{value}</div>
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mt-1">{label}</div>
       </div>
     </>
   );

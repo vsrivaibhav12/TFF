@@ -115,7 +115,7 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
   }
 
   function SortIcon({ col }: { col: string }) {
-    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 text-stone-300" />;
+    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 text-zinc-300" />;
     return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 text-teal-600" /> : <ArrowDown className="h-3 w-3 text-teal-600" />;
   }
 
@@ -174,16 +174,16 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
       <ConfirmDialog />
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
           <input
             type="text"
             placeholder="Search tasks…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-3 h-9 rounded-md border border-stone-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 w-60"
+            className="pl-9 pr-3 h-9 rounded-md border border-zinc-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 w-60"
           />
         </div>
-        <div className="ml-auto text-sm text-stone-500">
+        <div className="ml-auto text-sm text-zinc-500">
           {filtered.length} of {tasks.length} tasks
         </div>
       </div>
@@ -191,7 +191,7 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
       <div className="tff-card overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-stone-50/50 hover:bg-stone-50/50">
+            <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
               <TableHead className="w-10">
                 <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" />
               </TableHead>
@@ -221,13 +221,13 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
                     <Checkbox checked={selected.has(t.id)} onCheckedChange={() => toggle(t.id)} aria-label={`Select task ${t.title}`} />
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs font-mono text-stone-500">{t.task_number ?? '—'}</span>
+                    <span className="text-xs font-mono text-zinc-500">{t.task_number ?? '—'}</span>
                   </TableCell>
                   <TableCell>
-                    <Link href={`/admin/tasks/${t.id}`} className="font-medium text-stone-900 hover:text-teal-700">
+                    <Link href={`/admin/tasks/${t.id}`} className="font-medium text-zinc-900 hover:text-teal-700">
                       {t.title}
                     </Link>
-                    <div className="flex items-center gap-1.5 mt-0.5 text-xs text-stone-500">
+                    <div className="flex items-center gap-1.5 mt-0.5 text-xs text-zinc-500">
                       <Building2 className="h-3 w-3" />
                       <span className="truncate">{(t.clients as any)?.business_name ?? '—'}</span>
                     </div>
@@ -238,14 +238,14 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
                         <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-semibold border border-teal-200">
                           {((t.users_profile as any).full_name as string).slice(0, 1)}
                         </div>
-                        <span className="text-sm text-stone-700">{(t.users_profile as any).full_name}</span>
+                        <span className="text-sm text-zinc-700">{(t.users_profile as any).full_name}</span>
                       </div>
                     ) : (
-                      <span className="text-sm text-stone-400">Unassigned</span>
+                      <span className="text-sm text-zinc-400">Unassigned</span>
                     )}
                   </TableCell>
                   <TableCell>
-                    <span className={cn('text-sm tabular-nums', overdue ? 'text-red-600 font-medium' : 'text-stone-700')}>
+                    <span className={cn('text-sm tabular-nums', overdue ? 'text-red-600 font-medium' : 'text-zinc-700')}>
                       {t.due_date ? formatDateIST(t.due_date) : '—'}
                     </span>
                   </TableCell>
@@ -274,7 +274,7 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
                   <TableCell className="text-right">
                     <Link
                       href={`/admin/tasks/${t.id}`}
-                      className="inline-flex items-center justify-center h-8 w-8 rounded-md text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-colors"
+                      className="inline-flex items-center justify-center h-8 w-8 rounded-md text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
                       aria-label="Open task"
                     >
                       <ArrowUpRight className="h-4 w-4" />

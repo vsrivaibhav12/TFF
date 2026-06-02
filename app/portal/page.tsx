@@ -70,13 +70,13 @@ export default async function ClientPortalDashboard() {
         <div className="tff-card p-8 md:p-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <p className="text-stone-500 text-base font-medium">
+              <p className="text-zinc-500 text-base font-medium">
                 {greeting}{me.full_name ? `, ${me.full_name.split(' ')[0]}` : ''}
               </p>
-              <h1 className="text-3xl md:text-4xl font-bold mt-2 tracking-tight text-stone-900">
+              <h1 className="text-3xl md:text-4xl font-bold mt-2 tracking-tight text-zinc-900">
                 Your compliance hub
               </h1>
-              <p className="text-stone-500 text-base mt-3 max-w-lg leading-relaxed">
+              <p className="text-zinc-500 text-base mt-3 max-w-lg leading-relaxed">
                 Track filings, respond to queries, and view your financial insights — all in one place.
               </p>
             </div>
@@ -93,10 +93,10 @@ export default async function ClientPortalDashboard() {
           <Link href="/portal/calendar" className="tff-card p-5 flex items-center gap-4 hover:border-teal-300 transition-colors">
             <ProgressRing progress={complianceScore} size={64} strokeWidth={6} color="#0D9488" />
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold uppercase tracking-widest text-stone-400">Compliance</div>
-              <div className="text-lg font-bold text-stone-900 mt-0.5">{complianceScore}%</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Compliance</div>
+              <div className="text-lg font-bold text-zinc-900 mt-0.5">{complianceScore}%</div>
               {complianceBreakdown && (
-                <div className="text-[10px] text-stone-400 mt-1 leading-tight">
+                <div className="text-[10px] text-zinc-400 mt-1 leading-tight">
                   GST {complianceBreakdown.gst.score}% · TDS {complianceBreakdown.tds.score}% · IT {complianceBreakdown.it.score}%
                 </div>
               )}
@@ -108,9 +108,9 @@ export default async function ClientPortalDashboard() {
               <div className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center">
                 <Clock className="h-4 w-4 text-amber-600" />
               </div>
-              <span className="text-xs font-semibold uppercase tracking-widest text-stone-400">Awaiting you</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Awaiting you</span>
             </div>
-            <div className="mt-2 text-3xl font-bold tabular-nums text-stone-900">{awaitingYou.length}</div>
+            <div className="mt-2 text-3xl font-bold tabular-nums text-zinc-900">{awaitingYou.length}</div>
           </div>
 
           <div className="tff-card p-5">
@@ -118,9 +118,9 @@ export default async function ClientPortalDashboard() {
               <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center">
                 <MessageSquare className="h-4 w-4 text-blue-600" />
               </div>
-              <span className="text-xs font-semibold uppercase tracking-widest text-stone-400">Open queries</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Open queries</span>
             </div>
-            <div className="mt-2 text-3xl font-bold tabular-nums text-stone-900">{openQueries.length}</div>
+            <div className="mt-2 text-3xl font-bold tabular-nums text-zinc-900">{openQueries.length}</div>
           </div>
 
           <div className="tff-card p-5">
@@ -128,9 +128,9 @@ export default async function ClientPortalDashboard() {
               <div className="h-8 w-8 rounded-lg bg-rose-50 flex items-center justify-center">
                 <Bell className="h-4 w-4 text-rose-600" />
               </div>
-              <span className="text-xs font-semibold uppercase tracking-widest text-stone-400">Notices</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Notices</span>
             </div>
-            <div className="mt-2 text-3xl font-bold tabular-nums text-stone-900">{openNotices.length}</div>
+            <div className="mt-2 text-3xl font-bold tabular-nums text-zinc-900">{openNotices.length}</div>
           </div>
         </div>
       </StaggerItem>
@@ -149,8 +149,8 @@ export default async function ClientPortalDashboard() {
           <div className="tff-card tff-card-pad">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-base font-semibold text-stone-900 tracking-tight">Action required</h2>
-                <p className="text-base text-stone-500 mt-1">Tasks waiting for your input</p>
+                <h2 className="text-base font-semibold text-zinc-900 tracking-tight">Action required</h2>
+                <p className="text-base text-zinc-500 mt-1">Tasks waiting for your input</p>
               </div>
               <Link href="/portal/tasks" className="text-sm text-teal-700 hover:underline font-medium inline-flex items-center gap-1">
                 All <ArrowRight className="h-4 w-4" />
@@ -160,8 +160,8 @@ export default async function ClientPortalDashboard() {
             {awaitingYou.length === 0 ? (
               <div className="tff-empty p-12">
                 <CheckCircle2 className="h-10 w-10 text-teal-400 mx-auto mb-3" />
-                <p className="text-base font-medium text-stone-700">Nothing waiting on you</p>
-                <p className="text-sm text-stone-500 mt-1">We will notify you when something needs your attention.</p>
+                <p className="text-base font-medium text-zinc-700">Nothing waiting on you</p>
+                <p className="text-sm text-zinc-500 mt-1">We will notify you when something needs your attention.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -169,17 +169,17 @@ export default async function ClientPortalDashboard() {
                   <Link
                     key={t.id}
                     href={`/portal/tasks/${t.id}`}
-                    className="group flex items-center gap-4 rounded-xl border border-stone-100 p-4 hover:border-teal-200 hover:bg-teal-50/20 transition-all"
+                    className="group flex items-center gap-4 rounded-xl border border-zinc-100 p-4 hover:border-teal-200 hover:bg-teal-50/20 transition-all"
                   >
                     <div className="h-11 w-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
                       <Briefcase className="h-5 w-5 text-amber-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[15px] font-semibold text-stone-900 truncate group-hover:text-teal-700 transition-colors">{t.title}</div>
-                      <div className="text-sm text-stone-500 mt-0.5">{t.clients?.business_name} · due {t.due_date ? timeAgo(t.due_date).replace(' ago', '') : '—'}</div>
+                      <div className="text-[15px] font-semibold text-zinc-900 truncate group-hover:text-teal-700 transition-colors">{t.title}</div>
+                      <div className="text-sm text-zinc-500 mt-0.5">{t.clients?.business_name} · due {t.due_date ? timeAgo(t.due_date).replace(' ago', '') : '—'}</div>
                     </div>
                     <Badge variant="warning" className="shrink-0">Needs action</Badge>
-                    <ArrowRight className="h-4 w-4 text-stone-300 group-hover:text-teal-500 transition-colors shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-teal-500 transition-colors shrink-0" />
                   </Link>
                 ))}
               </div>
@@ -195,8 +195,8 @@ export default async function ClientPortalDashboard() {
               <div className="tff-card tff-card-pad">
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <h2 className="text-base font-semibold text-stone-900 tracking-tight">Notices</h2>
-                    <p className="text-base text-stone-500 mt-1">From tax authorities</p>
+                    <h2 className="text-base font-semibold text-zinc-900 tracking-tight">Notices</h2>
+                    <p className="text-base text-zinc-500 mt-1">From tax authorities</p>
                   </div>
                   <Link href="/portal/notices" className="text-sm text-teal-700 hover:underline font-medium">View all</Link>
                 </div>
@@ -205,14 +205,14 @@ export default async function ClientPortalDashboard() {
                     <Link
                       key={n.id}
                       href={`/portal/notices`}
-                      className="group flex items-center gap-4 rounded-xl border border-stone-100 p-4 hover:border-rose-200 hover:bg-rose-50/20 transition-all"
+                      className="group flex items-center gap-4 rounded-xl border border-zinc-100 p-4 hover:border-rose-200 hover:bg-rose-50/20 transition-all"
                     >
                       <div className="h-11 w-11 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0">
                         <Bell className="h-5 w-5 text-rose-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[15px] font-semibold text-stone-900 truncate group-hover:text-rose-700 transition-colors">{n.subject ?? n.notice_type}</div>
-                        <div className="text-sm text-stone-500 mt-0.5">{n.clients?.business_name}</div>
+                        <div className="text-[15px] font-semibold text-zinc-900 truncate group-hover:text-rose-700 transition-colors">{n.subject ?? n.notice_type}</div>
+                        <div className="text-sm text-zinc-500 mt-0.5">{n.clients?.business_name}</div>
                       </div>
                       <Badge variant="danger" className="shrink-0">Open</Badge>
                     </Link>
@@ -228,8 +228,8 @@ export default async function ClientPortalDashboard() {
               <div className="tff-card tff-card-pad">
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <h2 className="text-base font-semibold text-stone-900 tracking-tight">Your queries</h2>
-                    <p className="text-base text-stone-500 mt-1">Questions you have raised</p>
+                    <h2 className="text-base font-semibold text-zinc-900 tracking-tight">Your queries</h2>
+                    <p className="text-base text-zinc-500 mt-1">Questions you have raised</p>
                   </div>
                   <Link href="/portal/queries" className="text-sm text-teal-700 hover:underline font-medium">View all</Link>
                 </div>
@@ -238,14 +238,14 @@ export default async function ClientPortalDashboard() {
                     <Link
                       key={q.id}
                       href={`/portal/queries/${q.id}`}
-                      className="group flex items-center gap-4 rounded-xl border border-stone-100 p-4 hover:border-blue-200 hover:bg-blue-50/20 transition-all"
+                      className="group flex items-center gap-4 rounded-xl border border-zinc-100 p-4 hover:border-blue-200 hover:bg-blue-50/20 transition-all"
                     >
                       <div className="h-11 w-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
                         <MessageSquare className="h-5 w-5 text-blue-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[15px] font-semibold text-stone-900 truncate group-hover:text-blue-700 transition-colors">{q.subject}</div>
-                        <div className="text-sm text-stone-500 mt-0.5">{timeAgo(q.created_at)}</div>
+                        <div className="text-[15px] font-semibold text-zinc-900 truncate group-hover:text-blue-700 transition-colors">{q.subject}</div>
+                        <div className="text-sm text-zinc-500 mt-0.5">{timeAgo(q.created_at)}</div>
                       </div>
                       <Badge variant="outline" className="shrink-0">{q.status}</Badge>
                     </Link>

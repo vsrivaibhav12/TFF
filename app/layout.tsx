@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           richColors
           closeButton
           toastOptions={{
-            className: 'border-stone-200 rounded-xl shadow-lg',
+            className: 'border-zinc-200 rounded-xl shadow-lg',
           }}
         />
       </body>

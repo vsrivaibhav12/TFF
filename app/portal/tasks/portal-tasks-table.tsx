@@ -54,7 +54,7 @@ export default function PortalTasksTable({ tasks }: { tasks: PortalTask[] }) {
   }
 
   function SortIcon({ col }: { col: string }) {
-    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 text-stone-300" />;
+    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 text-zinc-300" />;
     return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 text-teal-600" /> : <ArrowDown className="h-3 w-3 text-teal-600" />;
   }
 
@@ -63,7 +63,7 @@ export default function PortalTasksTable({ tasks }: { tasks: PortalTask[] }) {
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-stone-50/50">
+            <TableRow className="hover:bg-zinc-50/50">
               <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('title')}>
                 <span className="flex items-center gap-1">Task <SortIcon col="title" /></span>
               </TableHead>
@@ -84,15 +84,15 @@ export default function PortalTasksTable({ tasks }: { tasks: PortalTask[] }) {
                   <TableCell>
                     <Link
                       href={`/portal/tasks/${t.id}`}
-                      className="font-medium text-stone-900 hover:text-teal-700 transition-colors"
+                      className="font-medium text-zinc-900 hover:text-teal-700 transition-colors"
                     >
                       {t.title}
                     </Link>
                     {t.clients?.business_name && (
-                      <div className="text-xs text-stone-500 mt-0.5">{t.clients.business_name}</div>
+                      <div className="text-xs text-zinc-500 mt-0.5">{t.clients.business_name}</div>
                     )}
                   </TableCell>
-                  <TableCell className="text-stone-600">{formatDateIST(t.due_date)}</TableCell>
+                  <TableCell className="text-zinc-600">{formatDateIST(t.due_date)}</TableCell>
                   <TableCell>
                     <Badge
                       variant={CLIENT_VISIBLE_VARIANTS[cs] as any}
@@ -102,7 +102,7 @@ export default function PortalTasksTable({ tasks }: { tasks: PortalTask[] }) {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <ArrowRight className="h-4 w-4 text-stone-300" />
+                    <ArrowRight className="h-4 w-4 text-zinc-300" />
                   </TableCell>
                 </TableRow>
               );
