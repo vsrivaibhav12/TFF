@@ -1,6 +1,8 @@
 import { requireRole } from '@/lib/auth/require-role';
 import AppShell from '@/components/shell/app-shell';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * /account/* is reachable from any role.
  * Sidebar nav is intentionally minimal - this section is preferences-only.
