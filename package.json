@@ -32,12 +32,16 @@
     "db:seed-super-admins": "tsx scripts/seed-super-admins.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-checkbox": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-hover-card": "^1.1.16",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-popover": "^1.1.1",
     "@radix-ui/react-select": "^2.1.1",
@@ -77,7 +81,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^16.2.6",
+    "@next/bundle-analyzer": "^14.2.35",
     "@playwright/test": "^1.60.0",
     "@types/node": "^20",
     "@types/pg": "^8.11.10",
@@ -85,6 +89,8 @@
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.20",
     "dotenv": "^16.6.1",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
     "pg": "^8.13.0",
     "playwright": "^1.60.0",
     "postcss": "^8.4.47",
