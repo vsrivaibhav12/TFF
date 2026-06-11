@@ -33,6 +33,17 @@ export function formatDateIST(d: string | Date | null | undefined): string {
   }).format(date);
 }
 
+export function formatTimeIST(d: string | Date | null | undefined): string {
+  if (!d) return '—';
+  const date = typeof d === 'string' ? new Date(d) : d;
+  return new Intl.DateTimeFormat('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata',
+  }).format(date);
+}
+
 export function timeAgo(d: string | Date | null | undefined): string {
   if (!d) return '—';
   const date = typeof d === 'string' ? new Date(d) : d;
@@ -76,6 +87,15 @@ export function timeAgo(d: string | Date | null | undefined): string {
  * Returns today's date in IST as YYYY-MM-DD string.
  * Fixes the UTC-vs-IST bug: between 00:00–05:29 IST, UTC is still the previous day.
  */
+export function dueLabel(due?: string | null): string {
+  if (!due) return 'No due date';
+  const diff = Math.ceil((new Date(due).getTime() - Date.now()) / 86_400_000);
+  if (diff < 0) return 'Overdue';
+  if (diff === 0) return 'Due today';
+  if (diff === 1) return 'Due tomorrow';
+  return `Due in ${diff} days`;
+}
+
 export function todayIST(): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Kolkata',
@@ -104,4 +124,37 @@ export function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+export const GSTIN_STATE_MAP = { "01": "Jammu and Kashmir", "02": "Himachal Pradesh", "03": "Punjab", "04": "Chandigarh", "05": "Uttarakhand", "06": "Haryana", "07": "Delhi", "08": "Rajasthan", "09": "Uttar Pradesh", "10": "Bihar", "11": "Sikkim", "12": "AR", "13": "NL", "14": "MZ", "15": "TR", "16": "ML", "17": "AS", "18": "WB", "19": "JH", "20": "OR", "21": "CG", "22": "MP", "23": "UP", "24": "GJ", "26": "DD", "27": "MH", "28": "AP", "29": "KA", "30": "GA", "31": "LD", "32": "KL", "33": "TN", "34": "PY", "35": "AN", "36": "TG", "37": "AP", "38": "LA", "97": "OT" };
+export function deriveStateFromGstin(gstin: string): string | undefined { const code = gstin?.trim()?.substring(0, 2); return (GSTIN_STATE_MAP as Record<string, string>)[code]; }
+
+/**
+ * Uniform task title generator used across ALL task creation paths.
+ * Format: {SubService} — {Client} — {Period}
+ * Period: MM/YYYY | Q{quarter} {year} | {year}
+ */
+export function buildTaskTitle(opts: {
+  subServiceName: string;
+  clientName?: string;
+  periodYear?: number | null;
+  periodMonth?: number | null;
+  periodQuarter?: number | null;
+}): string {
+  const parts: string[] = [opts.subServiceName];
+  if (opts.clientName) parts.push(opts.clientName);
+
+  const periodParts: string[] = [];
+  if (opts.periodYear) {
+    if (opts.periodMonth) {
+      periodParts.push(`${opts.periodMonth}/${opts.periodYear}`);
+    } else if (opts.periodQuarter) {
+      periodParts.push(`Q${opts.periodQuarter} ${opts.periodYear}`);
+    } else {
+      periodParts.push(String(opts.periodYear));
+    }
+  }
+  if (periodParts.length > 0) parts.push(periodParts.join(' — '));
+
+  return parts.join(' — ');
 }

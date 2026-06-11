@@ -11,7 +11,7 @@ const upsertSchema = z.object({
   period_month: z.number().int().min(1).max(12),
   period_year: z.number().int().min(2000).max(2100),
   months_covered: z.number().int().min(1).max(12).default(12),
-  data: z.record(z.any()),
+  data_json: z.record(z.any()),
 });
 
 export async function upsertBizlensSnapshotAction(

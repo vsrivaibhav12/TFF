@@ -227,6 +227,6 @@ h1, h2, h3, h4, h5, h6 {
   .conic-border::before { animation: none !important; }
 }
 
-.tff-card { background: #ffffff; border-radius: 0.75rem; box-shadow: 0 2px 8px -2px rgba(28,25,23,0.03), 0 1px 3px rgba(28,25,23,0.02); transition: box-shadow 200ms ease; border: none; }
-.tff-card:hover { box-shadow: 0 8px 24px -4px rgba(28,25,23,0.06); }
+.tff-card { background: #ffffff; border-radius: 0.75rem; border: 1px solid #E4E4E7; transition: border-color 200ms ease; }
+.tff-card:hover { border-color: #D4D4D8; }
 .tff-card-pad { padding: 1.5rem; }

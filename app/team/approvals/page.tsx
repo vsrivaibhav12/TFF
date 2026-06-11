@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { hasCapability } from '@/lib/auth/require-capability';
 import { listLeaveRequests } from '@/lib/repositories/leave';
 import { listPermissionRequests } from '@/lib/repositories/permission';
 import { getDirectReports, hasDirectReports } from '@/lib/repositories/staff';
@@ -11,6 +12,19 @@ export const dynamic = 'force-dynamic';
 
 export default async function TeamApprovalsPage() {
   const me = await requireRole(['admin', 'team']);
+  const canApproveAny = await Promise.all([
+    hasCapability(me, 'attendance.approve'),
+    hasCapability(me, 'leave.approve'),
+    hasCapability(me, 'permission.approve'),
+  ]).then((arr) => arr.some(Boolean));
+  if (!canApproveAny && me.role !== 'admin') {
+    return (
+      <div className="space-y-6">
+        <h1 className="tff-page-title">Approvals</h1>
+        <p className="text-zinc-500">You do not have approval authority.</p>
+      </div>
+    );
+  }
   const isAdmin = me.role === 'admin';
   const isManager = await hasDirectReports(me.id);
 

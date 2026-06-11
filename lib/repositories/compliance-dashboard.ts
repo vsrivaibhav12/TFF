@@ -33,6 +33,7 @@ export async function loadComplianceDashboard(opts: {
   const { data: events } = await sb
     .from('compliance_calendar_events')
     .select('id, rule_id, rule_code, period_label, due_date, status, task_id, compliance_calendar_rules(display_name, service_kind), tasks(status, is_stuck)')
+    .eq('is_deleted', false)
     .gte('due_date', fromIso)
     .lte('due_date', toIso);
 

@@ -1,7 +1,7 @@
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
-import BulkTaskForm from './bulk-task-form';
+import BulkTaskForm from '@/components/tasks/bulk-task-form';
 import BackButton from '@/components/sophistication/back-button';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 
@@ -54,6 +54,7 @@ export default async function BulkTaskCreatePage({ searchParams }: { searchParam
         groups={groups ?? []}
         templates={templates ?? []}
         initialSubServiceId={searchParams.sub_service_id}
+        subServiceName={subServiceName}
       />
     </div>
   );

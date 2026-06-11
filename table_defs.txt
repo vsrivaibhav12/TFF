@@ -1,0 +1,1447 @@
+40: CREATE TABLE users_profile (
+41:   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+42:   
+43:   full_name TEXT NOT NULL,
+44:   email TEXT NOT NULL UNIQUE,
+45:   phone_number TEXT,
+46:   
+47:   role TEXT NOT NULL CHECK (role IN ('admin', 'team', 'client')),
+48:   
+49:   job_title TEXT,
+50:   department TEXT,
+51:   
+52:   is_active BOOLEAN DEFAULT TRUE,
+53:   is_verified BOOLEAN DEFAULT FALSE,
+54:   
+55:   reports_to UUID REFERENCES users_profile(id),
+56:   
+57:   created_at TIMESTAMP DEFAULT NOW(),
+58:   updated_at TIMESTAMP DEFAULT NOW(),
+59:   last_login TIMESTAMP,
+60:   is_deleted BOOLEAN DEFAULT FALSE,
+61:   deleted_at TIMESTAMP,
+62:   deleted_by UUID
+63: );
+72: CREATE TABLE client_groups (
+73:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+74:   name TEXT NOT NULL UNIQUE,
+75:   description TEXT,
+76:   created_at TIMESTAMP DEFAULT NOW(),
+77:   is_deleted BOOLEAN DEFAULT FALSE
+78: );
+80: CREATE TABLE clients (
+81:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+82:   
+83:   business_name TEXT NOT NULL,
+84:   business_registration_number TEXT,
+85:   
+86:   pan TEXT UNIQUE,
+87:   gstin TEXT,
+88:   
+89:   category TEXT CHECK (category IN (
+90:     'sole_proprietor', 'partnership', 'llp', 'pvt_ltd', 'public_ltd', 'huf', 'aop', 'ngo', 'other'
+91:   )),
+92:   residential_status TEXT CHECK (residential_status IN ('resident', 'non_resident')),
+93:   industry TEXT,
+94:   
+95:   primary_contact_person TEXT,
+96:   primary_contact_email TEXT,
+97:   primary_contact_phone TEXT,
+98:   
+99:   address_line_1 TEXT,
+100:   address_line_2 TEXT,
+101:   city TEXT,
+102:   state TEXT,
+103:   pincode TEXT,
+104:   
+105:   group_id UUID REFERENCES client_groups(id),
+106:   
+107:   portal_enabled BOOLEAN DEFAULT FALSE,
+108:   portal_access_level TEXT DEFAULT 'restricted',
+109:   
+110:   priority_tier TEXT CHECK (priority_tier IN ('standard', 'premium', 'strategic')) DEFAULT 'standard',
+111:   lifecycle_stage TEXT CHECK (lifecycle_stage IN (
+112:     'lead', 'caas_only', 'caas_bizlens', 'caas_vcfo', 'caas_bizlens_vcfo', 'full_suite', 'churn'
+113:   )) DEFAULT 'lead',
+114:   
+115:   primary_owner_id UUID REFERENCES users_profile(id),
+116:   
+117:   start_date DATE,
+118:   contract_value_annual NUMERIC(12, 2),
+119:   contract_renewal_date DATE,
+120:   
+121:   created_at TIMESTAMP DEFAULT NOW(),
+122:   updated_at TIMESTAMP DEFAULT NOW(),
+123:   notes TEXT,
+124:   is_deleted BOOLEAN DEFAULT FALSE,
+125:   deleted_at TIMESTAMP,
+126:   deleted_by UUID
+127: );
+134: CREATE TABLE client_users (
+135:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+136:   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+137:   user_id UUID NOT NULL REFERENCES users_profile(id) ON DELETE CASCADE,
+138:   
+139:   role_in_client TEXT CHECK (role_in_client IN ('owner', 'accountant', 'manager', 'other')),
+140:   
+141:   is_active BOOLEAN DEFAULT TRUE,
+142:   
+143:   created_at TIMESTAMP DEFAULT NOW(),
+144:   updated_at TIMESTAMP DEFAULT NOW(),
+145:   is_deleted BOOLEAN DEFAULT FALSE
+146: );
+151: CREATE TABLE team_client_assignment (
+152:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+153:   team_user_id UUID NOT NULL REFERENCES users_profile(id),
+154:   client_id UUID NOT NULL REFERENCES clients(id),
+155:   
+156:   role TEXT CHECK (role IN ('lead', 'support', 'reviewer')) DEFAULT 'lead',
+157:   
+158:   assigned_from DATE NOT NULL,
+159:   assigned_to DATE,
+160:   
+161:   created_at TIMESTAMP DEFAULT NOW(),
+162:   updated_at TIMESTAMP DEFAULT NOW()
+163: );
+186: CREATE TABLE service_categories (
+187:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+188:   name TEXT NOT NULL UNIQUE,
+189:   description TEXT,
+190:   display_order INT,
+191:   created_at TIMESTAMP DEFAULT NOW(),
+192:   updated_at TIMESTAMP DEFAULT NOW(),
+193:   is_deleted BOOLEAN DEFAULT FALSE
+194: );
+203: CREATE TABLE services (
+204:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+205:   category_id UUID NOT NULL REFERENCES service_categories(id),
+206:   name TEXT NOT NULL,
+207:   code TEXT UNIQUE,
+208:   description TEXT,
+209:   icon_url TEXT,
+210:   display_order INT,
+211:   created_at TIMESTAMP DEFAULT NOW(),
+212:   updated_at TIMESTAMP DEFAULT NOW(),
+213:   is_deleted BOOLEAN DEFAULT FALSE
+214: );
+226: CREATE TABLE sub_services (
+227:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+228:   service_id UUID NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+229:   name TEXT NOT NULL,
+230:   code TEXT,
+231:   description TEXT,
+232:   
+233:   frequency TEXT CHECK (frequency IN ('monthly', 'quarterly', 'annually', 'on_demand')),
+234:   
+235:   due_day_of_month INT CHECK (due_day_of_month BETWEEN 1 AND 31),
+236:   due_day_of_quarter INT,
+237:   due_month INT,
+238:   
+239:   is_billable BOOLEAN DEFAULT TRUE,
+240:   is_recurring BOOLEAN DEFAULT TRUE,
+241:   requires_client_input BOOLEAN DEFAULT TRUE,
+242:   
+243:   is_active BOOLEAN DEFAULT TRUE,
+244:   
+245:   created_at TIMESTAMP DEFAULT NOW(),
+246:   updated_at TIMESTAMP DEFAULT NOW(),
+247:   is_deleted BOOLEAN DEFAULT FALSE
+248: );
+272: CREATE TABLE client_services (
+273:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+274:   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+275:   service_id UUID NOT NULL REFERENCES services(id),
+276:   service_head_id UUID REFERENCES users_profile(id),
+277:   
+278:   access_level TEXT CHECK (access_level IN ('full', 'limited', 'view_only')) DEFAULT 'limited',
+279:   
+280:   start_date DATE NOT NULL,
+281:   end_date DATE,
+282:   fee_amount DECIMAL(12,2),
+283: 
+284:   is_active BOOLEAN DEFAULT TRUE,
+285:   
+286:   created_at TIMESTAMP DEFAULT NOW(),
+287:   updated_at TIMESTAMP DEFAULT NOW(),
+288:   
+289:   UNIQUE(client_id, service_id)
+290: );
+297: CREATE TABLE client_sub_services (
+298:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+299:   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+300:   sub_service_id UUID REFERENCES sub_services(id),
+301:   
+302:   access_level TEXT CHECK (access_level IN ('full', 'view_only')),
+303:   
+304:   fee_amount DECIMAL(12,2),
+305: 
+306:   is_active BOOLEAN DEFAULT TRUE,
+307:   
+308:   created_at TIMESTAMP DEFAULT NOW(),
+309:   updated_at TIMESTAMP DEFAULT NOW(),
+310:   
+311:   UNIQUE(client_id, sub_service_id)
+312: );
+318: CREATE TABLE client_feature_flags (
+319:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+320:   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+321:   sub_service_id UUID REFERENCES sub_services(id),
+322:   
+323:   feature_key TEXT NOT NULL,
+324:   feature_enabled BOOLEAN DEFAULT FALSE,
+325:   
+326:   created_at TIMESTAMP DEFAULT NOW(),
+327:   updated_at TIMESTAMP DEFAULT NOW(),
+328:   
+329:   UNIQUE(client_id, sub_service_id, feature_key)
+330: );
+339: CREATE TABLE task_templates (
+340:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+341:   sub_service_id UUID NOT NULL REFERENCES sub_services(id),
+342:   
+343:   title TEXT NOT NULL,
+344:   description TEXT,
+345:   
+346:   frequency TEXT NOT NULL CHECK (frequency IN ('monthly', 'quarterly', 'annually', 'on_demand')),
+347:   due_day_of_month INT,
+348:   due_day_of_quarter INT,
+349:   due_month INT,
+350:   
+351:   default_assignee_id UUID REFERENCES users_profile(id),
+352:   default_reviewer_id UUID REFERENCES users_profile(id),
+353:   
+354:   sop_steps JSONB DEFAULT '[]',
+355:   
+356:   is_active BOOLEAN DEFAULT TRUE,
+357:   
+358:   created_at TIMESTAMP DEFAULT NOW(),
+359:   updated_at TIMESTAMP DEFAULT NOW(),
+360:   is_deleted BOOLEAN DEFAULT FALSE
+361: );
+365: CREATE TABLE tasks (
+366:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+367:   
+368:   client_id UUID NOT NULL REFERENCES clients(id),
+369:   sub_service_id UUID NOT NULL REFERENCES sub_services(id),
+370:   task_template_id UUID REFERENCES task_templates(id),
+371:   
+372:   title TEXT NOT NULL,
+373:   description TEXT,
+374:   
+375:   assigned_to UUID REFERENCES users_profile(id),
+376:   reviewer_id UUID REFERENCES users_profile(id),
+377:   
+378:   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN (
+379:     'pending',
+380:     'awaiting_client',
+381:     'in_progress',
+382:     'review',
+383:     'completed'
+384:   )),
+385:   
+386:   priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+387:   
+388:   created_date DATE DEFAULT CURRENT_DATE,
+389:   due_date DATE NOT NULL,
+390:   started_date DATE,
+391:   completed_date DATE,
+392:   
+393:   period_month INT CHECK (period_month BETWEEN 1 AND 12),
+394:   period_year INT,
+395:   period_quarter INT CHECK (period_quarter BETWEEN 1 AND 4),
+396:   
+397:   task_number TEXT UNIQUE,
+398:   is_billable BOOLEAN DEFAULT FALSE,
+399:   bill_reference TEXT,
+400:   
+401:   is_recurring BOOLEAN DEFAULT FALSE,
+402: 
+403:   bill_amount DECIMAL(12,2),
+404:   billed BOOLEAN DEFAULT FALSE,
+405:   billed_date DATE,
+406: 
+407:   arn_reference TEXT,
+408:   is_arn_client_visible BOOLEAN DEFAULT FALSE,
+409: 
+410:   is_verified BOOLEAN DEFAULT FALSE,
+411: 
+412:   created_at TIMESTAMP DEFAULT NOW(),
+413:   updated_at TIMESTAMP DEFAULT NOW(),
+414:   is_deleted BOOLEAN DEFAULT FALSE,
+415:   deleted_at TIMESTAMP,
+416:   deleted_by UUID
+417: );
+438: CREATE TABLE task_document_requests (
+439:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+440:   task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+441:   
+442:   document_type TEXT NOT NULL,
+443:   description TEXT,
+444:   
+445:   is_received BOOLEAN DEFAULT FALSE,
+446:   received_date DATE,
+447:   received_from UUID REFERENCES users_profile(id),
+448:   
+449:   related_document_id UUID,
+450:   
+451:   date_requested DATE DEFAULT CURRENT_DATE,
+452:   reminder_count INT DEFAULT 0,
+453:   last_reminder_date DATE,
+454:   
+455:   created_at TIMESTAMP DEFAULT NOW(),
+456:   updated_at TIMESTAMP DEFAULT NOW()
+457: );
+462: CREATE TABLE task_activity (
+463:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+464:   task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+465:   
+466:   action TEXT NOT NULL,
+467:   field_name TEXT,
+468:   old_value TEXT,
+469:   new_value TEXT,
+470:   
+471:   changed_by UUID REFERENCES users_profile(id),
+472:   
+473:   created_at TIMESTAMP DEFAULT NOW()
+474: );
+479: CREATE TABLE task_notes (
+480:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+481:   task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+482:   
+483:   note_text TEXT NOT NULL,
+484:   created_by UUID NOT NULL REFERENCES users_profile(id),
+485:   created_at TIMESTAMP DEFAULT NOW(),
+486:   updated_at TIMESTAMP DEFAULT NOW(),
+487:   
+488:   is_deleted BOOLEAN DEFAULT FALSE
+489: );
+497: CREATE TABLE gst_filings (
+498:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+499:   client_id UUID NOT NULL REFERENCES clients(id),
+500:   
+501:   period_month INT NOT NULL CHECK (period_month BETWEEN 1 AND 12),
+502:   period_year INT NOT NULL,
+503:   
+504:   return_type TEXT NOT NULL CHECK (return_type IN ('GSTR-1', 'GSTR-3B', 'GSTR-9')),
+505:   
+506:   status TEXT NOT NULL DEFAULT 'not_started' CHECK (status IN (
+507:     'not_started', 'data_received', 'in_progress', 'review', 'filed'
+508:   )),
+509:   filed_date DATE,
+510:   ack_number TEXT,
+511:   
+512:   taxable_turnover NUMERIC(14, 2),
+513:   
+514:   output_cgst NUMERIC(14, 2),
+515:   output_sgst NUMERIC(14, 2),
+516:   output_igst NUMERIC(14, 2),
+517:   output_cess NUMERIC(14, 2),
+518:   output_tax_total NUMERIC(14, 2),
+519:   
+520:   itc_available_2b NUMERIC(14, 2),
+521:   itc_claimed NUMERIC(14, 2),
+522:   itc_reversed NUMERIC(14, 2),
+523:   
+524:   net_tax_payable NUMERIC(14, 2),
+525:   late_fee NUMERIC(14, 2),
+526:   interest_amount NUMERIC(14, 2),
+527:   
+528:   data_entered_by UUID REFERENCES users_profile(id),
+529:   data_entered_date TIMESTAMP,
+530:   filed_by UUID REFERENCES users_profile(id),
+531:   
+532:   is_current BOOLEAN DEFAULT TRUE,
+533:   superseded_by UUID REFERENCES gst_filings(id),
+534:   change_reason TEXT,
+535:   
+536:   created_at TIMESTAMP DEFAULT NOW(),
+537:   updated_at TIMESTAMP DEFAULT NOW(),
+538:   
+539:   UNIQUE(client_id, period_month, period_year, is_current)
+540: );
+547: CREATE TABLE tds_filings (
+548:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+549:   client_id UUID NOT NULL REFERENCES clients(id),
+550:   
+551:   period_quarter INT NOT NULL CHECK (period_quarter BETWEEN 1 AND 4),
+552:   period_year INT NOT NULL,
+553:   
+554:   status TEXT NOT NULL DEFAULT 'not_started' CHECK (status IN (
+555:     'not_started', 'data_received', 'in_progress', 'review', 'filed'
+556:   )),
+557:   filed_date DATE,
+558:   ack_number TEXT,
+559:   
+560:   total_deductions NUMERIC(14, 2),
+561:   deductee_count INT,
+562:   
+563:   section_194j NUMERIC(14, 2),
+564:   section_194o NUMERIC(14, 2),
+565:   section_194la NUMERIC(14, 2),
+566:   other_sections JSONB DEFAULT '{}',
+567:   
+568:   tax_deposited NUMERIC(14, 2),
+569:   
+570:   data_entered_by UUID REFERENCES users_profile(id),
+571:   data_entered_date TIMESTAMP,
+572:   filed_by UUID REFERENCES users_profile(id),
+573:   
+574:   is_current BOOLEAN DEFAULT TRUE,
+575:   superseded_by UUID REFERENCES tds_filings(id),
+576:   change_reason TEXT,
+577:   
+578:   created_at TIMESTAMP DEFAULT NOW(),
+579:   updated_at TIMESTAMP DEFAULT NOW(),
+580:   
+581:   UNIQUE(client_id, period_quarter, period_year, is_current)
+582: );
+586: CREATE TABLE it_filings (
+587:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+588:   client_id UUID NOT NULL REFERENCES clients(id),
+589:   
+590:   fy_ending_year INT NOT NULL,
+591:   
+592:   status TEXT NOT NULL DEFAULT 'not_started' CHECK (status IN (
+593:     'not_started', 'data_received', 'in_progress', 'review', 'filed'
+594:   )),
+595:   filed_date DATE,
+596:   ack_number TEXT,
+597:   
+598:   gross_income NUMERIC(14, 2),
+599:   deductions_claimed NUMERIC(14, 2),
+600:   taxable_income NUMERIC(14, 2),
+601:   tax_liability NUMERIC(14, 2),
+602:   refund_amount NUMERIC(14, 2),
+603:   
+604:   data_entered_by UUID REFERENCES users_profile(id),
+605:   data_entered_date TIMESTAMP,
+606:   filed_by UUID REFERENCES users_profile(id),
+607:   
+608:   is_current BOOLEAN DEFAULT TRUE,
+609:   superseded_by UUID REFERENCES it_filings(id),
+610:   change_reason TEXT,
+611:   
+612:   created_at TIMESTAMP DEFAULT NOW(),
+613:   updated_at TIMESTAMP DEFAULT NOW(),
+614:   
+615:   UNIQUE(client_id, fy_ending_year, is_current)
+616: );
+620: CREATE TABLE compliance_status (
+621:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+622:   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+623:   
+624:   filing_type TEXT NOT NULL,
+625:   period_identifier TEXT,
+626:   
+627:   status TEXT NOT NULL,
+628:   due_date DATE,
+629:   filed_date DATE,
+630:   ack_number TEXT,
+631:   
+632:   days_to_deadline INT GENERATED ALWAYS AS (
+633:     EXTRACT(DAY FROM (due_date - CURRENT_DATE))::INT
+634:   ) STORED,
+635:   
+636:   is_overdue BOOLEAN GENERATED ALWAYS AS (
+637:     CURRENT_DATE > due_date AND status != 'filed'
+638:   ) STORED,
+639:   
+640:   updated_at TIMESTAMP DEFAULT NOW(),
+641:   
+642:   UNIQUE(client_id, filing_type, period_identifier)
+643: );
+648: CREATE TABLE notices (
+649:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+650:   client_id UUID NOT NULL REFERENCES clients(id),
+651:   
+652:   notice_type TEXT NOT NULL CHECK (notice_type IN ('GST', 'Income Tax', 'TDS', 'Other')),
+653:   notice_number TEXT,
+654:   issuing_authority TEXT,
+655:   
+656:   notice_date DATE,
+657:   notice_received_date DATE,
+658:   due_date DATE,
+659:   
+660:   status TEXT NOT NULL DEFAULT 'received' CHECK (status IN (
+661:     'received', 'reply_pending', 'reply_submitted', 'hearing_pending', 'hearing_held', 'order_pending', 'order_received', 'closed'
+662:   )),
+663:   
+664:   amount_involved NUMERIC(14, 2),
+665:   subject TEXT,
+666:   description TEXT,
+667:   
+668:   assigned_to UUID REFERENCES users_profile(id),
+669:   
+670:   notice_document_id UUID,
+671:   reply_document_id UUID,
+672:   order_document_id UUID,
+673:   
+674:   created_at TIMESTAMP DEFAULT NOW(),
+675:   updated_at TIMESTAMP DEFAULT NOW(),
+676:   is_deleted BOOLEAN DEFAULT FALSE
+677: );
+687: CREATE TABLE gst_data_entries (
+688:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+689:   client_id UUID NOT NULL REFERENCES clients(id),
+690:   
+691:   period_month INT NOT NULL CHECK (period_month BETWEEN 1 AND 12),
+692:   period_year INT NOT NULL,
+693:   
+694:   entered_by UUID NOT NULL REFERENCES users_profile(id),
+695:   entered_at TIMESTAMP DEFAULT NOW(),
+696:   entry_source TEXT CHECK (entry_source IN ('manual', 'tally_import', 'pdf_upload', 'api')) DEFAULT 'manual',
+697:   
+698:   turnover NUMERIC(14, 2),
+699:   turnover_source TEXT,
+700:   turnover_confidence TEXT CHECK (turnover_confidence IN ('verified', 'estimated', 'provisional')) DEFAULT 'verified',
+701:   
+702:   output_tax_cgst NUMERIC(14, 2),
+703:   output_tax_sgst NUMERIC(14, 2),
+704:   output_tax_igst NUMERIC(14, 2),
+705:   
+706:   input_tax_2b NUMERIC(14, 2),
+707:   itc_books NUMERIC(14, 2),
+708:   cash_paid NUMERIC(14, 2),
+709:   
+710:   entry_notes TEXT,
+711:   
+712:   is_current BOOLEAN DEFAULT TRUE,
+713:   superseded_by UUID REFERENCES gst_data_entries(id),
+714:   change_reason TEXT,
+715:   
+716:   created_at TIMESTAMP DEFAULT NOW()
+717: );
+722: CREATE TABLE financial_data (
+723:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+724:   client_id UUID NOT NULL REFERENCES clients(id),
+725:   
+726:   data_type TEXT NOT NULL CHECK (data_type IN (
+727:     'profit_loss', 'balance_sheet', 'cash_flow', 'customer_metrics', 'supplier_metrics', 'asset_register'
+728:   )),
+729:   
+730:   period_month INT CHECK (period_month BETWEEN 1 AND 12),
+731:   period_year INT NOT NULL,
+732:   
+733:   data_json JSONB NOT NULL,
+734:   
+735:   entered_by UUID REFERENCES users_profile(id),
+736:   entered_at TIMESTAMP DEFAULT NOW(),
+737:   entry_source TEXT CHECK (entry_source IN ('manual', 'tally_import', 'api')),
+738:   
+739:   is_current BOOLEAN DEFAULT TRUE,
+740:   superseded_by UUID REFERENCES financial_data(id),
+741:   
+742:   created_at TIMESTAMP DEFAULT NOW()
+743: );
+752: CREATE TABLE documents (
+753:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+754:   client_id UUID NOT NULL REFERENCES clients(id),
+755:   
+756:   file_name TEXT NOT NULL,
+757:   file_url TEXT NOT NULL,
+758:   file_size INT,
+759:   file_type TEXT,
+760:   
+761:   document_category TEXT CHECK (document_category IN (
+762:     'GST', 'Income_Tax', 'TDS', 'ROC', 'Bank_Statement', 'Ledger', 'Register', 
+763:     'Payroll', 'Insurance', 'Audit', 'Legal', 'Other'
+764:   )),
+765:   document_period_month INT,
+766:   document_period_year INT,
+767:   
+768:   visible_to_client BOOLEAN DEFAULT TRUE,
+769:   visible_to_team BOOLEAN DEFAULT TRUE,
+770:   
+771:   uploaded_by UUID NOT NULL REFERENCES users_profile(id),
+772:   
+773:   description TEXT,
+774:   tags TEXT[] DEFAULT '{}',
+775:   
+776:   created_at TIMESTAMP DEFAULT NOW(),
+777:   updated_at TIMESTAMP DEFAULT NOW(),
+778:   is_deleted BOOLEAN DEFAULT FALSE,
+779:   deleted_at TIMESTAMP,
+780:   deleted_by UUID
+781: );
+786: CREATE TABLE inward_outward_register (
+787:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+788:   client_id UUID NOT NULL REFERENCES clients(id),
+789:   
+790:   direction TEXT NOT NULL CHECK (direction IN ('inward', 'outward')),
+791:   
+792:   description TEXT NOT NULL,
+793:   document_type TEXT,
+794:   quantity INT,
+795:   
+796:   date_received DATE,
+797:   date_returned DATE,
+798:   expected_return_date DATE,
+799:   
+800:   received_from_name TEXT,
+801:   received_from_contact TEXT,
+802:   handed_to_name TEXT,
+803:   handed_to_contact TEXT,
+804:   
+805:   condition TEXT,
+806:   notes TEXT,
+807:   
+808:   received_by UUID REFERENCES users_profile(id),
+809:   handed_by UUID REFERENCES users_profile(id),
+810:   
+811:   created_at TIMESTAMP DEFAULT NOW(),
+812:   updated_at TIMESTAMP DEFAULT NOW()
+813: );
+817: CREATE TABLE credentials (
+818:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+819:   client_id UUID NOT NULL REFERENCES clients(id),
+820:   
+821:   portal_name TEXT NOT NULL,
+822:   portal_url TEXT,
+823:   
+824:   username TEXT,
+825:   encrypted_password TEXT,
+826:   
+827:   security_question TEXT,
+828:   encrypted_security_answer TEXT,
+829:   
+830:   is_active BOOLEAN DEFAULT TRUE,
+831:   last_used_date DATE,
+832:   
+833:   created_at TIMESTAMP DEFAULT NOW(),
+834:   updated_at TIMESTAMP DEFAULT NOW(),
+835:   is_deleted BOOLEAN DEFAULT FALSE
+836: );
+840: CREATE TABLE dsc_records (
+841:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+842:   client_id UUID NOT NULL REFERENCES clients(id),
+843:   
+844:   holder_name TEXT NOT NULL,
+845:   holder_contact_email TEXT,
+846:   holder_phone TEXT,
+847:   
+848:   dsc_class TEXT NOT NULL CHECK (dsc_class IN ('Class 2', 'Class 3')),
+849:   dsc_type TEXT NOT NULL CHECK (dsc_type IN ('eSign', 'eToken')),
+850:   certificate_serial TEXT UNIQUE,
+851:   certificate_issuer TEXT,
+852:   
+853:   issued_date DATE,
+854:   expiry_date DATE NOT NULL,
+855:   
+856:   registered_portals TEXT[] DEFAULT '{}',
+857:   
+858:   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'revoked', 'suspended', 'expired')),
+859:   status_updated_at TIMESTAMP,
+860:   
+861:   encrypted_key_file BYTEA,
+862:   encrypted_pin TEXT,
+863:   encrypted_password TEXT,
+864:   
+865:   physical_location TEXT,
+866:   custodian_name TEXT,
+867:   custodian_phone TEXT,
+868:   
+869:   expiry_alert_sent BOOLEAN DEFAULT FALSE,
+870:   expiry_alert_sent_date DATE,
+871:   
+872:   created_at TIMESTAMP DEFAULT NOW(),
+873:   updated_at TIMESTAMP DEFAULT NOW(),
+874:   created_by UUID REFERENCES users_profile(id),
+875:   updated_by UUID REFERENCES users_profile(id),
+876:   
+877:   is_deleted BOOLEAN DEFAULT FALSE
+878: );
+887: CREATE TABLE vendors (
+888:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+889:   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+890:   
+891:   vendor_name TEXT NOT NULL,
+892:   vendor_gstin TEXT,
+893:   vendor_pan TEXT,
+894:   vendor_category TEXT CHECK (vendor_category IN ('Supplier', 'Service Provider', 'Contractor', 'Other')),
+895:   
+896:   contact_person TEXT,
+897:   contact_email TEXT,
+898:   contact_phone TEXT,
+899:   
+900:   address TEXT,
+901:   city TEXT,
+902:   state TEXT,
+903:   
+904:   created_at TIMESTAMP DEFAULT NOW(),
+905:   is_deleted BOOLEAN DEFAULT FALSE
+906: );
+910: CREATE TABLE vendor_gst_filings (
+911:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+912:   vendor_id UUID NOT NULL REFERENCES vendors(id),
+913:   client_id UUID NOT NULL REFERENCES clients(id),
+914:   
+915:   period_month INT NOT NULL CHECK (period_month BETWEEN 1 AND 12),
+916:   period_year INT NOT NULL,
+917:   
+918:   filed BOOLEAN DEFAULT FALSE,
+919:   filing_date DATE,
+920:   expected_filing_date DATE,
+921:   
+922:   gst_amount_involved NUMERIC(14, 2),
+923:   
+924:   created_at TIMESTAMP DEFAULT NOW(),
+925:   updated_at TIMESTAMP DEFAULT NOW()
+926: );
+934: CREATE TABLE queries (
+935:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+936:   client_id UUID NOT NULL REFERENCES clients(id),
+937:   task_id UUID REFERENCES tasks(id),
+938:   
+939:   subject TEXT NOT NULL,
+940:   description TEXT NOT NULL,
+941:   
+942:   status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved', 'closed')),
+943:   priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+944:   
+945:   created_by UUID NOT NULL REFERENCES users_profile(id),
+946:   assigned_to UUID REFERENCES users_profile(id),
+947:   
+948:   resolution_notes TEXT,
+949:   resolved_date TIMESTAMP,
+950:   
+951:   created_at TIMESTAMP DEFAULT NOW(),
+952:   updated_at TIMESTAMP DEFAULT NOW()
+953: );
+958: CREATE TABLE query_messages (
+959:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+960:   query_id UUID NOT NULL REFERENCES queries(id) ON DELETE CASCADE,
+961:   
+962:   message_text TEXT NOT NULL,
+963:   sender_id UUID NOT NULL REFERENCES users_profile(id),
+964:   
+965:   created_at TIMESTAMP DEFAULT NOW(),
+966:   is_deleted BOOLEAN DEFAULT FALSE
+967: );
+975: CREATE TABLE client_communication_log (
+976:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+977:   client_id UUID NOT NULL REFERENCES clients(id),
+978:   
+979:   communication_type TEXT NOT NULL CHECK (communication_type IN ('call', 'email', 'meeting', 'whatsapp', 'other')),
+980:   communication_date DATE NOT NULL,
+981:   
+982:   subject TEXT,
+983:   summary TEXT,
+984:   
+985:   from_user_id UUID REFERENCES users_profile(id),
+986:   to_contact_person TEXT,
+987:   
+988:   follow_up_needed BOOLEAN DEFAULT FALSE,
+989:   follow_up_date DATE,
+990:   follow_up_details TEXT,
+991:   
+992:   created_by UUID NOT NULL REFERENCES users_profile(id),
+993:   created_at TIMESTAMP DEFAULT NOW(),
+994:   
+995:   attachments TEXT[] DEFAULT '{}'
+996: );
+1004: CREATE TABLE hearings (
+1005:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1006:   notice_id UUID REFERENCES notices(id),
+1007:   client_id UUID NOT NULL REFERENCES clients(id),
+1008:   
+1009:   hearing_type TEXT CHECK (hearing_type IN ('GST', 'Income Tax', 'TDS', 'Other')),
+1010:   
+1011:   hearing_scheduled_date DATE,
+1012:   hearing_held_date DATE,
+1013:   next_hearing_date DATE,
+1014:   
+1015:   status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN (
+1016:     'scheduled', 'held', 'adjourned', 'concluded'
+1017:   )),
+1018:   
+1019:   venue TEXT,
+1020:   officer_name TEXT,
+1021:   subject TEXT,
+1022:   
+1023:   order_date DATE,
+1024:   order_amount NUMERIC(14, 2),
+1025:   order_notes TEXT,
+1026:   
+1027:   assigned_to UUID REFERENCES users_profile(id),
+1028:   
+1029:   order_document_id UUID,
+1030:   
+1031:   created_at TIMESTAMP DEFAULT NOW(),
+1032:   updated_at TIMESTAMP DEFAULT NOW()
+1033: );
+1042: CREATE TABLE attendance_logs (
+1043:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1044:   user_id UUID NOT NULL REFERENCES users_profile(id),
+1045:   
+1046:   attendance_date DATE NOT NULL,
+1047:   check_in_time TIMESTAMP,
+1048:   check_out_time TIMESTAMP,
+1049:   
+1050:   status TEXT CHECK (status IN ('present', 'absent', 'leave', 'work_from_home')),
+1051:   
+1052:   leave_type TEXT CHECK (leave_type IN ('paid', 'unpaid', 'sick', 'casual', 'comp')),
+1053:   
+1054:   is_manually_created BOOLEAN DEFAULT FALSE,
+1055:   override_reason TEXT,
+1056:   overridden_by UUID REFERENCES users_profile(id),
+1057:   
+1058:   created_at TIMESTAMP DEFAULT NOW(),
+1059:   updated_at TIMESTAMP DEFAULT NOW(),
+1060:   
+1061:   UNIQUE(user_id, attendance_date)
+1062: );
+1067: CREATE TABLE staff_payroll_settings (
+1068:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1069:   user_id UUID NOT NULL REFERENCES users_profile(id) UNIQUE,
+1070:   
+1071:   monthly_salary NUMERIC(12, 2) NOT NULL,
+1072:   paid_leaves_per_month INT DEFAULT 2,
+1073:   
+1074:   deduction_applicable BOOLEAN DEFAULT TRUE,
+1075:   leave_carry_forward_allowed BOOLEAN DEFAULT FALSE,
+1076:   max_carry_forward_days INT,
+1077:   
+1078:   salary_adjustment_for_leaves BOOLEAN DEFAULT TRUE,
+1079:   
+1080:   effective_from DATE NOT NULL,
+1081:   effective_to DATE,
+1082:   
+1083:   created_at TIMESTAMP DEFAULT NOW(),
+1084:   updated_at TIMESTAMP DEFAULT NOW()
+1085: );
+1087: CREATE TABLE payroll_runs (
+1088:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1089:   user_id UUID NOT NULL REFERENCES users_profile(id),
+1090:   
+1091:   month INT NOT NULL CHECK (month BETWEEN 1 AND 12),
+1092:   year INT NOT NULL,
+1093:   
+1094:   total_working_days INT,
+1095:   actual_present_days INT,
+1096:   actual_leave_days INT,
+1097:   paid_leave_days INT,
+1098:   unpaid_leave_days INT,
+1099:   daily_rate NUMERIC(12, 2),
+1100:   base_salary NUMERIC(12, 2),
+1101:   
+1102:   salary_for_present_days NUMERIC(12, 2),
+1103:   deduction_for_excess_leaves NUMERIC(12, 2),
+1104:   total_deductions NUMERIC(12, 2),
+1105:   gross_salary NUMERIC(12, 2),
+1106:   final_salary NUMERIC(12, 2),
+1107:   
+1108:   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'reviewed', 'approved', 'paid')),
+1109:   
+1110:   created_at TIMESTAMP DEFAULT NOW(),
+1111:   updated_at TIMESTAMP DEFAULT NOW(),
+1112:   created_by UUID REFERENCES users_profile(id),
+1113:   
+1114:   UNIQUE(user_id, month, year)
+1115: );
+1119: CREATE TABLE payroll_adjustments (
+1120:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1121:   payroll_id UUID NOT NULL REFERENCES payroll_runs(id),
+1122:   
+1123:   adjustment_type TEXT NOT NULL CHECK (adjustment_type IN ('bonus', 'deduction', 'overtime', 'other')),
+1124:   amount NUMERIC(12, 2) NOT NULL,
+1125:   reason TEXT NOT NULL,
+1126:   
+1127:   approved_by UUID NOT NULL REFERENCES users_profile(id),
+1128:   approved_at TIMESTAMP DEFAULT NOW(),
+1129:   
+1130:   created_at TIMESTAMP DEFAULT NOW()
+1131: );
+1133: CREATE TABLE leave_requests (
+1134:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1135:   user_id UUID NOT NULL REFERENCES users_profile(id),
+1136:   
+1137:   leave_type TEXT NOT NULL CHECK (leave_type IN ('paid', 'sick', 'casual', 'comp', 'other')),
+1138:   
+1139:   from_date DATE NOT NULL,
+1140:   to_date DATE NOT NULL,
+1141:   number_of_days INT NOT NULL,
+1142:   
+1143:   reason TEXT,
+1144:   
+1145:   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+1146:   
+1147:   reviewed_by UUID REFERENCES users_profile(id),
+1148:   reviewed_at TIMESTAMP,
+1149:   review_remarks TEXT,
+1150:   
+1151:   created_at TIMESTAMP DEFAULT NOW(),
+1152:   updated_at TIMESTAMP DEFAULT NOW()
+1153: );
+1161: CREATE TABLE vcfo_snapshots (
+1162:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1163:   client_id UUID NOT NULL REFERENCES clients(id),
+1164:   
+1165:   month INT NOT NULL CHECK (month BETWEEN 1 AND 12),
+1166:   year INT NOT NULL,
+1167:   
+1168:   cash_in_bank NUMERIC(14, 2),
+1169:   monthly_burn NUMERIC(14, 2),
+1170:   revenue NUMERIC(14, 2),
+1171:   key_expenses JSONB DEFAULT '{}',
+1172:   
+1173:   budgeted_revenue NUMERIC(14, 2),
+1174:   budgeted_expenses NUMERIC(14, 2),
+1175:   actual_revenue NUMERIC(14, 2),
+1176:   actual_expenses NUMERIC(14, 2),
+1177:   
+1178:   advisor_notes TEXT,
+1179:   
+1180:   data_entered_by UUID REFERENCES users_profile(id),
+1181:   created_at TIMESTAMP DEFAULT NOW(),
+1182:   updated_at TIMESTAMP DEFAULT NOW(),
+1183:   
+1184:   UNIQUE(client_id, month, year)
+1185: );
+1189: CREATE TABLE solution_log (
+1190:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1191:   client_id UUID NOT NULL REFERENCES clients(id),
+1192:   
+1193:   issue_identified_date DATE NOT NULL,
+1194:   issue_description TEXT NOT NULL,
+1195:   issue_category TEXT CHECK (issue_category IN (
+1196:     'cash_flow', 'profitability', 'tax_optimization', 'working_capital', 'vendor_management', 'process', 'compliance', 'other'
+1197:   )),
+1198:   
+1199:   root_cause TEXT,
+1200:   financial_impact_estimate NUMERIC(14, 2),
+1201:   
+1202:   recommended_solution TEXT NOT NULL,
+1203:   solution_status TEXT NOT NULL DEFAULT 'recommended' CHECK (solution_status IN (
+1204:     'recommended', 'in_progress', 'implemented', 'deferred'
+1205:   )),
+1206:   
+1207:   actual_outcome TEXT,
+1208:   actual_financial_impact NUMERIC(14, 2),
+1209:   implementation_date DATE,
+1210:   
+1211:   identified_by UUID REFERENCES users_profile(id),
+1212:   implemented_by UUID REFERENCES users_profile(id),
+1213:   
+1214:   created_at TIMESTAMP DEFAULT NOW(),
+1215:   updated_at TIMESTAMP DEFAULT NOW()
+1216: );
+1224: CREATE TABLE compliance_insights (
+1225:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1226:   client_id UUID NOT NULL REFERENCES clients(id),
+1227:   
+1228:   insight_type TEXT NOT NULL CHECK (insight_type IN (
+1229:     'gst_rate_vs_industry', 'itc_utilization_gap', 'tds_concentration_risk',
+1230:     'vendor_filing_compliance', 'filing_timeliness', 'other'
+1231:   )),
+1232:   
+1233:   period_month INT CHECK (period_month BETWEEN 1 AND 12),
+1234:   period_year INT,
+1235:   
+1236:   headline TEXT NOT NULL,
+1237:   narrative TEXT NOT NULL,
+1238:   
+1239:   raw_value NUMERIC(14, 2),
+1240:   benchmark_value NUMERIC(14, 2),
+1241:   variance NUMERIC(5, 2),
+1242:   
+1243:   severity TEXT CHECK (severity IN ('info', 'warning', 'critical')),
+1244:   
+1245:   recommended_action TEXT,
+1246:   
+1247:   created_at TIMESTAMP DEFAULT NOW()
+1248: );
+1252: CREATE TABLE benchmarks (
+1253:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1254:   
+1255:   industry TEXT NOT NULL,
+1256:   sub_industry TEXT,
+1257:   
+1258:   metric_name TEXT NOT NULL,
+1259:   metric_value NUMERIC(14, 2),
+1260:   
+1261:   period_year INT,
+1262:   sample_size INT,
+1263:   
+1264:   source TEXT,
+1265:   
+1266:   created_at TIMESTAMP DEFAULT NOW(),
+1267:   updated_at TIMESTAMP DEFAULT NOW()
+1268: );
+1276: CREATE TABLE global_audit_log (
+1277:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1278:   
+1279:   action TEXT NOT NULL,
+1280:   entity_type TEXT,
+1281:   entity_id UUID,
+1282:   
+1283:   details JSONB,
+1284:   
+1285:   performed_by UUID REFERENCES users_profile(id),
+1286:   performed_at TIMESTAMP DEFAULT NOW(),
+1287:   
+1288:   ip_address TEXT,
+1289:   user_agent TEXT
+1290: );
+1299: CREATE TABLE notifications (
+1300:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1301:   user_id UUID NOT NULL REFERENCES users_profile(id),
+1302:   
+1303:   notification_type TEXT NOT NULL CHECK (notification_type IN (
+1304:     'task_assigned', 'task_due_soon', 'task_completed', 'task_overdue',
+1305:     'document_uploaded', 'query_received', 'compliance_due', 'payment_reminder',
+1306:     'team_alert', 'system_alert', 'other'
+1307:   )),
+1308:   
+1309:   title TEXT NOT NULL,
+1310:   message TEXT NOT NULL,
+1311:   
+1312:   related_entity_type TEXT,
+1313:   related_entity_id UUID,
+1314:   
+1315:   is_read BOOLEAN DEFAULT FALSE,
+1316:   read_at TIMESTAMP,
+1317:   
+1318:   send_via_email BOOLEAN DEFAULT TRUE,
+1319:   email_sent BOOLEAN DEFAULT FALSE,
+1320:   
+1321:   created_at TIMESTAMP DEFAULT NOW(),
+1322:   updated_at TIMESTAMP DEFAULT NOW()
+1323: );
+1331: CREATE TABLE engagement_letters (
+1332:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1333:   client_id UUID NOT NULL REFERENCES clients(id),
+1334:   
+1335:   service_id UUID NOT NULL REFERENCES services(id),
+1336:   
+1337:   document_id UUID NOT NULL,
+1338:   
+1339:   scope_of_work TEXT,
+1340:   deliverables TEXT,
+1341:   timeline TEXT,
+1342:   fees NUMERIC(12, 2),
+1343:   
+1344:   signed_date DATE,
+1345:   effective_from DATE,
+1346:   effective_to DATE,
+1347:   
+1348:   created_at TIMESTAMP DEFAULT NOW()
+1349: );
+1357: CREATE TABLE client_lifecycle_stage (
+1358:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1359:   client_id UUID NOT NULL REFERENCES clients(id) UNIQUE,
+1360:   
+1361:   current_stage TEXT NOT NULL CHECK (current_stage IN (
+1362:     'lead', 'caas_only', 'caas_bizlens', 'caas_vcfo', 'caas_bizlens_vcfo', 'full_suite', 'churn'
+1363:   )),
+1364:   
+1365:   lead_date DATE,
+1366:   caas_date DATE,
+1367:   bizlens_date DATE,
+1368:   vcfo_date DATE,
+1369:   
+1370:   updated_at TIMESTAMP DEFAULT NOW()
+1371: );
+1799: CREATE TABLE IF NOT EXISTS staff_capabilities (
+1800:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1801:   user_id UUID NOT NULL REFERENCES users_profile(id) ON DELETE CASCADE,
+1802:   capability TEXT NOT NULL,
+1803: 
+1804:   granted_at TIMESTAMP DEFAULT NOW(),
+1805:   granted_by UUID NOT NULL REFERENCES users_profile(id),
+1806: 
+1807:   revoked_at TIMESTAMP,
+1808:   revoked_by UUID REFERENCES users_profile(id),
+1809: 
+1810:   -- One row per (user, capability). Re-grant after revoke updates the same row.
+1811:   UNIQUE(user_id, capability)
+1812: );
+1845: CREATE TABLE IF NOT EXISTS client_portal_visibility (
+1846:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1847:   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+1848:   module_key TEXT NOT NULL,
+1849:   is_enabled BOOLEAN DEFAULT TRUE,
+1850: 
+1851:   updated_at TIMESTAMP DEFAULT NOW(),
+1852:   updated_by UUID REFERENCES users_profile(id),
+1853: 
+1854:   UNIQUE(client_id, module_key)
+1855: );
+1896: CREATE TABLE IF NOT EXISTS notification_preferences (
+1897:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1898:   user_id UUID NOT NULL UNIQUE REFERENCES users_profile(id) ON DELETE CASCADE,
+1899:   email_frequency TEXT NOT NULL DEFAULT 'daily'
+1900:     CHECK (email_frequency IN ('immediate', 'daily', 'weekly', 'off')),
+1901:   in_app_enabled BOOLEAN DEFAULT TRUE,
+1902:   updated_at TIMESTAMP DEFAULT NOW()
+1903: );
+1962: CREATE TABLE IF NOT EXISTS saved_views (
+1963:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1964:   user_id UUID NOT NULL REFERENCES users_profile(id) ON DELETE CASCADE,
+1965:   scope TEXT NOT NULL,
+1966:   name TEXT NOT NULL,
+1967:   filters JSONB NOT NULL DEFAULT '{}',
+1968:   is_default BOOLEAN DEFAULT FALSE,
+1969:   created_at TIMESTAMP DEFAULT NOW(),
+1970:   updated_at TIMESTAMP DEFAULT NOW(),
+1971: 
+1972:   UNIQUE(user_id, scope, name)
+1973: );
+1994: CREATE TABLE IF NOT EXISTS sub_service_sop_steps (
+1995:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+1996:   sub_service_id UUID NOT NULL REFERENCES sub_services(id) ON DELETE CASCADE,
+1997:   step_order INT NOT NULL,
+1998:   title TEXT NOT NULL,
+1999:   description TEXT,
+2000:   is_required BOOLEAN DEFAULT TRUE,
+2001:   created_at TIMESTAMP DEFAULT NOW(),
+2002:   updated_at TIMESTAMP DEFAULT NOW(),
+2003:   is_deleted BOOLEAN DEFAULT FALSE
+2004: );
+2034: CREATE TABLE IF NOT EXISTS task_steps (
+2035:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2036:   task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+2037:   step_order INT NOT NULL,
+2038:   title TEXT NOT NULL,
+2039:   description TEXT,
+2040:   is_required BOOLEAN DEFAULT TRUE,
+2041: 
+2042:   -- Sign-off
+2043:   completed_at TIMESTAMP,
+2044:   completed_by UUID REFERENCES users_profile(id),
+2045:   completion_note TEXT,
+2046: 
+2047:   -- Provenance: which SOP step or template step seeded this row (NULL for ad-hoc steps)
+2048:   source_sop_step_id UUID REFERENCES sub_service_sop_steps(id),
+2049:   source_template_step_id UUID REFERENCES task_template_steps(id),
+2050: 
+2051:   created_at TIMESTAMP DEFAULT NOW(),
+2052:   updated_at TIMESTAMP DEFAULT NOW(),
+2053: 
+2054:   UNIQUE(task_id, step_order)
+2055: );
+2105: CREATE TABLE IF NOT EXISTS staff_role_templates (
+2106:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2107:   name TEXT NOT NULL UNIQUE,
+2108:   description TEXT,
+2109:   created_at TIMESTAMP DEFAULT NOW(),
+2110:   updated_at TIMESTAMP DEFAULT NOW(),
+2111:   created_by UUID REFERENCES users_profile(id),
+2112:   is_deleted BOOLEAN DEFAULT FALSE
+2113: );
+2128: CREATE TABLE IF NOT EXISTS staff_role_template_capabilities (
+2129:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2130:   template_id UUID NOT NULL REFERENCES staff_role_templates(id) ON DELETE CASCADE,
+2131:   capability TEXT NOT NULL,
+2132: 
+2133:   UNIQUE(template_id, capability)
+2134: );
+2159: CREATE TABLE IF NOT EXISTS client_import_batches (
+2160:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2161:   uploaded_by UUID NOT NULL REFERENCES users_profile(id),
+2162:   uploaded_at TIMESTAMP DEFAULT NOW(),
+2163: 
+2164:   source_filename TEXT,
+2165:   total_rows INT NOT NULL,
+2166:   successful_rows INT NOT NULL DEFAULT 0,
+2167:   skipped_rows INT NOT NULL DEFAULT 0,
+2168:   error_rows INT NOT NULL DEFAULT 0,
+2169: 
+2170:   errors JSONB DEFAULT '[]',  -- array of { row_index, business_name, error }
+2171: 
+2172:   status TEXT NOT NULL DEFAULT 'completed'
+2173:     CHECK (status IN ('processing', 'completed', 'failed'))
+2174: );
+2308: CREATE TABLE IF NOT EXISTS profit_centres (
+2309:   code        TEXT PRIMARY KEY,
+2310:   name        TEXT NOT NULL,
+2311:   description TEXT,
+2312:   is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+2313:   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+2314: );
+2316: CREATE TABLE IF NOT EXISTS cost_centres (
+2317:   code        TEXT PRIMARY KEY,
+2318:   name        TEXT NOT NULL,
+2319:   description TEXT,
+2320:   is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+2321:   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+2322: );
+2324: CREATE TABLE IF NOT EXISTS billing_entities (
+2325:   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2326:   name            TEXT NOT NULL,
+2327:   legal_name      TEXT,
+2328:   gstin           TEXT,
+2329:   pan             TEXT,
+2330:   address_line1   TEXT,
+2331:   address_line2   TEXT,
+2332:   city            TEXT,
+2333:   state           TEXT,
+2334:   pincode         TEXT,
+2335:   invoice_prefix  TEXT NOT NULL,
+2336:   default_profit_centre_code TEXT REFERENCES profit_centres(code),
+2337:   signing_authority_name TEXT,
+2338:   signing_authority_designation TEXT,
+2339:   bank_account_name TEXT,
+2340:   bank_account_number TEXT,
+2341:   bank_ifsc       TEXT,
+2342:   bank_name       TEXT,
+2343:   is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+2344:   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+2345:   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+2346: );
+2348: CREATE TABLE IF NOT EXISTS user_billing_entity_access (
+2349:   user_id           UUID NOT NULL REFERENCES users_profile(id) ON DELETE CASCADE,
+2350:   billing_entity_id UUID NOT NULL REFERENCES billing_entities(id) ON DELETE CASCADE,
+2351:   granted_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+2352:   PRIMARY KEY (user_id, billing_entity_id)
+2353: );
+2407: CREATE TABLE IF NOT EXISTS compliance_calendar_rules (
+2408:   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2409:   rule_code           TEXT NOT NULL UNIQUE,
+2410:   display_name        TEXT NOT NULL,
+2411:   service_kind        TEXT NOT NULL,
+2412:   periodicity         TEXT NOT NULL,
+2413:   due_day             INTEGER,
+2414:   due_month_offset    INTEGER NOT NULL DEFAULT 1,
+2415:   due_date_formula    TEXT,
+2416:   applies_when        JSONB NOT NULL DEFAULT '{}'::jsonb,
+2417:   reminder_days       INTEGER[] NOT NULL DEFAULT '{7,3,1}',
+2418:   description         TEXT,
+2419:   is_active           BOOLEAN NOT NULL DEFAULT TRUE,
+2420:   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+2421:   updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+2422: );
+2434: CREATE TABLE IF NOT EXISTS client_compliance_profiles (
+2435:   client_id                UUID PRIMARY KEY REFERENCES clients(id) ON DELETE CASCADE,
+2436:   gst_filing_frequency     TEXT CHECK (gst_filing_frequency IN ('monthly','qrmp','not_applicable')),
+2437:   state_group              TEXT CHECK (state_group IN ('A','B') OR state_group IS NULL),
+2438:   entity_type              TEXT CHECK (entity_type IN ('company','llp','firm','proprietorship','huf','trust','aop','boi','individual')),
+2439:   is_audit_applicable      BOOLEAN NOT NULL DEFAULT FALSE,
+2440:   is_tds_deductor          BOOLEAN NOT NULL DEFAULT FALSE,
+2441:   is_tcs_collector         BOOLEAN NOT NULL DEFAULT FALSE,
+2442:   is_advance_tax_applicable BOOLEAN NOT NULL DEFAULT FALSE,
+2443:   is_pf_applicable         BOOLEAN NOT NULL DEFAULT FALSE,
+2444:   is_esi_applicable        BOOLEAN NOT NULL DEFAULT FALSE,
+2445:   is_pt_applicable         BOOLEAN NOT NULL DEFAULT FALSE,
+2446:   pt_state                 TEXT,
+2447:   is_roc_applicable        BOOLEAN NOT NULL DEFAULT FALSE,
+2448:   agm_date                 DATE,
+2449:   is_transfer_pricing      BOOLEAN NOT NULL DEFAULT FALSE,
+2450:   annual_turnover_estimate NUMERIC(15,2),
+2451:   fy_start_month           INTEGER NOT NULL DEFAULT 4,
+2452:   notes                    TEXT,
+2453:   updated_at               TIMESTAMPTZ NOT NULL DEFAULT NOW()
+2454: );
+2467: CREATE TABLE IF NOT EXISTS compliance_calendar_events (
+2468:   id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2469:   client_id         UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+2470:   rule_id           UUID NOT NULL REFERENCES compliance_calendar_rules(id) ON DELETE CASCADE,
+2471:   rule_code         TEXT NOT NULL,
+2472:   period_label      TEXT NOT NULL,
+2473:   due_date          DATE NOT NULL,
+2474:   status            TEXT NOT NULL DEFAULT 'upcoming' CHECK (status IN ('upcoming','task_created','filed','overdue','dismissed')),
+2475:   task_id           UUID REFERENCES tasks(id) ON DELETE SET NULL,
+2476:   generated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+2477:   UNIQUE (client_id, rule_id, period_label)
+2478: );
+2503: CREATE TABLE IF NOT EXISTS document_requests (
+2504:   id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2505:   task_id           UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+2506:   client_id         UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+2507:   document_name     TEXT NOT NULL,
+2508:   description       TEXT,
+2509:   is_required       BOOLEAN NOT NULL DEFAULT TRUE,
+2510:   due_date          DATE,
+2511:   fulfilled_at      TIMESTAMPTZ,
+2512:   fulfilled_by_document_id UUID REFERENCES documents(id) ON DELETE SET NULL,
+2513:   fulfilled_by_user_id UUID REFERENCES users_profile(id) ON DELETE SET NULL,
+2514:   created_by        UUID NOT NULL REFERENCES users_profile(id),
+2515:   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+2516: );
+2542: CREATE TABLE IF NOT EXISTS sub_service_document_request_templates (
+2543:   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2544:   sub_service_id  UUID NOT NULL REFERENCES sub_services(id) ON DELETE CASCADE,
+2545:   document_name   TEXT NOT NULL,
+2546:   description     TEXT,
+2547:   is_required     BOOLEAN NOT NULL DEFAULT TRUE,
+2548:   display_order   INTEGER NOT NULL DEFAULT 0,
+2549:   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+2550: );
+2567: CREATE TABLE IF NOT EXISTS task_custom_field_definitions (
+2568:   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2569:   service_id      UUID REFERENCES services(id) ON DELETE CASCADE,
+2570:   sub_service_id  UUID REFERENCES sub_services(id) ON DELETE CASCADE,
+2571:   field_key       TEXT NOT NULL,
+2572:   display_label   TEXT NOT NULL,
+2573:   field_type      TEXT NOT NULL CHECK (field_type IN ('text','number','date','dropdown','boolean')),
+2574:   options_json    JSONB,
+2575:   is_required     BOOLEAN NOT NULL DEFAULT FALSE,
+2576:   display_order   INTEGER NOT NULL DEFAULT 0,
+2577:   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+2578:   CHECK (service_id IS NOT NULL OR sub_service_id IS NOT NULL)
+2579: );
+2584: CREATE TABLE IF NOT EXISTS task_custom_field_values (
+2585:   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2586:   task_id       UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+2587:   definition_id UUID NOT NULL REFERENCES task_custom_field_definitions(id) ON DELETE CASCADE,
+2588:   value_text    TEXT,
+2589:   value_number  NUMERIC(20,4),
+2590:   value_date    DATE,
+2591:   value_bool    BOOLEAN,
+2592:   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+2593:   UNIQUE (task_id, definition_id)
+2594: );
+2615: CREATE TABLE IF NOT EXISTS task_labels (
+2616:   code         TEXT PRIMARY KEY,
+2617:   display_name TEXT NOT NULL,
+2618:   color_hex    TEXT,
+2619:   is_active    BOOLEAN NOT NULL DEFAULT TRUE,
+2620:   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+2621: );
+2623: CREATE TABLE IF NOT EXISTS task_label_assignments (
+2624:   task_id     UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+2625:   label_code  TEXT NOT NULL REFERENCES task_labels(code) ON DELETE CASCADE,
+2626:   assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+2627:   PRIMARY KEY (task_id, label_code)
+2628: );
+2651: CREATE TABLE IF NOT EXISTS task_workdone (
+2652:   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2653:   task_id       UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+2654:   user_id       UUID NOT NULL REFERENCES users_profile(id) ON DELETE CASCADE,
+2655:   client_id     UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+2656:   work_date     DATE NOT NULL,
+2657:   duration_minutes INTEGER NOT NULL CHECK (duration_minutes > 0 AND duration_minutes <= 1440),
+2658:   note          TEXT,
+2659:   entry_method  TEXT NOT NULL CHECK (entry_method IN ('timer','manual')),
+2660:   started_at    TIMESTAMPTZ,
+2661:   ended_at      TIMESTAMPTZ,
+2662:   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+2663:   updated_at    TIMESTAMPTZ DEFAULT NOW()
+2664: );
+2712: CREATE TABLE IF NOT EXISTS bizlens_data (
+2713:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2714:   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+2715:   
+2716:   -- Core period
+2717:   period_month INT CHECK (period_month BETWEEN 1 AND 12),
+2718:   period_year INT NOT NULL,
+2719:   months_covered INT NOT NULL DEFAULT 1,
+2720:   
+2721:   -- P&L / Operations
+2722:   sales_revenue NUMERIC(14, 2) NOT NULL DEFAULT 0,
+2723:   variable_costs NUMERIC(14, 2) NOT NULL DEFAULT 0,
+2724:   fixed_costs NUMERIC(14, 2) NOT NULL DEFAULT 0,
+2725:   fc_includes_interest BOOLEAN DEFAULT FALSE,
+2726:   purchases NUMERIC(14, 2) DEFAULT 0,
+2727:   interest_expense NUMERIC(14, 2) DEFAULT 0,
+2728:   target_profit NUMERIC(14, 2) DEFAULT 0,
+2729:   inventory_change NUMERIC(14, 2) DEFAULT 0,
+2730:   other_income NUMERIC(14, 2) DEFAULT 0,
+2731:   non_cash_expenses NUMERIC(14, 2) DEFAULT 0,
+2732:   
+2733:   -- Balance Sheet: Assets
+2734:   bs_cash NUMERIC(14, 2) DEFAULT 0,
+2735:   bs_inventory NUMERIC(14, 2) DEFAULT 0,
+2736:   bs_accounts_receivable NUMERIC(14, 2) DEFAULT 0,
+2737:   bs_other_current_assets NUMERIC(14, 2) DEFAULT 0,
+2738:   bs_loans_advances NUMERIC(14, 2) DEFAULT 0,
+2739:   realisable_fixed_assets NUMERIC(14, 2) DEFAULT 0,
+2740:   
+2741:   -- Balance Sheet: Liabilities & Equity
+2742:   bs_accounts_payable NUMERIC(14, 2) DEFAULT 0,
+2743:   bs_current_liabilities_other NUMERIC(14, 2) DEFAULT 0,
+2744:   bs_short_term_borrowings NUMERIC(14, 2) DEFAULT 0,
+2745:   bs_long_term_borrowings NUMERIC(14, 2) DEFAULT 0,
+2746:   bs_other_liabilities NUMERIC(14, 2) DEFAULT 0,
+2747:   bs_equity NUMERIC(14, 2) DEFAULT 0,
+2748:   
+2749:   -- Ageing (AR)
+2750:   ar_ageing_available BOOLEAN DEFAULT FALSE,
+2751:   ar_0_30 NUMERIC(14, 2) DEFAULT 0,
+2752:   ar_31_60 NUMERIC(14, 2) DEFAULT 0,
+2753:   ar_61_90 NUMERIC(14, 2) DEFAULT 0,
+2754:   ar_90_plus NUMERIC(14, 2) DEFAULT 0,
+2755:   
+2756:   -- Ageing (AP)
+2757:   ap_ageing_available BOOLEAN DEFAULT FALSE,
+2758:   ap_0_30 NUMERIC(14, 2) DEFAULT 0,
+2759:   ap_31_60 NUMERIC(14, 2) DEFAULT 0,
+2760:   ap_61_90 NUMERIC(14, 2) DEFAULT 0,
+2761:   ap_90_plus NUMERIC(14, 2) DEFAULT 0,
+2762:   
+2763:   -- Concentration & Strategic
+2764:   top_customer_pct NUMERIC(5, 2),
+2765:   top_supplier_pct NUMERIC(5, 2),
+2766:   wc_intentional BOOLEAN DEFAULT FALSE,
+2767:   ap_strategic BOOLEAN DEFAULT FALSE,
+2768:   
+2769:   -- State
+2770:   status TEXT CHECK (status IN ('draft', 'published')) DEFAULT 'draft',
+2771:   created_by UUID REFERENCES users_profile(id),
+2772:   created_at TIMESTAMPTZ DEFAULT NOW(),
+2773:   updated_at TIMESTAMPTZ DEFAULT NOW(),
+2774: 
+2775:   -- For overriding older versions for the same period
+2776:   is_current BOOLEAN DEFAULT TRUE,
+2777:   superseded_by UUID REFERENCES bizlens_data(id)
+2778: );
+2834: CREATE TABLE IF NOT EXISTS leave_balances (
+2835:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2836:   user_id UUID NOT NULL REFERENCES users_profile(id) ON DELETE CASCADE,
+2837:   year INT NOT NULL,
+2838:   accrued_paid_leaves NUMERIC(4,2) DEFAULT 0.00,
+2839:   taken_paid_leaves NUMERIC(4,2) DEFAULT 0.00,
+2840:   remaining_paid_leaves NUMERIC(4,2) GENERATED ALWAYS AS (accrued_paid_leaves - taken_paid_leaves) STORED,
+2841:   UNIQUE(user_id, year)
+2842: );
+2868: CREATE TABLE IF NOT EXISTS holidays (
+2869:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2870:   holiday_date DATE NOT NULL,
+2871:   name TEXT NOT NULL,
+2872:   description TEXT,
+2873:   is_optional BOOLEAN DEFAULT FALSE,
+2874:   created_at TIMESTAMP DEFAULT NOW(),
+2875:   updated_at TIMESTAMP DEFAULT NOW(),
+2876:   UNIQUE(holiday_date)
+2877: );
+2896: CREATE TABLE IF NOT EXISTS permission_requests (
+2897:   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+2898:   user_id UUID NOT NULL REFERENCES auth.users(id),
+2899:   request_date DATE NOT NULL,
+2900:   from_time TIME,
+2901:   to_time TIME,
+2902:   reason TEXT,
+2903:   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+2904:   reviewed_by UUID REFERENCES auth.users(id),
+2905:   reviewed_at TIMESTAMP,
+2906:   review_remarks TEXT,
+2907:   created_at TIMESTAMP DEFAULT NOW(),
+2908:   updated_at TIMESTAMP DEFAULT NOW()
+2909: );
+2929: CREATE TABLE IF NOT EXISTS weekly_timesheet_submissions (
+2930:   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+2931:   user_id UUID NOT NULL REFERENCES users_profile(id) ON DELETE CASCADE,
+2932:   manager_id UUID REFERENCES users_profile(id) ON DELETE SET NULL,
+2933: 
+2934:   week_start DATE NOT NULL,
+2935:   week_end DATE NOT NULL,
+2936: 
+2937:   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'submitted', 'approved', 'rejected')),
+2938: 
+2939:   -- Auto-computed summary at time of submission
+2940:   present_days INT DEFAULT 0,
+2941:   leave_days INT DEFAULT 0,
+2942:   wfh_days INT DEFAULT 0,
+2943:   half_days INT DEFAULT 0,
+2944:   permission_hours NUMERIC(4,1) DEFAULT 0,
+2945: 
+2946:   submitted_at TIMESTAMP,
+2947:   approved_at TIMESTAMP,
+2948:   approved_by UUID REFERENCES users_profile(id) ON DELETE SET NULL,
+2949:   review_remarks TEXT,
+2950: 
+2951:   created_at TIMESTAMP DEFAULT NOW(),
+2952:   updated_at TIMESTAMP DEFAULT NOW(),
+2953: 
+2954:   -- One submission per user per week
+2955:   UNIQUE (user_id, week_start)
+2956: );

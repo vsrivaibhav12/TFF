@@ -1,22 +1,61 @@
 'use client';
 
-import { TaskColumn } from './task-column';
+import { useState, useEffect } from 'react';
+import { KanbanBoard } from './kanban-board';
+import { transitionTaskAction } from '@/lib/actions/tasks';
+
+interface Task {
+  id: string;
+  title: string;
+  status: string;
+  priority: string;
+  due_date: string | null;
+  is_stuck?: boolean;
+  is_verified?: boolean;
+  clients?: { business_name: string } | null;
+  users_profile?: { full_name: string } | null;
+}
 
 interface TaskBoardProps {
-  tasks: any[];
+  tasks: Task[];
   hrefPrefix?: string;
 }
 
-export function TaskBoard({ tasks, hrefPrefix = '/admin/tasks' }: TaskBoardProps) {
-  const todo = tasks.filter((t) => t.status === 'pending' && !t.is_blocked_on_client && !t.is_stuck);
-  const inProgress = tasks.filter((t) => t.status === 'in_progress' && !t.is_blocked_on_client && !t.is_stuck);
-  const pendingReview = tasks.filter((t) => t.is_blocked_on_client || t.is_stuck || t.status === 'review' || t.status === 'awaiting_client');
+export function TaskBoard({ tasks, hrefPrefix }: TaskBoardProps) {
+  const [boardTasks, setBoardTasks] = useState<Task[]>(tasks);
+
+  useEffect(() => {
+    setBoardTasks(tasks);
+  }, [tasks]);
+
+  const handleStatusChange = async (taskId: string, newStatus: string) => {
+    setBoardTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+    );
+    await transitionTaskAction({ task_id: taskId, to_status: newStatus as import('@/lib/validation/schemas').TaskStatus });
+  };
+
+  const handleReorder = async (taskId: string, newIndex: number, columnId: string) => {
+    setBoardTasks((prev) => {
+      const colTasks = prev.filter((t) => t.status === columnId);
+      const task = colTasks.find((t) => t.id === taskId);
+      if (!task) return prev;
+      const oldIndex = colTasks.findIndex((t) => t.id === taskId);
+      if (oldIndex === -1 || oldIndex === newIndex) return prev;
+      const reordered = [...colTasks];
+      reordered.splice(oldIndex, 1);
+      reordered.splice(newIndex, 0, task);
+      const others = prev.filter((t) => t.status !== columnId);
+      return [...others, ...reordered];
+    });
+  };
 
   return (
-    <div className="flex gap-5 overflow-x-auto pb-4">
-      <TaskColumn title="To do" tasks={todo} hrefPrefix={hrefPrefix} color="#71717A" />
-      <TaskColumn title="In progress" tasks={inProgress} hrefPrefix={hrefPrefix} color="#0D9488" />
-      <TaskColumn title="Pending review" tasks={pendingReview} hrefPrefix={hrefPrefix} color="#F59E0B" />
-    </div>
+    <KanbanBoard
+      tasks={boardTasks}
+      hrefPrefix={hrefPrefix}
+      onStatusChange={handleStatusChange}
+      onReorder={handleReorder}
+    />
   );
 }

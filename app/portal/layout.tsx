@@ -16,7 +16,7 @@ const FULL_NAV: Array<NavItem & { gate?: string }> = [
   { href: '/portal/notices',   label: 'Notices',             icon: 'scroll',     gate: 'portal.notices' },
 ];
 
-export default async function PortalLayout({ children, modal }: { children: React.ReactNode, modal: React.ReactNode }) {
+export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const [user, visible, clients] = await Promise.all([
     requireRole('client'),
     getVisibleModulesForCurrentClient(),
@@ -31,8 +31,7 @@ export default async function PortalLayout({ children, modal }: { children: Reac
   return (
     <AppShell user={displayUser} role="client" nav={nav}>
       <div className="pb-20 md:pb-0">{children}</div>
-      {modal}
-      <MobileBottomNav />
+      <MobileBottomNav visibleModules={Array.from(visible)} />
     </AppShell>
   );
 }

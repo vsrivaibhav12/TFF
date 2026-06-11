@@ -54,8 +54,8 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               )}
-              {Icon && <Icon className={cn('h-5 w-5 transition-all', active ? 'stroke-[2.5] -translate-y-0.5' : '')} />}
-              <span className={cn('transition-all', active ? 'font-bold' : '')}>{t.label}</span>
+              {Icon && <Icon className={cn('h-5 w-5 transition-transform', active ? 'stroke-[2.5] -translate-y-0.5' : '')} />}
+              <span className={cn('transition-colors', active ? 'font-bold' : '')}>{t.label}</span>
             </Link>
           );
         })}
@@ -74,8 +74,8 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
               transition={{ type: 'spring', stiffness: 500, damping: 30 }}
             />
           )}
-          <Menu className={cn('h-5 w-5 transition-all', isMoreActive ? 'stroke-[2.5] -translate-y-0.5' : '')} />
-          <span className={cn('transition-all', isMoreActive ? 'font-bold' : '')}>More</span>
+          <Menu className={cn('h-5 w-5 transition-transform', isMoreActive ? 'stroke-[2.5] -translate-y-0.5' : '')} />
+          <span className={cn('transition-colors', isMoreActive ? 'font-bold' : '')}>More</span>
         </button>
       </nav>
 

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,13 @@ export default function NewQueryDialog({ clients }: { clients: { id: string; bus
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
+
+  // Listen for command palette /query shortcut
+  useEffect(() => {
+    function handle(e: Event) { setOpen(true); }
+    window.addEventListener('cmdk:new-query', handle);
+    return () => window.removeEventListener('cmdk:new-query', handle);
+  }, []);
 
   function submit() {
     if (!client_id || !subject || !description) return;

@@ -1,37 +1,98 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 
-export async function listPayrollRuns(filter?: { userId?: string; year?: number; month?: number }) {
+export interface PayrollSettingsRow {
+  monthly_salary: number;
+  paid_leaves_per_month: number;
+  deduction_applicable: boolean;
+  salary_adjustment_for_leaves: boolean;
+}
+
+export async function getPayrollSettings(userId: string): Promise<PayrollSettingsRow | null> {
   const sb = createClient();
-  let q = sb
+  const { data, error } = await sb
+    .from('staff_payroll_settings')
+    .select('monthly_salary, paid_leaves_per_month, deduction_applicable, salary_adjustment_for_leaves')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data as PayrollSettingsRow | null;
+}
+
+export async function getPayrollRun(userId: string, year: number, month: number): Promise<{ id: string; status: string } | null> {
+  const sb = createClient();
+  const { data, error } = await sb
     .from('payroll_runs')
-    .select('id, user_id, month, year, total_working_days, actual_present_days, actual_leave_days, gross_salary, total_deductions, final_salary, status, created_at, users_profile!payroll_runs_user_id_fkey(full_name, email)')
+    .select('id, status')
+    .eq('user_id', userId)
+    .eq('month', month)
+    .eq('year', year)
+    .maybeSingle();
+  if (error) throw error;
+  return data as { id: string; status: string } | null;
+}
+
+export async function getPayrollRunById(id: string): Promise<any | null> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from('payroll_runs')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function listAttendanceLogsForMonth(
+  userId: string,
+  from: string,
+  to: string
+): Promise<Array<{ status: string }>> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from('attendance_logs')
+    .select('status')
+    .eq('user_id', userId)
+    .gte('attendance_date', from)
+    .lte('attendance_date', to);
+  if (error) throw error;
+  return (data ?? []) as Array<{ status: string }>;
+}
+
+export async function upsertPayrollRun(payload: Record<string, any>): Promise<{ id: string }> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from('payroll_runs')
+    .upsert(payload, { onConflict: 'user_id,month,year' })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return data as { id: string };
+}
+
+export async function listPayrollRuns(): Promise<any[]> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from('payroll_runs')
+    .select('id, user_id, month, year, final_salary, status, created_at')
     .order('year', { ascending: false })
-    .order('month', { ascending: false });
-  if (filter?.userId) q = q.eq('user_id', filter.userId);
-  if (filter?.year) q = q.eq('year', filter.year);
-  if (filter?.month) q = q.eq('month', filter.month);
-  const { data, error } = await q.limit(200);
+    .order('month', { ascending: false })
+    .limit(200);
   if (error) throw error;
   return data ?? [];
 }
 
-export async function getPayrollRun(id: string) {
+export async function upsertPayrollSettings(payload: {
+  user_id: string;
+  monthly_salary: number;
+  paid_leaves_per_month: number;
+  deduction_applicable: boolean;
+  salary_adjustment_for_leaves: boolean;
+  effective_from: string;
+}): Promise<void> {
   const sb = createClient();
-  const { data } = await sb
-    .from('payroll_runs')
-    .select('*, users_profile!payroll_runs_user_id_fkey(full_name, email)')
-    .eq('id', id)
-    .maybeSingle();
-  return data;
-}
-
-export async function getPayrollSettings(userId: string) {
-  const sb = createClient();
-  const { data } = await sb
+  const { error } = await sb
     .from('staff_payroll_settings')
-    .select('monthly_salary, paid_leaves_per_month, deduction_applicable, salary_adjustment_for_leaves, leave_carry_forward_allowed, max_carry_forward_days, effective_from, effective_to')
-    .eq('user_id', userId)
-    .maybeSingle();
-  return data;
+    .upsert({ ...payload, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  if (error) throw error;
 }

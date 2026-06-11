@@ -15,16 +15,49 @@ SECURITY DEFINER
 STABLE
 SET search_path = public
 AS $$
+DECLARE
+  v_user_id UUID;
+  v_template_id UUID;
 BEGIN
   IF to_regclass('public.staff_capabilities') IS NULL THEN
     RETURN FALSE;
   END IF;
-  RETURN EXISTS (
+
+  v_user_id := auth.uid();
+
+  -- 1. Explicit deviation (grant or revoke)
+  IF EXISTS (
     SELECT 1 FROM staff_capabilities
-    WHERE user_id = auth.uid()
+    WHERE user_id = v_user_id
       AND capability = cap
       AND revoked_at IS NULL
-  );
+  ) THEN
+    RETURN TRUE;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM staff_capabilities
+    WHERE user_id = v_user_id
+      AND capability = cap
+      AND revoked_at IS NOT NULL
+  ) THEN
+    RETURN FALSE;
+  END IF;
+
+  -- 2. Fallback to active role template
+  SELECT active_role_template_id INTO v_template_id
+  FROM users_profile
+  WHERE id = v_user_id;
+
+  IF v_template_id IS NOT NULL THEN
+    RETURN EXISTS (
+      SELECT 1 FROM staff_role_template_capabilities
+      WHERE template_id = v_template_id
+        AND capability = cap
+    );
+  END IF;
+
+  RETURN FALSE;
 EXCEPTION WHEN undefined_table THEN
   RETURN FALSE;
 END;
@@ -110,10 +143,11 @@ CREATE POLICY "tasks_team_view" ON tasks
       client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
       OR assigned_to = auth.uid()
       OR reviewer_id = auth.uid()
+      OR public.user_has_capability('tasks.view')
       OR public.user_has_capability('tasks.assign')
       OR public.user_has_capability('tasks.complete')
       OR public.user_has_capability('tasks.create')
-      OR public.user_has_capability('tasks.delete')
+      OR public.user_has_capability('tasks.edit')
     )
   );
 
@@ -130,7 +164,7 @@ CREATE POLICY "tasks_team_insert" ON tasks
     )
   );
 
--- Team UPDATE: own/assigned OR task capabilities
+-- Team UPDATE: own/assigned OR tasks.edit
 DROP POLICY IF EXISTS "tasks_team_update_own" ON tasks;
 CREATE POLICY "tasks_team_update_own" ON tasks
   FOR UPDATE TO authenticated
@@ -140,8 +174,7 @@ CREATE POLICY "tasks_team_update_own" ON tasks
       client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
       OR assigned_to = auth.uid()
       OR reviewer_id = auth.uid()
-      OR public.user_has_capability('tasks.assign')
-      OR public.user_has_capability('tasks.complete')
+      OR public.user_has_capability('tasks.edit')
     )
   );
 
@@ -357,6 +390,7 @@ CREATE POLICY "gst_filings_team_select" ON gst_filings
     public.current_user_role() = 'team'
     AND (
       client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+      OR public.user_has_capability('compliance.view')
       OR public.user_has_capability('compliance.enter')
     )
   );
@@ -399,6 +433,7 @@ CREATE POLICY "tds_filings_team_select" ON tds_filings
     public.current_user_role() = 'team'
     AND (
       client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+      OR public.user_has_capability('compliance.view')
       OR public.user_has_capability('compliance.enter')
     )
   );
@@ -441,6 +476,7 @@ CREATE POLICY "it_filings_team_select" ON it_filings
     public.current_user_role() = 'team'
     AND (
       client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+      OR public.user_has_capability('compliance.view')
       OR public.user_has_capability('compliance.enter')
     )
   );
@@ -483,6 +519,7 @@ CREATE POLICY "compliance_status_team_select" ON compliance_status
     public.current_user_role() = 'team'
     AND (
       client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+      OR public.user_has_capability('compliance.view')
       OR public.user_has_capability('compliance.enter')
     )
   );
@@ -951,3 +988,146 @@ CREATE POLICY "client_lifecycle_team_read" ON client_lifecycle_stage
 -- ============================================================================
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+
+-- ============================================================================
+-- v2 VIEW CAPABILITIES (2026-06-04)
+-- Adds read-only SELECT policies for the new *.view capabilities so that
+-- modules can be exposed in the team nav without also granting write access.
+-- ============================================================================
+
+-- NOTICES: team with notices.view can read notices
+DROP POLICY IF EXISTS "notices_team_view_select" ON notices;
+CREATE POLICY "notices_team_view_select" ON notices
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('notices.view')
+  );
+
+-- HEARINGS: team with hearings.view can read hearings
+DROP POLICY IF EXISTS "hearings_team_view_select" ON hearings;
+CREATE POLICY "hearings_team_view_select" ON hearings
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('hearings.view')
+  );
+
+-- BIZLENS DATA: team with bizlens.view can read
+DROP POLICY IF EXISTS "bizlens_data_team_view_select" ON bizlens_data;
+CREATE POLICY "bizlens_data_team_view_select" ON bizlens_data
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('bizlens.view')
+  );
+
+-- VCFO SNAPSHOTS: team with vcfo.view can read
+DROP POLICY IF EXISTS "vcfo_snapshots_team_view_select" ON vcfo_snapshots;
+CREATE POLICY "vcfo_snapshots_team_view_select" ON vcfo_snapshots
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('vcfo.view')
+  );
+
+-- DSC: team with dsc.view can read
+DROP POLICY IF EXISTS "dsc_records_team_view_select" ON dsc_records;
+CREATE POLICY "dsc_records_team_view_select" ON dsc_records
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('dsc.view')
+  );
+
+-- CREDENTIALS: team with credentials.view can read
+DROP POLICY IF EXISTS "credentials_team_view_select" ON credentials;
+CREATE POLICY "credentials_team_view_select" ON credentials
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('credentials.view')
+  );
+
+-- PAYROLL RUNS: team with payroll.view can read
+DROP POLICY IF EXISTS "payroll_runs_team_view_select" ON payroll_runs;
+CREATE POLICY "payroll_runs_team_view_select" ON payroll_runs
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('payroll.view')
+  );
+
+-- QUERIES: team with queries.view can read
+DROP POLICY IF EXISTS "queries_team_view_select" ON queries;
+CREATE POLICY "queries_team_view_select" ON queries
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('queries.view')
+  );
+
+-- SERVICES: team with services.view can read
+DROP POLICY IF EXISTS "services_team_view_select" ON services;
+CREATE POLICY "services_team_view_select" ON services
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('services.view')
+  );
+
+-- SUB SERVICES: team with services.view can read
+DROP POLICY IF EXISTS "sub_services_team_view_select" ON sub_services;
+CREATE POLICY "sub_services_team_view_select" ON sub_services
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('services.view')
+  );
+
+-- DOCUMENTS: team with documents.view can read
+DROP POLICY IF EXISTS "documents_team_view_select" ON documents;
+CREATE POLICY "documents_team_view_select" ON documents
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('documents.view')
+  );
+
+-- COMPLIANCE INSIGHTS: team with insights.view can read
+DROP POLICY IF EXISTS "insights_team_view_select" ON compliance_insights;
+CREATE POLICY "insights_team_view_select" ON compliance_insights
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('insights.view')
+  );
+
+-- ============================================================================
+-- WORK DONE (task_workdone)
+-- ============================================================================
+
+-- Team with workdone.manage can mutate any row
+DROP POLICY IF EXISTS "task_workdone_team_manage" ON task_workdone;
+CREATE POLICY "task_workdone_team_manage" ON task_workdone
+  FOR ALL TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('workdone.manage')
+  )
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('workdone.manage')
+  );
+
+-- ============================================================================
+-- ROLE TEMPLATE CAPABILITIES (staff_role_template_capabilities)
+-- ============================================================================
+
+-- All authenticated users must be able to read template capabilities so that
+-- team members can resolve their effective capability set (template + deviations).
+-- Template definitions themselves are not sensitive data.
+DROP POLICY IF EXISTS "role_template_caps_read_all" ON staff_role_template_capabilities;
+CREATE POLICY "role_template_caps_read_all" ON staff_role_template_capabilities
+  FOR SELECT TO authenticated
+  USING (TRUE);

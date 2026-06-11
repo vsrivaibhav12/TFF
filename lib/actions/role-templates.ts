@@ -7,7 +7,6 @@ import { ALL_CAPABILITIES, type Capability } from '@/lib/auth/capabilities';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { writeAudit } from '@/lib/services/audit-service';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
-import { setUserCapabilitiesAction } from '@/lib/actions/staff-capabilities';
 
 const upsertSchema = z.object({
   id: z.string().uuid().optional(),
@@ -106,14 +105,15 @@ export async function deleteRoleTemplateAction(id: string): Promise<ActionResult
 }
 
 /**
- * Apply a role template to a user. Bulk-grants the template's capabilities by
- * calling the existing `setUserCapabilitiesAction` (which audits each diff).
- * Updates `users_profile.active_role_template_id` so the UI can show the badge.
+ * Apply a role template to a user. Sets `active_role_template_id` so that
+ * `hasCapability` resolves template capabilities live. Removes any redundant
+ * explicit rows in `staff_capabilities` that match the template (they are now
+ * derived automatically). Keeps deviations (capabilities not in the template).
  */
 export async function applyRoleTemplateAction(input: {
   user_id: string;
   template_id: string;
-}): Promise<ActionResult<{ granted: number; revoked: number }>> {
+}): Promise<ActionResult<{ template_caps: number; overrides_kept: number }>> {
   try {
     const me = await requireRole(['admin']);
     await requireCapability(me, 'staff.grant_capabilities');
@@ -123,30 +123,40 @@ export async function applyRoleTemplateAction(input: {
       .select('capability')
       .eq('template_id', input.template_id);
     if (error) return fail(error.message, 'DB');
-    const list = (caps ?? []).map((r: any) => r.capability) as Capability[];
+    const templateCaps = new Set<string>((caps ?? []).map((r: any) => r.capability));
 
-    const r = await setUserCapabilitiesAction({
-      user_id: input.user_id,
-      capabilities: list,
-    });
-    if (!r.success) return r;
+    // Clean up redundant explicit rows that are now covered by the template
+    const { data: existingRows } = await sb
+      .from('staff_capabilities')
+      .select('id, capability')
+      .eq('user_id', input.user_id)
+      .is('revoked_at', null);
 
-    await sb
+    const toDelete = (existingRows ?? []).filter((r: any) => templateCaps.has(r.capability));
+    if (toDelete.length > 0) {
+      await sb.from('staff_capabilities').delete().in(
+        'id',
+        toDelete.map((r: any) => r.id)
+      );
+    }
+
+    const { error: profileErr } = await sb
       .from('users_profile')
       .update({ active_role_template_id: input.template_id })
       .eq('id', input.user_id);
+    if (profileErr) return fail(profileErr.message, 'DB');
 
     await writeAudit({
       action: 'role_template.apply',
       entity_type: 'user',
       entity_id: input.user_id,
       performed_by: me.id,
-      details: { template_id: input.template_id, capability_count: list.length },
+      details: { template_id: input.template_id, template_caps: templateCaps.size, overrides_kept: (existingRows ?? []).length - toDelete.length },
     });
 
     revalidatePath(`/admin/team/${input.user_id}`);
     revalidatePath(`/admin/team/${input.user_id}/capabilities`);
-    return ok((r as any).data);
+    return ok({ template_caps: templateCaps.size, overrides_kept: (existingRows ?? []).length - toDelete.length });
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
   }

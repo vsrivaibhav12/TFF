@@ -111,7 +111,6 @@ const subServiceSchema = z.object({
   due_month: z.number().int().min(1).max(12).optional().nullable(),
   is_recurring: z.boolean().default(true),
   requires_client_input: z.boolean().default(true),
-  requires_verification: z.boolean().default(false),
   is_active: z.boolean().default(true),
 });
 export async function upsertSubServiceAction(input: z.infer<typeof subServiceSchema>): Promise<ActionResult<{ id: string }>> {
@@ -191,7 +190,7 @@ export async function upsertSopStepAction(input: z.infer<typeof sopStepSchema>):
     if (error) return fail(error.message, 'DB');
 
     // Sync to open tasks (append)
-    const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', rest.sub_service_id).not('status', 'in', '("completed","cancelled")');
+    const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', rest.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
     if (openTasks && openTasks.length > 0) {
       const rows = openTasks.map((t: any) => ({
         task_id: t.id,

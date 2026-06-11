@@ -32,6 +32,7 @@ export async function getUserProfile(userId: string) {
     .from('users_profile')
     .select('geo_check_in_required, reports_to, full_name, email, role, staff_payroll_settings(paid_leaves_per_month)')
     .eq('id', userId)
+    .eq('is_deleted', false)
     .maybeSingle();
   if (error) throw error;
   return data;

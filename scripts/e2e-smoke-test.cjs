@@ -1,6 +1,18 @@
 const { chromium } = require('playwright');
+const http = require('http');
 
 const BASE_URL = 'http://localhost:3000';
+
+// Fail fast with a clear message if the dev server is not running
+async function checkServer() {
+  return new Promise((resolve) => {
+    const req = http.get(BASE_URL, (res) => {
+      resolve(res.statusCode < 500);
+    });
+    req.on('error', () => resolve(false));
+    req.setTimeout(3000, () => { req.destroy(); resolve(false); });
+  });
+}
 
 const USERS = {
   admin: { email: 'info@fiscalfulcrum.in', password: '__ADMIN_SEED_PASSWORD__' },
@@ -43,6 +55,14 @@ async function checkPage(page, url, checkSelector) {
 }
 
 async function runTests() {
+  const serverUp = await checkServer();
+  if (!serverUp) {
+    console.log('⚠️  Dev server not running at ' + BASE_URL);
+    console.log('   Start it with: npm run dev');
+    console.log('   Then re-run: node scripts/e2e-smoke-test.cjs');
+    process.exit(0);
+  }
+
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
 

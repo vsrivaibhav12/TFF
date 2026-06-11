@@ -1,5 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
-import { listTasks } from '@/lib/repositories/tasks';
+import { listTasks, enrichTasksWithLabels, enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-container';
 import EmptyState from '@/components/sophistication/empty-state';
@@ -9,6 +9,7 @@ import PortalTasksTable from './portal-tasks-table';
 import { getClientVisibleStatus, CLIENT_VISIBLE_LABELS } from '@/lib/services/client-visible-status';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,8 +19,10 @@ export default async function PortalTasks({ searchParams }: { searchParams: { st
   const clients = await listAccessibleClients();
   const clientId = clients[0]?.id || '';
   const rawTasks = clientId ? await listTasks({ clientId }) : [];
+  let tasksWithLabels = await enrichTasksWithLabels(rawTasks);
+  tasksWithLabels = await enrichTasksWithProgress(tasksWithLabels);
 
-  const tasksWithStatus = rawTasks.map((t: any) => ({
+  const tasksWithStatus = tasksWithLabels.map((t: any) => ({
     ...t,
     client_status: getClientVisibleStatus(t)
   }));
@@ -38,7 +41,8 @@ export default async function PortalTasks({ searchParams }: { searchParams: { st
     client_name: t.clients?.business_name ?? '',
   }));
   return (
-    <StaggerContainer className="space-y-6">
+    <PullToRefreshWrapper>
+      <StaggerContainer className="space-y-6">
       <StaggerItem>
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
@@ -89,6 +93,7 @@ export default async function PortalTasks({ searchParams }: { searchParams: { st
           <PortalTasksTable tasks={tasks as any} />
         </StaggerItem>
       )}
-    </StaggerContainer>
+      </StaggerContainer>
+    </PullToRefreshWrapper>
   );
 }

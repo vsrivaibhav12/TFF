@@ -1,6 +1,7 @@
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect, hasCapability } from '@/lib/auth/require-capability';
 import Link from 'next/link';
+import NewClientDialog from '@/components/clients/new-client-dialog';
 import { listAccessibleClients, listClientGroups, countAccessibleClients } from '@/lib/repositories/clients';
 import { getComplianceStatusForClients } from '@/lib/repositories/compliance';
 import { countActiveEngagementsForClients } from '@/lib/repositories/client-sub-services';
@@ -59,12 +60,20 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
     portal_enabled: c.portal_enabled,
   }));
 
-  const enrichedClients = clients.map((c: any) => ({
-    ...c,
-    group_name: c.client_groups?.name ?? null,
-    compliance: complianceMap[c.id] ?? { gst: 'unknown', tds: 'unknown', it: 'unknown' },
-    engagements: engagementMap[c.id] ?? 0,
-  }));
+  const enrichedClients = clients.map((c: any) => {
+    const compliance = complianceMap[c.id] ?? { gst: 'unknown', tds: 'unknown', it: 'unknown' };
+    const filedCount = [compliance.gst, compliance.tds, compliance.it].filter((s) => s === 'filed' || s === 'completed').length;
+    const inProgressCount = [compliance.gst, compliance.tds, compliance.it].filter((s) => s === 'in_progress' || s === 'processing').length;
+    const score = filedCount * 1 + inProgressCount * 0.5 + (3 - filedCount - inProgressCount) * (['unknown', 'pending'].includes(compliance.gst) ? 0.5 : 0);
+    const health = Math.min(100, Math.round((score / 3) * 100));
+    return {
+      ...c,
+      group_name: c.client_groups?.name ?? null,
+      compliance,
+      engagements: engagementMap[c.id] ?? 0,
+      complianceHealth: health,
+    };
+  });
 
   // Build pagination query string
   function pageHref(page: number) {
@@ -91,9 +100,7 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
           <Button variant="outline" asChild data-testid="bulk-import-btn">
             <Link href="/admin/clients/import"><Upload className="h-4 w-4 mr-1" /> Bulk import</Link>
           </Button>
-          <Button asChild data-testid="new-client-btn">
-            <Link href="/admin/clients/new"><Plus className="h-4 w-4 mr-1" /> New client</Link>
-          </Button>
+          <NewClientDialog groups={groups} />
         </div>
       </div>
 
@@ -113,7 +120,6 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
         <EmptyState
           title="No clients found"
           body="Try adjusting your filters or onboard your first client."
-          actionHref="/admin/clients/new"
           actionLabel="Create client"
           icon={<Building2 className="h-6 w-6 text-zinc-400" />}
         />

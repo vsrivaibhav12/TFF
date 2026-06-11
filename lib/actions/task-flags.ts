@@ -19,7 +19,7 @@ const stuckSchema = z.object({
 export async function setTaskStuckAction(input: z.infer<typeof stuckSchema>): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.assign');
+    await requireCapability(me, 'tasks.edit');
     const parsed = stuckSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     if (parsed.data.is_stuck && !parsed.data.reason_code) {
@@ -57,7 +57,7 @@ const blockSchema = z.object({
 export async function setTaskBlockedOnClientAction(input: z.infer<typeof blockSchema>): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.assign');
+    await requireCapability(me, 'tasks.edit');
     const parsed = blockSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     await setTaskBlockedOnClient(parsed.data.task_id, parsed.data.is_blocked_on_client, me.id);

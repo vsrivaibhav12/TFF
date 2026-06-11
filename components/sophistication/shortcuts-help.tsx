@@ -36,15 +36,22 @@ function triggerNewAction(pathname: string) {
     window.location.href = pathname.startsWith('/admin') ? '/admin/tasks/bulk-create' : pathname.replace(/\/tasks.*$/, '/tasks');
     return true;
   }
-  if (pathname.includes('/clients') && !pathname.includes('/new')) {
-    window.location.href = pathname.replace(/\/clients.*$/, '/clients/new');
+  if (pathname.includes('/clients')) {
+    window.location.href = pathname.replace(/\/clients.*$/, '/clients');
     return true;
   }
   return false;
 }
 
-export default function ShortcutsHelp({ role }: { role: 'admin' | 'team' | 'client' }) {
-  const [open, setOpen] = useState(false);
+export default function ShortcutsHelp({
+  role,
+  open,
+  onClose,
+}: {
+  role: 'admin' | 'team' | 'client';
+  open: boolean;
+  onClose: () => void;
+}) {
   const [g, setG] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -54,9 +61,7 @@ export default function ShortcutsHelp({ role }: { role: 'admin' | 'team' | 'clie
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.target && (e.target as HTMLElement).matches?.('input, textarea, [contenteditable]')) return;
-      if (e.key === '?') { e.preventDefault(); setOpen((v) => !v); }
-      else if (e.key === 'Escape') setOpen(false);
-      else if (e.key === 'n' || e.key === 'N') {
+      if (e.key === 'n' || e.key === 'N') {
         e.preventDefault();
         triggerNewAction(pathname ?? window.location.pathname);
       }
@@ -77,7 +82,7 @@ export default function ShortcutsHelp({ role }: { role: 'admin' | 'team' | 'clie
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-zinc-900/40 backdrop-blur-sm"
-      onClick={() => setOpen(false)}
+      onClick={onClose}
       data-testid="shortcuts-overlay"
     >
       <div

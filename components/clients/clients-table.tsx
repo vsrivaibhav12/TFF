@@ -105,7 +105,7 @@ export default function ClientsTable({
         {sorted.map((c) => (
           <div
             key={c.id}
-            className={`group grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-start md:items-center px-4 py-3 rounded-2xl bg-white transition-all duration-200 hover:shadow-md cursor-pointer ${selected.has(c.id) ? 'ring-1 ring-teal-200 bg-teal-50/40' : ''}`}
+            className={`group grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-start md:items-center px-4 py-3 rounded-2xl bg-white transition-all duration-200 hover:border-zinc-300 cursor-pointer ${selected.has(c.id) ? 'ring-1 ring-teal-200 bg-teal-50/40' : ''}`}
             style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
           >
             {selectable && (
@@ -115,7 +115,7 @@ export default function ClientsTable({
             )}
             {/* Client info */}
             <div className={`md:${selectable ? 'col-span-4' : 'col-span-5'} flex items-center gap-3 min-w-0`}>
-              <div className="w-10 h-10 rounded-xl bg-[#F3F4F6] flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
                 <Building2 className="h-5 w-5 text-zinc-400" />
               </div>
               <div className="min-w-0">
@@ -145,7 +145,7 @@ export default function ClientsTable({
             {/* Engagements / Work count */}
             <div className="md:col-span-2 hidden md:block">
               <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-semibold ${
-                c.engagements > 0 ? 'bg-[#0D9488]/10 text-[#0D9488]' : 'bg-zinc-100 text-zinc-400'
+                c.engagements > 0 ? 'bg-teal-50 text-teal-600' : 'bg-zinc-100 text-zinc-400'
               }`}>
                 {c.engagements}
               </span>
@@ -153,7 +153,7 @@ export default function ClientsTable({
 
             {/* View arrow */}
             <div className="md:col-span-1 flex justify-end hidden md:block">
-              <Link href={`${basePath}/${c.id}`} className="w-8 h-8 rounded-lg bg-zinc-50 flex items-center justify-center group-hover:bg-[#0D9488]/10 transition-colors">
+              <Link href={`${basePath}/${c.id}`} className="w-8 h-8 rounded-lg bg-zinc-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
                 <ArrowUpRight className="h-4 w-4 text-zinc-400 group-hover:text-[#0D9488] transition-colors" />
               </Link>
             </div>

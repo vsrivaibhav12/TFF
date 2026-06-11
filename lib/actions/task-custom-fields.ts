@@ -65,7 +65,7 @@ const valueSchema = z.object({
 export async function upsertCustomFieldValueAction(input: any): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    if (me.role === 'team') await requireCapability(me, 'tasks.complete');
+    if (me.role === 'team') await requireCapability(me, 'tasks.edit');
     const parsed = valueSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const sb = createClient();
@@ -95,7 +95,7 @@ const labelSchema = z.object({
 export async function createLabelAction(input: any): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'manage_custom_fields');
+    await requireCapability(me, 'manage_labels');
     const parsed = labelSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const sb = createClient();
@@ -111,7 +111,7 @@ export async function createLabelAction(input: any): Promise<ActionResult<void>>
 export async function deactivateLabelAction(code: string): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'manage_custom_fields');
+    await requireCapability(me, 'manage_labels');
     const sb = createClient();
     const { error } = await sb.from('task_labels').update({ is_active: false }).eq('code', code);
     if (error) return fail(error.message, 'DB');
@@ -132,7 +132,7 @@ const toggleLabelSchema = z.object({
 export async function toggleTaskLabelAction(input: any): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    if (me.role === 'team') await requireCapability(me, 'tasks.assign');
+    if (me.role === 'team') await requireCapability(me, 'tasks.edit');
     const parsed = toggleLabelSchema.safeParse(input);
     if (!parsed.success) return fail('Invalid input', 'VALIDATION');
     const sb = createClient();

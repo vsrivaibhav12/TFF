@@ -14,6 +14,7 @@ import { createServiceClient } from '@/lib/supabase/service-role';
 import { seedTaskStepsFromSop, seedTaskStepsFromTemplate } from '@/lib/services/task-steps-service';
 import { notify } from '@/lib/services/notification-service';
 import { writeAudit } from '@/lib/services/audit-service';
+import { buildTaskTitle } from '@/lib/utils';
 
 export async function createTaskAction(input: CreateTaskInput): Promise<ActionResult<{ id: string }>> {
   try {
@@ -56,7 +57,7 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
     // If linked to a task template, copy its steps onto the new task
     if (parsed.data.task_template_id) {
       try {
-        const sb = createServiceClient();
+        const sb = createClient();
         await seedTaskStepsFromTemplate(sb as any, { task_id: data.id, task_template_id: parsed.data.task_template_id });
       } catch {
         // Non-critical: template step seeding failure does not block task creation
@@ -64,7 +65,7 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
     } else if (parsed.data.sub_service_id) {
       // Auto-load SOP steps if no specific template is chosen
       try {
-        const sb = createServiceClient();
+        const sb = createClient();
         await seedTaskStepsFromSop(sb as any, { task_id: data.id, sub_service_id: parsed.data.sub_service_id });
       } catch {
         // Non-critical: SOP step seeding failure does not block task creation
@@ -128,7 +129,7 @@ export async function transitionTaskAction(input: { task_id: string; to_status: 
 export async function addTaskNoteAction(input: { task_id: string; body: string }): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team', 'client']);
-    if (me.role !== 'client') await requireCapability(me, 'tasks.assign');
+    if (me.role !== 'client') await requireCapability(me, 'tasks.edit');
     if (!input.body || input.body.trim().length < 1) return fail('Note cannot be empty', 'VALIDATION');
     
     await taskService.addTaskNote(input.task_id, input.body.trim(), me.id);
@@ -247,7 +248,7 @@ export async function sendTaskReminderAction(input: { task_id: string; message?:
 export async function updateTaskLabelsAction(taskId: string, labels: string[]): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.assign');
+    await requireCapability(me, 'tasks.edit');
     const task = await taskRepo.getTask(taskId);
     if (!task) return fail('Task not found', 'NOT_FOUND');
     if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
@@ -339,7 +340,7 @@ export async function updateTaskCustomFieldsAction(taskId: string, fields: Recor
 export async function softDeleteTaskAction(taskId: string): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.assign');
+    await requireCapability(me, 'tasks.delete');
     await taskRepo.softDeleteTaskRecord(taskId, me.id);
     await writeAudit({ action: 'task.delete', entity_type: 'task', entity_id: taskId, performed_by: me.id });
     revalidatePath('/admin/tasks');
@@ -354,7 +355,7 @@ export async function softDeleteTaskAction(taskId: string): Promise<ActionResult
 export async function bulkDeleteTasksAction(taskIds: string[]): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.assign'); // assuming same capability as soft delete
+    await requireCapability(me, 'tasks.delete');
     
     if (!taskIds || taskIds.length === 0) {
       return fail('No tasks selected', 'VALIDATION');
@@ -374,7 +375,7 @@ export async function bulkDeleteTasksAction(taskIds: string[]): Promise<ActionRe
 export async function updateTaskBillingAction(input: { task_id: string; is_billable: boolean; bill_reference?: string | null; bill_amount?: number | null }): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.assign');
+    await requireCapability(me, 'tasks.edit');
     const parsed = updateTaskBillingSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     
@@ -412,7 +413,7 @@ export async function updateTaskBillingAction(input: { task_id: string; is_billa
 export async function markTaskBilledAction(taskId: string): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.assign');
+    await requireCapability(me, 'tasks.edit');
     const task = await taskRepo.getTask(taskId);
     if (!task) return fail('Task not found', 'NOT_FOUND');
     if (!(task as any).is_billable) {
@@ -442,7 +443,7 @@ export async function markTaskBilledAction(taskId: string): Promise<ActionResult
 export async function updateTaskArnAction(input: { task_id: string; arn_reference?: string | null; is_arn_client_visible?: boolean }): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.assign');
+    await requireCapability(me, 'tasks.edit');
     const parsed = updateTaskArnSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     
@@ -479,7 +480,7 @@ export async function updateTaskArnAction(input: { task_id: string; arn_referenc
 export async function reopenTaskAction(input: { task_id: string; reason: string }): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.assign');
+    await requireCapability(me, 'tasks.edit');
     const parsed = reopenTaskSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     
@@ -557,11 +558,13 @@ export async function bulkCreateTasksAction(input: z.infer<typeof bulkCreateTask
         .eq('id', clientId)
         .maybeSingle();
 
-      const clientName = client?.business_name ?? 'Client';
-      const periodLabel = parsed.data.period_month
-        ? `${parsed.data.period_month}/${parsed.data.period_year}`
-        : `${parsed.data.period_year}`;
-      const title = `${clientName} — ${subService?.name ?? 'Task'} — ${periodLabel}`;
+      const title = buildTaskTitle({
+        subServiceName: subService?.name ?? 'Task',
+        clientName: client?.business_name,
+        periodYear: parsed.data.period_year,
+        periodMonth: parsed.data.period_month,
+        periodQuarter: parsed.data.period_quarter,
+      });
 
       try {
         await taskRepo.createTaskWithAutoNumber({
@@ -611,7 +614,7 @@ const bulkUpdateTasksSchema = z.object({
 export async function bulkUpdateTasksAction(input: z.infer<typeof bulkUpdateTasksSchema>): Promise<ActionResult<{ success: number; failed: number }>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.assign');
+    await requireCapability(me, 'tasks.edit');
     const parsed = bulkUpdateTasksSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
 
@@ -680,7 +683,7 @@ const updateTaskSchema = z.object({
 export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team', 'client']);
-    if (me.role !== 'client') await requireCapability(me, 'tasks.assign');
+    if (me.role !== 'client') await requireCapability(me, 'tasks.edit');
     const parsed = updateTaskSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
 
@@ -712,7 +715,7 @@ export async function loadTemplateStepsAction(input: { task_id: string; task_tem
     if (!task) return fail('Task not found', 'NOT_FOUND');
     if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
 
-    const sb = createServiceClient();
+    const sb = createClient();
     const count = await seedTaskStepsFromTemplate(sb as any, { task_id: input.task_id, task_template_id: input.task_template_id });
 
     revalidatePath(`/team/tasks/${input.task_id}`);
@@ -732,7 +735,7 @@ export async function loadSopStepsAction(input: { task_id: string; sub_service_i
     if (!task) return fail('Task not found', 'NOT_FOUND');
     if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
 
-    const sb = createServiceClient();
+    const sb = createClient();
     const count = await seedTaskStepsFromSop(sb as any, { task_id: input.task_id, sub_service_id: input.sub_service_id });
 
     revalidatePath(`/team/tasks/${input.task_id}`);

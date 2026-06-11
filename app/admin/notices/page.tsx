@@ -14,6 +14,7 @@ import FilterBar from '@/components/sophistication/filter-bar';
 import { ScrollText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import NoticesTable from './notices-table';
+import { MicroBarChart } from '@/components/charts/micro-bar-chart';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,6 +70,22 @@ export default async function AdminNoticesPage({ searchParams }: { searchParams:
     authority: n.issuing_authority ?? '',
   }));
 
+  // Notice aging buckets
+  const today = new Date().toISOString().slice(0, 10);
+  const aging = { '0-7 days': 0, '8-15 days': 0, '15+ days': 0 };
+  for (const n of items ?? []) {
+    if (!n.due_date || n.status === 'closed') continue;
+    const diff = Math.ceil((new Date(n.due_date).getTime() - new Date(today).getTime()) / 86400000);
+    if (diff <= 7) aging['0-7 days']++;
+    else if (diff <= 15) aging['8-15 days']++;
+    else aging['15+ days']++;
+  }
+  const agingSegments = [
+    { label: '0-7 days', value: aging['0-7 days'], color: '#0D9488' },
+    { label: '8-15 days', value: aging['8-15 days'], color: '#F59E0B' },
+    { label: '15+ days', value: aging['15+ days'], color: '#DC2626' },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -109,6 +126,13 @@ export default async function AdminNoticesPage({ searchParams }: { searchParams:
         />
         <SavedViewsBar scope="admin.notices" views={views as any} />
       </div>
+
+      {agingSegments.some((s) => s.value > 0) && (
+        <div className="tff-card p-4">
+          <h3 className="text-sm font-semibold text-zinc-700 mb-3">Notice aging</h3>
+          <MicroBarChart segments={agingSegments} />
+        </div>
+      )}
 
       {items.length === 0 ? (
         <EmptyState

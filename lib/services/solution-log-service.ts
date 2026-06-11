@@ -20,7 +20,7 @@ interface BaseEntry {
   actualOutcome?: string;
   financialImpactEstimate?: number;
   actualFinancialImpact?: number;
-  status?: 'identified' | 'in_progress' | 'implemented' | 'monitoring' | 'closed';
+  status?: 'recommended' | 'in_progress' | 'implemented' | 'deferred';
   sourceRecordId?: string;
   sourceRecordType?: string;
 }
@@ -106,7 +106,7 @@ export async function logVcfoSnapshot(opts: {
     identifiedBy: opts.identifiedBy,
     description: `vCFO snapshot recorded: ${pieces.join(' · ')}`,
     category: 'cash_flow',
-    status: 'monitoring',
+    status: 'in_progress',
     sourceRecordType: 'vcfo_snapshot',
     sourceRecordId: opts.snapshotId,
   });
@@ -129,7 +129,7 @@ export async function logTaxProjectionFinalized(opts: {
       ? `Advance tax instalments suggested: Rs.${opts.recommendedAdvanceTax.toFixed(0)}`
       : undefined,
     financialImpactEstimate: opts.estimatedTax,
-    status: 'identified',
+    status: 'recommended',
     sourceRecordType: 'tax_projection',
     sourceRecordId: opts.projectionId,
   });

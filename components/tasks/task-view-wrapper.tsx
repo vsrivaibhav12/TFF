@@ -5,13 +5,25 @@ import { cn } from '@/lib/utils';
 import { LayoutList, Columns3 } from 'lucide-react';
 import { TaskBoard } from './task-board';
 
+interface Task {
+  id: string;
+  title: string;
+  status: string;
+  priority: string;
+  due_date: string | null;
+  is_stuck?: boolean;
+  is_verified?: boolean;
+  clients?: { business_name: string } | null;
+  users_profile?: { full_name: string } | null;
+}
+
 interface TaskViewWrapperProps {
-  tasks: any[];
+  tasks: Task[];
   hrefPrefix?: string;
   children: React.ReactNode;
 }
 
-export function TaskViewWrapper({ tasks, hrefPrefix = '/admin/tasks', children }: TaskViewWrapperProps) {
+export function TaskViewWrapper({ tasks, hrefPrefix, children }: TaskViewWrapperProps) {
   const [view, setView] = useState<'list' | 'board'>('list');
 
   return (

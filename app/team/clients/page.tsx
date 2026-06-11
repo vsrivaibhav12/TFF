@@ -2,24 +2,27 @@ import { listAccessibleClients, listClientGroups, countAccessibleClients } from 
 import { getComplianceStatusForClients } from '@/lib/repositories/compliance';
 import { countActiveEngagementsForClients } from '@/lib/repositories/client-sub-services';
 import { listSavedViews } from '@/lib/actions/saved-views';
-import { getCurrentUser } from '@/lib/auth/require-role';
+import { requireRole } from '@/lib/auth/require-role';
 import { hasCapability } from '@/lib/auth/require-capability';
 import Link from 'next/link';
+import NewClientDialog from '@/components/clients/new-client-dialog';
 import { Users, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ExportButton from '@/components/sophistication/export-button';
 import EmptyState from '@/components/sophistication/empty-state';
 import SavedViewsBar from '@/components/sophistication/saved-views-bar';
 import FilterBar from '@/components/sophistication/filter-bar';
-import ClientsListShell from '@/components/clients/clients-list-shell';
+import ClientsTableClient from './clients-table-client';
+import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 50;
 
 export default async function TeamClientsList({ searchParams }: { searchParams: { group?: string; city?: string; q?: string; page?: string } }) {
-  const me = await getCurrentUser();
-  const canCreate = me ? await hasCapability(me, 'clients.create') : false;
-  const canAssignServices = me ? await hasCapability(me, 'services.assign') : false;
+  const me = await requireRole(['admin', 'team']);
+  const canCreate = await hasCapability(me, 'clients.create');
+  const canAssignServices = await hasCapability(me, 'services.assign');
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
 
@@ -42,19 +45,36 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const clientIds = clients.map((c: any) => c.id);
+  const clientIds = clients.map((c) => c.id);
 
   const [complianceMap, engagementMap] = await Promise.all([
     clientIds.length > 0 ? getComplianceStatusForClients(clientIds) : Promise.resolve<Record<string, { gst: string; tds: string; it: string }>>({}),
     clientIds.length > 0 ? countActiveEngagementsForClients(clientIds) : Promise.resolve<Record<string, number>>({}),
   ]);
 
-  const enrichedClients = clients.map((c: any) => ({
-    ...c,
-    group_name: c.client_groups?.name ?? null,
-    compliance: complianceMap[c.id] ?? { gst: 'unknown', tds: 'unknown', it: 'unknown' },
-    engagements: engagementMap[c.id] ?? 0,
+  const exportData = clients.map((c: any) => ({
+    business_name: c.business_name,
+    gstin: c.gstin ?? '',
+    category: c.category ?? '',
+    city: c.city ?? '',
+    state: c.state ?? '',
+    portal_enabled: c.portal_enabled,
   }));
+
+  const enrichedClients = clients.map((c) => {
+    const compliance = complianceMap[c.id] ?? { gst: 'unknown', tds: 'unknown', it: 'unknown' };
+    const filedCount = [compliance.gst, compliance.tds, compliance.it].filter((s) => s === 'filed' || s === 'completed').length;
+    const inProgressCount = [compliance.gst, compliance.tds, compliance.it].filter((s) => s === 'in_progress' || s === 'processing').length;
+    const score = filedCount * 1 + inProgressCount * 0.5 + (3 - filedCount - inProgressCount) * (['unknown', 'pending'].includes(compliance.gst) ? 0.5 : 0);
+    const health = Math.min(100, Math.round((score / 3) * 100));
+    return {
+      ...c,
+      group_name: c.client_groups?.name ?? null,
+      compliance,
+      engagements: engagementMap[c.id] ?? 0,
+      complianceHealth: health,
+    };
+  });
 
   function pageHref(page: number) {
     const params = new URLSearchParams();
@@ -66,22 +86,26 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
   }
 
   return (
-    <div className="space-y-6">
+    <PullToRefreshWrapper>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">My clients</h1>
           <p className="text-sm text-zinc-500 mt-1">{totalCount} client{totalCount !== 1 ? 's' : ''} assigned to you</p>
         </div>
-        {canCreate && (
-          <Button asChild>
-            <Link href="/admin/clients/new"><Plus className="h-4 w-4 mr-1" /> New client</Link>
-          </Button>
-        )}
+        <div className="flex gap-2">
+          <ExportButton data={exportData} filename="clients" format="excel" />
+          {canCreate && (
+            <Button asChild>
+              <NewClientDialog groups={groups} />
+            </Button>
+          )}
+        </div>
       </div>
 
       <FilterBar
         selects={[
-          { key: 'group', placeholder: 'All groups', options: groups.map((g: any) => ({ value: g.id, label: g.name })) },
+          { key: 'group', placeholder: 'All groups', options: groups.map((g) => ({ value: g.id, label: g.name })) },
         ]}
         inputs={[
           { key: 'city', placeholder: 'City', type: 'text' },
@@ -89,7 +113,7 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
         ]}
       />
 
-      <SavedViewsBar scope="team.clients" views={views as any} />
+      <SavedViewsBar scope="team.clients" views={views ?? []} />
 
       {clients.length === 0 && currentPage === 1 ? (
         <EmptyState
@@ -99,7 +123,7 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
         />
       ) : (
         <>
-          <ClientsListShell clients={enrichedClients as any} basePath="/team/clients" showBulkAssign={canAssignServices} />
+          <ClientsTableClient clients={enrichedClients} groups={groups} />
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
@@ -139,6 +163,7 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
           )}
         </>
       )}
-    </div>
+      </div>
+    </PullToRefreshWrapper>
   );
 }

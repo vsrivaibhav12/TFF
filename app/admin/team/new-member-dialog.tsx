@@ -53,7 +53,7 @@ export default function NewTeamMemberDialog({ team }: { team: TeamMember[] }) {
       toast.success(`Account created for ${form.email}`);
       setOpen(false);
       reset();
-      router.push(`/admin/team/${r.data.user_id}`);
+      router.push(`/admin/team?dock=team:${r.data.user_id}`);
     });
   }
 

@@ -18,7 +18,19 @@ export async function listLeaveRequests(filter?: { userId?: string; status?: str
 }
 
 // H-2: Repository functions for leave operations (previously inline in actions)
-export async function getLeaveRequestById(id: string) {
+export interface LeaveRequestRow {
+  id: string;
+  user_id: string;
+  leave_type: string;
+  from_date: string;
+  to_date: string;
+  number_of_days: number;
+  reason: string | null;
+  status: string;
+  reviewed_by: string | null;
+}
+
+export async function getLeaveRequestById(id: string): Promise<LeaveRequestRow | null> {
   const sb = createClient();
   const { data, error } = await sb
     .from('leave_requests')
@@ -26,7 +38,7 @@ export async function getLeaveRequestById(id: string) {
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
-  return data;
+  return data as LeaveRequestRow | null;
 }
 
 export async function createLeaveRequest(payload: {

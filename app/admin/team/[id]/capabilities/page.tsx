@@ -3,7 +3,7 @@ import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ALL_CAPABILITIES } from '@/lib/auth/capabilities';
-import { listGrantedCapabilities } from '@/lib/repositories/staff-capabilities';
+import { listEffectiveCapabilities } from '@/lib/repositories/staff-capabilities';
 import CapabilitiesForm from './capabilities-form';
 import { ChevronLeft } from 'lucide-react';
 
@@ -14,7 +14,7 @@ export default async function CapabilitiesPage({ params }: { params: { id: strin
   const sb = createClient();
   const { data: user } = await sb
     .from('users_profile')
-    .select('id, full_name, email, role')
+    .select('id, full_name, email, role, active_role_template_id')
     .eq('id', id)
     .maybeSingle();
   if (!user) notFound();
@@ -27,7 +27,18 @@ export default async function CapabilitiesPage({ params }: { params: { id: strin
       </div>
     );
   }
-  const granted = await listGrantedCapabilities(id);
+
+  const [granted, templateCaps] = await Promise.all([
+    listEffectiveCapabilities(id),
+    (async () => {
+      if (!user.active_role_template_id) return [] as string[];
+      const { data } = await sb
+        .from('staff_role_template_capabilities')
+        .select('capability')
+        .eq('template_id', user.active_role_template_id);
+      return (data ?? []).map((r: any) => r.capability as string);
+    })(),
+  ]);
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -36,13 +47,18 @@ export default async function CapabilitiesPage({ params }: { params: { id: strin
       </Link>
       <div>
         <h1 className="tff-page-title">Manage capabilities</h1>
-        <p className="tff-page-subtitle">Grant {(user as any).full_name} explicit rights. Every change is audited.</p>
+        <p className="tff-page-subtitle">
+          {templateCaps.length > 0
+            ? `${(user as any).full_name} inherits capabilities from their role template. Toggle individual capabilities below to create explicit deviations.`
+            : `Grant ${(user as any).full_name} explicit rights. Every change is audited.`}
+        </p>
       </div>
       <CapabilitiesForm
         userId={id}
         userName={(user as any).full_name}
         all={ALL_CAPABILITIES as unknown as string[]}
         granted={granted}
+        templateCaps={templateCaps}
       />
     </div>
   );

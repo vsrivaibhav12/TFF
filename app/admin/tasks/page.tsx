@@ -1,8 +1,9 @@
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
-import { listTasks, countTasks } from '@/lib/repositories/tasks';
+import { listTasks, countTasks, enrichTasksWithLabels, enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
 import { listSubServices } from '@/lib/repositories/services';
+import { listLabels } from '@/lib/repositories/task-custom-fields';
 import { listSavedViews } from '@/lib/actions/saved-views';
 import AdvancedTaskFilters from '@/components/tasks/advanced-task-filters';
 import Link from 'next/link';
@@ -17,51 +18,70 @@ import NewTaskDialog from '@/components/tasks/new-task-dialog';
 import SavedViewsBar from '@/components/sophistication/saved-views-bar';
 import FilterBar from '@/components/sophistication/filter-bar';
 import { Button } from '@/components/ui/button';
+import { TaskLabelFilterBar } from '@/components/tasks/task-label-filter-bar';
 
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 50;
 
-function buildTaskUrl(base: string, sp: Record<string, string | undefined>, overrides: Record<string, string | undefined>) {
+function buildTaskUrl(base: string, sp: Record<string, string | string[] | undefined>, overrides: Record<string, string | undefined>) {
   const params = new URLSearchParams();
   for (const [k, v] of Object.entries({ ...sp, ...overrides })) {
-    if (v !== undefined && v !== '' && v !== '__none__') params.set(k, v);
+    if (v === undefined || v === '' || v === '__none__') continue;
+    if (Array.isArray(v)) {
+      v.forEach((item) => params.append(k, item));
+    } else {
+      params.set(k, v);
+    }
   }
   const qs = params.toString();
   return qs ? `${base}?${qs}` : base;
 }
 
-export default async function AdminTasksPage({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string; page?: string; period_year?: string; is_billable?: string; is_stuck?: string; is_verified?: string } }) {
+export default async function AdminTasksPage({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string; page?: string; period_year?: string; period_month?: string; is_billable?: string; is_stuck?: string; is_verified?: string; label?: string | string[]; q?: string } }) {
   const me = await requireRole(['admin', 'team']);
-  await requireCapabilityOrRedirect(me, 'tasks.create');
+  await requireCapabilityOrRedirect(me, 'tasks.view');
 
-  const status = searchParams.status?.split(',').filter(Boolean) as any;
-  const priority = searchParams.priority?.split(',').filter(Boolean) as any;
+  const status = (searchParams.status?.split(',').filter(Boolean) ?? []) as Array<import('@/lib/validation/schemas').TaskStatus | 'blocked' | 'stuck'>;
+  const priority = searchParams.priority?.split(',').filter(Boolean) ?? [];
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
+
+  const labelFilter = Array.isArray(searchParams.label)
+    ? searchParams.label
+    : searchParams.label
+      ? [searchParams.label]
+      : undefined;
 
   const filterOpts = {
     status,
     priority,
     assignedTo: searchParams.assigned,
     clientId: searchParams.client,
-    subServiceId: searchParams.sub_service,
+    subServiceIds: searchParams.sub_service ? [searchParams.sub_service] : undefined,
     dueFrom: searchParams.due_from,
     dueTo: searchParams.due_to,
     periodYear: searchParams.period_year ? parseInt(searchParams.period_year, 10) : undefined,
+    periodMonth: searchParams.period_month ? parseInt(searchParams.period_month, 10) : undefined,
     isBillable: searchParams.is_billable === 'true' ? true : searchParams.is_billable === 'false' ? false : undefined,
     isStuck: searchParams.is_stuck === 'true' ? true : searchParams.is_stuck === 'false' ? false : undefined,
     isVerified: searchParams.is_verified === 'true' ? true : searchParams.is_verified === 'false' ? false : undefined,
+    labels: labelFilter,
+    q: searchParams.q,
   };
 
-  const [tasks, clients, team, subServices, views, totalCount] = await Promise.all([
+  const [rawTasks, clients, team, subServices, views, totalCount, allLabels] = await Promise.all([
     listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
     listAccessibleClients(),
     listTeamUsers(),
     listSubServices(),
     listSavedViews('admin.tasks'),
     countTasks(filterOpts),
+    listLabels(),
   ]);
+
+  let tasks = await enrichTasksWithLabels(rawTasks);
+  tasks = await enrichTasksWithProgress(tasks);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -89,13 +109,13 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
         actions={
           <>
             <ExportButton data={exportData} filename="tasks-export" format="csv" />
-            <NewTaskDialog clients={(clients ?? []) as any} team={team as any} triggerLabel="New task" triggerVariant="default" mode="admin" />
-            <a href="/admin/tasks/import">
+            <NewTaskDialog clients={clients ?? []} team={team ?? []} allSubServices={subServices ?? []} triggerLabel="New task" triggerVariant="default" mode="admin" currentUserId={me.id} />
+            <Link href="/admin/tasks/import">
               <Button variant="outline" size="sm"><Inbox className="h-4 w-4 mr-1" /> Import</Button>
-            </a>
-            <a href="/admin/tasks/bulk-create">
+            </Link>
+            <Link href="/admin/tasks/bulk-create">
               <Button variant="outline" size="sm"><Layers className="h-4 w-4 mr-1" /> Bulk create</Button>
-            </a>
+            </Link>
           </>
         }
       />
@@ -112,7 +132,8 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
           team={team ?? []} 
           subServices={subServices ?? []} 
         />
-        <SavedViewsBar scope="admin.tasks" views={views as any} />
+        <TaskLabelFilterBar labels={allLabels ?? []} />
+        <SavedViewsBar scope="admin.tasks" views={views ?? []} />
       </div>
 
       {(!tasks || tasks.length === 0) ? (
@@ -123,8 +144,8 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
         />
       ) : (
         <>
-          <TaskViewWrapper tasks={tasks as any} hrefPrefix="/admin/tasks">
-            <TasksTable tasks={tasks as any} todayIso={todayIso} team={team ?? []} />
+          <TaskViewWrapper tasks={tasks ?? []} hrefPrefix="/admin/tasks">
+            <TasksTable tasks={tasks ?? []} todayIso={todayIso} team={team ?? []} />
           </TaskViewWrapper>
 
           {/* Pagination */}
@@ -173,7 +194,7 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
 function StatCard({ label, value, icon, tone }: { label: string; value: number; icon: React.ReactNode; tone: 'zinc' | 'red' | 'amber' }) {
   const toneCls = tone === 'zinc' ? 'bg-zinc-100 text-zinc-600' : tone === 'red' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600';
   return (
-    <div className="tff-card p-5 transition-all duration-200 hover:shadow-sm">
+    <div className="tff-card p-5 transition-colors hover:border-zinc-300">
       <div className={cn('h-9 w-9 rounded-lg flex items-center justify-center', toneCls)}>{icon}</div>
       <div className="mt-3">
         <div className="text-2xl font-bold tabular-nums tracking-tight text-zinc-900">{value}</div>

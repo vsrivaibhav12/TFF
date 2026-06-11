@@ -9,12 +9,12 @@ export async function seedTaskStepsFromTemplate(
   sb: SupabaseClient,
   args: { task_id: string; task_template_id: string },
 ): Promise<number> {
-  const { data: existing } = await sb
+  const { count } = await sb
     .from('task_steps')
     .select('id', { head: true, count: 'exact' })
     .eq('task_id', args.task_id)
     .limit(1);
-  if (existing && (existing as any).length > 0) return 0;
+  if (count && count > 0) return 0;
 
   const { data: steps } = await sb
     .from('task_template_steps')
@@ -25,7 +25,7 @@ export async function seedTaskStepsFromTemplate(
 
   if (!steps || steps.length === 0) return 0;
 
-  const rows = steps.map((s: any) => ({
+  const rows = (steps as Array<{ id: string; step_order: number; title: string; description: string | null; is_required: boolean; guidance_notes: string | null }>).map((s) => ({
     task_id: args.task_id,
     step_order: s.step_order,
     title: s.title,
@@ -52,12 +52,12 @@ export async function seedTaskStepsFromSop(
   args: { task_id: string; sub_service_id: string },
 ): Promise<number> {
   // Skip if already seeded
-  const { data: existing } = await sb
+  const { count } = await sb
     .from('task_steps')
     .select('id', { head: true, count: 'exact' })
     .eq('task_id', args.task_id)
     .limit(1);
-  if (existing && (existing as any).length > 0) return 0;
+  if (count && count > 0) return 0;
 
   // Pull SOP
   const { data: sop } = await sb
@@ -69,7 +69,7 @@ export async function seedTaskStepsFromSop(
 
   if (!sop || sop.length === 0) return 0;
 
-  const rows = sop.map((s: any) => ({
+  const rows = (sop as Array<{ id: string; step_order: number; title: string; description: string | null; is_required: boolean; guidance_notes: string | null }>).map((s) => ({
     task_id: args.task_id,
     step_order: s.step_order,
     title: s.title,

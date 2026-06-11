@@ -23,12 +23,12 @@ export interface TransitionInput {
 export async function transitionTaskStatus(input: TransitionInput) {
   const task = await taskRepo.getTask(input.taskId);
   if (!task) throw new ServiceError('Task not found', 'NOT_FOUND');
-  if (!canModifyTask(task as any, input.toStatus)) {
+  if (!canModifyTask(task, input.toStatus)) {
     throw new ServiceError('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
   }
   
   if (input.toStatus === 'completed') {
-    const check = canCompleteTask(task as any);
+    const check = canCompleteTask(task);
     if (!check.ok) throw new ServiceError(check.reason, 'BILLING_REQUIRED');
   }
   
@@ -42,8 +42,8 @@ export async function transitionTaskStatus(input: TransitionInput) {
   // Sign-off gate when completing.
   if (input.toStatus === 'completed') {
     const stepRows = await taskRepo.getTaskSteps(input.taskId);
-    const required = (stepRows ?? []).filter((r: any) => r.is_required);
-    const incomplete = required.filter((r: any) => !r.completed_at).length;
+    const required = (stepRows ?? []).filter((r) => r.is_required);
+    const incomplete = required.filter((r) => !r.completed_at).length;
     if (required.length > 0 && incomplete > 0) {
       throw new ServiceError(
         `Cannot complete: ${incomplete} required checklist step${incomplete > 1 ? 's' : ''} still pending sign-off`,
@@ -154,10 +154,10 @@ export async function setTaskStuck(
 export async function verifyTask(taskId: string, performedBy: string, note?: string | null) {
   const task = await taskRepo.getTask(taskId);
   if (!task) throw new ServiceError('Task not found', 'NOT_FOUND');
-  if ((task as any).status !== 'completed') {
+  if (task.status !== 'completed') {
     throw new ServiceError('Cannot verify: task is not completed yet', 'NOT_COMPLETED');
   }
-  if ((task as any).verification_status === 'verified') {
+  if (task.verification_status === 'verified') {
     throw new ServiceError('Already verified', 'ALREADY_VERIFIED');
   }
   

@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { listServices } from '@/lib/repositories/services';
-import { getCurrentUser } from '@/lib/auth/require-role';
+import { requireRole } from '@/lib/auth/require-role';
 import { rateLimitByUser } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const me = await getCurrentUser();
-  if (!me) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const me = await requireRole(['admin', 'team']);
   const rl = rateLimitByUser(me.id, 'api:services', { maxRequests: 60, windowMs: 60_000 });
   if (!rl.allowed) return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
   try {

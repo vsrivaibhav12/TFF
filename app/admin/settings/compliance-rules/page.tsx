@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, RefreshCw, ListChecks } from 'lucide-react';
@@ -10,6 +12,8 @@ import RuleRowToggle from './rule-row-toggle';
 export const dynamic = 'force-dynamic';
 
 export default async function ComplianceRulesPage() {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'manage_compliance_rules');
   const sb = createClient();
   const { data: rules } = await sb
     .from('compliance_calendar_rules')

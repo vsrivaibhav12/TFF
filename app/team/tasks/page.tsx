@@ -1,71 +1,97 @@
 import Link from 'next/link';
-import { listTasks, countTasks } from '@/lib/repositories/tasks';
+import { requireRole } from '@/lib/auth/require-role';
+import { hasCapability, requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
+import { listTasks, countTasks, enrichTasksWithLabels, enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
 import { listSubServices } from '@/lib/repositories/services';
+import { listLabels } from '@/lib/repositories/task-custom-fields';
 import { listSavedViews } from '@/lib/actions/saved-views';
 import { getCurrentUser } from '@/lib/auth/require-role';
 import { PageHeader } from '@/components/ui/page-header';
+import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 import ExportButton from '@/components/sophistication/export-button';
 import EmptyState from '@/components/sophistication/empty-state';
 import SavedViewsBar from '@/components/sophistication/saved-views-bar';
-import FilterBar from '@/components/sophistication/filter-bar';
 import NewTaskDialog from '@/components/tasks/new-task-dialog';
 import TasksTableClient from './tasks-table-client';
 import { TaskViewWrapper } from '@/components/tasks/task-view-wrapper';
-import { Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Briefcase, AlertTriangle, Clock, Layers, Inbox, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TaskLabelFilterBar } from '@/components/tasks/task-label-filter-bar';
+import AdvancedTaskFilters from '@/components/tasks/advanced-task-filters';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 50;
 
-function buildTaskUrl(base: string, sp: Record<string, string | undefined>, overrides: Record<string, string | undefined>) {
+function buildTaskUrl(base: string, sp: Record<string, string | string[] | undefined>, overrides: Record<string, string | undefined>) {
   const params = new URLSearchParams();
   for (const [k, v] of Object.entries({ ...sp, ...overrides })) {
-    if (v !== undefined && v !== '' && v !== '__none__') params.set(k, v);
+    if (v === undefined || v === '' || v === '__none__') continue;
+    if (Array.isArray(v)) {
+      v.forEach((item) => params.append(k, item));
+    } else {
+      params.set(k, v);
+    }
   }
   const qs = params.toString();
   return qs ? `${base}?${qs}` : base;
 }
 
-export default async function TeamTasksList({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string; page?: string } }) {
-  const me = await getCurrentUser();
-  const status = searchParams.status?.split(',').filter(Boolean) as any;
-  const priority = searchParams.priority?.split(',').filter(Boolean) as any;
+export default async function TeamTasksList({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string; page?: string; period_year?: string; period_month?: string; is_billable?: string; is_stuck?: string; is_verified?: string; label?: string | string[]; q?: string } }) {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'tasks.view');
+  const status = (searchParams.status?.split(',').filter(Boolean) ?? []) as Array<import('@/lib/validation/schemas').TaskStatus | 'blocked' | 'stuck'>;
+  const priority = searchParams.priority?.split(',').filter(Boolean) ?? [];
   // Default to showing the current user's assigned tasks unless a specific filter is set
   const assignedTo = searchParams.assigned ?? me?.id ?? undefined;
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
 
-  const filterOpts = { status, priority, assignedTo, clientId: searchParams.client, subServiceId: searchParams.sub_service, dueFrom: searchParams.due_from, dueTo: searchParams.due_to };
+  const labelFilter = Array.isArray(searchParams.label)
+    ? searchParams.label
+    : searchParams.label
+      ? [searchParams.label]
+      : undefined;
 
-  const [tasks, clients, team, subServices, views, totalCount] = await Promise.all([
+  const filterOpts = {
+    status,
+    priority,
+    assignedTo,
+    clientId: searchParams.client,
+    subServiceIds: searchParams.sub_service ? [searchParams.sub_service] : undefined,
+    dueFrom: searchParams.due_from,
+    dueTo: searchParams.due_to,
+    periodYear: searchParams.period_year ? parseInt(searchParams.period_year, 10) : undefined,
+    periodMonth: searchParams.period_month ? parseInt(searchParams.period_month, 10) : undefined,
+    isBillable: searchParams.is_billable === 'true' ? true : searchParams.is_billable === 'false' ? false : undefined,
+    isStuck: searchParams.is_stuck === 'true' ? true : searchParams.is_stuck === 'false' ? false : undefined,
+    isVerified: searchParams.is_verified === 'true' ? true : searchParams.is_verified === 'false' ? false : undefined,
+    labels: labelFilter,
+    q: searchParams.q,
+  };
+
+  const [rawTasks, clients, team, subServices, views, totalCount, allLabels] = await Promise.all([
     listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
     listAccessibleClients(),
     listTeamUsers(),
     listSubServices(),
     listSavedViews('team.tasks'),
     countTasks(filterOpts),
+    listLabels(),
   ]);
 
+  let tasks = await enrichTasksWithLabels(rawTasks);
+  tasks = await enrichTasksWithProgress(tasks);
+
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  const filteredTasks = tasks;
 
-  const filters = [
-    { value: '', label: 'All' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'in_progress', label: 'In progress' },
-    { value: 'blocked', label: 'Awaiting client' },
-    { value: 'stuck', label: 'Stuck' },
-    { value: 'completed', label: 'Completed' },
-  ];
-
-  const priorityFilters = [
-    { value: '', label: 'All priorities' },
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-    { value: 'urgent', label: 'Urgent' },
-  ];
+  const { todayIST } = await import('@/lib/utils');
+  const todayIso = todayIST();
+  const total = totalCount;
+  const stuck = tasks?.filter((t: any) => t.is_stuck || t.priority === 'high').length ?? 0;
+  const dueToday = tasks?.filter((t: any) => t.due_date === todayIso).length ?? 0;
 
   const exportData = (tasks ?? []).map((t: any) => ({
     task_number: t.task_number ?? '',
@@ -77,106 +103,118 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
     assigned_to: t.users_profile?.full_name ?? '',
   }));
 
+  const canCreate = me ? await hasCapability(me, 'tasks.create') : false;
+  const canImport = me ? await hasCapability(me, 'tasks.create') : false; // reuse create cap until import cap exists
+  const canEdit = me ? await hasCapability(me, 'tasks.edit') : false;
+  const canComplete = me ? await hasCapability(me, 'tasks.complete') : false;
+
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Tasks"
-        subtitle={`${tasks.length} task${tasks.length === 1 ? '' : 's'} in this view.`}
-        actions={
-          <>
-            <ExportButton data={exportData} filename="tasks-export" format="csv" />
-            <NewTaskDialog clients={clients as any} team={team as any} mode="team" />
-          </>
-        }
-      />
+    <PullToRefreshWrapper>
+      <div className="space-y-6">
+        <PageHeader
+          title="Tasks"
+          subtitle={`${tasks.length} task${tasks.length === 1 ? '' : 's'} in this view.`}
+          actions={
+            <>
+              <ExportButton data={exportData} filename="tasks-export" format="csv" />
+              {canCreate && (
+                <NewTaskDialog clients={clients ?? []} team={team ?? []} allSubServices={subServices ?? []} mode="team" currentUserId={me?.id} />
+              )}
+              {canImport && (
+                <>
+                  <Link href="/team/tasks/import">
+                    <Button variant="outline" size="sm"><Inbox className="h-4 w-4 mr-1" /> Import</Button>
+                  </Link>
+                  <Link href="/team/tasks/bulk-create">
+                    <Button variant="outline" size="sm"><Layers className="h-4 w-4 mr-1" /> Bulk create</Button>
+                  </Link>
+                </>
+              )}
+            </>
+          }
+        />
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex gap-1.5 flex-wrap">
-            {filters.map((f) => (
-              <Link
-                key={f.value}
-                href={buildTaskUrl('/team/tasks', searchParams, { status: f.value || undefined })}
-                className={`rounded-md border px-3 py-1.5 text-xs ${(searchParams.status ?? '') === f.value ? 'border-teal-500 bg-teal-50 text-teal-800' : 'border-zinc-200 hover:bg-zinc-50'}`}
-                data-testid={`filter-${f.value || 'all'}`}
-              >{f.label}</Link>
-            ))}
-          </div>
-          <div className="flex gap-1.5 flex-wrap">
-            {priorityFilters.map((f) => (
-              <Link
-                key={f.value}
-                href={buildTaskUrl('/team/tasks', searchParams, { priority: f.value || undefined })}
-                className={`rounded-md border px-3 py-1.5 text-xs ${(searchParams.priority ?? '') === f.value ? 'border-amber-500 bg-amber-50 text-amber-800' : 'border-zinc-200 hover:bg-zinc-50'}`}
-              >{f.label}</Link>
-            ))}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatCard label="Active" value={total} icon={<Briefcase className="h-4 w-4" />} tone="zinc" />
+          <StatCard label="Stuck or high-priority" value={stuck} icon={<AlertTriangle className="h-4 w-4" />} tone="red" />
+          <StatCard label="Due today" value={dueToday} icon={<Clock className="h-4 w-4" />} tone="amber" />
         </div>
-        <FilterBar
-          selects={[
-            { key: 'assigned', placeholder: 'All assignees', options: team.map((u: any) => ({ value: u.id, label: u.full_name })) },
-            { key: 'client', placeholder: 'All clients', options: clients.map((c: any) => ({ value: c.id, label: c.business_name })) },
-            { key: 'sub_service', placeholder: 'All sub-services', options: subServices.map((s: any) => ({ value: s.id, label: s.name })) },
-          ]}
-          inputs={[
-            { key: 'due_from', placeholder: 'Due from', type: 'date' },
-            { key: 'due_to', placeholder: 'Due to', type: 'date' },
-          ]}
-        />
-        <SavedViewsBar scope="team.tasks" views={views as any} />
-      </div>
 
-      {tasks.length === 0 ? (
-        <EmptyState
-          title="No tasks here yet"
-          body="Tasks are auto-created from sub-services on the 1st of every month, or you can add one manually now."
-          icon={<Briefcase className="h-6 w-6 text-zinc-400" />}
-        />
-      ) : (
-        <>
-          <TaskViewWrapper tasks={filteredTasks as any} hrefPrefix="/team/tasks">
-            <TasksTableClient tasks={filteredTasks as any} />
-          </TaskViewWrapper>
+        <div className="space-y-3">
+          <AdvancedTaskFilters
+            clients={clients ?? []}
+            team={team ?? []}
+            subServices={subServices ?? []}
+          />
+          <TaskLabelFilterBar labels={allLabels ?? []} />
+          <SavedViewsBar scope="team.tasks" views={views ?? []} />
+        </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-2">
-              <p className="text-sm text-zinc-500">
-                Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, totalCount)} of {totalCount}
-              </p>
-              <div className="flex items-center gap-1">
-                {currentPage > 1 ? (
-                  <Link
-                    href={buildTaskUrl('/team/tasks', searchParams, { page: String(currentPage - 1) })}
-                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Link>
-                ) : (
-                  <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-100 text-zinc-300">
-                    <ChevronLeft className="h-4 w-4" />
+        {tasks.length === 0 ? (
+          <EmptyState
+            title="No tasks here yet"
+            body="Tasks are auto-created from sub-services on the 1st of every month, or you can add one manually now."
+            icon={<Briefcase className="h-6 w-6 text-zinc-400" />}
+          />
+        ) : (
+          <>
+            <TaskViewWrapper tasks={tasks ?? []} hrefPrefix="/team/tasks">
+              <TasksTableClient tasks={tasks ?? []} todayIso={todayIso} canEdit={canEdit} canComplete={canComplete} />
+            </TaskViewWrapper>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-sm text-zinc-500">
+                  Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, totalCount)} of {totalCount}
+                </p>
+                <div className="flex items-center gap-1">
+                  {currentPage > 1 ? (
+                    <Link
+                      href={buildTaskUrl('/team/tasks', searchParams, { page: String(currentPage - 1) })}
+                      className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-100 text-zinc-300">
+                      <ChevronLeft className="h-4 w-4" />
+                    </span>
+                  )}
+                  <span className="px-3 text-sm font-medium text-zinc-700">
+                    Page {currentPage} of {totalPages}
                   </span>
-                )}
-                <span className="px-3 text-sm font-medium text-zinc-700">
-                  Page {currentPage} of {totalPages}
-                </span>
-                {currentPage < totalPages ? (
-                  <Link
-                    href={buildTaskUrl('/team/tasks', searchParams, { page: String(currentPage + 1) })}
-                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                ) : (
-                  <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-100 text-zinc-300">
-                    <ChevronRight className="h-4 w-4" />
-                  </span>
-                )}
+                  {currentPage < totalPages ? (
+                    <Link
+                      href={buildTaskUrl('/team/tasks', searchParams, { page: String(currentPage + 1) })}
+                      className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-100 text-zinc-300">
+                      <ChevronRight className="h-4 w-4" />
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </>
-      )}
+            )}
+          </>
+        )}
+      </div>
+    </PullToRefreshWrapper>
+  );
+}
+
+function StatCard({ label, value, icon, tone }: { label: string; value: number; icon: React.ReactNode; tone: 'zinc' | 'red' | 'amber' }) {
+  const toneCls = tone === 'zinc' ? 'bg-zinc-100 text-zinc-600' : tone === 'red' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600';
+  return (
+    <div className="tff-card p-5 transition-colors hover:border-zinc-300">
+      <div className={cn('h-9 w-9 rounded-lg flex items-center justify-center', toneCls)}>{icon}</div>
+      <div className="mt-3">
+        <div className="text-2xl font-bold tabular-nums tracking-tight text-zinc-900">{value}</div>
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mt-1">{label}</div>
+      </div>
     </div>
   );
 }

@@ -24,6 +24,7 @@ import {
   UsersRound,
   FileCheck,
   Lock,
+  Inbox,
 } from 'lucide-react';
 
 export const ICONS: Record<string, LucideIcon> = {
@@ -52,6 +53,7 @@ export const ICONS: Record<string, LucideIcon> = {
   group: UsersRound,
   'file-check': FileCheck,
   lock: Lock,
+  inbox: Inbox,
 };
 
 export type NavIconName = keyof typeof ICONS;

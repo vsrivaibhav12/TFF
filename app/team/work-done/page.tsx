@@ -6,7 +6,7 @@ import WorkDoneForm from './work-done-form';
 import { WorkDoneRowActions } from '@/components/operations/work-done-actions';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { formatDateIST } from '@/lib/utils';
+import { formatDateIST, formatTimeIST } from '@/lib/utils';
 import ExportButton from '@/components/sophistication/export-button';
 
 export const dynamic = 'force-dynamic';
@@ -69,9 +69,9 @@ export default async function WorkDonePage() {
                   <TableRow key={l.id}>
                     <TableCell className="font-medium">{formatDateIST(l.work_date)}</TableCell>
                     <TableCell className="text-xs text-zinc-500">
-                      {l.started_at ? new Date(l.started_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                      {l.started_at ? formatTimeIST(l.started_at) : '—'}
                       {' – '}
-                      {l.ended_at ? new Date(l.ended_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                      {l.ended_at ? formatTimeIST(l.ended_at) : '—'}
                     </TableCell>
                     <TableCell>
                       <div className="max-w-[300px] truncate" title={l.note ?? ''}>{l.note ?? '—'}</div>
@@ -95,7 +95,7 @@ export default async function WorkDonePage() {
                     <TableCell>
                       <WorkDoneRowActions
                         entry={l}
-                        canEdit={l.user_id === me.id}
+                        canEdit={me.role === 'admin' || l.user_id === me.id}
                         clients={clients}
                         tasks={tasks}
                       />

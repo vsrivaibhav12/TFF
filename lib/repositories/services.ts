@@ -55,8 +55,21 @@ export async function listClientSubServices(clientId: string) {
     .from('client_sub_services')
     .select('id, sub_service_id, is_active, sub_services(id, code, name, frequency, service_id, services(code, name))')
     .eq('client_id', clientId)
+    .eq('is_active', true)
     .eq('sub_services.is_deleted', false);
   if (error) throw error;
+  for (const row of (data ?? []) as any[]) {
+    if (Array.isArray(row.sub_services) && row.sub_services.length > 0) {
+      row.sub_services = row.sub_services[0];
+    } else if (Array.isArray(row.sub_services)) {
+      row.sub_services = null;
+    }
+    if (row.sub_services && Array.isArray(row.sub_services.services) && row.sub_services.services.length > 0) {
+      row.sub_services.services = row.sub_services.services[0];
+    } else if (row.sub_services && Array.isArray(row.sub_services.services)) {
+      row.sub_services.services = null;
+    }
+  }
   return data ?? [];
 }
 

@@ -1,3 +1,5 @@
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { listHearings } from '@/lib/repositories/notices';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { PageHeader } from '@/components/ui/page-header';
@@ -23,6 +25,8 @@ function buildHearingUrl(sp: Record<string, string | undefined>, overrides: Reco
 }
 
 export default async function HearingsPage({ searchParams }: { searchParams: { status?: string; type?: string; client?: string; date_from?: string; date_to?: string } }) {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'hearings.view');
   const [items, clients] = await Promise.all([
     listHearings({
       status: searchParams.status,

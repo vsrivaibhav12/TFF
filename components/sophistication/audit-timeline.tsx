@@ -53,7 +53,7 @@ export default function AuditTimeline({ entries }: { entries: AuditEntry[] }) {
                         <>
                           <span className="font-mono text-xs bg-zinc-100 px-1 rounded">{entry.field_name}</span>
                           {entry.new_value && (
-                            <span className="ml-1 text-zinc-400">— set to <span className="text-zinc-700 italic">"{entry.new_value}"</span></span>
+                            <span className="ml-1 text-zinc-400">— set to <span className="text-zinc-700 italic">&quot;{entry.new_value}&quot;</span></span>
                           )}
                         </>
                       )}

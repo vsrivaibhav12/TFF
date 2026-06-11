@@ -1,3 +1,5 @@
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { listQueries } from '@/lib/repositories/queries';
 import { listSavedViews } from '@/lib/actions/saved-views';
@@ -11,13 +13,15 @@ import QueriesTableClient from './queries-table-client';
 export const dynamic = 'force-dynamic';
 
 export default async function TeamQueries({ searchParams }: { searchParams: { status?: string } }) {
-  const status = searchParams.status?.split(',').filter(Boolean) as any;
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'queries.view');
+  const status = searchParams.status?.split(',').filter(Boolean) ?? [];
   const [items, views] = await Promise.all([
     listQueries(status?.length ? { status } : { status: ['open', 'in_progress'] }),
     listSavedViews('team.queries'),
   ]);
 
-  const exportData = (items ?? []).map((q: any) => ({
+  const exportData = (items ?? []).map((q) => ({
     subject: q.subject,
     client: q.clients?.business_name ?? '',
     status: q.status,
@@ -38,7 +42,7 @@ export default async function TeamQueries({ searchParams }: { searchParams: { st
             <Link key={f.v} href={f.v ? `/team/queries?status=${f.v}` : '/team/queries'} className={`rounded-md border px-3 py-1.5 text-xs ${(searchParams.status ?? '') === f.v ? 'border-teal-500 bg-teal-50 text-teal-800' : 'border-zinc-200 hover:bg-zinc-50'}`}>{f.l}</Link>
           ))}
         </div>
-        <SavedViewsBar scope="team.queries" views={views as any} />
+        <SavedViewsBar scope="team.queries" views={views ?? []} />
       </div>
       {items.length === 0 ? (
         <EmptyState
@@ -47,7 +51,7 @@ export default async function TeamQueries({ searchParams }: { searchParams: { st
           icon={<MessageSquare className="h-6 w-6 text-zinc-400" />}
         />
       ) : (
-        <QueriesTableClient queries={items as any} />
+        <QueriesTableClient queries={items ?? []} />
       )}
     </div>
   );

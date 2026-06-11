@@ -2,7 +2,7 @@
  * 5 unit tests for the payroll service. Run via:  npx tsx scripts/test-payroll.ts
  * Pure functions, no Supabase needed.
  */
-import { computePayroll } from '../lib/services/payroll-service';
+import { computePayroll } from '../lib/services/payroll-compute';
 
 type Test = { name: string; run: () => void };
 let pass = 0;

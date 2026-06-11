@@ -4,6 +4,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -11,7 +12,7 @@ import { Filter, X, Calendar as CalendarIcon, SlidersHorizontal, CheckCircle2 } 
 import { Checkbox } from '@/components/ui/checkbox';
 
 interface AdvancedTaskFiltersProps {
-  clients: { id: string; business_name: string }[];
+  clients: { id: string; business_name: string; pan?: string | null }[];
   team: { id: string; full_name: string }[];
   subServices: { id: string; name: string }[];
   templates?: { id: string; name: string }[];
@@ -105,15 +106,21 @@ export default function AdvancedTaskFilters({ clients, team, subServices, templa
           </SelectContent>
         </Select>
 
-        <Select value={f.client || 'all'} onValueChange={(v) => update('client', v)}>
-          <SelectTrigger className="w-48 h-8 text-xs bg-zinc-50 border-dashed">
-            <SelectValue placeholder="Client" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Any client</SelectItem>
-            {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.business_name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          options={[
+            { value: 'all', label: 'Any client', searchString: 'any client' },
+            ...clients.map((c) => ({
+              value: c.id,
+              label: c.pan ? `${c.business_name} (${c.pan})` : c.business_name,
+              searchString: `${c.business_name} ${c.pan ?? ''}`.toLowerCase(),
+            })),
+          ]}
+          value={f.client || 'all'}
+          onChange={(v) => update('client', v)}
+          placeholder="Client"
+          searchPlaceholder="Search by name or PAN..."
+          className="w-48 h-8 text-xs bg-zinc-50 border-dashed"
+        />
 
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
@@ -148,6 +155,18 @@ export default function AdvancedTaskFilters({ clients, team, subServices, templa
               <div className="space-y-1.5">
                 <Label className="text-xs text-zinc-500">Period Year</Label>
                 <Input type="number" placeholder="e.g. 2026" className="h-8 text-xs" value={f.period_year || ''} onChange={(e) => update('period_year', e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-500">Period Month</Label>
+                <Select value={f.period_month || 'all'} onValueChange={(v) => update('period_month', v)}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Any" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Any</SelectItem>
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>{new Date(2000, i, 1).toLocaleString('en-IN', { month: 'short' })}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-zinc-500">Due From</Label>
@@ -196,6 +215,8 @@ export default function AdvancedTaskFilters({ clients, team, subServices, templa
             if (k === 'is_billable') label = `Billable Only`;
             if (k === 'is_stuck') label = `Stuck Only`;
             if (k === 'is_verified') label = `Verified Only`;
+            if (k === 'period_year') label = `Year: ${v}`;
+            if (k === 'period_month') label = `Month: ${new Date(2000, parseInt(v) - 1, 1).toLocaleString('en-IN', { month: 'short' })}`;
 
             return (
               <Badge key={k} variant="outline" className="bg-teal-50 text-teal-800 hover:bg-teal-100 text-[10px] pr-1 border border-teal-100">

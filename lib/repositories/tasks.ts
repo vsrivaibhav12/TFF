@@ -3,6 +3,48 @@ import { createClient } from '@/lib/supabase/server';
 import type { TaskStatus } from '@/lib/validation/schemas';
 import { todayIST } from '@/lib/utils';
 
+export interface TaskRow {
+  id: string;
+  task_number: string | null;
+  title: string;
+  status: TaskStatus;
+  priority: string;
+  due_date: string | null;
+  period_year: number | null;
+  period_month: number | null;
+  period_quarter: number | null;
+  assigned_to: string | null;
+  reviewer_id: string | null;
+  sub_service_id: string | null;
+  client_id: string | null;
+  is_blocked_on_client: boolean;
+  is_stuck: boolean;
+  stuck_reason_code: string | null;
+  verification_status: string | null;
+  is_billable: boolean;
+  bill_reference: string | null;
+  is_verified: boolean;
+  created_at: string;
+  updated_at: string;
+  is_deleted?: boolean;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  clients: { id: string; business_name: string } | null;
+  users_profile: { id: string; full_name: string; email: string } | null;
+  sub_services: { id: string; code: string; name: string } | null;
+}
+
+export interface TaskDetail extends TaskRow {
+  assignee: { id: string; full_name: string; email: string } | null;
+  reviewer: { id: string; full_name: string; email: string } | null;
+  sub_services: { id: string; code: string; name: string; services: { name: string } | null } | null;
+  description: string | null;
+  bill_amount: number | null;
+  arn_reference: string | null;
+  is_arn_client_visible: boolean;
+  started_date: string | null;
+}
+
 function normalizeFkArray(row: any, key: string) {
   if (row && Array.isArray(row[key]) && row[key].length > 0) {
     row[key] = row[key][0];
@@ -16,27 +58,44 @@ export async function listTasks(opts: {
   assignedTo?: string;
   status?: Array<TaskStatus | 'blocked' | 'stuck'>;
   priority?: string[];
-  subServiceId?: string;
+  subServiceIds?: string[];
   dueFrom?: string;
   dueTo?: string;
   periodYear?: number;
+  periodMonth?: number;
   isBillable?: boolean;
   isStuck?: boolean;
   isVerified?: boolean;
+  labels?: string[];
+  q?: string;
   limit?: number;
   offset?: number;
-} = {}) {
+} = {}): Promise<TaskRow[]> {
   const sb = createClient();
+
+  // Pre-filter by labels if specified
+  let labelTaskIds: string[] | undefined;
+  if (opts.labels?.length) {
+    const { data: la } = await sb
+      .from('task_label_assignments')
+      .select('task_id')
+      .in('label_code', opts.labels);
+    labelTaskIds = [...new Set((la ?? []).map((d: any) => d.task_id))];
+    if (labelTaskIds.length === 0) return [];
+  }
+
   let q = sb
     .from('tasks')
-    .select('id, task_number, title, status, priority, due_date, period_year, period_month, period_quarter, assigned_to, reviewer_id, sub_service_id, client_id, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status, is_billable, bill_reference, is_verified, created_at, updated_at, clients!tasks_client_id_fkey(id, business_name), users_profile!tasks_assigned_to_fkey(id, full_name, email)')
+    .select('id, task_number, title, status, priority, due_date, period_year, period_month, period_quarter, assigned_to, reviewer_id, sub_service_id, client_id, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status, is_billable, bill_reference, is_verified, created_at, updated_at, clients!tasks_client_id_fkey(id, business_name), users_profile!tasks_assigned_to_fkey(id, full_name, email), sub_services!tasks_sub_service_id_fkey(id, code, name)')
     .eq('is_deleted', false)
     .order('due_date', { ascending: true, nullsFirst: false });
+  if (labelTaskIds?.length) q = q.in('id', labelTaskIds);
   if (opts.clientId) q = q.eq('client_id', opts.clientId);
-  if (opts.subServiceId) q = q.eq('sub_service_id', opts.subServiceId);
+  if (opts.subServiceIds?.length) q = q.in('sub_service_id', opts.subServiceIds);
   if (opts.dueFrom) q = q.gte('due_date', opts.dueFrom);
   if (opts.dueTo) q = q.lte('due_date', opts.dueTo);
   if (opts.periodYear) q = q.eq('period_year', opts.periodYear);
+  if (opts.periodMonth) q = q.eq('period_month', opts.periodMonth);
   if (opts.isBillable !== undefined) q = q.eq('is_billable', opts.isBillable);
   if (opts.isStuck !== undefined) q = q.eq('is_stuck', opts.isStuck);
   if (opts.isVerified !== undefined) q = q.eq('is_verified', opts.isVerified);
@@ -46,6 +105,22 @@ export async function listTasks(opts: {
     q = q.is('assigned_to', null);
   } else if (opts.assignedTo) {
     q = q.eq('assigned_to', opts.assignedTo);
+  }
+
+  if (opts.q?.trim()) {
+    const term = opts.q.trim().toLowerCase();
+    // PostgREST cannot mix local and foreign columns in a single .or() string,
+    // so we search clients separately and include matching IDs.
+    const [{ data: clientMatches }, { data: subServiceMatches }] = await Promise.all([
+      sb.from('clients').select('id').ilike('business_name', `%${term}%`).eq('is_deleted', false),
+      sb.from('sub_services').select('id').ilike('name', `%${term}%`).eq('is_deleted', false),
+    ]);
+    const clientIds = (clientMatches ?? []).map((c: any) => c.id);
+    const subServiceIds = (subServiceMatches ?? []).map((s: any) => s.id);
+    const orParts: string[] = [`title.ilike.%${term}%`, `task_number.ilike.%${term}%`];
+    if (clientIds.length > 0) orParts.push(`client_id.in.(${clientIds.join(',')})`);
+    if (subServiceIds.length > 0) orParts.push(`sub_service_id.in.(${subServiceIds.join(',')})`);
+    q = q.or(orParts.join(','));
   }
 
   if (opts.status?.length) {
@@ -80,8 +155,9 @@ export async function listTasks(opts: {
   for (const row of (data ?? []) as any[]) {
     normalizeFkArray(row, 'users_profile');
     normalizeFkArray(row, 'clients');
+    normalizeFkArray(row, 'sub_services');
   }
-  return data ?? [];
+  return (data ?? []) as unknown as TaskRow[];
 }
 
 export async function countTasks(opts: {
@@ -89,24 +165,40 @@ export async function countTasks(opts: {
   assignedTo?: string;
   status?: Array<TaskStatus | 'blocked' | 'stuck'>;
   priority?: string[];
-  subServiceId?: string;
+  subServiceIds?: string[];
   dueFrom?: string;
   dueTo?: string;
   periodYear?: number;
+  periodMonth?: number;
   isBillable?: boolean;
   isStuck?: boolean;
   isVerified?: boolean;
+  labels?: string[];
+  q?: string;
 } = {}) {
   const sb = createClient();
+
+  let labelTaskIds: string[] | undefined;
+  if (opts.labels?.length) {
+    const { data: la } = await sb
+      .from('task_label_assignments')
+      .select('task_id')
+      .in('label_code', opts.labels);
+    labelTaskIds = [...new Set((la ?? []).map((d: any) => d.task_id))];
+    if (labelTaskIds.length === 0) return 0;
+  }
+
   let q = sb
     .from('tasks')
     .select('id', { count: 'exact', head: true })
     .eq('is_deleted', false);
+  if (labelTaskIds?.length) q = q.in('id', labelTaskIds);
   if (opts.clientId) q = q.eq('client_id', opts.clientId);
-  if (opts.subServiceId) q = q.eq('sub_service_id', opts.subServiceId);
+  if (opts.subServiceIds?.length) q = q.in('sub_service_id', opts.subServiceIds);
   if (opts.dueFrom) q = q.gte('due_date', opts.dueFrom);
   if (opts.dueTo) q = q.lte('due_date', opts.dueTo);
   if (opts.periodYear) q = q.eq('period_year', opts.periodYear);
+  if (opts.periodMonth) q = q.eq('period_month', opts.periodMonth);
   if (opts.isBillable !== undefined) q = q.eq('is_billable', opts.isBillable);
   if (opts.isStuck !== undefined) q = q.eq('is_stuck', opts.isStuck);
   if (opts.isVerified !== undefined) q = q.eq('is_verified', opts.isVerified);
@@ -116,6 +208,20 @@ export async function countTasks(opts: {
     q = q.is('assigned_to', null);
   } else if (opts.assignedTo) {
     q = q.eq('assigned_to', opts.assignedTo);
+  }
+
+  if (opts.q?.trim()) {
+    const term = opts.q.trim().toLowerCase();
+    const [{ data: clientMatches }, { data: subServiceMatches }] = await Promise.all([
+      sb.from('clients').select('id').ilike('business_name', `%${term}%`).eq('is_deleted', false),
+      sb.from('sub_services').select('id').ilike('name', `%${term}%`).eq('is_deleted', false),
+    ]);
+    const clientIds = (clientMatches ?? []).map((c: any) => c.id);
+    const subServiceIds = (subServiceMatches ?? []).map((s: any) => s.id);
+    const orParts: string[] = [`title.ilike.%${term}%`, `task_number.ilike.%${term}%`];
+    if (clientIds.length > 0) orParts.push(`client_id.in.(${clientIds.join(',')})`);
+    if (subServiceIds.length > 0) orParts.push(`sub_service_id.in.(${subServiceIds.join(',')})`);
+    q = q.or(orParts.join(','));
   }
 
   if (opts.status?.length) {
@@ -147,7 +253,7 @@ export async function countTasks(opts: {
   return count ?? 0;
 }
 
-export async function getTask(id: string) {
+export async function getTask(id: string): Promise<TaskDetail | null> {
   const sb = createClient();
   const { data, error } = await sb
     .from('tasks')
@@ -165,7 +271,7 @@ export async function getTask(id: string) {
       normalizeFkArray(data.sub_services, 'services');
     }
   }
-  return data;
+  return data as TaskDetail | null;
 }
 
 export async function listTaskActivity(taskId: string) {
@@ -320,21 +426,21 @@ export async function addTaskNoteRecord(payload: any) {
   if (error) throw error;
 }
 
-export async function getTaskSteps(taskId: string) {
+export async function getTaskSteps(taskId: string): Promise<Array<{ id: string; is_required: boolean; completed_at: string | null }>> {
   const sb = createClient();
   const { data, error } = await sb
     .from('task_steps')
     .select('id, is_required, completed_at')
     .eq('task_id', taskId);
   if (error) throw error;
-  return data;
+  return (data ?? []) as Array<{ id: string; is_required: boolean; completed_at: string | null }>;
 }
 
 export async function getSubServiceRequiresVerification(subServiceId: string) {
   const sb = createClient();
   const { data, error } = await sb
     .from('sub_services')
-    .select('requires_verification')
+    .select('requires_client_input')
     .eq('id', subServiceId)
     .eq('is_deleted', false)
     .maybeSingle();
@@ -356,4 +462,44 @@ export async function enrichTasksWithProgress(tasks: any[]): Promise<any[]> {
     const progress_pct = total === 0 ? 0 : Math.round((completed / total) * 100);
     return { ...t, progress_pct, step_total: total, step_completed: completed };
   });
+}
+
+export async function enrichTasksWithLabels(tasks: any[]): Promise<any[]> {
+  if (tasks.length === 0) return tasks;
+  const { listLabelsForTasks } = await import('./task-custom-fields');
+  const taskIds = tasks.map((t) => t.id);
+  const labelMap = await listLabelsForTasks(taskIds);
+  return tasks.map((t) => ({ ...t, labels: labelMap.get(t.id) ?? [] }));
+}
+
+export async function getTaskClosureVelocity(days = 30): Promise<{ date: string; count: number }[]> {
+  const sb = createClient();
+  const { todayIST } = await import('@/lib/utils');
+  const today = todayIST();
+  const start = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date(Date.now() - days * 86_400_000));
+
+  const { data } = await sb
+    .from('tasks')
+    .select('updated_at')
+    .eq('status', 'completed')
+    .gte('updated_at', `${start}T00:00:00+05:30`)
+    .order('updated_at', { ascending: true });
+
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const date = (row as any).updated_at.slice(0, 10);
+    counts[date] = (counts[date] ?? 0) + 1;
+  }
+
+  // Fill in missing dates with 0
+  const result: { date: string; count: number }[] = [];
+  for (let i = days; i >= 0; i--) {
+    const d = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date(Date.now() - i * 86_400_000));
+    result.push({ date: d, count: counts[d] ?? 0 });
+  }
+  return result;
 }

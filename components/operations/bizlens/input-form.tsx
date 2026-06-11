@@ -20,7 +20,7 @@ interface Props {
   report: BizlensData;
   clientId: string;
   role: 'admin' | 'team';
-  snapshots?: { id?: string; period_month: number; period_year: number; months_covered: number; data: Record<string, any> }[];
+  snapshots?: { id?: string; period_month: number; period_year: number; months_covered: number; data_json: Record<string, any> }[];
 }
 
 export default function BizlensStudioInputForm({ report, clientId, role, snapshots = [] }: Props) {
@@ -54,7 +54,7 @@ export default function BizlensStudioInputForm({ report, clientId, role, snapsho
         return;
       }
       toast.success('Report published successfully');
-      router.push(`/${role}/bizlens/${report.id}/output`);
+      router.push(`/admin/bizlens/${report.id}/output`);
     } catch (e) {
       toast.error('Failed to publish');
     } finally {
@@ -81,7 +81,7 @@ export default function BizlensStudioInputForm({ report, clientId, role, snapsho
       <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm sticky top-4 z-10">
         <div className="flex items-center gap-4">
           <Button variant="ghost" asChild className="rounded-xl">
-            <Link href={`/${role}/bizlens`}><ArrowLeft className="w-4 h-4 mr-2" /> Back to Studio</Link>
+            <Link href={`/admin/bizlens`}><ArrowLeft className="w-4 h-4 mr-2" /> Back to Studio</Link>
           </Button>
           <div className="h-6 w-px bg-zinc-200 mx-2" />
           <div className="text-sm">
@@ -92,7 +92,7 @@ export default function BizlensStudioInputForm({ report, clientId, role, snapsho
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild className="rounded-xl border-zinc-200 font-bold">
-            <Link href={`/${role}/bizlens/${report.id}/output`}>Preview Report</Link>
+            <Link href={`/admin/bizlens/${report.id}/output`}>Preview Report</Link>
           </Button>
           <Button onClick={handlePublish} disabled={publishing || data.status === 'published'} className="bg-teal-600 hover:bg-teal-700 rounded-xl font-bold px-6  ">
             {publishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

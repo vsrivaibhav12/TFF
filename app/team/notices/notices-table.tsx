@@ -2,9 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { getStatusColour } from '@/lib/semantic-colours';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateIST, formatCurrencyINR } from '@/lib/utils';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { DockLink } from '@/components/shell/dock-link';
+import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
+import { cn } from '@/lib/utils';
 
 interface Notice {
   id: string;
@@ -17,9 +21,20 @@ interface Notice {
   clients?: { business_name: string } | null;
 }
 
+const DEFAULT_COLUMNS = [
+  { key: 'client', label: 'Client', visible: true, optional: true },
+  { key: 'notice_type', label: 'Type', visible: true, optional: true },
+  { key: 'notice_number', label: 'Number', visible: true, optional: true },
+  { key: 'subject', label: 'Subject', visible: true, optional: false },
+  { key: 'due_date', label: 'Due', visible: true, optional: true },
+  { key: 'amount', label: 'Amount', visible: true, optional: true },
+  { key: 'status', label: 'Status', visible: true, optional: false },
+];
+
 export default function NoticesTable({ notices }: { notices: Notice[] }) {
   const [sortKey, setSortKey] = useState<string>('due_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const { columns, setColumns, density, setDensity } = useTablePrefs('team-notices', DEFAULT_COLUMNS, 'comfortable');
 
   const sorted = useMemo(() => {
     const data = [...notices];
@@ -59,49 +74,98 @@ export default function NoticesTable({ notices }: { notices: Notice[] }) {
     return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 text-teal-600" /> : <ArrowDown className="h-3 w-3 text-teal-600" />;
   }
 
+  const colVisible = (key: string) => columns.find((c) => c.key === key)?.visible ?? true;
+  const rowPadding = density === 'compact' ? 'py-1.5' : 'py-3';
+
   return (
-    <div className="tff-card overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
-              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('client')}>
-                <span className="flex items-center gap-1">Client <SortIcon col="client" /></span>
-              </TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('notice_type')}>
-                <span className="flex items-center gap-1">Type <SortIcon col="notice_type" /></span>
-              </TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('notice_number')}>
-                <span className="flex items-center gap-1">Number <SortIcon col="notice_number" /></span>
-              </TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('subject')}>
-                <span className="flex items-center gap-1">Subject <SortIcon col="subject" /></span>
-              </TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('due_date')}>
-                <span className="flex items-center gap-1">Due <SortIcon col="due_date" /></span>
-              </TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('amount')}>
-                <span className="flex items-center gap-1">Amount <SortIcon col="amount" /></span>
-              </TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('status')}>
-                <span className="flex items-center gap-1">Status <SortIcon col="status" /></span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sorted.map((n) => (
-              <TableRow key={n.id} data-testid={`notice-row-${n.id}`}>
-                <TableCell className="font-medium">{n.clients?.business_name}</TableCell>
-                <TableCell><Badge variant="outline">{n.notice_type}</Badge></TableCell>
-                <TableCell className="font-mono text-xs">{n.notice_number ?? '—'}</TableCell>
-                <TableCell className="max-w-xs truncate">{n.subject ?? '—'}</TableCell>
-                <TableCell>{formatDateIST(n.due_date)}</TableCell>
-                <TableCell className="tabular-nums">{formatCurrencyINR(n.amount_involved, { compact: true })}</TableCell>
-                <TableCell><Badge variant={n.status === 'closed' ? 'success' : 'warning'}>{n.status.replace(/_/g, ' ')}</Badge></TableCell>
+    <div className="space-y-3">
+      <div className="flex items-center justify-end">
+        <TableToolbar
+          columns={columns}
+          onColumnsChange={setColumns}
+          density={density}
+          onDensityChange={setDensity}
+        />
+      </div>
+      <div className="tff-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
+                {colVisible('client') && (
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('client')}>
+                    <span className="flex items-center gap-1">Client <SortIcon col="client" /></span>
+                  </TableHead>
+                )}
+                {colVisible('notice_type') && (
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('notice_type')}>
+                    <span className="flex items-center gap-1">Type <SortIcon col="notice_type" /></span>
+                  </TableHead>
+                )}
+                {colVisible('notice_number') && (
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('notice_number')}>
+                    <span className="flex items-center gap-1">Number <SortIcon col="notice_number" /></span>
+                  </TableHead>
+                )}
+                {colVisible('subject') && (
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('subject')}>
+                    <span className="flex items-center gap-1">Subject <SortIcon col="subject" /></span>
+                  </TableHead>
+                )}
+                {colVisible('due_date') && (
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('due_date')}>
+                    <span className="flex items-center gap-1">Due <SortIcon col="due_date" /></span>
+                  </TableHead>
+                )}
+                {colVisible('amount') && (
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('amount')}>
+                    <span className="flex items-center gap-1">Amount <SortIcon col="amount" /></span>
+                  </TableHead>
+                )}
+                {colVisible('status') && (
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                    <span className="flex items-center gap-1">Status <SortIcon col="status" /></span>
+                  </TableHead>
+                )}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {sorted.map((n) => (
+                <TableRow key={n.id} data-testid={`notice-row-${n.id}`}>
+                  {colVisible('client') && (
+                    <TableCell className={cn('font-medium', rowPadding)}>
+                      <DockLink item={{ type: 'notice', id: n.id }} href={`/team/notices/${n.id}`}>
+                        {n.clients?.business_name}
+                      </DockLink>
+                    </TableCell>
+                  )}
+                  {colVisible('notice_type') && (
+                    <TableCell className={rowPadding}><Badge variant="outline">{n.notice_type}</Badge></TableCell>
+                  )}
+                  {colVisible('notice_number') && (
+                    <TableCell className={cn('font-mono text-xs', rowPadding)}>{n.notice_number ?? '—'}</TableCell>
+                  )}
+                  {colVisible('subject') && (
+                    <TableCell className={cn('max-w-xs truncate', rowPadding)}>
+                      <DockLink item={{ type: 'notice', id: n.id }} href={`/team/notices/${n.id}`}>
+                        {n.subject ?? '—'}
+                      </DockLink>
+                    </TableCell>
+                  )}
+                  {colVisible('due_date') && (
+                    <TableCell className={rowPadding}>{formatDateIST(n.due_date)}</TableCell>
+                  )}
+                  {colVisible('amount') && (
+                    <TableCell className={cn('tabular-nums', rowPadding)}>{formatCurrencyINR(n.amount_involved, { compact: true })}</TableCell>
+                  )}
+                  {colVisible('status') && (
+                    <TableCell className={rowPadding}><Badge className={cn(getStatusColour(n.status).bg, getStatusColour(n.status).text, getStatusColour(n.status).border)}><span className={cn('h-1.5 w-1.5 rounded-full', getStatusColour(n.status).dot)} />{n.status.replace(/_/g, ' ')}</Badge></TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

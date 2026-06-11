@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { formatTimeIST } from '@/lib/utils';
 import { listTeamUsers } from '@/lib/repositories/clients';
 import { listAttendanceForDate, getTodayAttendance } from '@/lib/repositories/attendance';
 import { getUserProfile } from '@/lib/repositories/staff';
@@ -36,8 +37,8 @@ export default async function AdminAttendancePage({ searchParams }: { searchPara
     user_name: userMap.get(l.user_id)?.full_name ?? userMap.get(l.user_id)?.email ?? '—',
     attendance_date: l.attendance_date,
     status: l.status,
-    check_in_time: l.check_in_time ? new Date(l.check_in_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '',
-    check_out_time: l.check_out_time ? new Date(l.check_out_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '',
+    check_in_time: l.check_in_time ? formatTimeIST(l.check_in_time) : '',
+    check_out_time: l.check_out_time ? formatTimeIST(l.check_out_time) : '',
   }));
 
   const geoRequired = !!(profile as any)?.geo_check_in_required;
@@ -68,8 +69,8 @@ export default async function AdminAttendancePage({ searchParams }: { searchPara
                     {today.check_in_time && (
                       <span className="flex items-center gap-1 text-zinc-400">
                         <Clock className="h-3 w-3" />
-                        {new Date(today.check_in_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                        {today.check_out_time && ` → ${new Date(today.check_out_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`}
+                        {formatTimeIST(today.check_in_time)}
+                        {today.check_out_time && ` → ${formatTimeIST(today.check_out_time)}`}
                       </span>
                     )}
                   </span>

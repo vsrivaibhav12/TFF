@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { Clock, ArrowRight, Inbox, Play, CheckCircle2 } from 'lucide-react';
+import { cn, dueLabel } from '@/lib/utils';
+import { ArrowRight, Inbox, Play, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { transitionTaskAction } from '@/lib/actions/tasks';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface Task {
   id: string;
@@ -13,12 +15,13 @@ interface Task {
   priority?: string | null;
   due_date?: string | null;
   clients?: { business_name: string } | { business_name: string }[] | null;
+  sub_services?: { name: string } | null;
   users_profile?: { full_name: string } | { full_name: string }[] | null;
 }
 
 interface PriorityListProps {
   tasks: Task[];
-  href?: string;
+  href: string;
   emptyMessage?: string;
 }
 
@@ -48,19 +51,37 @@ function assigneeName(t: Task): string {
   return u.full_name ?? '';
 }
 
-function dueLabel(due?: string | null): string {
-  if (!due) return 'No due date';
-  const diff = Math.ceil((new Date(due).getTime() - Date.now()) / 86_400_000);
-  if (diff < 0) return 'Overdue';
-  if (diff === 0) return 'Due today';
-  if (diff === 1) return 'Due tomorrow';
-  return `Due in ${diff} days`;
+
+
+function urgencyBorder(t: Task): string {
+  if (t.due_date) {
+    const diff = Math.ceil((new Date(t.due_date).getTime() - Date.now()) / 86_400_000);
+    if (diff < 0) return 'border-l-red-500';
+    if (diff === 0) return 'border-l-amber-500';
+  }
+  if (t.status === 'in_progress') return 'border-l-teal-500';
+  return 'border-l-transparent';
 }
 
-export function PriorityList({ tasks, href = '/admin/tasks', emptyMessage = 'No urgent tasks' }: PriorityListProps) {
+export function PriorityList({ tasks, href, emptyMessage = 'No urgent tasks' }: PriorityListProps) {
+  const router = useRouter();
+
+  async function handleComplete(e: React.ChangeEvent<HTMLInputElement>, taskId: string) {
+    e.preventDefault();
+    if (e.target.checked) {
+      const r = await transitionTaskAction({ task_id: taskId, to_status: 'completed' });
+      if (r.success) {
+        toast.success('Task completed');
+        router.refresh();
+      } else {
+        toast.error(r.error);
+      }
+    }
+  }
+
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-5 md:p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-5">
+    <div className="h-full flex flex-col">
+      <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-base font-semibold text-zinc-900 tracking-tight">Today&apos;s priorities</h3>
           <p className="text-xs text-zinc-500 mt-0.5">Tasks needing attention</p>
@@ -79,43 +100,55 @@ export function PriorityList({ tasks, href = '/admin/tasks', emptyMessage = 'No 
           <p className="text-xs text-zinc-400 mt-1">Check back later for updates.</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1">
           {tasks.map((t) => {
             const p = priorityLabel(t.priority);
+            const isCompleted = t.status === 'completed';
             return (
-              <Link
+              <div
                 key={t.id}
-                href={`${href}/${t.id}`}
-                className="group flex items-center gap-3 rounded-xl border border-zinc-100 p-3 hover:border-teal-200 hover:bg-teal-50/30 transition-all"
+                className={cn(
+                  'group flex items-center gap-3 rounded-lg border-l-2 py-2 px-3 hover:bg-zinc-50 transition-colors',
+                  urgencyBorder(t)
+                )}
               >
-                <div className="h-9 w-9 rounded-lg bg-zinc-50 flex items-center justify-center shrink-0 border border-zinc-200">
-                  <Clock className="h-4 w-4 text-zinc-500" />
+                <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-zinc-300 text-teal-600 focus:ring-teal-600 cursor-pointer"
+                    checked={isCompleted}
+                    onChange={(e) => handleComplete(e, t.id)}
+                    disabled={isCompleted}
+                  />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate group-hover:text-teal-700 transition-colors">{t.title}</div>
-                  <div className="text-xs text-zinc-500 mt-0.5">
+
+                <Link href={`${href}/${t.id}`} className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate group-hover:text-teal-700 transition-colors">{t.sub_services?.name ?? t.title}</div>
+                  <div className="text-[11px] text-zinc-500">
                     {clientName(t)}
                     {assigneeName(t) ? ` · ${assigneeName(t)}` : ''}
                   </div>
-                </div>
-                <div className="flex flex-col items-end gap-1 shrink-0 group-hover:hidden">
-                  <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full border', priorityStyles[p] || priorityStyles.medium)}>
+                </Link>
+
+                <div className="flex items-center gap-2 shrink-0 group-hover:hidden">
+                  <span className="text-[11px] text-zinc-500">{dueLabel(t.due_date)}</span>
+                  <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full border', priorityStyles[p] || priorityStyles.medium)}>
                     {p}
                   </span>
-                  <span className="text-[10px] text-zinc-400">{dueLabel(t.due_date)}</span>
                 </div>
+
                 <div className="hidden group-hover:flex items-center shrink-0 animate-in fade-in zoom-in duration-200">
                   {t.status === 'pending' ? (
-                    <Button variant="outline" size="sm" className="h-8 text-xs border-teal-200 text-teal-700 hover:bg-teal-50">
+                    <Button variant="ghost" size="sm" className="h-7 text-[11px] text-teal-700 hover:bg-teal-50" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const r = await transitionTaskAction({ task_id: t.id, to_status: 'in_progress' }); if (r.success) { toast.success('Task started'); router.refresh(); } else toast.error(r.error); }}>
                       <Play className="h-3 w-3 mr-1" /> Start
                     </Button>
-                  ) : (
-                    <Button variant="outline" size="sm" className="h-8 text-xs border-zinc-200 text-zinc-700 hover:bg-zinc-50">
+                  ) : t.status === 'in_progress' ? (
+                    <Button variant="ghost" size="sm" className="h-7 text-[11px] text-zinc-700 hover:bg-zinc-50" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const r = await transitionTaskAction({ task_id: t.id, to_status: 'completed' }); if (r.success) { toast.success('Task completed'); router.refresh(); } else toast.error(r.error); }}>
                       <CheckCircle2 className="h-3 w-3 mr-1" /> Complete
                     </Button>
-                  )}
+                  ) : null}
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>

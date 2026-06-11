@@ -106,7 +106,7 @@ export default function TurnoverCalculator() {
             <span className="text-[#0D9488]">{formatLakh(opt.lowLakh)} – {formatLakh(opt.highLakh)}</span> is typically slipping through every year.
           </p>
           <p className="mt-3 text-[14px] sm:text-[15px] text-[#71717A] leading-[1.6]">
-            That's <span className="text-[#0D9488] font-semibold">5–14% of your revenue</span> — money you've earned but never see, because it gets stuck in four places:
+            That&apos;s <span className="text-[#0D9488] font-semibold">5–14% of your revenue</span> — money you&apos;ve earned but never see, because it gets stuck in four places:
           </p>
 
           <div className="mt-6 grid sm:grid-cols-2 gap-3">

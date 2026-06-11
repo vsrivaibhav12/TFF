@@ -1,4 +1,5 @@
-import { requireRole, getCurrentUser } from '@/lib/auth/require-role';
+import { requireRole } from '@/lib/auth/require-role';
+import { hasCapability } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { listAttendanceForUser, getTodayAttendance } from '@/lib/repositories/attendance';
 import { listLeaveRequests } from '@/lib/repositories/leave';
@@ -15,7 +16,7 @@ import SubmitWeekButton from './submit-week-button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatDateIST } from '@/lib/utils';
+import { formatDateIST, formatTimeIST } from '@/lib/utils';
 import { MapPin, ClipboardList, CalendarDays, Clock, ShieldCheck } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import Link from 'next/link';
@@ -31,8 +32,9 @@ export default async function AttendancePage() {
 
   const isManager = await hasDirectReports(me.id);
   const isAdmin = me.role === 'admin';
-  const canApproveLeave = isAdmin; // leave.approve capability check happens in action
-  const canApprovePermission = isAdmin; // permission.approve capability check happens in action
+  const canApproveLeave = await hasCapability(me, 'leave.approve');
+  const canApprovePermission = await hasCapability(me, 'permission.approve');
+  const canApproveAttendance = await hasCapability(me, 'attendance.approve');
 
   // Fetch direct report IDs if manager
   const directReports = isManager ? await getDirectReports(me.id) : [];
@@ -59,7 +61,7 @@ export default async function AttendancePage() {
     listPermissionRequests({ userId: me.id }),
     canApprovePermission ? listPermissionRequests({ status: 'pending' }) : Promise.resolve([]),
     getCurrentWeekSubmission(me.id),
-    (isAdmin || isManager) ? (isAdmin ? getAllPendingWeeklySubmissions() : getPendingWeeklySubmissions(me.id)) : Promise.resolve([]),
+    (canApproveAttendance || isManager) ? (isAdmin ? getAllPendingWeeklySubmissions() : getPendingWeeklySubmissions(me.id)) : Promise.resolve([]),
   ]);
 
   // Filter pending items to manager's direct reports (if not admin)
@@ -87,8 +89,8 @@ export default async function AttendancePage() {
   const exportData = monthLogs.map((l: any) => ({
     attendance_date: l.attendance_date,
     status: l.status,
-    check_in_time: l.check_in_time ? new Date(l.check_in_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '',
-    check_out_time: l.check_out_time ? new Date(l.check_out_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '',
+    check_in_time: l.check_in_time ? formatTimeIST(l.check_in_time) : '',
+    check_out_time: l.check_out_time ? formatTimeIST(l.check_out_time) : '',
   }));
 
   return (
@@ -117,7 +119,7 @@ export default async function AttendancePage() {
       </div>
 
       {/* Manager approval banner */}
-      {(isManager || isAdmin) && (pendingLeave.length > 0 || pendingPermissions.length > 0 || pendingWeeks.length > 0) && (
+      {(canApproveLeave || canApprovePermission || canApproveAttendance || isManager) && (pendingLeave.length > 0 || pendingPermissions.length > 0 || pendingWeeks.length > 0) && (
         <Link
           href="/team/approvals"
           className="block rounded-xl border border-amber-200 bg-amber-50 p-4 hover:border-amber-300 transition-colors"
@@ -177,14 +179,10 @@ export default async function AttendancePage() {
                         <Badge variant={l.status === 'leave' ? 'warning' : l.status === 'present' ? 'success' : 'outline'}>{l.status}</Badge>
                       </TableCell>
                       <TableCell className="text-xs">
-                        {l.check_in_time
-                          ? new Date(l.check_in_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-                          : '—'}
+                        {l.check_in_time ? formatTimeIST(l.check_in_time) : '—'}
                       </TableCell>
                       <TableCell className="text-xs">
-                        {l.check_out_time
-                          ? new Date(l.check_out_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-                          : '—'}
+                        {l.check_out_time ? formatTimeIST(l.check_out_time) : '—'}
                       </TableCell>
                       <TableCell className="text-xs text-zinc-500">
                         {l.check_in_lat != null && l.check_in_lng != null ? (
@@ -219,7 +217,7 @@ export default async function AttendancePage() {
             <LeaveForm />
           </div>
 
-          {(isAdmin || isManager) && pendingLeave.length > 0 && (
+          {(canApproveLeave || isManager) && pendingLeave.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-base font-semibold">Pending leave approvals</h2>
               <div className="tff-card overflow-hidden">
@@ -311,7 +309,7 @@ export default async function AttendancePage() {
             <PermissionForm />
           </div>
 
-          {(isAdmin || isManager) && pendingPermissions.length > 0 && (
+          {(canApprovePermission || isManager) && pendingPermissions.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-base font-semibold">Pending permission approvals</h2>
               <div className="tff-card overflow-hidden">

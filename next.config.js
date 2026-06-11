@@ -14,7 +14,7 @@ const nextConfig = {
     ],
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   // R-7: Security headers for the financial portal
   async headers() {

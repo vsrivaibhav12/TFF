@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Play, Square, Plus, Trash2, Loader2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { addManualWorkDoneAction, logTimerWorkDoneAction, deleteWorkDoneAction } from '@/lib/actions/workdone';
-import { formatDateIST } from '@/lib/utils';
+import { formatDateIST, formatTimeIST } from '@/lib/utils';
 import type { WorkDoneRow } from '@/lib/repositories/workdone';
 import { useConfirm } from '@/components/ui/use-confirm';
 
@@ -27,7 +27,7 @@ export default function WorkDonePanel({
   const [pending, startTransition] = useTransition();
   const [showManual, setShowManual] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  const [manual, setManual] = useState({ work_date: new Date().toISOString().slice(0, 10), hours: '', minutes: '', note: '' });
+  const [manual, setManual] = useState({ work_date: new Date().toISOString().slice(0, 10), hours: '', minutes: '', start_time: '', end_time: '', note: '' });
   const [timerStart, setTimerStart] = useState<number | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [timerNote, setTimerNote] = useState('');
@@ -84,16 +84,20 @@ export default function WorkDonePanel({
     const totalMinutes = (Number(manual.hours) || 0) * 60 + (Number(manual.minutes) || 0);
     if (totalMinutes <= 0) { toast.error('Enter at least 1 minute'); return; }
     if (totalMinutes > 1440) { toast.error('Cannot log more than 24 hours in one entry'); return; }
+    const startedAt = manual.start_time ? new Date(`${manual.work_date}T${manual.start_time}:00`).toISOString() : null;
+    const endedAt = manual.end_time ? new Date(`${manual.work_date}T${manual.end_time}:00`).toISOString() : null;
     startTransition(async () => {
       const r = await addManualWorkDoneAction({
         task_id: taskId,
         work_date: manual.work_date,
         duration_minutes: totalMinutes,
         note: manual.note || null,
+        started_at: startedAt,
+        ended_at: endedAt,
       });
       if (!r.success) { toast.error(r.error); return; }
       toast.success(`Logged ${totalMinutes}m`);
-      setManual({ work_date: new Date().toISOString().slice(0, 10), hours: '', minutes: '', note: '' });
+      setManual({ work_date: new Date().toISOString().slice(0, 10), hours: '', minutes: '', start_time: '', end_time: '', note: '' });
       setShowManual(false);
       router.refresh();
     });
@@ -180,6 +184,16 @@ export default function WorkDonePanel({
               <Input id="wd-m" type="number" min={0} max={59} value={manual.minutes} onChange={(e) => setManual({ ...manual, minutes: e.target.value })} placeholder="0" />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="wd-start" className="text-xs">Start time</Label>
+              <Input id="wd-start" type="time" value={manual.start_time} onChange={(e) => setManual({ ...manual, start_time: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="wd-end" className="text-xs">End time</Label>
+              <Input id="wd-end" type="time" value={manual.end_time} onChange={(e) => setManual({ ...manual, end_time: e.target.value })} />
+            </div>
+          </div>
           <div className="space-y-1">
             <Label htmlFor="wd-note" className="text-xs">Note (optional)</Label>
             <Input id="wd-note" value={manual.note} onChange={(e) => setManual({ ...manual, note: e.target.value })} placeholder="What did you work on?" />
@@ -205,7 +219,11 @@ export default function WorkDonePanel({
                   <span className="text-zinc-400 mx-2">·</span>
                   <span className="text-zinc-600">{e.users_profile?.full_name ?? 'You'}</span>
                   <span className="text-zinc-400 mx-2">·</span>
-                  <span className="text-zinc-500 text-xs">{formatDateIST(e.work_date)}</span>
+                  {e.started_at && e.ended_at ? (
+                    <span className="text-zinc-500 text-xs">{formatTimeIST(e.started_at)} – {formatTimeIST(e.ended_at)}</span>
+                  ) : (
+                    <span className="text-zinc-500 text-xs">{formatDateIST(e.work_date)}</span>
+                  )}
                   {e.entry_method === 'timer' && (
                     <span className="ml-2 inline-flex items-center gap-0.5 text-[10px] uppercase tracking-wide text-teal-600 font-semibold">
                       <Clock className="h-2.5 w-2.5" /> timer

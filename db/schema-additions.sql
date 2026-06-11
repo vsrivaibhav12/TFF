@@ -39,7 +39,7 @@
 --   attendance.approve, leave.approve,
 --   documents.upload, documents.delete,
 --   queries.assign,
---   audit.view, firm_dashboard.view, insights.configure
+--   audit.view, insights.configure
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS staff_capabilities (

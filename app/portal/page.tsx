@@ -58,7 +58,7 @@ export default async function ClientPortalDashboard() {
   const awaitingYou = tasksWithStatus.filter((t: any) => t._cs === 'we_need_info');
   const completedTasks = tasksWithStatus.filter((t: any) => t._cs === 'completed');
   const openQueries = queries.filter((q: any) => q.status !== 'resolved' && q.status !== 'closed');
-  const openNotices = (notices as any[]).filter((n: any) => n.status === 'open');
+  const openNotices = notices.filter((n) => n.status !== 'closed');
 
   const complianceBreakdown = clientId ? await computeComplianceScore(clientId) : null;
   const complianceScore = complianceBreakdown?.overall ?? 0;
@@ -169,7 +169,7 @@ export default async function ClientPortalDashboard() {
                   <Link
                     key={t.id}
                     href={`/portal/tasks/${t.id}`}
-                    className="group flex items-center gap-4 rounded-xl border border-zinc-100 p-4 hover:border-teal-200 hover:bg-teal-50/20 transition-all"
+                    className="group flex items-center gap-4 rounded-xl border border-zinc-100 p-4 hover:border-teal-200 hover:bg-teal-50/20 transition-colors"
                   >
                     <div className="h-11 w-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
                       <Briefcase className="h-5 w-5 text-amber-600" />
@@ -205,7 +205,7 @@ export default async function ClientPortalDashboard() {
                     <Link
                       key={n.id}
                       href={`/portal/notices`}
-                      className="group flex items-center gap-4 rounded-xl border border-zinc-100 p-4 hover:border-rose-200 hover:bg-rose-50/20 transition-all"
+                      className="group flex items-center gap-4 rounded-xl border border-zinc-100 p-4 hover:border-rose-200 hover:bg-rose-50/20 transition-colors"
                     >
                       <div className="h-11 w-11 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0">
                         <Bell className="h-5 w-5 text-rose-600" />
@@ -238,7 +238,7 @@ export default async function ClientPortalDashboard() {
                     <Link
                       key={q.id}
                       href={`/portal/queries/${q.id}`}
-                      className="group flex items-center gap-4 rounded-xl border border-zinc-100 p-4 hover:border-blue-200 hover:bg-blue-50/20 transition-all"
+                      className="group flex items-center gap-4 rounded-xl border border-zinc-100 p-4 hover:border-blue-200 hover:bg-blue-50/20 transition-colors"
                     >
                       <div className="h-11 w-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
                         <MessageSquare className="h-5 w-5 text-blue-600" />

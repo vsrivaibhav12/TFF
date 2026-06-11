@@ -2,17 +2,19 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { DockLink } from '@/components/shell/dock-link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
+import { getStatusColour } from '@/lib/semantic-colours';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatDateIST } from '@/lib/utils';
-import { ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, Building2, User } from 'lucide-react';
+import { formatDateIST, cn } from '@/lib/utils';
+import { ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, Building2, User, Search } from 'lucide-react';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 import { updateQueryStatusAction } from '@/lib/actions/queries';
 import { toast } from 'sonner';
 import { Pagination } from '@/components/ui/pagination';
-import { Search } from 'lucide-react';
+import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
 
 interface Query {
   id: string;
@@ -23,6 +25,15 @@ interface Query {
   users_profile?: { full_name: string | null } | null;
 }
 
+const DEFAULT_COLUMNS = [
+  { key: 'select', label: 'Select', visible: true, optional: false },
+  { key: 'subject', label: 'Subject & client', visible: true, optional: false },
+  { key: 'raised_by', label: 'Raised by', visible: true, optional: true },
+  { key: 'status', label: 'Status', visible: true, optional: false },
+  { key: 'created_at', label: 'Date', visible: true, optional: true },
+  { key: 'actions', label: 'Actions', visible: true, optional: false },
+];
+
 export default function QueriesTable({ queries, total, page, limit }: { queries: Query[]; total: number; page: number; limit: number }) {
   const [sortKey, setSortKey] = useState<string>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
@@ -31,6 +42,7 @@ export default function QueriesTable({ queries, total, page, limit }: { queries:
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [searchInput, setSearchInput] = useState(searchParams.get('query') || '');
+  const { columns, setColumns, density, setDensity } = useTablePrefs('admin-queries', DEFAULT_COLUMNS, 'comfortable');
 
   const sorted = useMemo(() => {
     const data = [...queries];
@@ -109,75 +121,111 @@ export default function QueriesTable({ queries, total, page, limit }: { queries:
     router.push(`${pathname}?${params.toString()}`);
   }
 
+  const colVisible = (key: string) => columns.find((c) => c.key === key)?.visible ?? true;
+  const rowPadding = density === 'compact' ? 'py-1.5' : 'py-3';
+
   return (
-    <>
-      <form onSubmit={handleSearch} className="flex mb-4 relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-        <input
-          type="text"
-          placeholder="Search queries..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          className="pl-9 pr-3 h-9 w-full rounded-md border border-zinc-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500"
+    <div className="space-y-3">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <form onSubmit={handleSearch} className="flex relative max-w-sm w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+          <input
+            type="text"
+            placeholder="Search queries..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="pl-9 pr-3 h-9 w-full rounded-md border border-zinc-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500"
+          />
+        </form>
+        <TableToolbar
+          columns={columns}
+          onColumnsChange={setColumns}
+          density={density}
+          onDensityChange={setDensity}
         />
-      </form>
+      </div>
       <div className="tff-card overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
-                <TableHead className="w-10">
-                  <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" />
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('subject')}>
-                  <span className="flex items-center gap-1">Subject &amp; client <SortIcon col="subject" /></span>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('raised_by')}>
-                  <span className="flex items-center gap-1">Raised by <SortIcon col="raised_by" /></span>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none text-center" onClick={() => toggleSort('status')}>
-                  <span className="flex items-center gap-1">Status <SortIcon col="status" /></span>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('created_at')}>
-                  <span className="flex items-center gap-1">Date <SortIcon col="created_at" /></span>
-                </TableHead>
-                <TableHead></TableHead>
+                {colVisible('select') && (
+                  <TableHead className="w-10">
+                    <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" />
+                  </TableHead>
+                )}
+                {colVisible('subject') && (
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('subject')}>
+                    <span className="flex items-center gap-1">Subject &amp; client <SortIcon col="subject" /></span>
+                  </TableHead>
+                )}
+                {colVisible('raised_by') && (
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('raised_by')}>
+                    <span className="flex items-center gap-1">Raised by <SortIcon col="raised_by" /></span>
+                  </TableHead>
+                )}
+                {colVisible('status') && (
+                  <TableHead className="cursor-pointer select-none text-center" onClick={() => toggleSort('status')}>
+                    <span className="flex items-center gap-1">Status <SortIcon col="status" /></span>
+                  </TableHead>
+                )}
+                {colVisible('created_at') && (
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('created_at')}>
+                    <span className="flex items-center gap-1">Date <SortIcon col="created_at" /></span>
+                  </TableHead>
+                )}
+                {colVisible('actions') && (
+                  <TableHead></TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
               {sorted.map((q) => (
                 <TableRow key={q.id} className={selected.has(q.id) ? 'bg-teal-50/40' : ''} data-row>
-                  <TableCell>
-                    <Checkbox checked={selected.has(q.id)} onCheckedChange={() => toggle(q.id)} aria-label={`Select query ${q.subject}`} />
-                  </TableCell>
-                  <TableCell>
-                    <Link href={`/admin/queries/${q.id}`} className="font-medium text-zinc-900 hover:text-teal-700">
-                      {q.subject}
-                    </Link>
-                    <div className="flex items-center gap-1 mt-0.5 text-xs text-zinc-500">
-                      <Building2 className="h-3 w-3" />
-                      <span className="truncate">{q.clients?.business_name ?? '—'}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-zinc-700">
-                    <div className="flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5 text-zinc-400" />
-                      {q.users_profile?.full_name ?? 'Client user'}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant={q.status === 'resolved' ? 'success' : 'warning'}>{q.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-zinc-700 tabular-nums">{formatDateIST(q.created_at)}</TableCell>
-                  <TableCell className="text-right">
-                    <Link
-                      href={`/admin/queries/${q.id}`}
-                      className="inline-flex items-center justify-center h-8 w-8 rounded-md text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
-                      aria-label="Open query"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  </TableCell>
+                  {colVisible('select') && (
+                    <TableCell className={rowPadding}>
+                      <Checkbox checked={selected.has(q.id)} onCheckedChange={() => toggle(q.id)} aria-label={`Select query ${q.subject}`} />
+                    </TableCell>
+                  )}
+                  {colVisible('subject') && (
+                    <TableCell className={rowPadding}>
+                      <DockLink item={{ type: 'query', id: q.id }} href={`/admin/queries/${q.id}`} className="font-medium text-zinc-900 hover:text-teal-700">
+                        {q.subject}
+                      </DockLink>
+                      <div className="flex items-center gap-1 mt-0.5 text-xs text-zinc-500">
+                        <Building2 className="h-3 w-3" />
+                        <span className="truncate">{q.clients?.business_name ?? '—'}</span>
+                      </div>
+                    </TableCell>
+                  )}
+                  {colVisible('raised_by') && (
+                    <TableCell className={cn('text-zinc-700', rowPadding)}>
+                      <div className="flex items-center gap-1.5">
+                        <User className="h-3.5 w-3.5 text-zinc-400" />
+                        {q.users_profile?.full_name ?? 'Client user'}
+                      </div>
+                    </TableCell>
+                  )}
+                  {colVisible('status') && (
+                    <TableCell className={cn('text-center', rowPadding)}>
+                      <Badge className={cn(getStatusColour(q.status).bg, getStatusColour(q.status).text, getStatusColour(q.status).border)}><span className={cn('h-1.5 w-1.5 rounded-full', getStatusColour(q.status).dot)} />{q.status}</Badge>
+                    </TableCell>
+                  )}
+                  {colVisible('created_at') && (
+                    <TableCell className={cn('text-zinc-700 tabular-nums', rowPadding)}>{formatDateIST(q.created_at)}</TableCell>
+                  )}
+                  {colVisible('actions') && (
+                    <TableCell className={cn('text-right', rowPadding)}>
+                      <DockLink
+                        item={{ type: 'query', id: q.id }}
+                        href={`/admin/queries/${q.id}`}
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-md text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+                        aria-label="Open query"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </DockLink>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -202,6 +250,6 @@ export default function QueriesTable({ queries, total, page, limit }: { queries:
           },
         ]}
       />
-    </>
+    </div>
   );
 }

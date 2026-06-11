@@ -49,7 +49,7 @@ export async function upsertGstFilingAction(input: GstFilingInput): Promise<Acti
     const parsed = gstFilingSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const id = await supersedeAndInsert('gst_filings',
-      { client_id: parsed.data.client_id, period_year: parsed.data.period_year, period_month: parsed.data.period_month, return_type: parsed.data.return_type } as any,
+      { client_id: parsed.data.client_id, period_year: parsed.data.period_year, period_month: parsed.data.period_month, return_type: parsed.data.return_type },
       parsed.data,
       me.id,
     );
@@ -67,7 +67,7 @@ export async function upsertTdsFilingAction(input: TdsFilingInput): Promise<Acti
     const parsed = tdsFilingSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const id = await supersedeAndInsert('tds_filings',
-      { client_id: parsed.data.client_id, period_year: parsed.data.period_year, period_quarter: parsed.data.period_quarter } as any,
+      { client_id: parsed.data.client_id, period_year: parsed.data.period_year, period_quarter: parsed.data.period_quarter },
       parsed.data,
       me.id,
     );
@@ -85,7 +85,7 @@ export async function upsertItFilingAction(input: ItFilingInput): Promise<Action
     const parsed = itFilingSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const id = await supersedeAndInsert('it_filings',
-      { client_id: parsed.data.client_id, fy_ending_year: parsed.data.fy_ending_year } as any,
+      { client_id: parsed.data.client_id, fy_ending_year: parsed.data.fy_ending_year },
       parsed.data,
       me.id,
     );

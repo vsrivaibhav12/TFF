@@ -4,6 +4,7 @@ export interface IncomeTaxSlab {
   id?: string;
   assessment_year: string;
   category: string;
+  regime?: string;
   min_income: number;
   max_income: number | null;
   rate_percent: number;
@@ -26,6 +27,7 @@ export async function upsertIncomeTaxSlab(slab: IncomeTaxSlab) {
   const payload = {
     assessment_year: slab.assessment_year,
     category: slab.category,
+    regime: slab.regime ?? 'old',
     min_income: slab.min_income,
     max_income: slab.max_income,
     rate_percent: slab.rate_percent,
@@ -36,7 +38,7 @@ export async function upsertIncomeTaxSlab(slab: IncomeTaxSlab) {
   };
   const { data, error } = await sb
     .from('income_tax_slabs')
-    .upsert(payload, { onConflict: 'assessment_year,category,min_income' })
+    .upsert(payload, { onConflict: 'category,assessment_year,regime,min_income' })
     .select()
     .single();
   if (error) throw error;

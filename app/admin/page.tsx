@@ -1,171 +1,133 @@
 import { requireRole } from '@/lib/auth/require-role';
-import { createClient } from '@/lib/supabase/server';
-import { todayIST, timeAgo } from '@/lib/utils';
+import { getAdminDashboardData } from '@/lib/services/dashboard-service';
+import { loadComplianceDashboard } from '@/lib/repositories/compliance-dashboard';
+import { listExpiringDsc } from '@/lib/repositories/dsc';
+import { getTaskClosureVelocity } from '@/lib/repositories/tasks';
+import { MicroBarChart } from '@/components/charts/micro-bar-chart';
+import { Sparkline } from '@/components/charts/sparkline';
 import Link from 'next/link';
+import { DockLink } from '@/components/shell/dock-link';
 import {
   Users,
   AlertTriangle,
   Briefcase,
   TrendingUp,
   ArrowRight,
-  Clock,
-  CheckCircle2,
-  Inbox,
-  CalendarX,
-  Bell,
   ShieldCheck,
+  LogIn,
+  MessageSquare,
 } from 'lucide-react';
 import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-container';
+import { dueLabel } from '@/lib/utils';
 import { PriorityList } from '@/components/dashboard/priority-list';
-import { ActivityFeed } from '@/components/dashboard/activity-feed';
-import { NeedsAttentionHub } from '@/components/dashboard/needs-attention-hub';
-import { FirmPulse } from '@/components/dashboard/business-pulse';
-import { enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import { AdminPayrollPrompt } from '@/components/dashboard/smart-prompts';
+import { AdminQuickActions } from '@/components/dashboard/admin-quick-actions';
+import { NeedsAttentionHub, type AttentionItem } from '@/components/dashboard/needs-attention-hub';
+import { ActivityFeed } from '@/components/dashboard/activity-feed';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
   await requireRole('admin');
-  const sb = createClient();
 
-  const todayIso = todayIST();
-  const weekAhead = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(new Date(Date.now() + 7 * 86_400_000));
-  const weekAgo = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(new Date(Date.now() - 7 * 86_400_000));
+  const {
+    activeClients,
+    openTasks,
+    overdueTasks,
+    activeEngagements,
+    recentTasks,
+    upcomingDeadlines,
+    upcomingNotices,
+    attentionTasks,
+    pendingApprovals,
+    attendanceToday,
+    openNoticesCount,
+    openQueriesCount,
+    openQueries,
+    recentAuditLogs,
+  } = await getAdminDashboardData();
 
-  // Core firm metrics
-  const [
-    { count: activeClients },
-    { count: openTasks },
-    { count: overdueTasks },
-    { data: rawRecentTasks },
-    { data: upcomingDeadlines },
-    { data: recentActivity },
-    { count: activeEngagements },
-    { data: upcomingNotices },
-    { data: recentWorkDone },
-    { data: recentCompletedTasks },
-    { data: attentionTasks },
-  ] = await Promise.all([
-    sb.from('clients').select('id', { head: true, count: 'exact' }).eq('is_deleted', false),
-    sb.from('tasks').select('id', { head: true, count: 'exact' }).eq('is_deleted', false).in('status', ['pending', 'in_progress']),
-    sb.from('compliance_status').select('id', { head: true, count: 'exact' }).eq('is_overdue', true),
-    sb.from('tasks').select('id, title, status, priority, due_date, clients!tasks_client_id_fkey(id, business_name), assigned_to, users_profile!tasks_assigned_to_fkey(full_name)').eq('is_deleted', false).in('status', ['pending', 'in_progress']).order('due_date').limit(5),
-    sb.from('compliance_calendar_events').select('id, client_id, rule_code, period_label, due_date, status, clients!compliance_calendar_events_client_id_fkey(business_name), compliance_calendar_rules!compliance_calendar_events_rule_id_fkey(display_name, service_kind)').gte('due_date', todayIso).lte('due_date', weekAhead).order('due_date', { ascending: true }).limit(6),
-    sb.from('global_audit_log').select('id, action, entity_type, entity_id, details, performed_at, performed_by:global_audit_log_performed_by_fkey(full_name, email)').order('performed_at', { ascending: false }).limit(6),
-    sb.from('client_sub_services').select('id', { head: true, count: 'exact' }).eq('is_active', true),
-    sb.from('notices').select('id, subject, notice_type, status, due_date, clients!notices_client_id_fkey(business_name)').gte('due_date', todayIso).order('due_date', { ascending: true }).limit(6),
-    sb.from('work_done').select('work_date, duration_minutes').gte('work_date', weekAgo),
-    sb.from('tasks').select('completed_at').eq('status', 'completed').gte('completed_at', weekAgo),
-    sb.from('tasks').select('id, title, status, priority, is_stuck, clients!tasks_client_id_fkey(business_name)').eq('is_deleted', false).or('status.eq.awaiting_client,is_stuck.eq.true').limit(3),
+  const complianceCells = await loadComplianceDashboard({ horizonMonths: 3 });
+  // Pick the most imminent period for each unique rule
+  const bestByRule = new Map<string, typeof complianceCells[0]>();
+  for (const cell of complianceCells) {
+    const existing = bestByRule.get(cell.rule_code);
+    if (!existing || cell.period_due_date < existing.period_due_date) {
+      bestByRule.set(cell.rule_code, cell);
+    }
+  }
+  const topCompliance = Array.from(bestByRule.values())
+    .sort((a, b) => a.period_due_date.localeCompare(b.period_due_date))
+    .slice(0, 6);
+
+  // DSC expiry radar
+  const [dsc30, dsc60, dsc90] = await Promise.all([
+    listExpiringDsc(30),
+    listExpiringDsc(60),
+    listExpiringDsc(90),
   ]);
+  const dscSegments = [
+    { label: '0-30 days', value: dsc30.length, color: '#DC2626' },
+    { label: '31-60 days', value: dsc60.length - dsc30.length, color: '#F59E0B' },
+    { label: '61-90 days', value: dsc90.length - dsc60.length, color: '#0D9488' },
+  ].filter((s) => s.value > 0);
 
-  const recentTasks = await enrichTasksWithProgress(rawRecentTasks ?? []);
+  // Task closure velocity (last 30 days)
+  const closureVelocity = await getTaskClosureVelocity(30);
 
-  // Compliance data for health score
-  const { data: complianceData } = await sb
-    .from('compliance_status')
-    .select('status')
-    .limit(500);
-
-  const filedCount = complianceData?.filter((r: any) => r.status === 'filed').length ?? 0;
-  const pendingCount = complianceData?.filter((r: any) => r.status === 'pending').length ?? 0;
-  const overdueCount = complianceData?.filter((r: any) => r.status === 'overdue').length ?? 0;
-  const totalCompliance = filedCount + pendingCount + overdueCount;
-  const complianceRate = totalCompliance > 0 ? Math.round((filedCount / totalCompliance) * 100) : 0;
-
-  // Pending approvals (leave + permission + timesheet)
-  const [
-    { count: pendingLeaveCount, data: pendingLeaves },
-    { count: pendingPermissionCount },
-    { count: pendingTimesheetCount },
-  ] = await Promise.all([
-    sb.from('leave_requests').select('id, status, users_profile!leave_requests_user_id_fkey(full_name)', { count: 'exact' }).eq('status', 'pending').limit(2),
-    sb.from('permission_requests').select('id', { count: 'exact' }).eq('status', 'pending'),
-    sb.from('weekly_timesheet_submissions').select('id', { count: 'exact' }).eq('status', 'submitted'),
-  ]);
-  const totalPendingApprovals = (pendingLeaveCount ?? 0) + (pendingPermissionCount ?? 0) + (pendingTimesheetCount ?? 0);
-
-  // Urgent alerts
-  const { data: urgentNotices } = await sb
-    .from('notices')
-    .select('id, subject, notice_type, status, due_date, clients!notices_client_id_fkey(business_name)')
-    .eq('status', 'open')
-    .order('due_date')
-    .limit(3);
-
-  const openNoticesCount = urgentNotices?.length ?? 0;
-
-  // Health score
-  const healthMetrics: { label: string; status: 'good' | 'at_risk' | 'poor' }[] = [
-    { label: 'Compliance', status: complianceRate >= 80 ? 'good' : complianceRate >= 60 ? 'at_risk' : 'poor' },
-    { label: 'On-time delivery', status: (overdueTasks ?? 0) === 0 ? 'good' : (overdueTasks ?? 0) < 5 ? 'at_risk' : 'poor' },
-    { label: 'Open notices', status: openNoticesCount === 0 ? 'good' : openNoticesCount < 3 ? 'at_risk' : 'poor' },
-    { label: 'Workload', status: (openTasks ?? 0) < 20 ? 'good' : (openTasks ?? 0) < 50 ? 'at_risk' : 'poor' },
-  ];
-  const healthScore = Math.max(0, Math.min(100, complianceRate - ((overdueTasks ?? 0) * 2) - (openNoticesCount * 5)));
-
-  // Today's Pulse alerts
-  const pulseAlerts = [
-    ...totalPendingApprovals > 0 ? [{ text: `${totalPendingApprovals} pending approval${totalPendingApprovals !== 1 ? 's' : ''}`, href: '/admin/approvals', color: 'bg-teal-50 text-teal-700 border-teal-200' }] : [],
-    ...(overdueTasks ?? 0) > 0 ? [{ text: `${overdueTasks} overdue filing${(overdueTasks ?? 0) !== 1 ? 's' : ''}`, href: '/admin/tasks', color: 'bg-red-50 text-red-700 border-red-200' }] : [],
-    ...(openNoticesCount > 0) ? [{ text: `${openNoticesCount} open notice${openNoticesCount !== 1 ? 's' : ''}`, href: '/admin/tasks', color: 'bg-amber-50 text-amber-700 border-amber-200' }] : [],
-    ...(upcomingDeadlines ?? []).length > 0 ? [{ text: `${upcomingDeadlines?.length} deadline${(upcomingDeadlines?.length ?? 0) !== 1 ? 's' : ''} this week`, href: '/admin/tasks', color: 'bg-blue-50 text-blue-700 border-blue-200' }] : [],
-  ];
-
-  const attentionItems = [
+  // Build attention items for NeedsAttentionHub
+  const attentionItems: AttentionItem[] = [
     ...(attentionTasks ?? []).map((t: any) => ({
-      id: `task-${t.id}`,
+      id: t.id,
       type: 'blocked' as const,
       title: t.title,
-      client: t.clients?.business_name ?? 'Unknown client',
-      reason: t.is_stuck ? 'Marked as stuck' : 'Awaiting client',
-      color: 'amber' as const,
+      client: t.clients?.business_name ?? '—',
+      reason: t.is_stuck ? 'Stuck' : 'Pending',
+      color: (t.is_stuck ? 'red' : 'amber') as AttentionItem['color'],
       href: `/admin/tasks/${t.id}`,
     })),
-    ...(pendingLeaves ?? []).map((l: any) => ({
-      id: `leave-${l.id}`,
-      type: 'approval' as const,
-      title: 'Leave Request',
-      client: 'Internal',
-      reason: l.users_profile?.full_name ?? 'Unknown user',
-      color: 'blue' as const,
-      href: '/admin/approvals',
+    ...(openQueries ?? []).map((q: any) => ({
+      id: q.id,
+      type: 'query' as const,
+      title: q.subject ?? 'Open query',
+      client: q.clients?.business_name ?? '—',
+      reason: 'Open',
+      color: 'blue' as AttentionItem['color'],
+      href: `/admin/queries/${q.id}`,
     })),
-  ];
+    ...(pendingApprovals.total > 0 ? [{
+      id: 'approvals',
+      type: 'approval' as const,
+      title: 'Pending approvals',
+      client: 'Team',
+      reason: `${pendingApprovals.total} waiting`,
+      color: 'teal' as AttentionItem['color'],
+      href: '/admin/approvals',
+    }] : []),
+  ].slice(0, 5);
 
   return (
     <StaggerContainer className="space-y-6">
       <AdminPayrollPrompt />
       {/* Header */}
       <StaggerItem>
-        <div>
-          <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Firm overview</h1>
-          <p className="text-sm text-zinc-500 mt-1">Everything you need to run the firm — at a glance.</p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Firm overview</h1>
+            <p className="text-sm text-zinc-500 mt-1">Everything you need to run the firm — at a glance.</p>
+          </div>
         </div>
       </StaggerItem>
 
+      {/* Quick Actions */}
+      <StaggerItem>
+        <AdminQuickActions />
+      </StaggerItem>
 
-
-      {/* Today's Pulse */}
-      {pulseAlerts.length > 0 && (
+      {/* Needs Attention Hub */}
+      {attentionItems.length > 0 && (
         <StaggerItem>
-          <div className="flex items-center gap-3 flex-wrap">
-            {pulseAlerts.map((a) => (
-              <Link
-                key={a.href}
-                href={a.href}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border ${a.color} hover:shadow-sm transition-all`}
-              >
-                <AlertTriangle className="h-4 w-4" />
-                {a.text}
-              </Link>
-            ))}
-          </div>
+          <NeedsAttentionHub items={attentionItems} />
         </StaggerItem>
       )}
 
@@ -179,14 +141,110 @@ export default async function AdminDashboard() {
         </div>
       </StaggerItem>
 
+      {/* Compliance Bird's-Eye */}
+      {topCompliance.length > 0 && (
+        <StaggerItem>
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-zinc-700 tracking-tight">Compliance this quarter</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {topCompliance.map((c) => {
+                const pct = c.total_clients > 0 ? Math.round((c.filed / c.total_clients) * 100) : 0;
+                const tone = pct >= 90 ? 'success' : pct >= 60 ? 'warning' : 'danger';
+                return (
+                  <Link
+                    key={c.rule_code}
+                    href={`/admin/compliance?rule=${c.rule_code}`}
+                    className="tff-card p-3 hover:border-teal-200 transition-colors group"
+                  >
+                    <div className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider truncate">{c.rule_name}</div>
+                    <div className="text-[10px] text-zinc-400 mt-0.5">{c.period_label}</div>
+                    <div className={`text-xl font-bold tabular-nums tracking-tight mt-2 ${tone === 'success' ? 'text-teal-700' : tone === 'warning' ? 'text-amber-600' : 'text-red-600'}`}>
+                      {c.filed}<span className="text-zinc-300 text-sm font-medium">/{c.total_clients}</span>
+                    </div>
+                    <div className="mt-2 h-1.5 w-full rounded-full bg-zinc-100 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${tone === 'success' ? 'bg-teal-500' : tone === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-[10px] text-zinc-400">{pct}% filed</span>
+                      {c.overdue > 0 && <span className="text-[10px] text-red-600 font-medium">{c.overdue} overdue</span>}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </StaggerItem>
+      )}
+
+      {/* DSC expiry + Task velocity micro-row */}
+      {(dscSegments.length > 0 || closureVelocity.length > 0) && (
+        <StaggerItem>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {dscSegments.length > 0 && (
+              <Link href="/admin/dsc" className="tff-card p-4 hover:border-teal-200 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-zinc-700">DSC expiry radar</h3>
+                  <span className="text-xs text-zinc-400">Next 90 days</span>
+                </div>
+                <MicroBarChart segments={dscSegments} />
+              </Link>
+            )}
+            {closureVelocity.length > 0 && (
+              <div className="tff-card p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-zinc-700">Task closure velocity</h3>
+                  <span className="text-xs text-zinc-400">Last 30 days</span>
+                </div>
+                <Sparkline
+                  data={closureVelocity.map((d) => ({ label: d.date.slice(5), value: d.count }))}
+                  color="#0D9488"
+                  height={50}
+                />
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[10px] text-zinc-400">
+                    Total closed: <span className="font-medium text-zinc-700 tabular-nums">{closureVelocity.reduce((sum, d) => sum + d.count, 0)}</span>
+                  </span>
+                  <span className="text-[10px] text-zinc-400">
+                    Avg/day: <span className="font-medium text-zinc-700 tabular-nums">{(closureVelocity.reduce((sum, d) => sum + d.count, 0) / 30).toFixed(1)}</span>
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </StaggerItem>
+      )}
+
       {/* Widget Grid */}
       <StaggerItem>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-5">
-            <PriorityList tasks={recentTasks as any} href="/admin/tasks" />
+            <PriorityList tasks={recentTasks} href="/admin/tasks" />
           </div>
-          <div className="lg:col-span-7">
-            <NeedsAttentionHub items={attentionItems as any} />
+          <div className="lg:col-span-7 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <StatCard
+                label="Team attendance today"
+                value={`${attendanceToday.presentCount ?? 0} / ${attendanceToday.teamTotal ?? 0}`}
+                icon={<LogIn className="h-5 w-5" />}
+                href="/admin/attendance"
+              />
+              <StatCard
+                label="Open queries"
+                value={openQueriesCount ?? 0}
+                icon={<MessageSquare className="h-5 w-5" />}
+                href="/admin/queries"
+              />
+              <StatCard
+                label="Pending approvals"
+                value={pendingApprovals.total}
+                icon={<ShieldCheck className="h-5 w-5" />}
+                href="/admin/approvals"
+              />
+            </div>
+            <ActivityFeed items={recentAuditLogs as any} href="/admin/audit-log" />
           </div>
         </div>
       </StaggerItem>
@@ -204,60 +262,54 @@ export default async function AdminDashboard() {
                 View all <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {(upcomingNotices ?? []).map((n: any) => (
-                <Link
+            <div className="space-y-0">
+              {(upcomingNotices ?? []).map((n, i) => (
+                <DockLink
                   key={n.id}
+                  item={{ type: 'notice', id: n.id }}
                   href={`/admin/notices/${n.id}`}
-                  className="flex items-center gap-3 rounded-xl border border-zinc-100 p-3 hover:border-teal-200 hover:bg-teal-50/30 transition-all"
+                  className={`flex items-center gap-3 py-3 ${i !== (upcomingNotices ?? []).length - 1 ? 'border-b border-zinc-100' : ''} hover:bg-zinc-50/50 transition-colors`}
                 >
-                  <div className="h-10 w-10 rounded-lg flex flex-col items-center justify-center shrink-0 border text-zinc-600 bg-zinc-50 border-zinc-200">
+                  <div className="h-9 w-9 rounded-lg flex flex-col items-center justify-center shrink-0 border text-zinc-600 bg-zinc-50 border-zinc-200">
                     <span className="text-[9px] font-bold leading-none">{new Date(n.due_date).toLocaleString('en-GB', { month: 'short' }).toUpperCase()}</span>
-                    <span className="text-sm font-bold leading-tight">{new Date(n.due_date).getDate()}</span>
+                    <span className="text-sm font-bold leading-tight tabular-nums">{new Date(n.due_date).getDate()}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold truncate">{n.subject ?? 'Untitled notice'}</div>
-                    <div className="text-xs text-zinc-500">{n.clients?.business_name} · {n.notice_type}</div>
+                    <div className="text-sm font-medium truncate">{n.subject ?? 'Untitled notice'}</div>
+                    <div className="text-[11px] text-zinc-400 mt-0.5">{dueLabel(n.due_date)}</div>
                   </div>
-                </Link>
+                  <div className="text-[11px] text-zinc-500 shrink-0">{n.clients?.business_name}</div>
+                </DockLink>
               ))}
             </div>
           </div>
         </StaggerItem>
       )}
-
-      {/* Bottom Row: Firm Pulse */}
-      <div className="grid grid-cols-1 gap-6">
-        <StaggerItem>
-          <FirmPulse workDone={recentWorkDone ?? []} completedTasks={recentCompletedTasks ?? []} />
-        </StaggerItem>
-      </div>
     </StaggerContainer>
   );
 }
 
-function StatCard({ label, value, icon, href, tone = 'default' }: { label: string; value: number; icon: React.ReactNode; href?: string; tone?: 'default' | 'warning' }) {
+function StatCard({ label, value, icon, href, tone = 'default' }: { label: string; value: number | string; icon: React.ReactNode; href?: string; tone?: 'default' | 'warning' }) {
   const content = (
-    <>
-      <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${tone === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-zinc-100 text-zinc-500'}`}>
+    <div className="flex items-center gap-3">
+      <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${tone === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-zinc-100 text-zinc-500'}`}>
         {icon}
       </div>
-      <div className="mt-3">
+      <div>
         <div className={`text-2xl font-bold tabular-nums tracking-tight ${tone === 'warning' ? 'text-amber-600' : 'text-zinc-900'}`}>{value}</div>
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mt-1">{label}</div>
+        <div className="text-[11px] font-medium text-zinc-500">{label}</div>
       </div>
-    </>
+    </div>
   );
 
-  const cls = 'tff-card p-5 transition-all duration-200 hover:shadow-card-hover';
-  const style = {};
+  const cls = 'tff-card p-3 transition-colors duration-200';
 
   if (href) {
     return (
-      <Link href={href} className={cls} style={style}>
+      <Link href={href} className={cls}>
         {content}
       </Link>
     );
   }
-  return <div className={cls} style={style}>{content}</div>;
+  return <div className={cls}>{content}</div>;
 }

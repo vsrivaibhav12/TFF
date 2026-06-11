@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
+import { Suspense } from 'react';
 import { SWRProvider } from '@/lib/swr-config';
+import { DockProvider } from '@/lib/state/dock-state';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,7 +27,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} scroll-smooth`}>
       <body className="min-h-screen antialiased">
         <SWRProvider>
-          {children}
+          <Suspense>
+            <DockProvider>
+              {children}
+            </DockProvider>
+          </Suspense>
         </SWRProvider>
         <Toaster
           position="bottom-right"

@@ -23,6 +23,7 @@ export function MiniSparkline({
   color = '#0D9488',
   className,
 }: MiniSparklineProps) {
+  const gradientId = useId();
   if (!data || data.length < 2) return null;
 
   const padding = 2;
@@ -40,8 +41,6 @@ export function MiniSparkline({
 
   // Area fill: same points + bottom corners
   const areaPoints = `${padding},${height - padding} ${polylinePoints} ${width - padding},${height - padding}`;
-
-  const gradientId = useId();
 
   return (
     <svg

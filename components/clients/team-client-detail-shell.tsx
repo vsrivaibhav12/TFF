@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { DockLink } from '@/components/shell/dock-link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ProgressRing } from '@/components/ui/progress-ring';
@@ -54,7 +55,7 @@ export default function TeamClientDetailShell({
           <div className="tff-card p-6">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
                   <Building2 className="h-7 w-7 text-zinc-400" />
                 </div>
                 <div>
@@ -72,7 +73,7 @@ export default function TeamClientDetailShell({
               </div>
               {canEdit && (
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`/admin/clients/${client.id}`}><Pencil className="h-4 w-4 mr-1" /> Edit</Link>
+                  <Link href={`${basePath}/clients/${client.id}`}><Pencil className="h-4 w-4 mr-1" /> Edit</Link>
                 </Button>
               )}
             </div>
@@ -94,17 +95,17 @@ export default function TeamClientDetailShell({
             ) : (
               <div className="space-y-2">
                 {openTasks.slice(0, 5).map((t: any) => (
-                  <Link key={t.id} href={`/team/tasks/${t.id}`} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors group">
+                  <DockLink key={t.id} item={{ type: 'task', id: t.id }} href={`/team/tasks/${t.id}`} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors group">
                     <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0 border border-zinc-200">
                       <FileText className="h-4 w-4 text-zinc-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-medium text-zinc-900 truncate">{t.title}</div>
+                      <div className="text-[13px] font-medium text-zinc-900 truncate">{t.sub_services?.name ?? t.title}</div>
                       <div className="text-[11px] text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
                     </div>
                     <ProgressRing size={24} strokeWidth={3} hideLabel progress={t.progress_pct ?? 0} />
                     <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-[#0D9488] transition-colors" />
-                  </Link>
+                  </DockLink>
                 ))}
                 {openNotices.slice(0, 3).map((n: any) => (
                   <div key={n.id} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 transition-colors group">
@@ -119,7 +120,7 @@ export default function TeamClientDetailShell({
                   </div>
                 ))}
                 {openQueries.slice(0, 3).map((q: any) => (
-                  <Link key={q.id} href={`/team/queries/${q.id}`} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors group">
+                  <DockLink key={q.id} item={{ type: 'query', id: q.id }} href={`/team/queries/${q.id}`} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors group">
                     <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0 border border-zinc-200">
                       <MessageSquare className="h-4 w-4 text-[#0D9488]" />
                     </div>
@@ -129,7 +130,7 @@ export default function TeamClientDetailShell({
                     </div>
                     <span className={`text-[11px] px-2 py-0.5 rounded border ${statusBadgeClass(q.status)}`}>{q.status}</span>
                     <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-[#0D9488] transition-colors" />
-                  </Link>
+                  </DockLink>
                 ))}
               </div>
             )}

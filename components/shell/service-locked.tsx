@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { DockLink } from '@/components/shell/dock-link';
 import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ServiceKind } from '@/lib/auth/service-applicability';
@@ -52,10 +53,10 @@ export default function ServiceLocked({
       </p>
       <div className="mt-6 flex justify-center gap-2">
         <Button variant="outline" asChild>
-          <Link href={`${basePath}/clients/${clientId}`}>Back to client</Link>
+          <DockLink item={{ type: 'client', id: clientId }} href={`${basePath}/clients/${clientId}`}>Back to client</DockLink>
         </Button>
         <Button asChild data-testid="service-locked-subscribe">
-          <Link href={`/admin/clients/${clientId}`}>Manage services</Link>
+          <Link href={`${basePath}/clients/${clientId}`}>Manage services</Link>
         </Button>
       </div>
     </div>

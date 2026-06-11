@@ -5,21 +5,27 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { LayoutDashboard, Briefcase, Calendar, MessageSquare } from 'lucide-react';
 
-const TABS = [
-  { href: '/portal', label: 'Home', icon: LayoutDashboard },
-  { href: '/portal/tasks', label: 'Work', icon: Briefcase },
-  { href: '/portal/calendar', label: 'Calendar', icon: Calendar },
-  { href: '/portal/queries', label: 'Queries', icon: MessageSquare },
+const ALL_TABS = [
+  { href: '/portal', label: 'Home', icon: LayoutDashboard, gate: 'portal.dashboard' },
+  { href: '/portal/tasks', label: 'Work', icon: Briefcase, gate: 'portal.tasks' },
+  { href: '/portal/calendar', label: 'Calendar', icon: Calendar, gate: 'portal.compliance_calendar' },
+  { href: '/portal/queries', label: 'Queries', icon: MessageSquare, gate: 'portal.queries' },
 ];
 
-export default function MobileBottomNav() {
+interface MobileBottomNavProps {
+  visibleModules?: string[];
+}
+
+export default function MobileBottomNav({ visibleModules }: MobileBottomNavProps) {
   const pathname = usePathname();
+  const tabs = ALL_TABS.filter((t) => visibleModules?.includes(t.gate) ?? true);
   return (
     <nav
       data-testid="mobile-bottom-nav"
-      className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/90 backdrop-blur-lg border-t border-zinc-200/60 grid grid-cols-4 pb-[env(safe-area-inset-bottom,0)]"
+      className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/90 backdrop-blur-lg border-t border-zinc-200/60 grid pb-[env(safe-area-inset-bottom,0)]"
+      style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
     >
-      {TABS.map((t) => {
+      {tabs.map((t) => {
         const active = t.href === '/portal' ? pathname === '/portal' : pathname.startsWith(t.href);
         const Icon = t.icon;
         return (
@@ -39,8 +45,8 @@ export default function MobileBottomNav() {
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               />
             )}
-            <Icon className={cn('h-5 w-5 transition-all', active ? 'stroke-[2.5] -translate-y-0.5' : '')} />
-            <span className={cn('transition-all', active ? 'font-bold' : '')}>{t.label}</span>
+            <Icon className={cn('h-5 w-5 transition-transform', active ? 'stroke-[2.5] -translate-y-0.5' : '')} />
+            <span className={cn('transition-colors', active ? 'font-bold' : '')}>{t.label}</span>
           </Link>
         );
       })}

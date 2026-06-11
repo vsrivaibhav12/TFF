@@ -18,7 +18,7 @@ const centreSchema = z.object({
 export async function upsertProfitCentreAction(input: z.infer<typeof centreSchema>): Promise<ActionResult<{ code: string }>> {
   try {
     const me = await requireRole(['admin']);
-    await requireCapability(me, 'staff.manage');
+    await requireCapability(me, 'manage_billing_entities');
     const parsed = centreSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const sb = createClient();
@@ -36,7 +36,7 @@ export async function upsertProfitCentreAction(input: z.infer<typeof centreSchem
 export async function upsertCostCentreAction(input: z.infer<typeof centreSchema>): Promise<ActionResult<{ code: string }>> {
   try {
     const me = await requireRole(['admin']);
-    await requireCapability(me, 'staff.manage');
+    await requireCapability(me, 'manage_billing_entities');
     const parsed = centreSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const sb = createClient();
@@ -54,7 +54,7 @@ export async function upsertCostCentreAction(input: z.infer<typeof centreSchema>
 export async function deleteCentreAction(input: { table: 'profit_centres' | 'cost_centres'; code: string }): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin']);
-    await requireCapability(me, 'staff.manage');
+    await requireCapability(me, 'manage_billing_entities');
     const sb = createClient();
     // Soft-deactivate rather than hard-delete (FKs)
     const { error } = await sb.from(input.table).update({ is_active: false }).eq('code', input.code);

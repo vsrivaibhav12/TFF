@@ -19,7 +19,7 @@ export function AdminQuickActions() {
 
   const actions = [
     { label: 'New task', icon: Plus, variant: 'default' as const, onClick: () => router.push('/admin/tasks') },
-    { label: 'New client', icon: Users, variant: 'default' as const, onClick: () => router.push('/admin/clients/new') },
+    { label: 'New client', icon: Users, variant: 'default' as const, onClick: () => router.push('/admin/clients') },
     { label: 'New notice', icon: FileCheck, variant: 'secondary' as const, onClick: () => router.push('/admin/notices') },
     { label: 'Schedule hearing', icon: Gavel, variant: 'secondary' as const, onClick: () => router.push('/admin/hearings') },
     { label: 'Log work', icon: Timer, variant: 'secondary' as const, onClick: () => router.push('/admin/work-done') },

@@ -100,7 +100,7 @@ export async function addSolutionAction(input: z.infer<typeof solutionSchema>): 
 
 const updateSolutionSchema = z.object({
   id: z.string().uuid(),
-  solution_status: z.enum(['recommended', 'implemented', 'monitoring', 'closed']),
+  solution_status: z.enum(['recommended', 'in_progress', 'implemented', 'deferred']),
 });
 
 export async function updateSolutionStatusAction(input: z.infer<typeof updateSolutionSchema>): Promise<ActionResult<void>> {

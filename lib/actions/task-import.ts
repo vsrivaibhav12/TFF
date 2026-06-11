@@ -7,6 +7,7 @@ import { requireCapability } from '@/lib/auth/require-capability';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 import { parseTasksBuffer, type ParsedTaskRow } from '@/lib/services/task-import-service';
 import { createTaskAction } from '@/lib/actions/tasks';
+import { buildTaskTitle } from '@/lib/utils';
 
 export interface TaskImportPreview {
   rows: ParsedTaskRow[];
@@ -156,13 +157,26 @@ export async function commitTaskImportAction(input: {
       // Automatically assign the first active task template
       const taskTemplateId = templateMap.get(subServiceId);
 
-      // We auto-generate the title in createTaskAction if it's empty, but let's build it here like new-task-dialog does.
-      // Wait, the createTaskSchema requires a title. Let's auto-generate it.
-      let newTitle = `${r.client_name} - ${r.sub_service}`;
-      if (r.period_year) {
-        newTitle += ` ${r.period_year}`;
-        if (r.period) newTitle += ` ${r.period}`;
+      // Uniform title generation across all creation paths
+      let periodMonth: number | null = null;
+      let periodQuarter: number | null = null;
+      if (r.period) {
+        const pNum = parseInt(r.period.replace(/\D/g, ''), 10);
+        if (!isNaN(pNum)) {
+          if (r.period.toLowerCase().includes('q')) {
+            periodQuarter = pNum;
+          } else {
+            periodMonth = pNum;
+          }
+        }
       }
+      const newTitle = buildTaskTitle({
+        subServiceName: r.sub_service || 'Task',
+        clientName: r.client_name,
+        periodYear: r.period_year ? parseInt(r.period_year, 10) : null,
+        periodMonth,
+        periodQuarter,
+      });
 
       // Create Task
       const payload: any = {
@@ -175,18 +189,9 @@ export async function commitTaskImportAction(input: {
         period_year: r.period_year ? parseInt(r.period_year, 10) : undefined,
       };
 
-      // Handle period if it's a month or quarter. The user just gave "period" string.
-      // Try to parse it to month or quarter if it's a number.
-      if (r.period) {
-        const pNum = parseInt(r.period.replace(/\D/g, ''), 10);
-        if (!isNaN(pNum)) {
-            if (r.period.toLowerCase().includes('q')) {
-               payload.period_quarter = pNum;
-            } else {
-               payload.period_month = pNum;
-            }
-        }
-      }
+      // Period already parsed for title generation above
+      if (periodMonth !== null) payload.period_month = periodMonth;
+      if (periodQuarter !== null) payload.period_quarter = periodQuarter;
 
       // If due_date is provided
       if (r.due_date) {

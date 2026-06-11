@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { seedTaskStepsFromSop } from '@/lib/services/task-steps-service';
 import { fetchAll } from '@/lib/supabase/fetch-all';
+import { buildTaskTitle } from '@/lib/utils';
 
 /**
  * Vercel Cron: Generate recurring tasks from client_sub_services.
@@ -143,7 +144,12 @@ export async function GET(request: NextRequest) {
     const insertPayload: any = {
       client_id: l.client_id,
       sub_service_id: l.sub_service_id,
-      title: `${ss.name} \u2014 ${periodLabel}`,
+      title: buildTaskTitle({
+        subServiceName: ss.name,
+        periodYear: periodYear,
+        periodMonth: taskPeriodMonth ?? undefined,
+        periodQuarter: taskPeriodQuarter ?? undefined,
+      }),
       status: 'pending',
       priority: 'medium',
       due_date: dueDateStr,

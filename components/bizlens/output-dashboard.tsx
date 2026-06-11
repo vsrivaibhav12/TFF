@@ -19,7 +19,7 @@ export default function BizlensOutputDashboard({
   clientId, isPortal = false, role = 'team',
   trends, projections,
 }: any) {
-  const basePath = role === 'admin' ? '/admin' : '/team';
+  const basePath = isPortal ? '/portal' : '/admin';
 
   return (
     <div className="tff-stack-lg">

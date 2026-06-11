@@ -46,13 +46,13 @@ function calcOptPaths(m: any, targetProfit: number, months: number) {
 }
 
 export default function SimulatorTab({ report }: any) {
-  if (!report) return null;
-  const m = report.monthly;
-
   const [salesPct, setSalesPct] = useState(0);
   const [vcPct, setVcPct] = useState(0);
   const [fcPct, setFcPct] = useState(0);
   const [showOpt, setShowOpt] = useState(false);
+
+  if (!report) return null;
+  const m = report.monthly;
 
   const sim = simScenario(m, { salesPct, vcPct, fcPct });
   const delta = sim.op - m.opProfit;

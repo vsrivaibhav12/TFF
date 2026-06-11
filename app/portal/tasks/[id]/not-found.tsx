@@ -1,25 +1,14 @@
 import Link from 'next/link';
-import { FileQuestion } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
-export default function PortalTaskNotFound() {
+export default function NotFound() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4 tff-card py-12">
-      <div className="h-16 w-16 bg-zinc-50 rounded-full flex items-center justify-center mb-6">
-        <FileQuestion className="h-8 w-8 text-zinc-300" />
-      </div>
-      <h1 className="text-2xl font-bold tracking-tight text-zinc-900 mb-2">Task Unavailable</h1>
-      <p className="text-zinc-500 max-w-sm mb-8">
-        This task either doesn't exist, has been deleted, or your profile doesn't have permission to view it.
-      </p>
-      <div className="flex gap-4">
-        <Button asChild variant="outline">
-          <Link href="/portal">Dashboard</Link>
-        </Button>
-        <Button asChild variant="default" className="bg-teal-600 hover:bg-teal-700">
-          <Link href="/portal/tasks">All Tasks</Link>
-        </Button>
-      </div>
+    <div className="max-w-md mx-auto px-6 py-24 text-center">
+      <h1 className="text-4xl font-bold text-zinc-900">404</h1>
+      <p className="text-zinc-500 mt-2">Page not found.</p>
+      <Link href="/portal/tasks" className="inline-flex items-center gap-1 text-teal-700 text-sm font-medium mt-6 hover:underline">
+        <ArrowLeft className="h-4 w-4" /> Back to tasks
+      </Link>
     </div>
   );
 }

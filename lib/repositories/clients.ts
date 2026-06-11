@@ -79,6 +79,7 @@ export async function listTeamUsers() {
     .select('id, full_name, email, role, is_active, reports_to, is_prime_admin')
     .in('role', ['team', 'admin'])
     .eq('is_active', true)
+    .eq('is_deleted', false)
     .order('full_name');
   if (error) throw error;
   return data ?? [];
@@ -89,7 +90,8 @@ export async function listClientUsers(clientId: string) {
   const { data, error } = await sb
     .from('client_users')
     .select('id, role_in_client, is_active, user_id, users_profile!client_users_user_id_fkey(id, full_name, email)')
-    .eq('client_id', clientId);
+    .eq('client_id', clientId)
+    .eq('is_deleted', false);
   if (error) throw error;
   return data ?? [];
 }

@@ -6,6 +6,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { toast } from 'sonner';
 import { applyRoleTemplateAction, clearRoleTemplateAction } from '@/lib/actions/role-templates';
 import type { RoleTemplate } from '@/lib/repositories/role-templates';
+import Link from 'next/link';
 import { X } from 'lucide-react';
 
 export default function ApplyRoleControl({
@@ -30,9 +31,9 @@ export default function ApplyRoleControl({
       const r = await applyRoleTemplateAction({ user_id: userId, template_id: chosen });
       if (!r.success) toast.error(r.error);
       else {
-        const granted = (r as any).data?.granted ?? 0;
-        const revoked = (r as any).data?.revoked ?? 0;
-        toast.success(`Role applied · +${granted} granted, -${revoked} revoked`);
+        const template_caps = (r as any).data?.template_caps ?? 0;
+        const overrides_kept = (r as any).data?.overrides_kept ?? 0;
+        toast.success(`Role applied · ${template_caps} from template, ${overrides_kept} overrides kept`);
         router.refresh();
       }
     });
@@ -54,9 +55,9 @@ export default function ApplyRoleControl({
     return (
       <p className="text-xs text-zinc-500">
         No role templates yet.{' '}
-        <a href="/admin/team/roles" className="text-teal-700 hover:underline">
+        <Link href="/admin/team/roles" className="text-teal-700 hover:underline">
           Create one
-        </a>{' '}
+        </Link>{' '}
         to apply pre-defined access.
       </p>
     );

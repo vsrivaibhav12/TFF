@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
 
 interface StaggerContainerProps {
@@ -12,27 +11,12 @@ interface StaggerContainerProps {
 
 export function StaggerContainer({
   children,
-  stagger = 0.05,
-  delay = 0,
   className,
 }: StaggerContainerProps) {
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={{
-        hidden: {},
-        visible: {
-          transition: {
-            staggerChildren: stagger,
-            delayChildren: delay,
-          },
-        },
-      }}
-      className={className}
-    >
+    <div className={`animate-in fade-in duration-150 ${className ?? ''}`}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -43,20 +27,5 @@ export function StaggerItem({
   children: ReactNode;
   className?: string;
 }) {
-  return (
-    <motion.div
-      variants={{
-        hidden: { opacity: 0, y: 12 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
-        },
-      }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className={className}>{children}</div>;
 }
-

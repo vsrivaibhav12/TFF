@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { softDeleteTaskAction } from '@/lib/actions/tasks';
 import { Trash2 } from 'lucide-react';
 
-export default function DeleteTaskButton({ taskId, redirectTo }: { taskId: string; redirectTo: string }) {
+export default function DeleteTaskButton({ taskId, redirectTo, onSuccess }: { taskId: string; redirectTo: string; onSuccess?: () => void }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
@@ -16,7 +16,11 @@ export default function DeleteTaskButton({ taskId, redirectTo }: { taskId: strin
       const r = await softDeleteTaskAction(taskId);
       if (r.success) {
         toast.success('Task deleted');
-        router.push(redirectTo);
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push(redirectTo);
+        }
       } else {
         toast.error(r.error);
         setConfirming(false);

@@ -1,17 +1,20 @@
 import { requireRole } from '@/lib/auth/require-role';
-import { listGrantedCapabilities } from '@/lib/repositories/staff-capabilities';
+import { listEffectiveCapabilities } from '@/lib/repositories/staff-capabilities';
 import { filterNavByCapabilities } from '@/lib/auth/nav-capabilities';
 import AppShell from '@/components/shell/app-shell';
 
-export default async function AdminLayout({ children, modal }: { children: React.ReactNode, modal: React.ReactNode }) {
-  const user = await requireRole(['admin', 'team']);
+export const dynamic = 'force-dynamic';
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const user = await requireRole('admin');
   const capabilities = user.role === 'admin'
     ? []
-    : await listGrantedCapabilities(user.id);
+    : await listEffectiveCapabilities(user.id);
 
   const fullNav = [
     /* ── Primary ── */
     { href: '/admin', label: 'Home', icon: 'dashboard' as const },
+    { href: '/admin/inbox', label: 'Inbox', icon: 'inbox' as const },
     { href: '/admin/clients', label: 'Clients', icon: 'users' as const },
     { href: '/admin/tasks', label: 'Tasks', icon: 'clipboard' as const },
 
@@ -56,7 +59,6 @@ export default async function AdminLayout({ children, modal }: { children: React
     >
       <div data-admin-only>
         {children}
-        {modal}
       </div>
     </AppShell>
   );

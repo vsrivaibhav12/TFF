@@ -88,7 +88,7 @@ export async function checkOutAction(): Promise<ActionResult<void>> {
     const { error } = await sb
       .from('attendance_logs')
       .update({ check_out_time: now })
-      .eq('id', (existing as any).id);
+      .eq('id', (existing as { id: string }).id);
     if (error) return fail(error.message, 'DB');
     revalidatePath('/team/attendance');
     return ok(undefined);

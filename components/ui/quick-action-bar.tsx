@@ -26,7 +26,7 @@ export function QuickActionBar({ actions, className }: QuickActionBarProps) {
             key={action.label}
             onClick={action.onClick}
             className={cn(
-              'flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-semibold transition-all duration-200',
+              'flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-semibold transition-colors duration-200',
               isDefault
                 ? 'bg-teal-800 text-white hover:bg-teal-700 shadow-sm'
                 : 'bg-white text-zinc-700 hover:bg-zinc-50 border border-zinc-200 hover:border-zinc-300'

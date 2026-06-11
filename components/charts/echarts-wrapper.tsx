@@ -26,6 +26,7 @@ export default function EChartsWrapper({ option, onClick, height = 300, classNam
       instance.dispose();
       instanceRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

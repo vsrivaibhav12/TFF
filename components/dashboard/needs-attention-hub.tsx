@@ -12,6 +12,8 @@ export type AttentionItem = {
   reason: string;
   color: 'amber' | 'red' | 'blue' | 'teal' | 'orange';
   href: string;
+  amount?: number;
+  amountLabel?: string;
 };
 
 export function NeedsAttentionHub({ items = [] }: { items?: AttentionItem[] }) {
@@ -53,6 +55,9 @@ export function NeedsAttentionHub({ items = [] }: { items?: AttentionItem[] }) {
                 <div className="text-sm font-semibold text-zinc-900">{item.title}</div>
                 <div className="text-xs text-zinc-500 mt-0.5">
                   {item.client} · <span className={`text-${item.color}-600 font-medium`}>{item.reason}</span>
+                  {item.amountLabel && (
+                    <span className="ml-1.5 text-amber-600 font-medium">{item.amountLabel}</span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0 sm:opacity-0 group-hover:opacity-100 transition-opacity">

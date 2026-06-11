@@ -22,7 +22,7 @@ const ROLE_HOME: Record<string, string> = {
 
 const ROLE_ALLOWED_PREFIX: Record<string, string[]> = {
   admin: ['/admin', '/team'],
-  team: ['/team', '/admin'],
+  team: ['/team'],
   client: ['/portal'],
 };
 

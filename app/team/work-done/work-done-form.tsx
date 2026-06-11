@@ -169,7 +169,7 @@ export default function WorkDoneForm({ clients, tasks }: { clients: any[]; tasks
             </SelectTrigger>
             <SelectContent>
               {filteredTasks.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
+                <SelectItem key={t.id} value={t.id}>{t.sub_services?.name ?? t.title}</SelectItem>
               ))}
             </SelectContent>
           </Select>

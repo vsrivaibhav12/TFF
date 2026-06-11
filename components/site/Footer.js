@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { PhoneTrigger, MailTrigger } from './ContactModal'
 import { Linkedin, ArrowUp, MapPin, Phone, Mail } from 'lucide-react'
 
@@ -15,7 +16,7 @@ export default function Footer() {
         <div className="grid md:grid-cols-12 gap-8 lg:gap-10">
           <div className="md:col-span-5">
             <div className="flex items-center gap-2">
-              <img src="/logo.svg" className="h-7 w-auto" alt="The Fiscal Fulcrum" />
+              <Image src="/logo.svg" width={28} height={28} className="h-7 w-auto" alt="The Fiscal Fulcrum" />
               <span className="font-display text-white font-bold text-[17px]">The Fiscal Fulcrum</span>
             </div>
             <p className="mt-3 text-[14px] text-slate-400 italic">The Manufacturing Finance Partner for Ambitious Businesses</p>

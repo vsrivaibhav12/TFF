@@ -30,13 +30,17 @@ import BackButton from '@/components/sophistication/back-button';
 // Group capabilities into logical clusters for UX (don't expose raw list to user)
 const CLUSTERS: Array<{ label: string; caps: readonly string[] }> = [
   { label: 'Clients', caps: ['clients.read.all', 'clients.create', 'clients.edit', 'clients.delete', 'clients.assign_team', 'clients.toggle_portal'] },
-  { label: 'Services', caps: ['services.manage', 'services.assign'] },
-  { label: 'Staff', caps: ['staff.manage', 'staff.grant_capabilities'] },
-  { label: 'Vaults', caps: ['dsc.manage', 'credentials.manage'] },
-  { label: 'Tasks & Compliance', caps: ['tasks.assign', 'tasks.complete', 'compliance.enter', 'notices.manage', 'queries.assign'] },
-  { label: 'Advisory', caps: ['bizlens.enter', 'vcfo.enter', 'insights.configure'] },
-  { label: 'HR & Payroll', caps: ['payroll.run', 'attendance.approve', 'leave.approve'] },
-  { label: 'Insights & Audit', caps: ['audit.view', 'firm_dashboard.view'] },
+  { label: 'Services', caps: ['services.view', 'services.manage', 'services.assign'] },
+  { label: 'Staff', caps: ['staff.manage', 'staff.grant_capabilities', 'promote_to_admin'] },
+  { label: 'Vaults', caps: ['dsc.view', 'dsc.manage', 'credentials.view', 'credentials.manage'] },
+  { label: 'Tasks', caps: ['tasks.view', 'tasks.create', 'tasks.edit', 'tasks.assign', 'tasks.complete', 'tasks.delete', 'verify_tasks'] },
+  { label: 'Notices & Hearings', caps: ['notices.view', 'notices.manage', 'hearings.view', 'hearings.manage'] },
+  { label: 'Compliance & Queries', caps: ['compliance.view', 'compliance.enter', 'manage_compliance_rules', 'queries.view', 'queries.assign'] },
+  { label: 'Advisory', caps: ['bizlens.view', 'bizlens.enter', 'vcfo.view', 'vcfo.enter', 'insights.view', 'insights.configure'] },
+  { label: 'Documents', caps: ['documents.view'] },
+  { label: 'HR & Payroll', caps: ['payroll.run', 'attendance.approve', 'leave.approve', 'permission.approve'] },
+  { label: 'Billing & Settings', caps: ['manage_billing_entities', 'manage_custom_fields', 'manage_labels'] },
+  { label: 'Work & Audit', caps: ['workdone.manage', 'view_workdone_reports', 'audit.view', 'manage_solution_log'] },
 ];
 
 export default function RoleTemplatesAdmin({ templates }: { templates: RoleTemplate[] }) {

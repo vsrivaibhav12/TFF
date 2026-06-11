@@ -22,7 +22,7 @@ const workDoneSchema = z.object({
 export async function addWorkDoneAction(input: z.infer<typeof workDoneSchema>): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.complete');
+    await requireCapability(me, 'workdone.manage');
     const parsed = workDoneSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
 
@@ -45,12 +45,14 @@ const manualSchema = z.object({
   work_date: z.string(),
   duration_minutes: z.number().int().positive().max(1440),
   note: z.string().max(500).optional().nullable(),
+  started_at: z.string().optional().nullable(),
+  ended_at: z.string().optional().nullable(),
 });
 
 export async function addManualWorkDoneAction(input: any): Promise<ActionResult<{ id: string }>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.complete');
+    await requireCapability(me, 'workdone.manage');
     const parsed = manualSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const sb = createClient();
@@ -67,6 +69,8 @@ export async function addManualWorkDoneAction(input: any): Promise<ActionResult<
         duration_minutes: parsed.data.duration_minutes,
         note: parsed.data.note ?? null,
         entry_method: 'manual',
+        started_at: parsed.data.started_at ?? null,
+        ended_at: parsed.data.ended_at ?? null,
       })
       .select('id')
       .single();
@@ -89,7 +93,7 @@ const timerSchema = z.object({
 export async function logTimerWorkDoneAction(input: any): Promise<ActionResult<{ id: string; duration_minutes: number }>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.complete');
+    await requireCapability(me, 'workdone.manage');
     const parsed = timerSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     const start = new Date(parsed.data.started_at);
@@ -127,7 +131,7 @@ export async function logTimerWorkDoneAction(input: any): Promise<ActionResult<{
 export async function deleteWorkDoneAction(id: string): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.complete');
+    await requireCapability(me, 'workdone.manage');
     const sb = createClient();
     const { data: row } = await sb.from('task_workdone').select('user_id, task_id').eq('id', id).maybeSingle();
     if (!row) return fail('Not found', 'NOT_FOUND');
@@ -166,7 +170,7 @@ const updateWorkDoneSchema = z.object({
 export async function updateWorkDoneAction(input: z.infer<typeof updateWorkDoneSchema>): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.complete');
+    await requireCapability(me, 'workdone.manage');
     const parsed = updateWorkDoneSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
 

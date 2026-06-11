@@ -35,7 +35,7 @@ export function WorkDoneRowActions({
   entry: WorkDoneEntry;
   canEdit: boolean;
   clients: Array<{ id: string; business_name: string }>;
-  tasks: Array<{ id: string; title: string; client_id?: string | null }>;
+  tasks: Array<{ id: string; title: string; client_id?: string | null; sub_services?: { name: string } | null }>;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -89,7 +89,7 @@ function WorkDoneEditDialog({
 }: {
   entry: WorkDoneEntry;
   clients: Array<{ id: string; business_name: string }>;
-  tasks: Array<{ id: string; title: string; client_id?: string | null }>;
+  tasks: Array<{ id: string; title: string; client_id?: string | null; sub_services?: { name: string } | null }>;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -149,7 +149,7 @@ function WorkDoneEditDialog({
                 <SelectTrigger><SelectValue placeholder="Select task" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">None</SelectItem>
-                  {filteredTasks.map((t) => <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}
+                  {filteredTasks.map((t) => <SelectItem key={t.id} value={t.id}>{t.sub_services?.name ?? t.title}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

@@ -69,7 +69,7 @@ export default async function AdminWorkHub() {
 
   const [rawTasks, notices, queries] = await Promise.all([
     listTasks({ limit: 200 }),
-    listAllNotices({ status: 'open' }),
+    listAllNotices({ status: ['received', 'reply_pending', 'reply_submitted', 'hearing_pending', 'hearing_held', 'order_pending', 'order_received'] }),
     listQueries({ status: ['open', 'in_progress'] }),
   ]);
 

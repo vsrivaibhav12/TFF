@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { formatTimeIST } from '@/lib/utils';
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -137,10 +138,10 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
                     )}
                   </td>
                   <td className="px-4 py-3 text-xs text-zinc-600 tabular-nums">
-                    {log?.check_in_time ? new Date(log.check_in_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                    {log?.check_in_time ? formatTimeIST(log.check_in_time) : '—'}
                   </td>
                   <td className="px-4 py-3 text-xs text-zinc-600 tabular-nums">
-                    {log?.check_out_time ? new Date(log.check_out_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                    {log?.check_out_time ? formatTimeIST(log.check_out_time) : '—'}
                   </td>
                   <td className="px-4 py-3 text-right">
                     {editing ? (

@@ -93,6 +93,40 @@ const updateManagerSchema = z.object({
   manager_id: z.union([z.string().uuid(), z.literal(''), z.null()]).optional().transform(v => v && v !== '' ? v : null),
 });
 
+const updateProfileSchema = z.object({
+  user_id: z.string().uuid(),
+  job_title: z.string().trim().optional().nullable(),
+  department: z.string().trim().optional().nullable(),
+  phone_number: z.string().trim().optional().nullable(),
+});
+
+export async function updateTeamMemberProfileAction(
+  input: z.infer<typeof updateProfileSchema>,
+): Promise<ActionResult<void>> {
+  try {
+    const me = await requireRole('admin');
+    await requireCapability(me, 'staff.manage');
+    const parsed = updateProfileSchema.safeParse(input);
+    if (!parsed.success) return fail('Invalid input', 'VALIDATION');
+    const sb = createClient();
+    const { error } = await sb
+      .from('users_profile')
+      .update({
+        job_title: parsed.data.job_title || null,
+        department: parsed.data.department || null,
+        phone_number: parsed.data.phone_number || null,
+      })
+      .eq('id', parsed.data.user_id);
+    if (error) return fail(error.message, 'DB');
+    await writeAudit({ action: 'team.update_profile', entity_type: 'user', entity_id: parsed.data.user_id, performed_by: me.id, details: { job_title: parsed.data.job_title, department: parsed.data.department } });
+    revalidatePath('/admin/team');
+    revalidatePath(`/admin/team/${input.user_id}`);
+    return ok(undefined);
+  } catch (e: any) {
+    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  }
+}
+
 export async function updateTeamMemberManagerAction(
   input: z.infer<typeof updateManagerSchema>,
 ): Promise<ActionResult<void>> {

@@ -1,15 +1,16 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { hasCapability } from '@/lib/auth/require-capability';
 import { listTasks, countTasksByStatus, countOverdueTasks } from '@/lib/repositories/tasks';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { listLeaveRequests } from '@/lib/repositories/leave';
 import { listPermissionRequests } from '@/lib/repositories/permission';
 import { getDirectReports } from '@/lib/repositories/staff';
+import { getTodayAttendance } from '@/lib/repositories/attendance';
 
 
 import { enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { DockLink } from '@/components/shell/dock-link';
 import {
   ArrowRight,
   Briefcase,
@@ -17,8 +18,6 @@ import {
   Users,
   AlertTriangle,
   CalendarDays,
-  ClipboardCheck,
-  Timer,
   ShieldCheck,
 } from 'lucide-react';
 import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-container';
@@ -26,6 +25,7 @@ import EmptyState from '@/components/sophistication/empty-state';
 import { ClientsEmptyIllustration } from '@/components/ui/empty-illustrations';
 import { PriorityList } from '@/components/dashboard/priority-list';
 import { TeamAttendancePrompt } from '@/components/dashboard/smart-prompts';
+import { TeamQuickActions } from '@/components/dashboard/team-quick-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,16 +34,19 @@ export default async function TeamWorkspace() {
   const isAdmin = me.role === 'admin';
   const directReports = isAdmin ? [] : await getDirectReports(me.id);
   const isManager = directReports.length > 0;
-  const canSeeApprovals = isAdmin || isManager;
+  const canApproveLeave = await hasCapability(me, 'leave.approve');
+  const canApprovePermission = await hasCapability(me, 'permission.approve');
+  const canApproveAttendance = await hasCapability(me, 'attendance.approve');
+  const canSeeApprovals = canApproveLeave || canApprovePermission || canApproveAttendance || isManager;
 
-  const [counts, overdueCount, dueSoonRaw, clients, pendingLeaveAll, pendingPermissionAll] = await Promise.all([
+  const [counts, overdueCount, dueSoonRaw, clients, pendingLeaveAll, pendingPermissionAll, todayAttendance] = await Promise.all([
     countTasksByStatus({ assignedTo: me.id }),
     countOverdueTasks({ assignedTo: me.id }),
     listTasks({ assignedTo: me.id, status: ['pending', 'in_progress'], limit: 6 }),
     listAccessibleClients(),
     canSeeApprovals ? listLeaveRequests({ status: 'pending' }) : Promise.resolve([]),
     canSeeApprovals ? listPermissionRequests({ status: 'pending' }) : Promise.resolve([]),
-
+    getTodayAttendance(me.id),
   ]);
 
   const dueSoon = await enrichTasksWithProgress(dueSoonRaw ?? []);
@@ -56,8 +59,8 @@ export default async function TeamWorkspace() {
       pendingApprovalsCount = pendingLeaveAll.length + pendingPermissionAll.length;
     } else {
       pendingApprovalsCount =
-        pendingLeaveAll.filter((r: any) => reportIds.includes(r.user_id)).length +
-        pendingPermissionAll.filter((r: any) => reportIds.includes(r.user_id)).length;
+        pendingLeaveAll.filter((r) => reportIds.includes(r.user_id)).length +
+        pendingPermissionAll.filter((r) => reportIds.includes(r.user_id)).length;
     }
   }
 
@@ -65,17 +68,22 @@ export default async function TeamWorkspace() {
 
   return (
     <StaggerContainer className="space-y-6">
-      <TeamAttendancePrompt />
+      <TeamAttendancePrompt hasAttendance={!!todayAttendance} />
       {/* Header */}
       <StaggerItem>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">My workspace</h1>
             <p className="text-sm text-zinc-500 mt-1">
-              {totalAssigned} tasks assigned · {overdueCount > 0 ? `${overdueCount} overdue` : 'All on track'}
+              <span className="tabular-nums">{totalAssigned}</span> tasks assigned · {overdueCount > 0 ? <><span className="tabular-nums">{overdueCount}</span> overdue</> : 'All on track'}
             </p>
           </div>
         </div>
+      </StaggerItem>
+
+      {/* Quick Actions */}
+      <StaggerItem>
+        <TeamQuickActions />
       </StaggerItem>
 
 
@@ -92,14 +100,16 @@ export default async function TeamWorkspace() {
             <Link
               key={m.label}
               href="/team/tasks"
-              className="tff-card p-5 transition-all duration-200 hover:shadow-card-hover"
+              className="tff-card p-3 transition-colors duration-200"
             >
-              <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${m.tone === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-zinc-100 text-zinc-500'}`}>
-                <m.icon className="h-4 w-4" />
-              </div>
-              <div className="mt-3">
-                <div className={`text-2xl font-bold tabular-nums tracking-tight ${m.tone === 'warning' ? 'text-amber-600' : 'text-zinc-900'}`}>{m.value}</div>
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mt-1">{m.label}</div>
+              <div className="flex items-center gap-3">
+                <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${m.tone === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-zinc-100 text-zinc-500'}`}>
+                  <m.icon className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className={`text-2xl font-bold tabular-nums tracking-tight ${m.tone === 'warning' ? 'text-amber-600' : 'text-zinc-900'}`}>{m.value}</div>
+                  <div className="text-[11px] font-medium text-zinc-500">{m.label}</div>
+                </div>
               </div>
             </Link>
           ))}
@@ -122,7 +132,7 @@ export default async function TeamWorkspace() {
                   Attendance approval for the week due
                 </div>
                 <div className="text-xs text-amber-700 mt-0.5">
-                  {pendingApprovalsCount} pending item{pendingApprovalsCount > 1 ? 's' : ''} waiting for your review
+                  <span className="tabular-nums">{pendingApprovalsCount}</span> pending item{pendingApprovalsCount > 1 ? 's' : ''} waiting for your review
                 </div>
               </div>
               <ArrowRight className="h-5 w-5 text-amber-600 ml-auto shrink-0" />
@@ -134,7 +144,7 @@ export default async function TeamWorkspace() {
       {/* Tasks + Compliance grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <StaggerItem className="xl:col-span-2">
-          <PriorityList tasks={dueSoon as any} href="/team/tasks" emptyMessage="No pending tasks" />
+          <PriorityList tasks={dueSoon} href="/team/tasks" emptyMessage="No pending tasks" />
         </StaggerItem>
 
 
@@ -156,11 +166,12 @@ export default async function TeamWorkspace() {
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {clients.slice(0, 8).map((c: any) => (
-              <Link
+            {clients.slice(0, 8).map((c) => (
+              <DockLink
                 key={c.id}
+                item={{ type: 'client', id: c.id }}
                 href={`/team/clients/${c.id}`}
-                className="flex items-center gap-3 rounded-xl border border-zinc-100 px-4 py-3 hover:border-teal-200 hover:bg-teal-50/20 transition-all"
+                className="flex items-center gap-3 rounded-xl border border-zinc-100 px-4 py-3 hover:border-teal-200 hover:bg-teal-50/20 transition-colors"
               >
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 flex items-center justify-center shrink-0">
                   <Users className="h-4 w-4 text-teal-600" />
@@ -169,7 +180,7 @@ export default async function TeamWorkspace() {
                   <div className="text-sm font-medium truncate">{c.business_name}</div>
                   <div className="text-xs text-zinc-500">{c.pan ?? '—'}</div>
                 </div>
-              </Link>
+              </DockLink>
             ))}
             {clients.length === 0 && (
               <div className="col-span-full">

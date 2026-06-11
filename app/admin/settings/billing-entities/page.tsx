@@ -1,11 +1,15 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import BillingEntitiesAdmin from './billing-entities-admin';
 import { ChevronLeft } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export default async function BillingEntitiesPage() {
+  const me = await requireRole(['admin', 'team']);
+  await requireCapabilityOrRedirect(me, 'manage_billing_entities');
   const sb = createClient();
   const [{ data: entities }, { data: pcs }, { data: users }] = await Promise.all([
     sb.from('billing_entities').select('*').order('name'),

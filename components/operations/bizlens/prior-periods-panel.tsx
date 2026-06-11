@@ -13,7 +13,7 @@ interface Snapshot {
   period_month: number;
   period_year: number;
   months_covered: number;
-  data: Record<string, number>;
+  data_json: Record<string, number>;
 }
 
 interface Props {
@@ -43,7 +43,7 @@ function emptySnapshot(): Snapshot {
     period_month: now.getMonth() + 1,
     period_year: now.getFullYear(),
     months_covered: 12,
-    data: {},
+    data_json: {},
   };
 }
 
@@ -55,7 +55,7 @@ export default function PriorPeriodsPanel({ clientId, snapshots: initial }: Prop
   function setField(key: string, value: string) {
     if (!editing) return;
     const num = value === '' ? 0 : Number(value);
-    setEditing({ ...editing, data: { ...editing.data, [key]: num } });
+    setEditing({ ...editing, data_json: { ...editing.data_json, [key]: num } });
   }
 
   function save() {
@@ -66,7 +66,7 @@ export default function PriorPeriodsPanel({ clientId, snapshots: initial }: Prop
         period_month: editing.period_month,
         period_year: editing.period_year,
         months_covered: editing.months_covered,
-        data: editing.data,
+        data_json: editing.data_json,
       });
       if (r.success) {
         toast.success('Snapshot saved');
@@ -138,7 +138,7 @@ export default function PriorPeriodsPanel({ clientId, snapshots: initial }: Prop
                   {FIELDS.slice(0, 6).map(f => (
                     <div key={f.key} className="flex justify-between">
                       <span className="text-zinc-400">{f.label}</span>
-                      <span className="font-medium text-zinc-700">₹{((s.data[f.key] || 0) / 1e5).toFixed(1)}L</span>
+                      <span className="font-medium text-zinc-700">₹{((s.data_json[f.key] || 0) / 1e5).toFixed(1)}L</span>
                     </div>
                   ))}
                 </div>
@@ -165,7 +165,7 @@ export default function PriorPeriodsPanel({ clientId, snapshots: initial }: Prop
               {FIELDS.map(f => (
                 <div key={f.key} className="space-y-1">
                   <Label className="text-xs">{f.label} ₹</Label>
-                  <Input type="number" value={editing.data[f.key] ?? ''} onChange={(e) => setField(f.key, e.target.value)} placeholder="0" />
+                  <Input type="number" value={editing.data_json[f.key] ?? ''} onChange={(e) => setField(f.key, e.target.value)} placeholder="0" />
                 </div>
               ))}
             </div>

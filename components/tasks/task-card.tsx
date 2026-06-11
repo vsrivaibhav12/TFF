@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatDateIST } from '@/lib/utils';
-import { Calendar, AlertTriangle, Briefcase, Bell, MessageSquare } from 'lucide-react';
+import { getStatusColour, getPriorityColour } from '@/lib/semantic-colours';
+import { Calendar, AlertTriangle, Briefcase, Bell, MessageSquare, Tag } from 'lucide-react';
+import { TaskLabelPills, type TaskLabel } from './task-label-pills';
 import { ProgressRing } from '@/components/ui/progress-ring';
 
 interface TaskCardProps {
@@ -13,22 +15,26 @@ interface TaskCardProps {
     status: string;
     priority?: string | null;
     due_date?: string | null;
+    period_year?: number | null;
+    period_month?: number | null;
+    period_quarter?: number | null;
     clients?: { business_name: string } | { business_name: string }[] | null;
+    sub_services?: { name: string } | null;
     is_blocked_on_client?: boolean;
     is_stuck?: boolean;
     assignee?: { full_name?: string | null } | null;
     work_item_type?: string;
     work_item_label?: string;
     progress_pct?: number;
+    labels?: TaskLabel[];
   };
   hrefPrefix?: string;
 }
 
-const priorityStyles: Record<string, string> = {
-  urgent: 'bg-red-50 text-red-700 border-red-200',
-  high: 'bg-red-50 text-red-700 border-red-200',
-  medium: 'bg-amber-50 text-amber-700 border-amber-200',
-  low: 'bg-teal-50 text-teal-700 border-teal-200',
+const typeBorderColours: Record<string, string> = {
+  task: 'border-l-blue-500',
+  notice: 'border-l-rose-500',
+  query: 'border-l-purple-500',
 };
 
 const typeIcons: Record<string, React.ReactNode> = {
@@ -60,7 +66,7 @@ function clientName(task: TaskCardProps['task']): string {
   return c.business_name ?? '';
 }
 
-export function TaskCard({ task, hrefPrefix = '/admin/tasks' }: TaskCardProps) {
+export function TaskCard({ task, hrefPrefix }: TaskCardProps) {
   const p = (task.priority ?? 'medium').toLowerCase();
   const overdue = isOverdue(task.due_date);
   const workType = task.work_item_type ?? 'task';
@@ -69,8 +75,10 @@ export function TaskCard({ task, hrefPrefix = '/admin/tasks' }: TaskCardProps) {
   return (
     <Link
       href={`${hrefPrefix}/${task.id}`}
-      className="group block rounded-xl bg-white p-4 hover:shadow-md transition-all border border-transparent hover:border-zinc-100"
-      style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+      className={cn(
+        'group block rounded-xl bg-white p-4 hover:border-zinc-300 transition-colors border border-transparent border-l-4',
+        typeBorderColours[workType] || typeBorderColours.task
+      )}
     >
       {/* Top row: type + priority */}
       <div className="flex items-center justify-between gap-2">
@@ -78,20 +86,26 @@ export function TaskCard({ task, hrefPrefix = '/admin/tasks' }: TaskCardProps) {
           {typeIcons[workType] || typeIcons.task}
           {task.work_item_label ?? 'Task'}
         </div>
-        <Badge variant="outline" className={cn('text-[10px] shrink-0', priorityStyles[p] || priorityStyles.medium)}>
+        <Badge variant="outline" className={cn('text-[10px] shrink-0', getPriorityColour(p).bg, getPriorityColour(p).text, 'border-current')}>
+          <span className={cn('h-1.5 w-1.5 rounded-full mr-1', getPriorityColour(p).dot)} />
           {p}
         </Badge>
       </div>
 
-      {/* Title */}
-      <h4 className="text-sm font-semibold text-zinc-900 mt-2.5 line-clamp-2 group-hover:text-teal-700 transition-colors">
-        {task.title}
-      </h4>
-
-      {/* Client */}
-      {clientName(task) && (
-        <p className="text-xs text-zinc-500 mt-1 truncate">{clientName(task)}</p>
-      )}
+      {/* Sub Service + Client */}
+      <div className="mt-2.5">
+        <h4 className="text-sm font-semibold text-zinc-900 line-clamp-2 group-hover:text-teal-700 transition-colors">
+          {task.sub_services?.name ?? task.title}
+        </h4>
+        {clientName(task) && (
+          <p className="text-xs text-zinc-500 mt-1 truncate">{clientName(task)}</p>
+        )}
+        {task.labels && task.labels.length > 0 && (
+          <div className="mt-1.5">
+            <TaskLabelPills labels={task.labels} maxVisible={3} size="xs" />
+          </div>
+        )}
+      </div>
 
       {/* Bottom row: due date + progress ring */}
       <div className="flex items-center justify-between mt-3">

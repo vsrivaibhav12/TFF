@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { hasCapability } from '@/lib/auth/require-capability';
 import { listLeaveRequests } from '@/lib/repositories/leave';
 import LeaveForm from './leave-form';
 import ReviewLeave from './review-leave';
@@ -13,9 +14,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function LeavePage() {
   const me = await requireRole(['admin', 'team']);
+  const canApproveLeave = await hasCapability(me, 'leave.approve');
   const [mine, pendingAll] = await Promise.all([
     listLeaveRequests({ userId: me.id }),
-    me.role === 'admin' ? listLeaveRequests({ status: 'pending' }) : Promise.resolve([]),
+    canApproveLeave ? listLeaveRequests({ status: 'pending' }) : Promise.resolve([]),
   ]);
 
   const exportData = mine.map((r: any) => ({
@@ -35,7 +37,7 @@ export default async function LeavePage() {
         </div>
       </div>
 
-      {me.role === 'admin' && (
+      {canApproveLeave && (
         <section className="space-y-3">
           <h2 className="text-base font-semibold">Pending approvals</h2>
           {pendingAll.length === 0 ? (

@@ -88,12 +88,13 @@ export async function revealCredentialAction(id: string): Promise<ActionResult<{
       .eq('id', id)
       .maybeSingle();
     if (error || !data) return fail('Not found', 'NOT_FOUND');
-    if ((data as any).is_deleted) return fail('Credential has been deleted', 'DELETED');
+    const cred = data as { id: string; client_id: string; portal_name: string; encrypted_password: string | null; encrypted_security_answer: string | null; is_deleted: boolean };
+    if (cred.is_deleted) return fail('Credential has been deleted', 'DELETED');
     let password = '';
     let security_answer: string | null = null;
     try {
-      password = (data as any).encrypted_password ? decryptString((data as any).encrypted_password) : '';
-      security_answer = (data as any).encrypted_security_answer ? decryptString((data as any).encrypted_security_answer) : null;
+      password = cred.encrypted_password ? decryptString(cred.encrypted_password) : '';
+      security_answer = cred.encrypted_security_answer ? decryptString(cred.encrypted_security_answer) : null;
     } catch (e: any) {
       return fail('Decryption failed: ' + (e?.message ?? 'unknown'), 'DECRYPT');
     }
@@ -104,7 +105,7 @@ export async function revealCredentialAction(id: string): Promise<ActionResult<{
       entity_type: 'credential',
       entity_id: id,
       performed_by: me.id,
-      details: { client_id: (data as any).client_id, portal_name: (data as any).portal_name },
+      details: { client_id: cred.client_id, portal_name: cred.portal_name },
     });
     return ok({ password, security_answer });
   } catch (e: any) {

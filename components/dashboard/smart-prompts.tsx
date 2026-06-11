@@ -28,7 +28,7 @@ export function AdminPayrollPrompt() {
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-teal-900">Time to run payroll</h3>
           <p className="text-sm text-teal-700 mt-0.5">
-            It is the end of the month. Don't forget to run payroll for the team.
+            It is the end of the month. Don&apos;t forget to run payroll for the team.
           </p>
         </div>
         <Link
@@ -42,12 +42,8 @@ export function AdminPayrollPrompt() {
   );
 }
 
-export function TeamAttendancePrompt() {
-  // In a real app, this checks if attendance is logged for today
-  // For the sake of the UX mockup, we show it
-  const [show, setShow] = useState(true);
-
-  if (!show) return null;
+export function TeamAttendancePrompt({ hasAttendance }: { hasAttendance: boolean }) {
+  if (hasAttendance) return null;
 
   return (
     <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
@@ -58,12 +54,11 @@ export function TeamAttendancePrompt() {
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-amber-900">Punch In</h3>
           <p className="text-sm text-amber-700 mt-0.5">
-            You haven't marked your attendance today. Please punch in to start your day.
+            You haven&apos;t marked your attendance today. Please punch in to start your day.
           </p>
         </div>
         <Link
           href="/team/attendance"
-          onClick={() => setShow(false)}
           className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
           Punch In Now

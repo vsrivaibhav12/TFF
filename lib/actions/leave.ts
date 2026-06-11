@@ -49,9 +49,10 @@ export async function requestLeaveAction(input: z.infer<typeof leaveSchema>): Pr
     const sb = createClient();
     const { data: admins } = await sb.from('users_profile').select('id').eq('role', 'admin').eq('is_active', true);
     for (const a of admins ?? []) {
-      if ((a as any).id === me.id) continue;
+      const admin = a as { id: string };
+      if (admin.id === me.id) continue;
       await notify({
-        user_id: (a as any).id,
+        user_id: admin.id,
         type: 'team_alert',
         title: 'Leave request',
         message: `${me.full_name ?? me.email} requested ${days} day(s) of ${parsed.data.leave_type} leave (${parsed.data.from_date} to ${parsed.data.to_date}).`,
@@ -76,12 +77,12 @@ export async function reviewLeaveAction(input: { id: string; approve: boolean; r
     const row = await leaveRepo.getLeaveRequestById(input.id);
     if (!row) return fail('Not found', 'NOT_FOUND');
     // C-2: Prevent self-approval
-    if ((row as any).user_id === me.id && me.role !== 'admin') {
+    if (row.user_id === me.id && me.role !== 'admin') {
       return fail('You cannot approve or reject your own leave request', 'SELF_APPROVAL');
     }
     // Guard: only pending requests can be reviewed
-    if ((row as any).status !== 'pending') {
-      return fail(`Leave request is already ${(row as any).status}`, 'ALREADY_REVIEWED');
+    if (row.status !== 'pending') {
+      return fail(`Leave request is already ${row.status}`, 'ALREADY_REVIEWED');
     }
     await leaveRepo.updateLeaveRequestStatus(input.id, {
       status: input.approve ? 'approved' : 'rejected',

@@ -182,7 +182,7 @@ DROP POLICY IF EXISTS "tasks_team_delete" ON tasks;
 CREATE POLICY "tasks_team_delete" ON tasks FOR DELETE TO authenticated
   USING (
     public.current_user_role() = 'team'
-    AND public.user_has_capability('tasks.delete')
+    AND public.user_has_capability('tasks.edit')
   );
 
 -- task_activity, task_notes, task_document_requests, task_templates

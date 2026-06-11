@@ -1,5 +1,6 @@
 import { requireRole } from '@/lib/auth/require-role';
 import Link from 'next/link';
+import { DockLink } from '@/components/shell/dock-link';
 import { listTeamUsers } from '@/lib/repositories/clients';
 import { PageHeader } from '@/components/ui/page-header';
 import ExportButton from '@/components/sophistication/export-button';
@@ -35,9 +36,9 @@ export default async function AdminTeamPage() {
           <>
             <ExportButton data={exportData} filename="team-export" format="csv" />
             <Button variant="outline" asChild data-testid="manage-roles-btn">
-              <a href="/admin/team/roles">
+              <Link href="/admin/team/roles">
                 <ShieldCheck className="h-4 w-4 mr-1" /> Role templates
-              </a>
+              </Link>
             </Button>
             <NewTeamMemberDialog team={team.map((u: any) => ({ id: u.id, full_name: u.full_name, email: u.email }))} />
           </>
@@ -61,9 +62,9 @@ export default async function AdminTeamPage() {
             ) : (team.map((u: any) => (
               <TableRow key={u.id} className="cursor-pointer hover:bg-zinc-50">
                 <TableCell className="font-medium">
-                  <Link href={`/admin/team/${u.id}`} className="hover:underline" data-testid={`team-row-${u.id}`}>
+                  <DockLink item={{ type: 'team', id: u.id }} href={`/admin/team/${u.id}`} className="hover:underline" data-testid={`team-row-${u.id}`}>
                     {u.full_name}
-                  </Link>
+                  </DockLink>
                 </TableCell>
                 <TableCell>{u.email}</TableCell>
                 <TableCell>

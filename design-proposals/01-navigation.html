@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TFF — Navigation Revolution</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            teal: { 50:'#f0fdfa',100:'#ccfbf1',200:'#99f6e4',300:'#5eead4',400:'#2dd4bf',500:'#14b8a6',600:'#0d9488',700:'#0f766e',800:'#115e59',900:'#134e4a' },
+            zinc: { 50:'#fafafa',100:'#f4f4f5',200:'#e4e4e7',300:'#d4d4d8',400:'#a1a1aa',500:'#71717a',600:'#52525b',700:'#3f3f46',800:'#27272a',900:'#18181b' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .dock-enter { animation: dockSlide 0.25s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes dockSlide { from { transform:translateX(100%); opacity:0 } to { transform:translateX(0); opacity:1 } }
+    .tooltip { opacity:0; pointer-events:none; transition: opacity 0.15s; }
+    .group:hover .tooltip { opacity:1; }
+  </style>
+</head>
+<body class="bg-zinc-50 text-zinc-900 font-sans antialiased h-screen overflow-hidden">
+
+  <!-- LEFT RAIL -->
+  <nav class="fixed left-0 top-0 bottom-0 w-[72px] bg-white border-r border-zinc-200 flex flex-col items-center py-4 z-40">
+    <!-- Logo -->
+    <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-6">FF</div>
+
+    <!-- Primary Nav -->
+    <div class="flex-1 flex flex-col gap-1 w-full px-2">
+      <button class="group relative w-full aspect-square rounded-xl flex items-center justify-center text-teal-600 bg-teal-50 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <div class="tooltip absolute left-full ml-3 px-2 py-1 bg-zinc-800 text-white text-xs rounded-md whitespace-nowrap z-50">Dashboard</div>
+      </button>
+      <button class="group relative w-full aspect-square rounded-xl flex items-center justify-center text-zinc-500 hover:bg-zinc-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+        <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+        <div class="tooltip absolute left-full ml-3 px-2 py-1 bg-zinc-800 text-white text-xs rounded-md whitespace-nowrap z-50">Inbox <span class="text-red-300">3 new</span></div>
+      </button>
+      <button class="group relative w-full aspect-square rounded-xl flex items-center justify-center text-zinc-500 hover:bg-zinc-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <div class="tooltip absolute left-full ml-3 px-2 py-1 bg-zinc-800 text-white text-xs rounded-md whitespace-nowrap z-50">Clients</div>
+      </button>
+      <button class="group relative w-full aspect-square rounded-xl flex items-center justify-center text-zinc-500 hover:bg-zinc-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        <div class="tooltip absolute left-full ml-3 px-2 py-1 bg-zinc-800 text-white text-xs rounded-md whitespace-nowrap z-50">Tasks</div>
+      </button>
+      <button class="group relative w-full aspect-square rounded-xl flex items-center justify-center text-zinc-500 hover:bg-zinc-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <div class="tooltip absolute left-full ml-3 px-2 py-1 bg-zinc-800 text-white text-xs rounded-md whitespace-nowrap z-50">Calendar</div>
+      </button>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="flex flex-col gap-1 w-full px-2 mb-2">
+      <button class="group relative w-full aspect-square rounded-xl flex items-center justify-center text-zinc-500 hover:bg-zinc-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <div class="tooltip absolute left-full ml-3 px-2 py-1 bg-zinc-800 text-white text-xs rounded-md whitespace-nowrap z-50">Command Center (Cmd+K)</div>
+      </button>
+      <button class="group relative w-full aspect-square rounded-xl flex items-center justify-center text-zinc-500 hover:bg-zinc-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="absolute top-2 right-2 w-2 h-2 bg-teal-500 rounded-full border-2 border-white"></span>
+        <div class="tooltip absolute left-full ml-3 px-2 py-1 bg-zinc-800 text-white text-xs rounded-md whitespace-nowrap z-50">Notifications</div>
+      </button>
+      <div class="w-8 h-8 rounded-full bg-teal-700 text-white flex items-center justify-center text-xs font-semibold mx-auto mt-2 cursor-pointer">AK</div>
+    </div>
+  </nav>
+
+  <!-- CONTEXTUAL PANEL (appears when in Clients module) -->
+  <aside class="fixed left-[72px] top-0 bottom-0 w-[280px] bg-white border-r border-zinc-200 z-30 flex flex-col">
+    <div class="p-4 border-b border-zinc-100">
+      <h2 class="text-sm font-semibold text-zinc-900">Clients</h2>
+      <p class="text-xs text-zinc-500 mt-0.5">42 active clients</p>
+    </div>
+    <div class="p-3">
+      <div class="relative">
+        <svg class="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search clients..." class="w-full pl-9 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20">
+      </div>
+    </div>
+    <div class="px-3 pb-2">
+      <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <span class="px-2 py-1 bg-teal-50 text-teal-700 text-xs font-medium rounded-md whitespace-nowrap">All</span>
+        <span class="px-2 py-1 bg-white border border-zinc-200 text-zinc-600 text-xs font-medium rounded-md whitespace-nowrap">GST</span>
+        <span class="px-2 py-1 bg-white border border-zinc-200 text-zinc-600 text-xs font-medium rounded-md whitespace-nowrap">TDS</span>
+        <span class="px-2 py-1 bg-white border border-zinc-200 text-zinc-600 text-xs font-medium rounded-md whitespace-nowrap">IT</span>
+      </div>
+    </div>
+    <div class="flex-1 overflow-y-auto px-3">
+      <div class="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2 mt-2">Recently viewed</div>
+      <div class="space-y-1">
+        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-50 cursor-pointer group">
+          <div class="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold">AC</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-zinc-900 truncate">Acme Corporation</div>
+            <div class="text-xs text-zinc-500">3 open tasks</div>
+          </div>
+          <div class="w-2 h-2 rounded-full bg-teal-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        </div>
+        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-50 cursor-pointer group">
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">SB</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-zinc-900 truncate">Swadeshi Bazaar</div>
+            <div class="text-xs text-zinc-500">1 notice due</div>
+          </div>
+          <div class="w-2 h-2 rounded-full bg-teal-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        </div>
+        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-50 cursor-pointer group">
+          <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold">KR</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-zinc-900 truncate">Krishi Rasayan</div>
+            <div class="text-xs text-zinc-500">2 queries pending</div>
+          </div>
+          <div class="w-2 h-2 rounded-full bg-teal-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        </div>
+      </div>
+      <div class="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2 mt-4">Saved views</div>
+      <div class="space-y-1">
+        <div class="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-50 cursor-pointer text-sm text-zinc-600">
+          <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+          Overdue filings
+        </div>
+        <div class="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-50 cursor-pointer text-sm text-zinc-600">
+          <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+          High-value clients
+        </div>
+      </div>
+    </div>
+    <div class="p-3 border-t border-zinc-100">
+      <button class="w-full py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Add client
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="ml-[352px] h-full overflow-y-auto bg-zinc-50">
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-zinc-200 px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2 text-sm text-zinc-500">
+        <span>Clients</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        <span class="text-zinc-900 font-medium">All clients</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-zinc-500">Cmd+K for commands</span>
+        <div class="h-4 w-px bg-zinc-200"></div>
+        <button class="text-sm text-zinc-600 hover:text-zinc-900">Export</button>
+      </div>
+    </header>
+
+    <div class="p-6 max-w-6xl">
+      <!-- Page Header -->
+      <div class="flex items-end justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-semibold text-zinc-900 tracking-tight">Clients</h1>
+          <p class="text-sm text-zinc-500 mt-1">Manage your client roster, assignments, and portal visibility.</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="px-3 py-2 text-sm font-medium text-zinc-600 bg-white border border-zinc-200 rounded-lg hover:border-zinc-300 transition-colors">Import</button>
+          <button class="px-3 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">Add client</button>
+        </div>
+      </div>
+
+      <!-- Content Placeholder -->
+      <div class="bg-white border border-zinc-200 rounded-xl p-8 text-center">
+        <div class="w-16 h-16 bg-zinc-100 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+          <svg class="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+        <h3 class="text-base font-medium text-zinc-900">Table view would appear here</h3>
+        <p class="text-sm text-zinc-500 mt-1 max-w-md mx-auto">See <code>07-table-redesign.html</code> for the spreadsheet-first list design.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT-SIDE DOCK (demo) -->
+  <div id="dock" class="fixed right-0 top-0 bottom-0 w-[480px] bg-white border-l border-zinc-200 shadow-2xl z-50 dock-enter flex flex-col">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
+      <div class="flex items-center gap-2 text-sm text-zinc-500">
+        <span>Clients</span>
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        <span class="text-zinc-900 font-medium">Acme Corporation</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600" title="Pop out to full page">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </button>
+        <button onclick="document.getElementById('dock').style.display='none'" class="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="flex-1 overflow-y-auto p-5">
+      <div class="flex items-start gap-4 mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center text-xl font-bold shrink-0">AC</div>
+        <div class="flex-1">
+          <h2 class="text-lg font-semibold text-zinc-900">Acme Corporation Pvt Ltd</h2>
+          <p class="text-sm text-zinc-500">GST: 27AABCU9603R1ZX · PAN: AABCU9603R</p>
+          <div class="flex gap-2 mt-3">
+            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-md">Active</span>
+            <span class="px-2 py-0.5 bg-zinc-100 text-zinc-600 text-xs font-medium rounded-md">GST Monthly</span>
+            <span class="px-2 py-0.5 bg-zinc-100 text-zinc-600 text-xs font-medium rounded-md">TDS Quarterly</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-4 border-b border-zinc-200 mb-5">
+        <button class="pb-2.5 text-sm font-medium text-teal-600 border-b-2 border-teal-600">Overview</button>
+        <button class="pb-2.5 text-sm font-medium text-zinc-500 hover:text-zinc-700">Activity</button>
+        <button class="pb-2.5 text-sm font-medium text-zinc-500 hover:text-zinc-700">Tasks <span class="ml-1 text-xs bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded-md">3</span></button>
+        <button class="pb-2.5 text-sm font-medium text-zinc-500 hover:text-zinc-700">Notices</button>
+      </div>
+
+      <!-- Inline editable fields -->
+      <div class="space-y-4">
+        <div class="group">
+          <label class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Primary contact</label>
+          <div class="mt-1 flex items-center justify-between p-2.5 bg-zinc-50 rounded-lg group-hover:bg-zinc-100 transition-colors cursor-pointer">
+            <span class="text-sm text-zinc-900">Rahul Sharma (rahul@acme.in)</span>
+            <svg class="w-4 h-4 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          </div>
+        </div>
+        <div class="group">
+          <label class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Billing entity</label>
+          <div class="mt-1 flex items-center justify-between p-2.5 bg-zinc-50 rounded-lg group-hover:bg-zinc-100 transition-colors cursor-pointer">
+            <span class="text-sm text-zinc-900">Acme Corp — Mumbai</span>
+            <svg class="w-4 h-4 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          </div>
+        </div>
+        <div class="group">
+          <label class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Team assigned</label>
+          <div class="mt-1 flex items-center gap-2 p-2.5">
+            <div class="w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-medium">AK</div>
+            <div class="w-7 h-7 rounded-full bg-amber-600 text-white flex items-center justify-center text-xs font-medium">PS</div>
+            <button class="w-7 h-7 rounded-full border border-dashed border-zinc-300 flex items-center justify-center text-zinc-400 hover:border-teal-500 hover:text-teal-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-4 border-t border-zinc-100 flex gap-2">
+      <button class="flex-1 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors">New task</button>
+      <button class="flex-1 py-2.5 bg-white border border-zinc-200 text-zinc-700 text-sm font-medium rounded-lg hover:border-zinc-300 transition-colors">Message</button>
+    </div>
+  </div>
+
+</body>
+</html>

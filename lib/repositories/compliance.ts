@@ -2,6 +2,27 @@ import { createClient } from '@/lib/supabase/server';
 
 const BATCH_SIZE = 100;
 
+export interface GstFilingRow {
+  id: string; client_id: string; period_month: number; period_year: number;
+  return_type: string; status: string; filed_date: string | null;
+  ack_number: string | null; taxable_turnover: number | null;
+  output_cgst: number | null; output_sgst: number | null;
+  output_igst: number | null; output_cess: number | null;
+}
+
+export interface TdsFilingRow {
+  id: string; client_id: string; period_quarter: number; period_year: number;
+  status: string; filed_date: string | null;
+  ack_number: string | null; total_deductions: number | null; deductee_count: number | null;
+}
+
+export interface ItFilingRow {
+  id: string; client_id: string; fy_ending_year: number;
+  status: string; filed_date: string | null;
+  ack_number: string | null; gross_income: number | null;
+  deductions_claimed: number | null; taxable_income: number | null; tax_liability: number | null;
+}
+
 export async function getComplianceStatusForClients(clientIds: string[]) {
   if (clientIds.length === 0) return {};
   const sb = createClient();
@@ -17,7 +38,7 @@ export async function getComplianceStatusForClients(clientIds: string[]) {
       .order('updated_at', { ascending: false });
     if (error) throw error;
 
-    for (const row of (data ?? []) as any[]) {
+    for (const row of (data ?? []) as Array<{ client_id: string; filing_type: string; status: string }>) {
       if (!result[row.client_id]) {
         result[row.client_id] = { gst: 'unknown', tds: 'unknown', it: 'unknown' };
       }
@@ -46,8 +67,9 @@ export async function listAllUpcomingDueDates(days: number) {
     .order('due_date');
   if (error) throw error;
 
-  const result = { gst: [] as any[], tds: [] as any[], it: [] as any[] };
-  for (const row of (data ?? []) as any[]) {
+  type DueItem = { due_date: string; status: string; period_label: string; clients: { business_name: string }; display_name: string };
+  const result = { gst: [] as DueItem[], tds: [] as DueItem[], it: [] as DueItem[] };
+  for (const row of (data ?? []) as Array<any>) {
     const kind = row.compliance_calendar_rules?.service_kind?.toLowerCase();
     const item = {
       due_date: row.due_date,
@@ -63,11 +85,11 @@ export async function listAllUpcomingDueDates(days: number) {
   return result;
 }
 
-export async function listGstFilings(clientId: string) {
+export async function listGstFilings(clientId: string): Promise<GstFilingRow[]> {
   const sb = createClient();
-  const { data, error } = await sb.from('gst_filings').select('id, client_id, period_month, period_year, return_type, status, filed_date, ack_number, taxable_turnover, output_cgst, output_sgst, output_igst, output_cess').eq('client_id', clientId).eq('is_deleted', false).order('period_year', { ascending: false }).order('period_month', { ascending: false });
+  const { data, error } = await sb.from('gst_filings').select('id, client_id, period_month, period_year, return_type, status, filed_date, ack_number, taxable_turnover, output_cgst, output_sgst, output_igst, output_cess').eq('client_id', clientId).order('period_year', { ascending: false }).order('period_month', { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as GstFilingRow[];
 }
 
 export async function listGstFilingsForClients(clientIds: string[]) {
@@ -80,7 +102,6 @@ export async function listGstFilingsForClients(clientIds: string[]) {
       .from('gst_filings')
       .select('id, client_id, period_month, period_year, return_type, status, filed_date, ack_number, taxable_turnover, output_cgst, output_sgst, output_igst, output_cess')
       .in('client_id', batch)
-      .eq('is_deleted', false)
       .order('period_year', { ascending: false })
       .order('period_month', { ascending: false });
     if (error) throw error;
@@ -89,16 +110,16 @@ export async function listGstFilingsForClients(clientIds: string[]) {
   return result;
 }
 
-export async function listTdsFilings(clientId: string) {
+export async function listTdsFilings(clientId: string): Promise<TdsFilingRow[]> {
   const sb = createClient();
-  const { data, error } = await sb.from('tds_filings').select('id, client_id, period_quarter, period_year, status, filed_date, ack_number, total_deductions, deductee_count').eq('client_id', clientId).eq('is_deleted', false).order('period_year', { ascending: false }).order('period_quarter', { ascending: false });
+  const { data, error } = await sb.from('tds_filings').select('id, client_id, period_quarter, period_year, status, filed_date, ack_number, total_deductions, deductee_count').eq('client_id', clientId).order('period_year', { ascending: false }).order('period_quarter', { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as TdsFilingRow[];
 }
 
-export async function listItFilings(clientId: string) {
+export async function listItFilings(clientId: string): Promise<ItFilingRow[]> {
   const sb = createClient();
-  const { data, error } = await sb.from('it_filings').select('id, client_id, fy_ending_year, status, filed_date, ack_number, gross_income, deductions_claimed, taxable_income, tax_liability').eq('client_id', clientId).eq('is_deleted', false).order('fy_ending_year', { ascending: false });
+  const { data, error } = await sb.from('it_filings').select('id, client_id, fy_ending_year, status, filed_date, ack_number, gross_income, deductions_claimed, taxable_income, tax_liability').eq('client_id', clientId).order('fy_ending_year', { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as ItFilingRow[];
 }
