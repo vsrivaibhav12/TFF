@@ -94,9 +94,9 @@ export function TaskCard({ task, hrefPrefix }: TaskCardProps) {
 
       {/* Sub Service + Client */}
       <div className="mt-2.5">
-        <h4 className="text-sm font-semibold text-zinc-900 line-clamp-2 group-hover:text-teal-700 transition-colors">
-          {task.sub_services?.name ?? task.title}
-        </h4>
+        <span className="font-medium text-sm text-zinc-900 line-clamp-2 leading-snug group-hover:text-teal-700 transition-colors">
+          {task.sub_services?.name ?? task.title.split(' — ')[0]}
+        </span>
         {clientName(task) && (
           <p className="text-xs text-zinc-500 mt-1 truncate">{clientName(task)}</p>
         )}

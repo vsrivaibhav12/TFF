@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { getStatusColour } from '@/lib/semantic-colours';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ExpandableCell } from '@/components/ui/expandable-cell';
 import { formatDateIST, cn } from '@/lib/utils';
 import { ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, Building2, User, Search } from 'lucide-react';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
@@ -146,7 +147,7 @@ export default function QueriesTable({ queries, total, page, limit }: { queries:
       </div>
       <div className="tff-card overflow-hidden">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[1000px]">
             <TableHeader>
               <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
                 {colVisible('select') && (
@@ -189,12 +190,16 @@ export default function QueriesTable({ queries, total, page, limit }: { queries:
                   )}
                   {colVisible('subject') && (
                     <TableCell className={rowPadding}>
-                      <DockLink item={{ type: 'query', id: q.id }} href={`/admin/queries/${q.id}`} className="font-medium text-zinc-900 hover:text-teal-700">
-                        {q.subject}
+                      <DockLink item={{ type: 'query', id: q.id }} href={`/admin/queries/${q.id}`} className="block">
+                        <ExpandableCell className="font-medium text-zinc-900 hover:text-teal-700 max-w-[300px]" maxLines={1}>
+                          {q.subject}
+                        </ExpandableCell>
                       </DockLink>
                       <div className="flex items-center gap-1 mt-0.5 text-xs text-zinc-500">
-                        <Building2 className="h-3 w-3" />
-                        <span className="truncate">{q.clients?.business_name ?? '—'}</span>
+                        <Building2 className="h-3 w-3 shrink-0" />
+                        <ExpandableCell className="max-w-[200px]" maxLines={1}>
+                          {q.clients?.business_name ?? '—'}
+                        </ExpandableCell>
                       </div>
                     </TableCell>
                   )}

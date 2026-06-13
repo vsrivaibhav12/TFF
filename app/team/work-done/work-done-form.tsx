@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { addWorkDoneAction } from '@/lib/actions/work-done';
 import { toast } from 'sonner';
 
@@ -150,16 +151,21 @@ export default function WorkDoneForm({ clients, tasks }: { clients: any[]; tasks
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Client (optional)</Label>
-          <Select value={selectedClientId} onValueChange={handleClientChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select client" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.business_name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={[
+              { value: '__none__', label: 'No client', searchString: 'no client' },
+              ...clients.map((c) => ({
+                value: c.id,
+                label: c.pan ? `${c.business_name} (${c.pan})` : c.business_name,
+                searchString: `${c.business_name} ${c.pan ?? ''}`.toLowerCase(),
+              })),
+            ]}
+            value={selectedClientId || '__none__'}
+            onChange={(v) => handleClientChange(v === '__none__' ? '' : v)}
+            placeholder="Select client"
+            searchPlaceholder="Search by name or PAN..."
+            className="w-full"
+          />
         </div>
         <div className="space-y-2">
           <Label>Task (optional)</Label>
@@ -169,7 +175,7 @@ export default function WorkDoneForm({ clients, tasks }: { clients: any[]; tasks
             </SelectTrigger>
             <SelectContent>
               {filteredTasks.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.sub_services?.name ?? t.title}</SelectItem>
+                <SelectItem key={t.id} value={t.id}>{t.sub_services?.name ?? t.title.split(' — ')[0]}</SelectItem>
               ))}
             </SelectContent>
           </Select>

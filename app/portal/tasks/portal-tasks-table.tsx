@@ -5,6 +5,7 @@ import { DockLink } from '@/components/shell/dock-link';
 import { Badge } from '@/components/ui/badge';
 import { ProgressMicro } from '@/components/ui/progress-micro';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ExpandableCell } from '@/components/ui/expandable-cell';
 import { formatDateIST, cn } from '@/lib/utils';
 import {
   getClientVisibleStatus,
@@ -104,7 +105,7 @@ export default function PortalTasksTable({ tasks }: { tasks: PortalTask[] }) {
       </div>
       <div className="tff-card overflow-hidden">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[1000px]">
             <TableHeader>
               <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
                 {colVisible('sub_service') && (
@@ -153,12 +154,16 @@ export default function PortalTasksTable({ tasks }: { tasks: PortalTask[] }) {
                           href={`/portal/tasks/${t.id}`}
                           className="font-semibold text-zinc-900 hover:text-teal-700 transition-colors text-sm block"
                         >
-                          {t.sub_services?.name ?? t.title}
+                          <ExpandableCell className="max-w-[250px]" maxLines={1}>
+                            {t.sub_services?.name ?? t.title}
+                          </ExpandableCell>
                         </DockLink>
                         {t.clients?.business_name && (
                           <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-zinc-500">
-                            <Building2 className="h-3 w-3" />
-                            <span className="truncate">{t.clients.business_name}</span>
+                            <Building2 className="h-3 w-3 shrink-0" />
+                            <ExpandableCell className="max-w-[200px]" maxLines={1}>
+                              {t.clients.business_name}
+                            </ExpandableCell>
                           </div>
                         )}
                       </TableCell>

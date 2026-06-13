@@ -1,22 +1,26 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { hasCapability } from '@/lib/auth/require-capability';
 import { listWorkDone } from '@/lib/repositories/work-done';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { listTasks } from '@/lib/repositories/tasks';
 import WorkDoneForm from './work-done-form';
 import { WorkDoneRowActions } from '@/components/operations/work-done-actions';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ExpandableCell } from '@/components/ui/expandable-cell';
 import { Badge } from '@/components/ui/badge';
 import { formatDateIST, formatTimeIST } from '@/lib/utils';
+import { PageHeader } from '@/components/ui/page-header';
 import ExportButton from '@/components/sophistication/export-button';
 
 export const dynamic = 'force-dynamic';
 
 export default async function WorkDonePage() {
   const me = await requireRole(['admin', 'team']);
+  const canViewAll = await hasCapability(me, 'view_workdone_reports');
   const [logs, clients, tasks] = await Promise.all([
-    listWorkDone({ userId: me.id }),
+    listWorkDone(canViewAll ? {} : { userId: me.id }),
     listAccessibleClients(),
-    listTasks({ assignedTo: me.id, status: ['pending', 'in_progress'] }),
+    listTasks(canViewAll ? { status: ['pending', 'in_progress'] } : { assignedTo: me.id, status: ['pending', 'in_progress'] }),
   ]);
 
   const totalMinutes = logs.reduce((acc, l) => acc + l.duration_minutes, 0);
@@ -31,14 +35,12 @@ export default async function WorkDonePage() {
   }));
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="tff-page-title">WorkDone</h1>
-          <p className="tff-page-subtitle">Track your daily output and time spent on client tasks.</p>
-        </div>
-        <ExportButton data={exportData} filename="work-done" format="excel" />
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Work done"
+        subtitle="Track your daily output and time spent on client tasks."
+        actions={<ExportButton data={exportData} filename="work-done" format="excel" />}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-6">
@@ -53,10 +55,12 @@ export default async function WorkDonePage() {
 
         <div className="lg:col-span-2">
           <div className="tff-card overflow-hidden">
-            <Table>
-              <TableHeader>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
+                <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
+                  {canViewAll && <TableHead>Staff</TableHead>}
                   <TableHead>Time</TableHead>
                   <TableHead>Activity</TableHead>
                   <TableHead>Duration</TableHead>
@@ -68,13 +72,18 @@ export default async function WorkDonePage() {
                 {logs.map((l: any) => (
                   <TableRow key={l.id}>
                     <TableCell className="font-medium">{formatDateIST(l.work_date)}</TableCell>
+                    {canViewAll && (
+                      <TableCell className="text-sm text-zinc-600">{l.users_profile?.full_name ?? '—'}</TableCell>
+                    )}
                     <TableCell className="text-xs text-zinc-500">
                       {l.started_at ? formatTimeIST(l.started_at) : '—'}
                       {' – '}
                       {l.ended_at ? formatTimeIST(l.ended_at) : '—'}
                     </TableCell>
                     <TableCell>
-                      <div className="max-w-[300px] truncate" title={l.note ?? ''}>{l.note ?? '—'}</div>
+                      <ExpandableCell className="max-w-[300px]" maxLines={1}>
+                        {l.note ?? '—'}
+                      </ExpandableCell>
                     </TableCell>
                     <TableCell>{l.duration_minutes}m</TableCell>
                     <TableCell>
@@ -104,13 +113,14 @@ export default async function WorkDonePage() {
                 ))}
                 {logs.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-12 text-zinc-500">
+                    <TableCell colSpan={canViewAll ? 7 : 6} className="text-center py-12 text-zinc-500">
                       No work logged yet.
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
+            </div>
           </div>
         </div>
       </div>

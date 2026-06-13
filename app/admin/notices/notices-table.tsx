@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { getStatusColour } from '@/lib/semantic-colours';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ExpandableCell } from '@/components/ui/expandable-cell';
 import { formatDateIST, formatCurrencyINR, cn } from '@/lib/utils';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
@@ -121,7 +122,7 @@ export default function NoticesTable({ notices }: { notices: Notice[] }) {
       </div>
       <div className="tff-card overflow-hidden">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[1000px]">
             <TableHeader>
               <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
                 {colVisible('select') && (
@@ -176,8 +177,10 @@ export default function NoticesTable({ notices }: { notices: Notice[] }) {
                   )}
                   {colVisible('client') && (
                     <TableCell className={cn('font-medium', rowPadding)}>
-                      <DockLink item={{ type: 'notice', id: n.id }} href={`/admin/notices/${n.id}`}>
-                        {n.clients?.business_name}
+                      <DockLink item={{ type: 'notice', id: n.id }} href={`/admin/notices/${n.id}`} className="block">
+                        <ExpandableCell className="max-w-[200px]" maxLines={1}>
+                          {n.clients?.business_name}
+                        </ExpandableCell>
                       </DockLink>
                     </TableCell>
                   )}
@@ -188,9 +191,11 @@ export default function NoticesTable({ notices }: { notices: Notice[] }) {
                     <TableCell className={cn('font-mono tabular-nums text-xs', rowPadding)}>{n.notice_number ?? '—'}</TableCell>
                   )}
                   {colVisible('subject') && (
-                    <TableCell className={cn('max-w-xs truncate', rowPadding)}>
-                      <DockLink item={{ type: 'notice', id: n.id }} href={`/admin/notices/${n.id}`}>
-                        {n.subject ?? '—'}
+                    <TableCell className={rowPadding}>
+                      <DockLink item={{ type: 'notice', id: n.id }} href={`/admin/notices/${n.id}`} className="block">
+                        <ExpandableCell className="max-w-[250px]" maxLines={1}>
+                          {n.subject ?? '—'}
+                        </ExpandableCell>
                       </DockLink>
                     </TableCell>
                   )}

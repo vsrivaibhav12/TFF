@@ -8,6 +8,7 @@ import WorkDoneForm from '@/app/team/work-done/work-done-form';
 import { WorkDoneRowActions } from '@/components/operations/work-done-actions';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { ExpandableCell } from '@/components/ui/expandable-cell';
 import { formatDateIST } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -53,8 +54,9 @@ export default async function AdminWorkDonePage() {
 
         <div className="lg:col-span-2">
           <div className="tff-card overflow-hidden">
-            <Table>
-              <TableHeader>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
+                <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Staff</TableHead>
@@ -70,7 +72,9 @@ export default async function AdminWorkDonePage() {
                     <TableCell className="font-medium">{formatDateIST(l.work_date)}</TableCell>
                     <TableCell className="text-sm text-zinc-600">{l.users_profile?.full_name ?? '—'}</TableCell>
                     <TableCell>
-                      <div className="max-w-[300px] truncate" title={l.note ?? ''}>{l.note ?? '—'}</div>
+                      <ExpandableCell className="max-w-[300px]" maxLines={1}>
+                        {l.note ?? '—'}
+                      </ExpandableCell>
                     </TableCell>
                     <TableCell>{l.duration_minutes}m</TableCell>
                     <TableCell>
@@ -107,6 +111,7 @@ export default async function AdminWorkDonePage() {
                 )}
               </TableBody>
             </Table>
+            </div>
           </div>
         </div>
       </div>

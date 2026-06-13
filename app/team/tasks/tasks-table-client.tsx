@@ -269,7 +269,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                   </Badge>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-zinc-900">{t.sub_services?.name ?? t.title}</p>
+                  <p className="text-sm font-semibold text-zinc-900">{t.sub_services?.name ?? t.title.split(' — ')[0]}</p>
                   <p className="text-xs text-zinc-500">{t.clients?.business_name ?? '—'}</p>
                 </div>
                 <div className="flex items-center justify-between">
@@ -422,7 +422,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                     <div className="min-w-0 overflow-hidden pr-2">
                       <TaskHoverCard taskId={t.id}>
                         <DockLink item={{ type: 'task', id: t.id }} href={`/team/tasks/${t.id}`} className="font-semibold text-zinc-900 hover:text-teal-700 truncate block text-sm">
-                          {t.sub_services?.name ?? t.title}
+                          {t.sub_services?.name ?? t.title.split(' — ')[0]}
                         </DockLink>
                       </TaskHoverCard>
                       {t.labels && t.labels.length > 0 && (

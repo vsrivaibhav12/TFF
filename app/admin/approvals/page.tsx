@@ -5,6 +5,7 @@ import { listPermissionRequests } from '@/lib/repositories/permission';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateIST } from '@/lib/utils';
+import { ExpandableCell } from '@/components/ui/expandable-cell';
 import { ClipboardList, ShieldCheck } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import ReviewLeave from '@/app/team/leave/review-leave';
@@ -43,8 +44,9 @@ export default async function AdminApprovalsPage() {
           />
         ) : (
           <div className="tff-card overflow-hidden">
-            <Table>
-              <TableHeader>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
+                <TableHeader>
                 <TableRow>
                   <TableHead>Member</TableHead>
                   <TableHead>Type</TableHead>
@@ -61,12 +63,17 @@ export default async function AdminApprovalsPage() {
                     <TableCell><Badge variant="outline">{r.leave_type}</Badge></TableCell>
                     <TableCell className="text-xs">{formatDateIST(r.from_date)} → {formatDateIST(r.to_date)}</TableCell>
                     <TableCell>{r.number_of_days}</TableCell>
-                    <TableCell className="max-w-xs truncate">{r.reason ?? '—'}</TableCell>
+                    <TableCell>
+                      <ExpandableCell className="max-w-[300px]" maxLines={1}>
+                        {r.reason ?? '—'}
+                      </ExpandableCell>
+                    </TableCell>
                     <TableCell><ReviewLeave id={r.id} /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            </div>
           </div>
         )}
       </div>
@@ -84,8 +91,9 @@ export default async function AdminApprovalsPage() {
           />
         ) : (
           <div className="tff-card overflow-hidden">
-            <Table>
-              <TableHeader>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
+                <TableHeader>
                 <TableRow>
                   <TableHead>Member</TableHead>
                   <TableHead>Date</TableHead>
@@ -100,12 +108,17 @@ export default async function AdminApprovalsPage() {
                     <TableCell className="font-medium">{r.users_profile?.full_name}</TableCell>
                     <TableCell>{formatDateIST(r.request_date)}</TableCell>
                     <TableCell className="text-xs">{r.from_time ?? '—'} → {r.to_time ?? '—'}</TableCell>
-                    <TableCell className="max-w-xs truncate">{r.reason ?? '—'}</TableCell>
+                    <TableCell>
+                      <ExpandableCell className="max-w-[300px]" maxLines={1}>
+                        {r.reason ?? '—'}
+                      </ExpandableCell>
+                    </TableCell>
                     <TableCell><ReviewPermission id={r.id} /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            </div>
           </div>
         )}
       </div>

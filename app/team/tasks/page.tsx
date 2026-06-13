@@ -41,11 +41,11 @@ function buildTaskUrl(base: string, sp: Record<string, string | string[] | undef
 
 export default async function TeamTasksList({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string; page?: string; period_year?: string; period_month?: string; is_billable?: string; is_stuck?: string; is_verified?: string; label?: string | string[]; q?: string } }) {
   const me = await requireRole(['admin', 'team']);
-  await requireCapabilityOrRedirect(me, 'tasks.view');
+  const canViewAll = await hasCapability(me, 'tasks.view');
   const status = (searchParams.status?.split(',').filter(Boolean) ?? []) as Array<import('@/lib/validation/schemas').TaskStatus | 'blocked' | 'stuck'>;
   const priority = searchParams.priority?.split(',').filter(Boolean) ?? [];
-  // Default to showing the current user's assigned tasks unless a specific filter is set
-  const assignedTo = searchParams.assigned ?? me?.id ?? undefined;
+  // Default to showing the current user's assigned tasks unless they have view-all cap and don't specify assignee
+  const assignedTo = searchParams.assigned ?? (canViewAll ? undefined : me.id);
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
 

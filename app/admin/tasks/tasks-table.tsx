@@ -13,6 +13,7 @@ import { useConfirm } from '@/components/ui/use-confirm';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import { ExpandableCell } from '@/components/ui/expandable-cell';
 import { formatDateIST, cn } from '@/lib/utils';
 import {
   Search, Filter, AlertTriangle, Building2, ArrowUpRight, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck,
@@ -249,7 +250,7 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
       </div>
 
       <div className="tff-card overflow-x-auto">
-        <Table>
+        <Table className="min-w-[1000px]">
           <TableHeader>
             <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
               {colVisible('select') && (
@@ -323,14 +324,18 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
                   )}
                   {colVisible('client') && (
                     <TableCell className={rowPadding}>
-                      <span className="text-sm text-zinc-500 truncate block">{t.clients?.business_name ?? '—'}</span>
+                      <ExpandableCell className="text-sm text-zinc-500" maxLines={1}>
+                        {t.clients?.business_name ?? '—'}
+                      </ExpandableCell>
                     </TableCell>
                   )}
                   {colVisible('sub_service') && (
                     <TableCell className={rowPadding}>
                       <TaskHoverCard taskId={t.id}>
-                        <DockLink item={{ type: 'task', id: t.id }} href={`/admin/tasks/${t.id}`} className="font-semibold text-zinc-900 hover:text-teal-700 text-sm truncate block">
-                          {t.sub_services?.name ?? t.title}
+                        <DockLink item={{ type: 'task', id: t.id }} href={`/admin/tasks/${t.id}`} className="font-semibold text-zinc-900 hover:text-teal-700 text-sm block">
+                          <ExpandableCell maxLines={1}>
+                            {t.sub_services?.name ?? t.title.split(' — ')[0]}
+                          </ExpandableCell>
                         </DockLink>
                       </TaskHoverCard>
                       {t.labels && t.labels.length > 0 && (

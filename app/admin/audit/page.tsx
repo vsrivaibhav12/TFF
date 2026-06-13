@@ -2,6 +2,7 @@ import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ExpandableCell } from '@/components/ui/expandable-cell';
 import { PageHeader } from '@/components/ui/page-header';
 import ExportButton from '@/components/sophistication/export-button';
 import { Badge } from '@/components/ui/badge';
@@ -54,7 +55,7 @@ export default async function AuditPage({ searchParams }: { searchParams: { acto
       <AuditFilters initial={searchParams} />
       <div className="tff-card overflow-hidden">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[1000px]">
           <TableHeader><TableRow><TableHead>Action</TableHead><TableHead>Entity</TableHead><TableHead>Actor</TableHead><TableHead>When</TableHead><TableHead>Detail</TableHead></TableRow></TableHeader>
           <TableBody>{(data ?? []).length === 0 ? (
             <TableRow><TableCell colSpan={5} className="p-0"><EmptyState title="No audit entries" body="Privileged actions will appear here once recorded." icon={<Scroll className="h-6 w-6 text-zinc-400" />} /></TableCell></TableRow>
@@ -64,7 +65,11 @@ export default async function AuditPage({ searchParams }: { searchParams: { acto
               <TableCell><span className="text-xs">{r.entity_type}</span><div className="font-mono text-[10px] text-zinc-400">{r.entity_id?.slice(0, 8)}</div></TableCell>
               <TableCell className="text-xs">{r.users_profile?.full_name ?? '—'}<div className="text-zinc-400">{r.users_profile?.email}</div></TableCell>
               <TableCell className="text-xs">{formatDateIST(r.performed_at)}</TableCell>
-              <TableCell className="font-mono text-[10px] text-zinc-500 max-w-xs truncate">{r.details ? JSON.stringify(r.details) : '—'}</TableCell>
+              <TableCell>
+                <ExpandableCell className="font-mono text-[10px] text-zinc-500 max-w-[300px]" maxLines={1}>
+                  {r.details ? JSON.stringify(r.details) : '—'}
+                </ExpandableCell>
+              </TableCell>
             </TableRow>
           )))}</TableBody>
         </Table>
