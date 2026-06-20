@@ -5,6 +5,7 @@ import { requireCapability, hasCapability } from '@/lib/auth/require-capability'
 import { getTask, listTaskActivity, listTaskNotes, listTasks, enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import { getClientById, listTeamUsers, listClientGroups, listClientUsers, listTeamAssignments } from '@/lib/repositories/clients';
 import { listClientServices, listClientSubServices } from '@/lib/repositories/services';
+import { listTaskTemplates } from '@/lib/repositories/task-templates';
 import { listTaskSteps } from '@/lib/repositories/task-steps';
 import { listDefinitionsForSubService, listValuesForTask, listLabels, listLabelsForTask } from '@/lib/repositories/task-custom-fields';
 import { listWorkDoneForTask } from '@/lib/repositories/workdone';
@@ -35,7 +36,7 @@ export async function getTaskDockData(id: string) {
     const task = await getTask(id);
     if (!task) return fail('Task not found');
 
-    const [activity, notes, team, steps, cfDefs, cfValues, allLabels, assignedLabels, workdone] = await Promise.all([
+    const [activity, notes, team, steps, cfDefs, cfValues, allLabels, assignedLabels, workdone, subServices, taskTemplates] = await Promise.all([
       listTaskActivity(id),
       listTaskNotes(id),
       listTeamUsers(),
@@ -45,6 +46,8 @@ export async function getTaskDockData(id: string) {
       listLabels(),
       listLabelsForTask(id),
       listWorkDoneForTask(id),
+      listClientSubServices(task.client_id!),
+      listTaskTemplates(),
     ]);
 
     const canEdit = await hasCapability(me, 'tasks.edit');
@@ -60,6 +63,8 @@ export async function getTaskDockData(id: string) {
       allLabels,
       assignedLabels,
       workdone,
+      subServices,
+      taskTemplates,
       currentUserId: me.id,
       canEdit,
     });

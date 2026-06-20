@@ -257,7 +257,7 @@ export async function getTask(id: string): Promise<TaskDetail | null> {
   const sb = createClient();
   const { data, error } = await sb
     .from('tasks')
-    .select('*, clients!tasks_client_id_fkey(id, business_name), sub_services!tasks_sub_service_id_fkey(code, name, services!sub_services_service_id_fkey(name)), assignee:users_profile!tasks_assigned_to_fkey(id, full_name, email), reviewer:users_profile!tasks_reviewer_id_fkey(id, full_name, email)')
+    .select('*, task_template_id, clients!tasks_client_id_fkey(id, business_name), sub_services!tasks_sub_service_id_fkey(code, name, services!sub_services_service_id_fkey(name)), assignee:users_profile!tasks_assigned_to_fkey(id, full_name, email), reviewer:users_profile!tasks_reviewer_id_fkey(id, full_name, email)')
     .eq('id', id)
     .eq('is_deleted', false)
     .maybeSingle();

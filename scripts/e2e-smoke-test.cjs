@@ -1,5 +1,7 @@
 const { chromium } = require('playwright');
 const http = require('http');
+const path = require('path');
+require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
 
 const BASE_URL = 'http://localhost:3000';
 
@@ -14,10 +16,22 @@ async function checkServer() {
   });
 }
 
+const ADMIN_EMAIL = process.env.ADMIN_SEED_EMAIL || 'info@fiscalfulcrum.in';
+const ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD;
+const TEAM_EMAIL = 'team.demo@fiscalfulcrum.in';
+const TEAM_PASSWORD = process.env.TEAM_SEED_PASSWORD;
+const CLIENT_EMAIL = 'client.demo@fiscalfulcrum.in';
+const CLIENT_PASSWORD = process.env.CLIENT_SEED_PASSWORD;
+
+if (!ADMIN_PASSWORD || !TEAM_PASSWORD || !CLIENT_PASSWORD) {
+  console.error('Missing seed password env vars. Set ADMIN_SEED_PASSWORD, TEAM_SEED_PASSWORD, CLIENT_SEED_PASSWORD in .env.local');
+  process.exit(1);
+}
+
 const USERS = {
-  admin: { email: 'info@fiscalfulcrum.in', password: '__ADMIN_SEED_PASSWORD__' },
-  team: { email: 'team.demo@fiscalfulcrum.in', password: '__TEAM_SEED_PASSWORD__' },
-  client: { email: 'client.demo@fiscalfulcrum.in', password: '__CLIENT_SEED_PASSWORD__' },
+  admin: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+  team: { email: TEAM_EMAIL, password: TEAM_PASSWORD },
+  client: { email: CLIENT_EMAIL, password: CLIENT_PASSWORD },
 };
 
 const results = [];

@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, ShieldCheck, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { ALL_CAPABILITIES } from '@/lib/auth/capabilities';
+import { ALL_CAPABILITIES, CAPABILITY_DETAILS, type Capability } from '@/lib/auth/capabilities';
 import {
   upsertRoleTemplateAction,
   deleteRoleTemplateAction,
@@ -28,20 +28,13 @@ import type { RoleTemplate } from '@/lib/repositories/role-templates';
 import BackButton from '@/components/sophistication/back-button';
 
 // Group capabilities into logical clusters for UX (don't expose raw list to user)
-const CLUSTERS: Array<{ label: string; caps: readonly string[] }> = [
-  { label: 'Clients', caps: ['clients.read.all', 'clients.create', 'clients.edit', 'clients.delete', 'clients.assign_team', 'clients.toggle_portal'] },
-  { label: 'Services', caps: ['services.view', 'services.manage', 'services.assign'] },
-  { label: 'Staff', caps: ['staff.manage', 'staff.grant_capabilities', 'promote_to_admin'] },
-  { label: 'Vaults', caps: ['dsc.view', 'dsc.manage', 'credentials.view', 'credentials.manage'] },
-  { label: 'Tasks', caps: ['tasks.view', 'tasks.create', 'tasks.edit', 'tasks.assign', 'tasks.complete', 'tasks.delete', 'verify_tasks'] },
-  { label: 'Notices & Hearings', caps: ['notices.view', 'notices.manage', 'hearings.view', 'hearings.manage'] },
-  { label: 'Compliance & Queries', caps: ['compliance.view', 'compliance.enter', 'manage_compliance_rules', 'queries.view', 'queries.assign'] },
-  { label: 'Advisory', caps: ['bizlens.view', 'bizlens.enter', 'vcfo.view', 'vcfo.enter', 'insights.view', 'insights.configure'] },
-  { label: 'Documents', caps: ['documents.view'] },
-  { label: 'HR & Payroll', caps: ['payroll.run', 'attendance.view_all', 'attendance.approve', 'leave.approve', 'permission.approve'] },
-  { label: 'Billing & Settings', caps: ['manage_billing_entities', 'manage_custom_fields', 'manage_labels'] },
-  { label: 'Work & Audit', caps: ['workdone.manage', 'view_workdone_reports', 'audit.view', 'manage_solution_log'] },
-];
+const CLUSTERS: Array<{ label: string; caps: readonly Capability[] }> =
+  Array.from(new Set(ALL_CAPABILITIES.map((c) => CAPABILITY_DETAILS[c].category)))
+    .map((category) => ({
+      label: category,
+      caps: ALL_CAPABILITIES.filter((c) => CAPABILITY_DETAILS[c].category === category),
+    }))
+    .filter((c) => c.caps.length > 0);
 
 export default function RoleTemplatesAdmin({ templates }: { templates: RoleTemplate[] }) {
   const router = useRouter();
@@ -285,19 +278,27 @@ function RoleEditorDialog({
                       ({cluster.caps.filter((c) => caps.has(c)).length} / {cluster.caps.length})
                     </span>
                   </button>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 mt-2 pl-7">
-                    {cluster.caps.map((c) => (
-                      <label
-                        key={c}
-                        className="flex items-center gap-2 text-xs cursor-pointer hover:text-zinc-900"
-                      >
-                        <Checkbox
-                          checked={caps.has(c)}
-                          onCheckedChange={() => toggleCap(c)}
-                        />
-                        <code className="font-mono text-[11px]">{c}</code>
-                      </label>
-                    ))}
+                  <div className="grid grid-cols-1 gap-x-4 gap-y-2 mt-2 pl-7">
+                    {cluster.caps.map((c) => {
+                      const meta = CAPABILITY_DETAILS[c];
+                      return (
+                        <label
+                          key={c}
+                          className="flex items-start gap-2 text-xs cursor-pointer hover:text-zinc-900"
+                        >
+                          <Checkbox
+                            checked={caps.has(c)}
+                            onCheckedChange={() => toggleCap(c)}
+                            className="mt-0.5"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium text-zinc-800">{meta.label}</span>
+                            <p className="text-[11px] text-zinc-500 mt-0.5 leading-snug">{meta.description}</p>
+                            <code className="font-mono text-[10px] text-zinc-400">{c}</code>
+                          </div>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
               );

@@ -681,6 +681,7 @@ const updateTaskSchema = z.object({
   period_month: z.number().int().min(1).max(12).optional().nullable(),
   period_quarter: z.number().int().min(1).max(4).optional().nullable(),
   sub_service_id: z.string().uuid().optional().nullable(),
+  task_template_id: z.string().uuid().optional().nullable(),
   arn_reference: z.string().max(100).optional().nullable(),
   bill_reference: z.string().max(100).optional().nullable(),
   bill_amount: z.number().optional().nullable(),
@@ -711,8 +712,12 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
       const subServiceId = updates.sub_service_id ?? (task as any).sub_service_id;
       let subServiceName = (task as any).sub_services?.name ?? (task as any).title?.split(' — ')[0] ?? 'Task';
       if (subServiceId) {
-        const { data: sub } = await sb.from('sub_services').select('name').eq('id', subServiceId).maybeSingle();
+        const { data: sub } = await sb.from('sub_services').select('name, is_billable').eq('id', subServiceId).maybeSingle();
         if (sub?.name) subServiceName = sub.name;
+        // Inherit billable flag from the new sub-service unless the user explicitly set it.
+        if (updates.sub_service_id !== undefined && updates.is_billable === undefined && sub && sub.is_billable !== null) {
+          updates.is_billable = sub.is_billable;
+        }
       }
       updates.title = buildTaskTitle({
         subServiceName,

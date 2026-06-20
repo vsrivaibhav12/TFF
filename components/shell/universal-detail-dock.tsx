@@ -162,6 +162,8 @@ function DockPanelContent({ item }: { item: { type: string; id: string } }) {
           allLabels={taskData.allLabels}
           assignedLabels={taskData.assignedLabels}
           workdone={taskData.workdone}
+          subServices={taskData.subServices ?? []}
+          taskTemplates={taskData.taskTemplates ?? []}
           currentUserId={taskData.currentUserId}
           canEdit={taskData.canEdit ?? false}
           canEditSteps={taskData.canEdit ?? false}

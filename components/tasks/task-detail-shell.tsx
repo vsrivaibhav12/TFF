@@ -42,6 +42,8 @@ interface Props {
   allLabels: any[];
   assignedLabels: any[];
   workdone: any[];
+  subServices: any[];
+  taskTemplates: any[];
   currentUserId: string;
   canEdit: boolean;
   canEditSteps: boolean;
@@ -62,6 +64,8 @@ export default function TaskDetailShell({
   allLabels,
   assignedLabels,
   workdone,
+  subServices,
+  taskTemplates,
   currentUserId,
   canEdit,
   canEditSteps,
@@ -80,6 +84,10 @@ export default function TaskDetailShell({
   const [editingBilling, setEditingBilling] = useState(false);
   const [editingArn, setEditingArn] = useState(false);
   const [editingFinance, setEditingFinance] = useState(false);
+  const [editingService, setEditingService] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(false);
+  const [selectedSubServiceId, setSelectedSubServiceId] = useState(task.sub_service_id || '');
+  const [selectedTemplateId, setSelectedTemplateId] = useState(task.task_template_id || '');
   const [description, setDescription] = useState(task.description || '');
   const [periodYear, setPeriodYear] = useState(task.period_year ?? '');
   const [periodMonth, setPeriodMonth] = useState(task.period_month ?? '');
@@ -436,6 +444,67 @@ export default function TaskDetailShell({
                 <div className="text-sm font-semibold text-zinc-900">{task.arn_reference || '—'}</div>
               )}
             </div>
+
+            {/* Service */}
+            <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Service</div>
+                {canEdit && !isClosed && !editingService && (
+                  <button onClick={() => setEditingService(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                )}
+              </div>
+              {editingService ? (
+                <div className="space-y-2">
+                  <Select value={selectedSubServiceId} onValueChange={(v) => { setSelectedSubServiceId(v); setSelectedTemplateId(''); }}>
+                    <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Select service" /></SelectTrigger>
+                    <SelectContent>
+                      {subServices.map((s: any) => (
+                        <SelectItem key={s.sub_service_id} value={s.sub_service_id} className="text-xs">
+                          {s.sub_services?.services?.name ? `${s.sub_services.services.name} › ` : ''}{s.sub_services?.name || s.sub_service_id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm font-semibold text-zinc-900">{task.sub_services ? `${task.sub_services.services?.name ?? ''} › ${task.sub_services.name}` : '—'}</div>
+              )}
+            </div>
+
+            {/* Template */}
+            <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Template</div>
+                {canEdit && !isClosed && !editingTemplate && (
+                  <button onClick={() => setEditingTemplate(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                )}
+              </div>
+              {editingTemplate ? (
+                <div className="space-y-2">
+                  <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                    <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Select template" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="" className="text-xs">None</SelectItem>
+                      {taskTemplates
+                        .filter((t: any) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id))
+                        .map((t: any) => (
+                          <SelectItem key={t.id} value={t.id} className="text-xs">{t.title}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ task_template_id: selectedTemplateId || null })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm font-semibold text-zinc-900">{taskTemplates.find((t: any) => t.id === task.task_template_id)?.title || '—'}</div>
+              )}
+            </div>
           </div>
 
           {/* Progress bar */}
@@ -755,7 +824,55 @@ export default function TaskDetailShell({
 
                 <DetailItem label="Assignees" value={((task as any).assignees?.length ? (task as any).assignees : task.assignee ? [task.assignee] : []).map((a: any) => a.full_name).join(', ') || '—'} />
                 <DetailItem label="Reviewers" value={((task as any).reviewers?.length ? (task as any).reviewers : task.reviewer ? [task.reviewer] : []).map((r: any) => r.full_name).join(', ') || '—'} />
-                <DetailItem label="Service" value={task.sub_services ? `${task.sub_services.services?.name ?? ''} › ${task.sub_services.name}` : '—'} />
+                <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Service {canEdit && !isClosed && <Button size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingService(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dd className="font-semibold text-zinc-900 text-right">
+                    {editingService ? (
+                      <div className="flex items-center gap-1 justify-end">
+                        <Select value={selectedSubServiceId} onValueChange={(v) => { setSelectedSubServiceId(v); setSelectedTemplateId(''); }}>
+                          <SelectTrigger className="h-6 text-[10px] w-44 px-1"><SelectValue placeholder="Select service" /></SelectTrigger>
+                          <SelectContent>
+                            {subServices.map((s: any) => (
+                              <SelectItem key={s.sub_service_id} value={s.sub_service_id} className="text-xs">
+                                {s.sub_services?.services?.name ? `${s.sub_services.services.name} › ` : ''}{s.sub_services?.name || s.sub_service_id}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                      </div>
+                    ) : (
+                      task.sub_services ? `${task.sub_services.services?.name ?? ''} › ${task.sub_services.name}` : '—'
+                    )}
+                  </dd>
+                </div>
+
+                <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Template {canEdit && !isClosed && <Button size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingTemplate(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dd className="font-semibold text-zinc-900 text-right">
+                    {editingTemplate ? (
+                      <div className="flex items-center gap-1 justify-end">
+                        <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                          <SelectTrigger className="h-6 text-[10px] w-44 px-1"><SelectValue placeholder="Select template" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="" className="text-xs">None</SelectItem>
+                            {taskTemplates
+                              .filter((t: any) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id))
+                              .map((t: any) => (
+                                <SelectItem key={t.id} value={t.id} className="text-xs">{t.title}</SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ task_template_id: selectedTemplateId || null })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                      </div>
+                    ) : (
+                      taskTemplates.find((t: any) => t.id === task.task_template_id)?.title || '—'
+                    )}
+                  </dd>
+                </div>
+
                 <DetailItem label="Created" value={formatDateIST(task.created_date) || '—'} />
                 <DetailItem label="Completed" value={formatDateIST(task.completed_date) || 'Not completed'} />
 
