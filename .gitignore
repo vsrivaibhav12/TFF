@@ -19,4 +19,5 @@ credentials.json
 *.key
 .credentials
 !.env.local.example
+*.tsbuildinfo
 .next/cache/webpack/server-production/0.pack
