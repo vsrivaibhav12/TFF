@@ -1,7 +1,9 @@
 import { requireRole } from '@/lib/auth/require-role';
 import { hasCapability } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
-import { listAttendanceForUser, getTodayAttendance } from '@/lib/repositories/attendance';
+import { listAttendanceForUser, getTodayAttendance, listAttendanceForAllUsers } from '@/lib/repositories/attendance';
+import { listTeamUsers } from '@/lib/repositories/clients';
+import AdminAttendanceRoster from '@/app/admin/attendance/admin-attendance-roster';
 import { listLeaveRequests } from '@/lib/repositories/leave';
 import { listPermissionRequests } from '@/lib/repositories/permission';
 import { getDirectReports, hasDirectReports, getUserProfile } from '@/lib/repositories/staff';
@@ -24,7 +26,7 @@ import ExportButton from '@/components/sophistication/export-button';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AttendancePage() {
+export default async function AttendancePage({ searchParams }: { searchParams?: { date?: string } }) {
   const me = await requireRole(['admin', 'team']);
   const sb = createClient();
   const now = new Date();
@@ -35,10 +37,22 @@ export default async function AttendancePage() {
   const canApproveLeave = await hasCapability(me, 'leave.approve');
   const canApprovePermission = await hasCapability(me, 'permission.approve');
   const canApproveAttendance = await hasCapability(me, 'attendance.approve');
+  const canViewAllAttendance = await hasCapability(me, 'attendance.view_all');
 
   // Fetch direct report IDs if manager
   const directReports = isManager ? await getDirectReports(me.id) : [];
   const reportIds = directReports.map((r) => r.id);
+
+  // All-staff roster data for senior staff with attendance.view_all
+  const todayIST = (await import('@/lib/utils')).todayIST();
+  const selectedDate = searchParams?.date ?? todayIST;
+  const [teamUsers, allLogs] = canViewAllAttendance
+    ? await Promise.all([listTeamUsers(), listAttendanceForAllUsers(selectedDate)])
+    : [[], []];
+  const logByUser = new Map<string, any>();
+  for (const l of allLogs) {
+    logByUser.set(l.user_id, l);
+  }
 
   const { weekStart, weekEnd } = getWeekBounds(now);
 
@@ -143,6 +157,7 @@ export default async function AttendancePage() {
       <Tabs defaultValue="attendance">
         <TabsList>
           <TabsTrigger value="attendance">Attendance log</TabsTrigger>
+          {canViewAllAttendance && <TabsTrigger value="all-staff">All staff</TabsTrigger>}
           <TabsTrigger value="leave">Leave</TabsTrigger>
           <TabsTrigger value="permission">Permission / OD</TabsTrigger>
         </TabsList>
@@ -207,6 +222,20 @@ export default async function AttendancePage() {
             </Table>
           </div>
         </TabsContent>
+
+        {/* All staff tab */}
+        {canViewAllAttendance && (
+          <TabsContent value="all-staff" className="space-y-6">
+            <AdminAttendanceRoster
+              date={selectedDate}
+              teamUsers={teamUsers as any}
+              logs={logByUser}
+              currentUserId={me.id}
+              readOnly
+              basePath="/team/attendance"
+            />
+          </TabsContent>
+        )}
 
         {/* Leave tab */}
         <TabsContent value="leave" className="space-y-8">

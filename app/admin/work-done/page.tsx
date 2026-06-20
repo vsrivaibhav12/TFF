@@ -1,24 +1,34 @@
 import { requireRole } from '@/lib/auth/require-role';
+import { hasCapability } from '@/lib/auth/require-capability';
 import { listWorkDone } from '@/lib/repositories/work-done';
-import { listAccessibleClients } from '@/lib/repositories/clients';
+import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
 import { listTasks } from '@/lib/repositories/tasks';
 import { PageHeader } from '@/components/ui/page-header';
 import ExportButton from '@/components/sophistication/export-button';
 import WorkDoneForm from '@/app/team/work-done/work-done-form';
-import { WorkDoneRowActions } from '@/components/operations/work-done-actions';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { ExpandableCell } from '@/components/ui/expandable-cell';
-import { formatDateIST } from '@/lib/utils';
+import WorkDoneFilters from '@/components/operations/work-done-filters';
+import WorkDoneTable from '@/components/operations/work-done-table';
+import { displayTaskName } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminWorkDonePage() {
-  await requireRole('admin');
-  const [logs, clients, tasks] = await Promise.all([
-    listWorkDone({}),
+export default async function AdminWorkDonePage({ searchParams }: { searchParams?: { from?: string; to?: string; q?: string; client?: string; task?: string; user?: string } }) {
+  const me = await requireRole('admin');
+  const canManageWorkDone = await hasCapability(me, 'workdone.manage');
+
+  const listOpts: Parameters<typeof listWorkDone>[0] = {};
+  if (searchParams?.from) listOpts.startDate = searchParams.from;
+  if (searchParams?.to) listOpts.endDate = searchParams.to;
+  if (searchParams?.q) listOpts.search = searchParams.q;
+  if (searchParams?.client) listOpts.clientId = searchParams.client;
+  if (searchParams?.task) listOpts.taskId = searchParams.task;
+  if (searchParams?.user) listOpts.userId = searchParams.user;
+
+  const [logs, clients, tasks, staff] = await Promise.all([
+    listWorkDone(listOpts),
     listAccessibleClients(),
     listTasks({ status: ['pending', 'in_progress'] }),
+    listTeamUsers(),
   ]);
 
   const totalMinutes = logs.reduce((acc, l) => acc + l.duration_minutes, 0);
@@ -30,7 +40,7 @@ export default async function AdminWorkDonePage() {
     activity: l.note ?? '',
     duration_minutes: l.duration_minutes,
     client: l.clients?.business_name ?? (l.client_id ? 'Archived client' : ''),
-    task: l.tasks?.title ?? (l.task_id ? 'Archived task' : ''),
+    task: l.tasks ? displayTaskName(l.tasks) : (l.task_id ? 'Archived task' : ''),
   }));
 
   return (
@@ -52,67 +62,17 @@ export default async function AdminWorkDonePage() {
           </div>
         </div>
 
-        <div className="lg:col-span-2">
-          <div className="tff-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[800px]">
-                <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Staff</TableHead>
-                  <TableHead>Activity</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Context</TableHead>
-                  <TableHead className="w-16"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logs.map((l: any) => (
-                  <TableRow key={l.id}>
-                    <TableCell className="font-medium">{formatDateIST(l.work_date)}</TableCell>
-                    <TableCell className="text-sm text-zinc-600">{l.users_profile?.full_name ?? '—'}</TableCell>
-                    <TableCell>
-                      <ExpandableCell className="max-w-[300px]" maxLines={1}>
-                        {l.note ?? '—'}
-                      </ExpandableCell>
-                    </TableCell>
-                    <TableCell>{l.duration_minutes}m</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        {l.client_id && (
-                          <span className="text-[10px] text-zinc-500 uppercase">
-                            {l.clients?.business_name ?? 'Archived client'}
-                          </span>
-                        )}
-                        {l.task_id && (
-                          <Badge variant="outline" className="text-[10px] py-0">
-                            {l.tasks?.title ?? 'Archived task'}
-                          </Badge>
-                        )}
-                        {!l.client_id && !l.task_id && <span className="text-zinc-400">—</span>}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <WorkDoneRowActions
-                        entry={l}
-                        canEdit={true}
-                        clients={clients}
-                        tasks={tasks}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {logs.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-12 text-zinc-500">
-                      No work logged yet.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-            </div>
-          </div>
+        <div className="lg:col-span-2 space-y-4">
+          <WorkDoneFilters clients={clients} tasks={tasks} showStaffFilter staff={staff} />
+          <WorkDoneTable
+            logs={logs}
+            clients={clients}
+            tasks={tasks}
+            canViewAll
+            canManage={canManageWorkDone}
+            currentUserId={me.id}
+            role="admin"
+          />
         </div>
       </div>
     </div>

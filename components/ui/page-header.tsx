@@ -20,7 +20,7 @@ export function PageHeader({ title, subtitle, actions, showBreadcrumbs = true }:
   return (
     <div className="space-y-4">
       {showBreadcrumbs && segments.length > 0 && (
-        <div className="flex items-center gap-1.5 text-sm text-zinc-500">
+        <div className="flex items-center gap-1.5 text-sm text-zinc-500 md:hidden">
           <Link href={`/${role}`} className="hover:text-zinc-900 transition-colors capitalize">
             {role === 'client' ? 'Portal' : role}
           </Link>

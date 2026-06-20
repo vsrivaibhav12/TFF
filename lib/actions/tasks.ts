@@ -143,29 +143,37 @@ export async function addTaskNoteAction(input: { task_id: string; body: string }
   }
 }
 
-export async function assignTaskAction(input: { task_id: string; assigned_to?: string | null; reviewer_id?: string | null }): Promise<ActionResult<void>> {
+export async function assignTaskAction(input: { task_id: string; assigned_to?: string | string[] | null; reviewer_id?: string | string[] | null }): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'tasks.assign');
-    
+
     const task = await taskRepo.getTask(input.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
     if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
-    
-    const updates: any = { updated_at: new Date().toISOString() };
-    if (input.assigned_to !== undefined) updates.assigned_to = input.assigned_to || null;
-    if (input.reviewer_id !== undefined) updates.reviewer_id = input.reviewer_id || null;
-    
-    await taskRepo.updateTaskRecord(input.task_id, updates);
-    
+
+    const assigneeIds = input.assigned_to
+      ? (Array.isArray(input.assigned_to) ? input.assigned_to : [input.assigned_to]).filter(Boolean)
+      : [];
+    const reviewerIds = input.reviewer_id
+      ? (Array.isArray(input.reviewer_id) ? input.reviewer_id : [input.reviewer_id]).filter(Boolean)
+      : [];
+
+    await taskRepo.updateTaskRecord(input.task_id, {
+      assigned_to: assigneeIds[0] || null,
+      reviewer_id: reviewerIds[0] || null,
+      updated_at: new Date().toISOString(),
+    });
+    await taskRepo.setTaskAssignees(input.task_id, assigneeIds, reviewerIds, me.id);
+
     await taskRepo.addTaskActivity({
       task_id: input.task_id,
       action: 'assignment_changed',
       field_name: 'assignment',
-      new_value: `assigned_to=${input.assigned_to ?? '-'} reviewer=${input.reviewer_id ?? '-'}`,
+      new_value: `assignees=${assigneeIds.join(',') || '-'} reviewers=${reviewerIds.join(',') || '-'}`,
       changed_by: me.id,
     });
-    await writeAudit({ action: 'task.assign', entity_type: 'task', entity_id: input.task_id, performed_by: me.id, details: { assigned_to: input.assigned_to, reviewer_id: input.reviewer_id } });
+    await writeAudit({ action: 'task.assign', entity_type: 'task', entity_id: input.task_id, performed_by: me.id, details: { assigned_to: assigneeIds, reviewer_id: reviewerIds } });
     revalidatePath(`/team/tasks/${input.task_id}`);
     revalidatePath(`/admin/tasks/${input.task_id}`);
     return ok(undefined);
@@ -691,6 +699,29 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
     const task = await taskRepo.getTask(task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
     if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+
+    // Regenerate title if sub-service or period changes so the stored title stays consistent.
+    const titleNeedsRegen =
+      updates.sub_service_id !== undefined ||
+      updates.period_year !== undefined ||
+      updates.period_month !== undefined ||
+      updates.period_quarter !== undefined;
+    if (titleNeedsRegen) {
+      const sb = createClient();
+      const subServiceId = updates.sub_service_id ?? (task as any).sub_service_id;
+      let subServiceName = (task as any).sub_services?.name ?? (task as any).title?.split(' — ')[0] ?? 'Task';
+      if (subServiceId) {
+        const { data: sub } = await sb.from('sub_services').select('name').eq('id', subServiceId).maybeSingle();
+        if (sub?.name) subServiceName = sub.name;
+      }
+      updates.title = buildTaskTitle({
+        subServiceName,
+        clientName: (task as any).clients?.business_name ?? undefined,
+        periodYear: updates.period_year ?? (task as any).period_year ?? null,
+        periodMonth: updates.period_month ?? (task as any).period_month ?? null,
+        periodQuarter: updates.period_quarter ?? (task as any).period_quarter ?? null,
+      });
+    }
 
     await taskRepo.updateTaskRecord(task_id, {
       ...updates,

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ProgressMicro } from '@/components/ui/progress-micro';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ExpandableCell } from '@/components/ui/expandable-cell';
-import { formatDateIST, cn } from '@/lib/utils';
+import { formatDateIST, cn, displayTaskName } from '@/lib/utils';
 import {
   getClientVisibleStatus,
   CLIENT_VISIBLE_LABELS,
@@ -155,7 +155,7 @@ export default function PortalTasksTable({ tasks }: { tasks: PortalTask[] }) {
                           className="font-semibold text-zinc-900 hover:text-teal-700 transition-colors text-sm block"
                         >
                           <ExpandableCell className="max-w-[250px]" maxLines={1}>
-                            {t.sub_services?.name ?? t.title}
+                            {displayTaskName(t)}
                           </ExpandableCell>
                         </DockLink>
                         {t.clients?.business_name && (

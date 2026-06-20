@@ -14,8 +14,16 @@ import { listEffectiveCapabilities as repoListEffectiveCapabilities } from '@/li
  *  3. Active role template has the capability → ALLOW
  *  4. Otherwise → DENY
  */
-export async function hasCapability(user: AppUser, capability: Capability): Promise<boolean> {
+export async function hasCapability(user: AppUser, capability: Capability | Capability[]): Promise<boolean> {
   if (user.role === 'admin') return true;
+  const caps = Array.isArray(capability) ? capability : [capability];
+  for (const cap of caps) {
+    if (await hasSingleCapability(user, cap)) return true;
+  }
+  return false;
+}
+
+async function hasSingleCapability(user: AppUser, capability: Capability): Promise<boolean> {
   const sb = createClient();
 
   // 1. Check explicit deviation (grant or revoke)
@@ -49,17 +57,18 @@ export async function hasCapability(user: AppUser, capability: Capability): Prom
   return !!templateCap;
 }
 
-export async function requireCapability(user: AppUser, capability: Capability): Promise<void> {
+export async function requireCapability(user: AppUser, capability: Capability | Capability[]): Promise<void> {
   const ok = await hasCapability(user, capability);
   if (!ok) {
-    throw new ServiceError(`Missing capability: ${capability}`, 'NO_CAPABILITY');
+    const label = Array.isArray(capability) ? capability.join(' or ') : capability;
+    throw new ServiceError(`Missing capability: ${label}`, 'NO_CAPABILITY');
   }
 }
 
 /**
  * Hard variant for use directly in pages (not actions): redirects to / if missing.
  */
-export async function requireCapabilityOrRedirect(user: AppUser, capability: Capability) {
+export async function requireCapabilityOrRedirect(user: AppUser, capability: Capability | Capability[]) {
   if (!(await hasCapability(user, capability))) redirect(`/${user.role}`);
 }
 

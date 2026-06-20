@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { cn, formatDateIST } from '@/lib/utils';
+import { cn, formatDateIST, displayTaskName } from '@/lib/utils';
 import { getStatusColour, getPriorityColour } from '@/lib/semantic-colours';
 import { Calendar, AlertTriangle, Briefcase, Bell, MessageSquare, Tag } from 'lucide-react';
 import { TaskLabelPills, type TaskLabel } from './task-label-pills';
@@ -95,7 +95,7 @@ export function TaskCard({ task, hrefPrefix }: TaskCardProps) {
       {/* Sub Service + Client */}
       <div className="mt-2.5">
         <span className="font-medium text-sm text-zinc-900 line-clamp-2 leading-snug group-hover:text-teal-700 transition-colors">
-          {task.sub_services?.name ?? task.title.split(' — ')[0]}
+          {displayTaskName(task)}
         </span>
         {clientName(task) && (
           <p className="text-xs text-zinc-500 mt-1 truncate">{clientName(task)}</p>

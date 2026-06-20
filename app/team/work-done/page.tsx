@@ -1,26 +1,36 @@
 import { requireRole } from '@/lib/auth/require-role';
 import { hasCapability } from '@/lib/auth/require-capability';
 import { listWorkDone } from '@/lib/repositories/work-done';
-import { listAccessibleClients } from '@/lib/repositories/clients';
+import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
 import { listTasks } from '@/lib/repositories/tasks';
 import WorkDoneForm from './work-done-form';
-import { WorkDoneRowActions } from '@/components/operations/work-done-actions';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ExpandableCell } from '@/components/ui/expandable-cell';
-import { Badge } from '@/components/ui/badge';
-import { formatDateIST, formatTimeIST } from '@/lib/utils';
+import WorkDoneFilters from '@/components/operations/work-done-filters';
+import WorkDoneTable from '@/components/operations/work-done-table';
+import { displayTaskName } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
 import ExportButton from '@/components/sophistication/export-button';
 
 export const dynamic = 'force-dynamic';
 
-export default async function WorkDonePage() {
+export default async function WorkDonePage({ searchParams }: { searchParams?: { from?: string; to?: string; q?: string; client?: string; task?: string; user?: string } }) {
   const me = await requireRole(['admin', 'team']);
   const canViewAll = await hasCapability(me, 'view_workdone_reports');
-  const [logs, clients, tasks] = await Promise.all([
-    listWorkDone(canViewAll ? {} : { userId: me.id }),
+  const canManageWorkDone = await hasCapability(me, 'workdone.manage');
+
+  const listOpts: Parameters<typeof listWorkDone>[0] = {};
+  if (!canViewAll) listOpts.userId = me.id;
+  if (searchParams?.from) listOpts.startDate = searchParams.from;
+  if (searchParams?.to) listOpts.endDate = searchParams.to;
+  if (searchParams?.q) listOpts.search = searchParams.q;
+  if (searchParams?.client) listOpts.clientId = searchParams.client;
+  if (searchParams?.task) listOpts.taskId = searchParams.task;
+  if (canViewAll && searchParams?.user) listOpts.userId = searchParams.user;
+
+  const [logs, clients, tasks, staff] = await Promise.all([
+    listWorkDone(listOpts),
     listAccessibleClients(),
     listTasks(canViewAll ? { status: ['pending', 'in_progress'] } : { assignedTo: me.id, status: ['pending', 'in_progress'] }),
+    canViewAll ? listTeamUsers() : Promise.resolve([]),
   ]);
 
   const totalMinutes = logs.reduce((acc, l) => acc + l.duration_minutes, 0);
@@ -31,7 +41,7 @@ export default async function WorkDonePage() {
     note: l.note ?? '',
     duration_minutes: l.duration_minutes,
     client_name: l.clients?.business_name ?? (l.client_id ? 'Archived client' : ''),
-    task_title: l.tasks?.title ?? (l.task_id ? 'Archived task' : ''),
+    task_title: l.tasks ? displayTaskName(l.tasks) : (l.task_id ? 'Archived task' : ''),
   }));
 
   return (
@@ -53,75 +63,17 @@ export default async function WorkDonePage() {
           </div>
         </div>
 
-        <div className="lg:col-span-2">
-          <div className="tff-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[800px]">
-                <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  {canViewAll && <TableHead>Staff</TableHead>}
-                  <TableHead>Time</TableHead>
-                  <TableHead>Activity</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Context</TableHead>
-                  <TableHead className="w-16"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logs.map((l: any) => (
-                  <TableRow key={l.id}>
-                    <TableCell className="font-medium">{formatDateIST(l.work_date)}</TableCell>
-                    {canViewAll && (
-                      <TableCell className="text-sm text-zinc-600">{l.users_profile?.full_name ?? '—'}</TableCell>
-                    )}
-                    <TableCell className="text-xs text-zinc-500">
-                      {l.started_at ? formatTimeIST(l.started_at) : '—'}
-                      {' – '}
-                      {l.ended_at ? formatTimeIST(l.ended_at) : '—'}
-                    </TableCell>
-                    <TableCell>
-                      <ExpandableCell className="max-w-[300px]" maxLines={1}>
-                        {l.note ?? '—'}
-                      </ExpandableCell>
-                    </TableCell>
-                    <TableCell>{l.duration_minutes}m</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        {l.client_id && (
-                          <span className="text-[10px] text-zinc-500 uppercase">
-                            {l.clients?.business_name ?? 'Archived client'}
-                          </span>
-                        )}
-                        {l.task_id && (
-                          <Badge variant="outline" className="text-[10px] py-0">
-                            {l.tasks?.title ?? 'Archived task'}
-                          </Badge>
-                        )}
-                        {!l.client_id && !l.task_id && <span className="text-zinc-400">—</span>}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <WorkDoneRowActions
-                        entry={l}
-                        canEdit={me.role === 'admin' || l.user_id === me.id}
-                        clients={clients}
-                        tasks={tasks}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {logs.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={canViewAll ? 7 : 6} className="text-center py-12 text-zinc-500">
-                      No work logged yet.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-            </div>
-          </div>
+        <div className="lg:col-span-2 space-y-4">
+          <WorkDoneFilters clients={clients} tasks={tasks} showStaffFilter={canViewAll} staff={staff} />
+          <WorkDoneTable
+            logs={logs}
+            clients={clients}
+            tasks={tasks}
+            canViewAll={canViewAll}
+            canManage={canManageWorkDone}
+            currentUserId={me.id}
+            role="team"
+          />
         </div>
       </div>
     </div>

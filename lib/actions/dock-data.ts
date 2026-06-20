@@ -19,9 +19,18 @@ import { ok, fail } from '@/lib/actions/result';
 export async function getTaskDockData(id: string) {
   try {
     const me = await requireRole(['admin', 'team']);
-    
-    // Enforce task access capability (defense in depth beyond RLS)
-    await requireCapability(me, 'tasks.view');
+
+    // Enforce task access capability (defense in depth beyond RLS).
+    // Any meaningful task permission grants dock access; tasks.view is the read-all capability.
+    const canAccess = await hasCapability(me, 'tasks.view')
+      || await hasCapability(me, 'tasks.edit')
+      || await hasCapability(me, 'tasks.assign')
+      || await hasCapability(me, 'tasks.complete')
+      || await hasCapability(me, 'tasks.delete')
+      || await hasCapability(me, 'tasks.create');
+    if (!canAccess) {
+      await requireCapability(me, 'tasks.view');
+    }
 
     const task = await getTask(id);
     if (!task) return fail('Task not found');
@@ -62,7 +71,11 @@ export async function getTaskDockData(id: string) {
 export async function getClientDockData(id: string) {
   try {
     const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'clients.read.all');
+    const canReadAll = await hasCapability(me, 'clients.read.all');
+    const canEdit = await hasCapability(me, 'clients.edit');
+    if (!canReadAll && !canEdit) {
+      await requireCapability(me, 'clients.read.all');
+    }
 
     const client = await getClientById(id);
     if (!client) return fail('Client not found');

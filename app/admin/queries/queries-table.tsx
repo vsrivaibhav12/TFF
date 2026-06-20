@@ -9,6 +9,8 @@ import { getStatusColour } from '@/lib/semantic-colours';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ExpandableCell } from '@/components/ui/expandable-cell';
+import { ResizableTableHead } from '@/components/ui/resizable-table-head';
+import { useColumnWidths } from '@/lib/hooks/use-column-widths';
 import { formatDateIST, cn } from '@/lib/utils';
 import { ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, Building2, User, Search } from 'lucide-react';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
@@ -44,6 +46,14 @@ export default function QueriesTable({ queries, total, page, limit }: { queries:
   const pathname = usePathname();
   const [searchInput, setSearchInput] = useState(searchParams.get('query') || '');
   const { columns, setColumns, density, setDensity } = useTablePrefs('admin-queries', DEFAULT_COLUMNS, 'comfortable');
+  const { widths, setWidth, loaded } = useColumnWidths('admin-queries', {
+    select: 44,
+    subject: 320,
+    raised_by: 150,
+    status: 110,
+    created_at: 110,
+    actions: 60,
+  });
 
   const sorted = useMemo(() => {
     const data = [...queries];
@@ -147,7 +157,7 @@ export default function QueriesTable({ queries, total, page, limit }: { queries:
       </div>
       <div className="tff-card overflow-hidden">
         <div className="overflow-x-auto">
-          <Table className="min-w-[1000px]">
+          <Table className="min-w-[1000px]" style={{ tableLayout: 'fixed' }}>
             <TableHeader>
               <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
                 {colVisible('select') && (
@@ -156,24 +166,24 @@ export default function QueriesTable({ queries, total, page, limit }: { queries:
                   </TableHead>
                 )}
                 {colVisible('subject') && (
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('subject')}>
+                  <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.subject : undefined} onResize={(w) => setWidth('subject', w)} onClick={() => toggleSort('subject')}>
                     <span className="flex items-center gap-1">Subject &amp; client <SortIcon col="subject" /></span>
-                  </TableHead>
+                  </ResizableTableHead>
                 )}
                 {colVisible('raised_by') && (
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('raised_by')}>
+                  <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.raised_by : undefined} onResize={(w) => setWidth('raised_by', w)} onClick={() => toggleSort('raised_by')}>
                     <span className="flex items-center gap-1">Raised by <SortIcon col="raised_by" /></span>
-                  </TableHead>
+                  </ResizableTableHead>
                 )}
                 {colVisible('status') && (
-                  <TableHead className="cursor-pointer select-none text-center" onClick={() => toggleSort('status')}>
+                  <ResizableTableHead className="cursor-pointer select-none text-center" width={loaded ? widths.status : undefined} onResize={(w) => setWidth('status', w)} onClick={() => toggleSort('status')}>
                     <span className="flex items-center gap-1">Status <SortIcon col="status" /></span>
-                  </TableHead>
+                  </ResizableTableHead>
                 )}
                 {colVisible('created_at') && (
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('created_at')}>
+                  <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.created_at : undefined} onResize={(w) => setWidth('created_at', w)} onClick={() => toggleSort('created_at')}>
                     <span className="flex items-center gap-1">Date <SortIcon col="created_at" /></span>
-                  </TableHead>
+                  </ResizableTableHead>
                 )}
                 {colVisible('actions') && (
                   <TableHead></TableHead>

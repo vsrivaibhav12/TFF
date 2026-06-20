@@ -9,9 +9,10 @@ interface Props {
   owners: { id: string; full_name: string; email: string }[];
   initial?: any;
   basePath: string;
+  readOnly?: boolean;
 }
 
-export default function ClientFormWrapper({ groups, owners, initial, basePath }: Props) {
+export default function ClientFormWrapper({ groups, owners, initial, basePath, readOnly }: Props) {
   const { clear } = useDockActions();
   const router = useRouter();
 
@@ -27,6 +28,7 @@ export default function ClientFormWrapper({ groups, owners, initial, basePath }:
           router.refresh();
         }
       }}
+      readOnly={readOnly}
       onDeleteSuccess={() => {
         clear();
         router.refresh();

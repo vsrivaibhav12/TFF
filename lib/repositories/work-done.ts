@@ -26,7 +26,14 @@ export interface WorkDoneSummaryRow {
   total_minutes: number;
 }
 
-export async function listWorkDone(opts: { userId?: string; startDate?: string; endDate?: string } = {}) {
+export async function listWorkDone(opts: {
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+  clientId?: string;
+  taskId?: string;
+  search?: string;
+} = {}) {
   const sb = createClient();
   let q = sb
     .from('task_workdone')
@@ -37,6 +44,9 @@ export async function listWorkDone(opts: { userId?: string; startDate?: string; 
   if (opts.userId) q = q.eq('user_id', opts.userId);
   if (opts.startDate) q = q.gte('work_date', opts.startDate);
   if (opts.endDate) q = q.lte('work_date', opts.endDate);
+  if (opts.clientId) q = q.eq('client_id', opts.clientId);
+  if (opts.taskId) q = q.eq('task_id', opts.taskId);
+  if (opts.search) q = q.ilike('note', `%${opts.search}%`);
 
   const { data, error } = await q;
   if (error) throw error;

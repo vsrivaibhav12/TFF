@@ -270,6 +270,17 @@ export async function getTask(id: string): Promise<TaskDetail | null> {
     if (data.sub_services) {
       normalizeFkArray(data.sub_services, 'services');
     }
+    const { data: assignees } = await sb
+      .from('task_assignees')
+      .select('role, users_profile!task_assignees_user_id_fkey(id, full_name, email)')
+      .eq('task_id', id);
+    const rows = (assignees ?? []) as any[];
+    const extractUser = (r: any) => {
+      const u = Array.isArray(r.users_profile) ? r.users_profile[0] : r.users_profile;
+      return u && u.id ? u : null;
+    };
+    (data as any).assignees = rows.filter((r) => r.role === 'assignee').map(extractUser).filter(Boolean);
+    (data as any).reviewers = rows.filter((r) => r.role === 'reviewer').map(extractUser).filter(Boolean);
   }
   return data as TaskDetail | null;
 }
@@ -334,6 +345,20 @@ export async function createTaskRecord(payload: any) {
   const { data, error } = await sb.from('tasks').insert(payload).select('id').single();
   if (error) throw error;
   return data;
+}
+
+export async function setTaskAssignees(taskId: string, assigneeIds: string[], reviewerIds: string[], assignedBy: string) {
+  const sb = createClient();
+  const { error: delError } = await sb.from('task_assignees').delete().eq('task_id', taskId);
+  if (delError) throw delError;
+  const rows = [
+    ...assigneeIds.map((userId) => ({ task_id: taskId, user_id: userId, role: 'assignee' as const, assigned_by: assignedBy })),
+    ...reviewerIds.map((userId) => ({ task_id: taskId, user_id: userId, role: 'reviewer' as const, assigned_by: assignedBy })),
+  ];
+  if (rows.length > 0) {
+    const { error } = await sb.from('task_assignees').insert(rows);
+    if (error) throw error;
+  }
 }
 
 export async function updateTaskRecord(id: string, payload: any) {

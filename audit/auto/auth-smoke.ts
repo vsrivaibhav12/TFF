@@ -24,10 +24,10 @@ async function main() {
   const { data: cs, error: ce } = await sbAnon.auth.signInWithPassword({ email: 'client.demo@fiscalfulcrum.in', password: '__CLIENT_SEED_PASSWORD__' });
   console.log(`Client login: ${ce ? 'FAIL: '+ce.message : 'OK'}`);
 
-  // sanity: try the broken query_replies and dsc tables
-  const { error: qrErr } = await sb.from('query_replies').select('id').limit(1);
-  console.log(`\nquery_replies select: ${qrErr ? 'FAIL: '+qrErr.message : 'unexpectedly OK'}`);
-  const { error: dscErr } = await sb.from('dsc').select('id').limit(1);
-  console.log(`dsc select: ${dscErr ? 'FAIL: '+dscErr.message : 'unexpectedly OK'}`);
+  // sanity: query real tables
+  const { error: qrErr } = await sb.from('query_messages').select('id').limit(1);
+  console.log(`\nquery_messages select: ${qrErr ? 'FAIL: '+qrErr.message : 'OK'}`);
+  const { error: dscErr } = await sb.from('dsc_records').select('id').limit(1);
+  console.log(`dsc_records select: ${dscErr ? 'FAIL: '+dscErr.message : 'OK'}`);
 }
 main().catch(e => { console.error(e); process.exit(1); });

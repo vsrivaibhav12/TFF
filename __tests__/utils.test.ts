@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cn, formatCurrencyINR, formatDateIST, timeAgo } from '../lib/utils';
+import { cn, formatCurrencyINR, formatDateIST, timeAgo, buildTaskTitle, displayTaskName } from '../lib/utils';
 
 describe('cn() — tailwind class merger', () => {
   test('merges conditional classes', () => {
@@ -73,5 +73,40 @@ describe('timeAgo()', () => {
   test('returns em-dash for null/undefined', () => {
     assert.equal(timeAgo(null), '—');
     assert.equal(timeAgo(undefined), '—');
+  });
+});
+
+
+describe('displayTaskName()', () => {
+  test('returns sub-service name when available', () => {
+    assert.equal(displayTaskName({ title: 'GSTR-1 — Acme — 07/2025', sub_services: { name: 'GSTR-1' } }), 'GSTR-1');
+  });
+  test('falls back to title prefix when sub_service missing', () => {
+    assert.equal(displayTaskName({ title: 'GSTR-3B — Acme — 07/2025' }), 'GSTR-3B');
+  });
+  test('handles title without separator', () => {
+    assert.equal(displayTaskName({ title: 'Adhoc task' }), 'Adhoc task');
+  });
+  test('returns untitled for null/undefined task', () => {
+    assert.equal(displayTaskName(null), 'Untitled task');
+    assert.equal(displayTaskName(undefined), 'Untitled task');
+  });
+  test('returns untitled when title missing', () => {
+    assert.equal(displayTaskName({}), 'Untitled task');
+  });
+});
+
+describe('buildTaskTitle()', () => {
+  test('builds title with sub-service and client', () => {
+    assert.equal(buildTaskTitle({ subServiceName: 'GSTR-1', clientName: 'Acme Corp' }), 'GSTR-1 — Acme Corp');
+  });
+  test('appends month/year period', () => {
+    assert.equal(buildTaskTitle({ subServiceName: 'GSTR-1', clientName: 'Acme', periodYear: 2025, periodMonth: 7 }), 'GSTR-1 — Acme — 7/2025');
+  });
+  test('appends quarter period', () => {
+    assert.equal(buildTaskTitle({ subServiceName: 'TDS', periodYear: 2025, periodQuarter: 2 }), 'TDS — Q2 2025');
+  });
+  test('works with sub-service only', () => {
+    assert.equal(buildTaskTitle({ subServiceName: 'ITR' }), 'ITR');
   });
 });

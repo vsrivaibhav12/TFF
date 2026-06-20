@@ -51,7 +51,7 @@ export const createTaskSchema = z.object({
   description: z.string().max(2000).optional().nullable(),
   assigned_to: z.string().uuid().optional().nullable(),
   reviewer_id: z.string().uuid().optional().nullable(),
-  due_date: z.string().date().optional().nullable(),
+  due_date: z.string().date(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
   period_year: z.number().int().min(2000).max(2100).optional().nullable(),
   period_month: z.number().int().min(1).max(12).optional().nullable(),

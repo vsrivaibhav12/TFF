@@ -36,11 +36,17 @@ export default function WorkDonePanel({
 
   // Restore in-progress timer on mount
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_PREFIX + taskId);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setTimerStart(parsed.startedAt);
-      setTimerNote(parsed.note ?? '');
+    try {
+      const saved = localStorage.getItem(STORAGE_PREFIX + taskId);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.startedAt === 'number') {
+          setTimerStart(parsed.startedAt);
+          setTimerNote(parsed.note ?? '');
+        }
+      }
+    } catch {
+      localStorage.removeItem(STORAGE_PREFIX + taskId);
     }
   }, [taskId]);
 
@@ -78,6 +84,21 @@ export default function WorkDonePanel({
       setTimerNote('');
       router.refresh();
     });
+  }
+
+  function computeMinutesFromTimes(next?: Partial<typeof manual>) {
+    const state = { ...manual, ...next };
+    if (!state.start_time || !state.end_time || !state.work_date) return;
+    const start = new Date(`${state.work_date}T${state.start_time}:00`).getTime();
+    const end = new Date(`${state.work_date}T${state.end_time}:00`).getTime();
+    const mins = Math.max(0, Math.round((end - start) / 60000));
+    if (mins > 0) {
+      const hours = Math.floor(mins / 60);
+      const minutes = mins % 60;
+      setManual((prev) => ({ ...prev, ...next, hours: String(hours), minutes: String(minutes) }));
+      return;
+    }
+    setManual((prev) => ({ ...prev, ...next }));
   }
 
   function submitManual() {
@@ -187,11 +208,11 @@ export default function WorkDonePanel({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="wd-start" className="text-xs">Start time</Label>
-              <Input id="wd-start" type="time" value={manual.start_time} onChange={(e) => setManual({ ...manual, start_time: e.target.value })} />
+              <Input id="wd-start" type="time" value={manual.start_time} onChange={(e) => computeMinutesFromTimes({ start_time: e.target.value })} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="wd-end" className="text-xs">End time</Label>
-              <Input id="wd-end" type="time" value={manual.end_time} onChange={(e) => setManual({ ...manual, end_time: e.target.value })} />
+              <Input id="wd-end" type="time" value={manual.end_time} onChange={(e) => computeMinutesFromTimes({ end_time: e.target.value })} />
             </div>
           </div>
           <div className="space-y-1">

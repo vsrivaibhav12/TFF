@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { displayTaskName } from '@/lib/utils';
 import { DockLink } from '@/components/shell/dock-link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,7 @@ export default function TeamClientDetailShell({
   return (
     <div className={`flex flex-col -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 ${isModal ? 'h-full' : 'h-[calc(100vh-6.5rem)]'}`}>
       {!isModal && (
-        <div className="flex-none mb-4">
+        <div className="flex-none mb-4 md:hidden">
           <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 font-medium">
             <ChevronLeft className="h-4 w-4" /> Back to clients
           </Link>
@@ -73,7 +74,7 @@ export default function TeamClientDetailShell({
               </div>
               {canEdit && (
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`${basePath}/clients/${client.id}`}><Pencil className="h-4 w-4 mr-1" /> Edit</Link>
+                  <Link href={`${basePath}/${client.id}`}><Pencil className="h-4 w-4 mr-1" /> Edit</Link>
                 </Button>
               )}
             </div>
@@ -100,7 +101,7 @@ export default function TeamClientDetailShell({
                       <FileText className="h-4 w-4 text-zinc-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-medium text-zinc-900 truncate">{t.sub_services?.name ?? t.title}</div>
+                      <div className="text-[13px] font-medium text-zinc-900 truncate">{displayTaskName(t)}</div>
                       <div className="text-[11px] text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
                     </div>
                     <ProgressRing size={24} strokeWidth={3} hideLabel progress={t.progress_pct ?? 0} />

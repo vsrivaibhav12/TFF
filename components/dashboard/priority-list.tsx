@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { cn, dueLabel } from '@/lib/utils';
+import { cn, dueLabel, displayTaskName } from '@/lib/utils';
 import { ArrowRight, Inbox, Play, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { transitionTaskAction } from '@/lib/actions/tasks';
@@ -123,7 +123,7 @@ export function PriorityList({ tasks, href, emptyMessage = 'No urgent tasks' }: 
                 </div>
 
                 <Link href={`${href}/${t.id}`} className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate group-hover:text-teal-700 transition-colors">{t.sub_services?.name ?? t.title}</div>
+                  <div className="text-sm font-medium truncate group-hover:text-teal-700 transition-colors">{displayTaskName(t)}</div>
                   <div className="text-[11px] text-zinc-500">
                     {clientName(t)}
                     {assigneeName(t) ? ` · ${assigneeName(t)}` : ''}

@@ -40,9 +40,17 @@ describe('createTaskSchema', () => {
     const r = createTaskSchema.safeParse({
       client_id: '550e8400-e29b-41d4-a716-446655440000',
       title: 'File GSTR-1',
+      due_date: '2025-07-31',
       priority: 'high',
     });
     assert.equal(r.success, true);
+  });
+  test('rejects missing due_date', () => {
+    const r = createTaskSchema.safeParse({
+      client_id: '550e8400-e29b-41d4-a716-446655440000',
+      title: 'File GSTR-1',
+    });
+    assert.equal(r.success, false);
   });
   test('rejects missing client_id', () => {
     const r = createTaskSchema.safeParse({ title: 'File GSTR-1' });
@@ -59,6 +67,7 @@ describe('createTaskSchema', () => {
     const r = createTaskSchema.safeParse({
       client_id: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Task',
+      due_date: '2025-07-31',
     });
     assert.equal(r.success, true);
     assert.equal((r.data as any).priority, 'medium');
@@ -67,6 +76,7 @@ describe('createTaskSchema', () => {
     const r = createTaskSchema.safeParse({
       client_id: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Task',
+      due_date: '2025-07-31',
       period_month: 13,
     });
     assert.equal(r.success, false);

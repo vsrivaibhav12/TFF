@@ -457,7 +457,14 @@ CREATE POLICY wd_self      ON task_workdone FOR ALL TO authenticated USING (
   user_id = auth.uid() OR public.current_user_role() = 'admin'
 );
 CREATE POLICY wd_team_read ON task_workdone FOR SELECT TO authenticated USING (
-  public.current_user_role() IN ('admin','team')
+  public.current_user_role() = 'admin'
+  OR (
+    public.current_user_role() = 'team'
+    AND (
+      user_id = auth.uid()
+      OR public.user_has_capability('view_workdone_reports')
+    )
+  )
 );
 
 

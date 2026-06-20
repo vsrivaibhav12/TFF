@@ -134,6 +134,18 @@ export function deriveStateFromGstin(gstin: string): string | undefined { const 
  * Format: {SubService} — {Client} — {Period}
  * Period: MM/YYYY | Q{quarter} {year} | {year}
  */
+/**
+ * Returns the human-facing task name.
+ * Prefer the linked sub-service name; fall back to the first segment of the
+ * generated title so that period/client suffixes are not shown.
+ */
+export function displayTaskName(task?: { sub_services?: { name?: string } | null; title?: string | null } | null): string {
+  if (!task) return 'Untitled task';
+  if (task.sub_services?.name) return task.sub_services.name;
+  if (task.title) return task.title.split(' — ')[0];
+  return 'Untitled task';
+}
+
 export function buildTaskTitle(opts: {
   subServiceName: string;
   clientName?: string;

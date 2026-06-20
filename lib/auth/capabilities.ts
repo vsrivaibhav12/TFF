@@ -40,7 +40,7 @@ export const ALL_CAPABILITIES = [
 
   // Payroll / HR / approvals
   'payroll.run',
-  'attendance.approve', 'leave.approve', 'permission.approve',
+  'attendance.view_all', 'attendance.approve', 'leave.approve', 'permission.approve',
 
   // Queries / audit
   'queries.view', 'queries.assign',

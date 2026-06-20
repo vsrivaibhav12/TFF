@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { getStatusColour } from '@/lib/semantic-colours';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProgressMicro } from '@/components/ui/progress-micro';
-import { formatDateIST, cn } from '@/lib/utils';
+import { formatDateIST, cn, displayTaskName } from '@/lib/utils';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 import { transitionTaskAction, updateTaskAction } from '@/lib/actions/tasks';
 import { TaskLabelPills } from '@/components/tasks/task-label-pills';
@@ -269,7 +269,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                   </Badge>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-zinc-900">{t.sub_services?.name ?? t.title.split(' — ')[0]}</p>
+                  <p className="text-sm font-semibold text-zinc-900">{displayTaskName(t)}</p>
                   <p className="text-xs text-zinc-500">{t.clients?.business_name ?? '—'}</p>
                 </div>
                 <div className="flex items-center justify-between">
@@ -405,7 +405,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                       <Checkbox
                         checked={selected.has(t.id)}
                         onCheckedChange={() => toggle(t.id)}
-                        aria-label={`Select task ${t.sub_services?.name ?? t.title}`}
+                        aria-label={`Select task ${displayTaskName(t)}`}
                         data-testid={`task-select-${t.id}`}
                       />
                     </div>
@@ -422,7 +422,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                     <div className="min-w-0 overflow-hidden pr-2">
                       <TaskHoverCard taskId={t.id}>
                         <DockLink item={{ type: 'task', id: t.id }} href={`/team/tasks/${t.id}`} className="font-semibold text-zinc-900 hover:text-teal-700 truncate block text-sm">
-                          {t.sub_services?.name ?? t.title.split(' — ')[0]}
+                          {displayTaskName(t)}
                         </DockLink>
                       </TaskHoverCard>
                       {t.labels && t.labels.length > 0 && (

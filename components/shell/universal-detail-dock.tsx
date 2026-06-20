@@ -192,6 +192,7 @@ function DockPanelContent({ item }: { item: { type: string; id: string } }) {
             openNotices={clientData.openNotices}
             openQueries={clientData.openQueries}
             basePath={clientData.basePath}
+            canEdit={clientData.canEdit ?? false}
             isModal={true}
           />
         </div>

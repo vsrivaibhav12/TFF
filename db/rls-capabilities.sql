@@ -905,6 +905,15 @@ CREATE POLICY "leave_requests_team_approve" ON leave_requests
     AND public.user_has_capability('leave.approve')
   );
 
+-- attendance_logs: team with attendance.view_all can read all
+DROP POLICY IF EXISTS "attendance_logs_team_view_all" ON attendance_logs;
+CREATE POLICY "attendance_logs_team_view_all" ON attendance_logs
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('attendance.view_all')
+  );
+
 -- attendance_logs: team with attendance.approve can manage all
 DROP POLICY IF EXISTS "attendance_logs_team_approve" ON attendance_logs;
 CREATE POLICY "attendance_logs_team_approve" ON attendance_logs
@@ -1049,13 +1058,13 @@ CREATE POLICY "credentials_team_view_select" ON credentials
     AND public.user_has_capability('credentials.view')
   );
 
--- PAYROLL RUNS: team with payroll.view can read
+-- PAYROLL RUNS: team with payroll.run can read
 DROP POLICY IF EXISTS "payroll_runs_team_view_select" ON payroll_runs;
 CREATE POLICY "payroll_runs_team_view_select" ON payroll_runs
   FOR SELECT TO authenticated
   USING (
     public.current_user_role() = 'team'
-    AND public.user_has_capability('payroll.view')
+    AND public.user_has_capability('payroll.run')
   );
 
 -- QUERIES: team with queries.view can read
@@ -1107,6 +1116,15 @@ CREATE POLICY "insights_team_view_select" ON compliance_insights
 -- WORK DONE (task_workdone)
 -- ============================================================================
 
+-- Team with view_workdone_reports can read any row
+DROP POLICY IF EXISTS "task_workdone_team_view_all" ON task_workdone;
+CREATE POLICY "task_workdone_team_view_all" ON task_workdone
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('view_workdone_reports')
+  );
+
 -- Team with workdone.manage can mutate any row
 DROP POLICY IF EXISTS "task_workdone_team_manage" ON task_workdone;
 CREATE POLICY "task_workdone_team_manage" ON task_workdone
@@ -1131,3 +1149,131 @@ DROP POLICY IF EXISTS "role_template_caps_read_all" ON staff_role_template_capab
 CREATE POLICY "role_template_caps_read_all" ON staff_role_template_capabilities
   FOR SELECT TO authenticated
   USING (TRUE);
+
+
+-- ============================================================================
+-- AUDIT FIX: capability-based RLS for delegated team permissions
+-- ============================================================================
+
+-- Team with manage_billing_entities can manage billing entities, profit centres, cost centres
+DROP POLICY IF EXISTS "billing_entities_team_manage" ON billing_entities;
+CREATE POLICY "billing_entities_team_manage" ON billing_entities
+  FOR ALL TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_billing_entities')
+  )
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_billing_entities')
+  );
+
+DROP POLICY IF EXISTS "profit_centres_team_manage" ON profit_centres;
+CREATE POLICY "profit_centres_team_manage" ON profit_centres
+  FOR ALL TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_billing_entities')
+  )
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_billing_entities')
+  );
+
+DROP POLICY IF EXISTS "cost_centres_team_manage" ON cost_centres;
+CREATE POLICY "cost_centres_team_manage" ON cost_centres
+  FOR ALL TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_billing_entities')
+  )
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_billing_entities')
+  );
+
+DROP POLICY IF EXISTS "user_billing_entity_access_team_manage" ON user_billing_entity_access;
+CREATE POLICY "user_billing_entity_access_team_manage" ON user_billing_entity_access
+  FOR ALL TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_billing_entities')
+  )
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_billing_entities')
+  );
+
+-- Team with manage_compliance_rules can manage compliance calendar rules
+DROP POLICY IF EXISTS "compliance_calendar_rules_team_manage" ON compliance_calendar_rules;
+CREATE POLICY "compliance_calendar_rules_team_manage" ON compliance_calendar_rules
+  FOR ALL TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_compliance_rules')
+  )
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_compliance_rules')
+  );
+
+-- Team with manage_custom_fields can manage task custom field definitions
+DROP POLICY IF EXISTS "task_custom_field_definitions_team_manage" ON task_custom_field_definitions;
+CREATE POLICY "task_custom_field_definitions_team_manage" ON task_custom_field_definitions
+  FOR ALL TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_custom_fields')
+  )
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_custom_fields')
+  );
+
+-- Team with manage_labels can manage task labels
+DROP POLICY IF EXISTS "task_labels_team_manage" ON task_labels;
+CREATE POLICY "task_labels_team_manage" ON task_labels
+  FOR ALL TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_labels')
+  )
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('manage_labels')
+  );
+
+-- Team with permission.approve can manage permission requests
+DROP POLICY IF EXISTS "permission_requests_team_approve" ON permission_requests;
+CREATE POLICY "permission_requests_team_approve" ON permission_requests
+  FOR ALL TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('permission.approve')
+  )
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('permission.approve')
+  );
+
+-- Team with attendance.approve can manage weekly timesheet submissions
+DROP POLICY IF EXISTS "weekly_timesheet_submissions_team_approve" ON weekly_timesheet_submissions;
+CREATE POLICY "weekly_timesheet_submissions_team_approve" ON weekly_timesheet_submissions
+  FOR ALL TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('attendance.approve')
+  )
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('attendance.approve')
+  );
+
+-- Team with verify_tasks can update tasks for verification
+DROP POLICY IF EXISTS "tasks_team_verify" ON tasks;
+CREATE POLICY "tasks_team_verify" ON tasks
+  FOR UPDATE TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('verify_tasks')
+  );

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, Pencil, Check, X, Loader2, ArrowRight, Plus, Clock, Trash2 } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { formatDateIST, formatTimeIST, timeAgo, cn } from '@/lib/utils';
@@ -86,6 +87,8 @@ export default function TaskDetailShell({
   const [priority, setPriority] = useState(task.priority);
   const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.slice(0, 10) : '');
   const [assignedTo, setAssignedTo] = useState(task.assigned_to || '');
+  const [assigneeIds, setAssigneeIds] = useState<string[]>((task as any).assignees?.map((a: any) => a.id) ?? (task.assigned_to ? [task.assigned_to] : []));
+  const [reviewerIds, setReviewerIds] = useState<string[]>((task as any).reviewers?.map((r: any) => r.id) ?? (task.reviewer_id ? [task.reviewer_id] : []));
   
   const [billable, setBillable] = useState(task.is_billable ?? false);
   const [billRef, setBillRef] = useState(task.bill_reference ?? '');
@@ -217,7 +220,7 @@ export default function TaskDetailShell({
     <div className={`flex flex-col -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 ${isModal ? 'h-full' : 'h-[calc(100vh-6.5rem)]'}`}>
       <ConfirmDialog />
       {!isModal && (
-        <div className="flex-none mb-4">
+        <div className="flex-none mb-4 md:hidden">
           <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 font-medium">
             <ChevronLeft className="h-4 w-4" /> Back to Tasks
           </Link>
@@ -316,38 +319,52 @@ export default function TaskDetailShell({
               )}
             </div>
 
-            {/* Assignee */}
+            {/* Assignees */}
             <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
               <div className="flex items-center justify-between mb-1">
-                <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Assignee</div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Assignees</div>
                 {!isClosed && !editingAssignee && (
                   <button onClick={() => setEditingAssignee(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
                 )}
               </div>
               {editingAssignee ? (
-                <div className="flex items-center gap-1">
-                  <Select value={assignedTo} onValueChange={(v) => setAssignedTo(v)}>
-                    <SelectTrigger className="h-7 text-xs w-28 px-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Unassigned</SelectItem>
-                      {team.map((u: any) => (
-                        <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
-                    setSaving(true);
-                    const r = await assignTaskAction({ task_id: task.id, assigned_to: assignedTo || null });
-                    setSaving(false);
-                    if (!r.success) { toast.error(r.error); return; }
-                    toast.success('Assignee updated');
-                    setEditingAssignee(false);
-                    onRefresh?.();
-                  }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setAssignedTo(task.assigned_to || ''); setEditingAssignee(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                <div className="space-y-2">
+                  <MultiSelect
+                    options={team.map((u: any) => ({ value: u.id, label: u.full_name, searchString: u.full_name.toLowerCase() }))}
+                    value={assigneeIds}
+                    onChange={setAssigneeIds}
+                    placeholder="Select assignees"
+                    searchPlaceholder="Search team..."
+                  />
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Reviewers</div>
+                  <MultiSelect
+                    options={team.map((u: any) => ({ value: u.id, label: u.full_name, searchString: u.full_name.toLowerCase() }))}
+                    value={reviewerIds}
+                    onChange={setReviewerIds}
+                    placeholder="Select reviewers"
+                    searchPlaceholder="Search team..."
+                  />
+                  <div className="flex items-center gap-1">
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
+                      setSaving(true);
+                      const r = await assignTaskAction({ task_id: task.id, assigned_to: assigneeIds, reviewer_id: reviewerIds });
+                      setSaving(false);
+                      if (!r.success) { toast.error(r.error); return; }
+                      toast.success('Assignment updated');
+                      setEditingAssignee(false);
+                      onRefresh?.();
+                    }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
+                      setAssigneeIds((task as any).assignees?.map((a: any) => a.id) ?? (task.assigned_to ? [task.assigned_to] : []));
+                      setReviewerIds((task as any).reviewers?.map((r: any) => r.id) ?? (task.reviewer_id ? [task.reviewer_id] : []));
+                      setEditingAssignee(false);
+                    }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                  </div>
                 </div>
               ) : (
-                <div className="text-sm font-semibold text-zinc-900">{task.assignee?.full_name || '—'}</div>
+                <div className="text-sm font-semibold text-zinc-900">
+                  {((task as any).assignees?.length ? (task as any).assignees : task.assignee ? [task.assignee] : []).map((a: any) => a.full_name).join(', ') || '—'}
+                </div>
               )}
             </div>
 
@@ -736,8 +753,8 @@ export default function TaskDetailShell({
                   </dd>
                 </div>
 
-                <DetailItem label="Assignee" value={task.assignee?.full_name || '—'} />
-                <DetailItem label="Reviewer" value={task.reviewer?.full_name || '—'} />
+                <DetailItem label="Assignees" value={((task as any).assignees?.length ? (task as any).assignees : task.assignee ? [task.assignee] : []).map((a: any) => a.full_name).join(', ') || '—'} />
+                <DetailItem label="Reviewers" value={((task as any).reviewers?.length ? (task as any).reviewers : task.reviewer ? [task.reviewer] : []).map((r: any) => r.full_name).join(', ') || '—'} />
                 <DetailItem label="Service" value={task.sub_services ? `${task.sub_services.services?.name ?? ''} › ${task.sub_services.name}` : '—'} />
                 <DetailItem label="Created" value={formatDateIST(task.created_date) || '—'} />
                 <DetailItem label="Completed" value={formatDateIST(task.completed_date) || 'Not completed'} />

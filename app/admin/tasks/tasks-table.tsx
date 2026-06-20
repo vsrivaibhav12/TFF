@@ -14,7 +14,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { ExpandableCell } from '@/components/ui/expandable-cell';
-import { formatDateIST, cn } from '@/lib/utils';
+import { ResizableTableHead } from '@/components/ui/resizable-table-head';
+import { useColumnWidths } from '@/lib/hooks/use-column-widths';
+import { formatDateIST, cn, displayTaskName } from '@/lib/utils';
 import {
   Search, Filter, AlertTriangle, Building2, ArrowUpRight, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck,
 } from 'lucide-react';
@@ -73,6 +75,20 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
   const [colSearch, setColSearch] = useState<Record<string, string>>({});
   const [ConfirmDialog, confirm] = useConfirm();
   const { columns, setColumns, density, setDensity } = useTablePrefs('admin-tasks', DEFAULT_COLUMNS, 'comfortable');
+  const { widths, setWidth, loaded } = useColumnWidths('admin-tasks', {
+    select: 44,
+    task_number: 80,
+    client: 160,
+    sub_service: 190,
+    period: 92,
+    status: 100,
+    due: 92,
+    owner: 130,
+    labels: 120,
+    progress: 92,
+    priority: 92,
+    actions: 60,
+  });
 
   const assignees = useMemo(() => {
     const map = new Map<string, string>();
@@ -250,7 +266,7 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
       </div>
 
       <div className="tff-card overflow-x-auto">
-        <Table className="min-w-[1000px]">
+        <Table className="min-w-[1000px]" style={{ tableLayout: 'fixed' }}>
           <TableHeader>
             <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
               {colVisible('select') && (
@@ -259,46 +275,46 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
                 </TableHead>
               )}
               {colVisible('task_number') && (
-                <TableHead className="cursor-pointer select-none w-24" onClick={() => toggleSort('task_number')}>
+                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.task_number : undefined} onResize={(w) => setWidth('task_number', w)} onClick={() => toggleSort('task_number')}>
                   <span className="flex items-center gap-1">Number <SortIcon col="task_number" /></span>
-                </TableHead>
+                </ResizableTableHead>
               )}
               {colVisible('client') && (
-                <TableHead className="cursor-pointer select-none w-40" onClick={() => toggleSort('client')}>
+                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.client : undefined} onResize={(w) => setWidth('client', w)} onClick={() => toggleSort('client')}>
                   <span className="flex items-center gap-1">Client <SortIcon col="client" /></span>
-                </TableHead>
+                </ResizableTableHead>
               )}
               {colVisible('sub_service') && (
-                <TableHead className="cursor-pointer select-none w-44" onClick={() => toggleSort('sub_service')}>
+                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.sub_service : undefined} onResize={(w) => setWidth('sub_service', w)} onClick={() => toggleSort('sub_service')}>
                   <span className="flex items-center gap-1">Sub Service <SortIcon col="sub_service" /></span>
-                </TableHead>
+                </ResizableTableHead>
               )}
               {colVisible('period') && (
-                <TableHead className="cursor-pointer select-none w-24" onClick={() => toggleSort('period')}>
+                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.period : undefined} onResize={(w) => setWidth('period', w)} onClick={() => toggleSort('period')}>
                   <span className="flex items-center gap-1">Period <SortIcon col="period" /></span>
-                </TableHead>
+                </ResizableTableHead>
               )}
               {colVisible('status') && (
-                <TableHead className="text-center">Status</TableHead>
+                <ResizableTableHead className="text-center" width={loaded ? widths.status : undefined} onResize={(w) => setWidth('status', w)}>Status</ResizableTableHead>
               )}
               {colVisible('due') && (
-                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('due_date')}>
+                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.due : undefined} onResize={(w) => setWidth('due', w)} onClick={() => toggleSort('due_date')}>
                   <span className="flex items-center gap-1">Due <SortIcon col="due_date" /></span>
-                </TableHead>
+                </ResizableTableHead>
               )}
               {colVisible('owner') && (
-                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('owner')}>
+                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.owner : undefined} onResize={(w) => setWidth('owner', w)} onClick={() => toggleSort('owner')}>
                   <span className="flex items-center gap-1">Owner <SortIcon col="owner" /></span>
-                </TableHead>
+                </ResizableTableHead>
               )}
               {colVisible('labels') && (
-                <TableHead className="text-center">Labels</TableHead>
+                <ResizableTableHead className="text-center" width={loaded ? widths.labels : undefined} onResize={(w) => setWidth('labels', w)}>Labels</ResizableTableHead>
               )}
               {colVisible('progress') && (
-                <TableHead className="text-center">Progress</TableHead>
+                <ResizableTableHead className="text-center" width={loaded ? widths.progress : undefined} onResize={(w) => setWidth('progress', w)}>Progress</ResizableTableHead>
               )}
               {colVisible('priority') && (
-                <TableHead className="text-center">Priority</TableHead>
+                <ResizableTableHead className="text-center" width={loaded ? widths.priority : undefined} onResize={(w) => setWidth('priority', w)}>Priority</ResizableTableHead>
               )}
               {colVisible('actions') && (
                 <TableHead></TableHead>
@@ -314,7 +330,7 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
                 <TableRow key={t.id} className={cn('transition-colors hover:bg-zinc-50/60', selected.has(t.id) ? 'bg-teal-50/40' : '', urgencyBorder)} data-row>
                   {colVisible('select') && (
                     <TableCell className={rowPadding}>
-                      <Checkbox checked={selected.has(t.id)} onCheckedChange={() => toggle(t.id)} aria-label={`Select task ${t.sub_services?.name ?? t.title}`} />
+                      <Checkbox checked={selected.has(t.id)} onCheckedChange={() => toggle(t.id)} aria-label={`Select task ${displayTaskName(t)}`} />
                     </TableCell>
                   )}
                   {colVisible('task_number') && (
@@ -334,7 +350,7 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
                       <TaskHoverCard taskId={t.id}>
                         <DockLink item={{ type: 'task', id: t.id }} href={`/admin/tasks/${t.id}`} className="font-semibold text-zinc-900 hover:text-teal-700 text-sm block">
                           <ExpandableCell maxLines={1}>
-                            {t.sub_services?.name ?? t.title.split(' — ')[0]}
+                            {displayTaskName(t)}
                           </ExpandableCell>
                         </DockLink>
                       </TaskHoverCard>

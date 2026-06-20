@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { getStatusColour } from '@/lib/semantic-colours';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ExpandableCell } from '@/components/ui/expandable-cell';
+import { ResizableTableHead } from '@/components/ui/resizable-table-head';
+import { useColumnWidths } from '@/lib/hooks/use-column-widths';
 import { formatDateIST, formatCurrencyINR } from '@/lib/utils';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { DockLink } from '@/components/shell/dock-link';
@@ -36,6 +38,15 @@ export default function NoticesTable({ notices }: { notices: Notice[] }) {
   const [sortKey, setSortKey] = useState<string>('due_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const { columns, setColumns, density, setDensity } = useTablePrefs('team-notices', DEFAULT_COLUMNS, 'comfortable');
+  const { widths, setWidth, loaded } = useColumnWidths('team-notices', {
+    client: 170,
+    notice_type: 110,
+    notice_number: 130,
+    subject: 260,
+    due_date: 95,
+    amount: 100,
+    status: 120,
+  });
 
   const sorted = useMemo(() => {
     const data = [...notices];
@@ -90,43 +101,43 @@ export default function NoticesTable({ notices }: { notices: Notice[] }) {
       </div>
       <div className="tff-card overflow-hidden">
         <div className="overflow-x-auto">
-          <Table className="min-w-[1000px]">
+          <Table className="min-w-[1000px]" style={{ tableLayout: 'fixed' }}>
             <TableHeader>
               <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
                 {colVisible('client') && (
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('client')}>
+                  <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.client : undefined} onResize={(w) => setWidth('client', w)} onClick={() => toggleSort('client')}>
                     <span className="flex items-center gap-1">Client <SortIcon col="client" /></span>
-                  </TableHead>
+                  </ResizableTableHead>
                 )}
                 {colVisible('notice_type') && (
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('notice_type')}>
+                  <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.notice_type : undefined} onResize={(w) => setWidth('notice_type', w)} onClick={() => toggleSort('notice_type')}>
                     <span className="flex items-center gap-1">Type <SortIcon col="notice_type" /></span>
-                  </TableHead>
+                  </ResizableTableHead>
                 )}
                 {colVisible('notice_number') && (
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('notice_number')}>
+                  <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.notice_number : undefined} onResize={(w) => setWidth('notice_number', w)} onClick={() => toggleSort('notice_number')}>
                     <span className="flex items-center gap-1">Number <SortIcon col="notice_number" /></span>
-                  </TableHead>
+                  </ResizableTableHead>
                 )}
                 {colVisible('subject') && (
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('subject')}>
+                  <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.subject : undefined} onResize={(w) => setWidth('subject', w)} onClick={() => toggleSort('subject')}>
                     <span className="flex items-center gap-1">Subject <SortIcon col="subject" /></span>
-                  </TableHead>
+                  </ResizableTableHead>
                 )}
                 {colVisible('due_date') && (
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('due_date')}>
+                  <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.due_date : undefined} onResize={(w) => setWidth('due_date', w)} onClick={() => toggleSort('due_date')}>
                     <span className="flex items-center gap-1">Due <SortIcon col="due_date" /></span>
-                  </TableHead>
+                  </ResizableTableHead>
                 )}
                 {colVisible('amount') && (
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('amount')}>
+                  <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.amount : undefined} onResize={(w) => setWidth('amount', w)} onClick={() => toggleSort('amount')}>
                     <span className="flex items-center gap-1">Amount <SortIcon col="amount" /></span>
-                  </TableHead>
+                  </ResizableTableHead>
                 )}
                 {colVisible('status') && (
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                  <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.status : undefined} onResize={(w) => setWidth('status', w)} onClick={() => toggleSort('status')}>
                     <span className="flex items-center gap-1">Status <SortIcon col="status" /></span>
-                  </TableHead>
+                  </ResizableTableHead>
                 )}
               </TableRow>
             </TableHeader>

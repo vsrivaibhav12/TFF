@@ -271,6 +271,32 @@ CREATE POLICY "sop_team_read" ON sub_service_sop_steps
   USING (public.current_user_role() IN ('team', 'admin'));
 
 -- ----------------------------------------------------------------------------
+-- 6b. TASK TEMPLATE STEPS (reusable steps inside a task template)
+-- ----------------------------------------------------------------------------
+-- Steps belong to a Task Template, not a generic SOP. Defined here so the
+-- task_steps.source_template_step_id foreign key is valid on fresh installs.
+
+CREATE TABLE IF NOT EXISTS task_template_steps (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  task_template_id UUID NOT NULL REFERENCES task_templates(id) ON DELETE CASCADE,
+  step_order INT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  is_required BOOLEAN DEFAULT TRUE,
+  guidance_notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  is_deleted BOOLEAN DEFAULT FALSE
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_task_template_steps_unique_active_order
+  ON task_template_steps(task_template_id, step_order)
+  WHERE is_deleted = FALSE;
+
+CREATE INDEX IF NOT EXISTS idx_task_template_steps_template
+  ON task_template_steps(task_template_id) WHERE is_deleted = FALSE;
+
+-- ----------------------------------------------------------------------------
 -- 7. TASK STEPS (per-task checklist with sign-off)
 -- ----------------------------------------------------------------------------
 -- Each task has its own ordered step list, copied from the sub-service's SOP
@@ -463,3 +489,82 @@ AND id NOT IN (SELECT category_id FROM services);
 -- ============================================================================
 -- DONE — v3.2
 -- ============================================================================
+
+
+-- ============================================================================
+-- v3.3 ADDITION — Multi-assignee tasks
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS task_assignees (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users_profile(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('assignee', 'reviewer')),
+  assigned_at TIMESTAMP DEFAULT NOW(),
+  assigned_by UUID REFERENCES users_profile(id),
+  UNIQUE(task_id, user_id, role)
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_assignees_task ON task_assignees(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_assignees_user ON task_assignees(user_id);
+
+ALTER TABLE task_assignees ENABLE ROW LEVEL SECURITY;
+
+-- Admin full access
+DROP POLICY IF EXISTS task_assignees_admin_all ON task_assignees;
+CREATE POLICY task_assignees_admin_all ON task_assignees
+  FOR ALL TO authenticated
+  USING (public.current_user_role() = 'admin')
+  WITH CHECK (public.current_user_role() = 'admin');
+
+-- Team read if they have any task capability or are assigned
+DROP POLICY IF EXISTS task_assignees_team_read ON task_assignees;
+CREATE POLICY task_assignees_team_read ON task_assignees
+  FOR SELECT TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND (
+      public.user_has_capability('tasks.view')
+      OR public.user_has_capability('tasks.edit')
+      OR public.user_has_capability('tasks.assign')
+      OR public.user_has_capability('tasks.complete')
+      OR public.user_has_capability('tasks.create')
+      OR public.user_has_capability('tasks.delete')
+      OR user_id = auth.uid()
+    )
+  );
+
+-- Team mutate if they have tasks.assign
+DROP POLICY IF EXISTS task_assignees_team_manage ON task_assignees;
+CREATE POLICY task_assignees_team_manage ON task_assignees
+  FOR ALL TO authenticated
+  USING (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('tasks.assign')
+  )
+  WITH CHECK (
+    public.current_user_role() = 'team'
+    AND public.user_has_capability('tasks.assign')
+  );
+
+-- Backfill from legacy single assignee / reviewer columns (idempotent)
+INSERT INTO task_assignees (task_id, user_id, role, assigned_at)
+SELECT id, assigned_to, 'assignee', COALESCE(updated_at, created_at)
+FROM tasks
+WHERE assigned_to IS NOT NULL
+ON CONFLICT (task_id, user_id, role) DO NOTHING;
+
+INSERT INTO task_assignees (task_id, user_id, role, assigned_at)
+SELECT id, reviewer_id, 'reviewer', COALESCE(updated_at, created_at)
+FROM tasks
+WHERE reviewer_id IS NOT NULL
+ON CONFLICT (task_id, user_id, role) DO NOTHING;
+
+
+-- ============================================================================
+-- v3.4 ADDITION — Align tasks.due_date with application validation
+-- ============================================================================
+-- The application Zod schema makes due_date optional/nullable, but the base
+-- schema.sql defines it as NOT NULL. This causes inserts without a due date
+-- to fail at the database layer. Make the column nullable to match the app.
+ALTER TABLE tasks ALTER COLUMN due_date DROP NOT NULL;

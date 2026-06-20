@@ -15,24 +15,31 @@ interface Props {
   teamUsers: any[];
   logs: Map<string, any>;
   currentUserId: string;
+  readOnly?: boolean;
+  basePath?: string;
 }
 
-const statusLabels: Record<string, string> = {
+const selfStatusLabels: Record<string, string> = {
+  present: "Present",
+  absent: "Absent",
+  leave: "Leave",
+  work_from_home: "Work from home",
+};
+
+const overrideStatusLabels: Record<string, string> = {
   present: "Present",
   leave: "Leave",
-  half_day: "Half day",
-  permission: "Permission",
 };
 
 const statusBadge: Record<string, string> = {
   present: "bg-teal-50 text-teal-700 border-teal-200",
+  absent: "bg-zinc-100 text-zinc-700 border-zinc-200",
   leave: "bg-amber-50 text-amber-700 border-amber-200",
-  half_day: "bg-blue-50 text-blue-700 border-blue-200",
-  permission: "bg-purple-50 text-purple-700 border-purple-200",
+  work_from_home: "bg-blue-50 text-blue-700 border-blue-200",
 };
 
 /** Self-marking uses upsert (no reason). Override for others requires reason. */
-export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUserId }: Props) {
+export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUserId, readOnly = false, basePath = '/admin/attendance' }: Props) {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(date);
   const [pending, startTransition] = useTransition();
@@ -86,7 +93,7 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
           value={selectedDate}
           onChange={(e) => {
             setSelectedDate(e.target.value);
-            router.push(`/admin/attendance?date=${e.target.value}`);
+            router.push(`${basePath}?date=${e.target.value}`);
           }}
           className="w-auto"
         />
@@ -127,13 +134,13 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
                         onChange={(e) => setStatus(e.target.value)}
                         className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm"
                       >
-                        {Object.entries(statusLabels).map(([k, v]) => (
+                        {Object.entries(isSelf ? selfStatusLabels : overrideStatusLabels).map(([k, v]) => (
                           <option key={k} value={k}>{v}</option>
                         ))}
                       </select>
                     ) : (
                       <Badge variant="outline" className={log ? statusBadge[log.status] : "bg-zinc-50 text-zinc-400 border-zinc-200"}>
-                        {log ? statusLabels[log.status] ?? log.status : "Not marked"}
+                        {log ? (isSelf ? selfStatusLabels[log.status] : overrideStatusLabels[log.status]) ?? log.status : "Not marked"}
                       </Badge>
                     )}
                   </td>
@@ -144,7 +151,9 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
                     {log?.check_out_time ? formatTimeIST(log.check_out_time) : '—'}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {editing ? (
+                    {readOnly ? (
+                      <span className="text-xs text-zinc-400">—</span>
+                    ) : editing ? (
                       <div className="space-y-2 inline-block text-left">
                         {!isSelf && (
                           <Input

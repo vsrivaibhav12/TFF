@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { addWorkDoneAction } from '@/lib/actions/work-done';
+import { displayTaskName } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const schema = z.object({
@@ -169,16 +170,21 @@ export default function WorkDoneForm({ clients, tasks }: { clients: any[]; tasks
         </div>
         <div className="space-y-2">
           <Label>Task (optional)</Label>
-          <Select value={selectedTaskId} onValueChange={handleTaskChange}>
-            <SelectTrigger>
-              <SelectValue placeholder={filteredTasks.length === 0 ? 'No tasks' : 'Select task'} />
-            </SelectTrigger>
-            <SelectContent>
-              {filteredTasks.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.sub_services?.name ?? t.title.split(' — ')[0]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={[
+              { value: '__none__', label: 'No task', searchString: 'no task' },
+              ...filteredTasks.map((t) => ({
+                value: t.id,
+                label: displayTaskName(t),
+                searchString: displayTaskName(t).toLowerCase(),
+              })),
+            ]}
+            value={selectedTaskId || '__none__'}
+            onChange={(v) => handleTaskChange(v === '__none__' ? '' : v)}
+            placeholder={filteredTasks.length === 0 ? 'No tasks' : 'Select task'}
+            searchPlaceholder="Search tasks..."
+            className="w-full"
+          />
         </div>
       </div>
 

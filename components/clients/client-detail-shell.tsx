@@ -3,6 +3,7 @@ import { DockLink } from '@/components/shell/dock-link';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, AlertTriangle, MessageSquare, Briefcase, ArrowRight } from 'lucide-react';
 import AuditTimeline from '@/components/sophistication/audit-timeline';
+import { displayTaskName } from '@/lib/utils';
 import ClientFormWrapper from './client-form-wrapper';
 import ClientServiceManager from '@/app/admin/clients/[id]/service-manager';
 import ClientTeamManager from '@/app/admin/clients/[id]/team-manager';
@@ -20,6 +21,7 @@ interface Props {
   openNotices: any;
   openQueries: any;
   basePath: string;
+  canEdit?: boolean;
   isModal?: boolean;
 }
 
@@ -43,6 +45,7 @@ export default function ClientDetailShell({
   openNotices,
   openQueries,
   basePath,
+  canEdit = false,
   isModal,
 }: Props) {
   const taskPrefix = basePath.replace('/clients', '/tasks');
@@ -50,7 +53,7 @@ export default function ClientDetailShell({
   return (
     <div className={`flex flex-col -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 ${isModal ? 'h-full' : 'h-[calc(100vh-6.5rem)]'}`}>
       {!isModal && (
-        <div className="flex-none mb-4">
+        <div className="flex-none mb-4 md:hidden">
           <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 font-medium">
             <ChevronLeft className="h-4 w-4" /> Back to clients
           </Link>
@@ -100,7 +103,7 @@ export default function ClientDetailShell({
                       <FileText className="h-3.5 w-3.5 text-zinc-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[12px] font-medium text-zinc-900 truncate">{t.sub_services?.name ?? t.title}</div>
+                      <div className="text-[12px] font-medium text-zinc-900 truncate">{displayTaskName(t)}</div>
                       <div className="text-[10px] text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
                     </div>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{t.status}</span>
@@ -230,7 +233,7 @@ export default function ClientDetailShell({
                         <FileText className="h-4 w-4 text-zinc-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-medium text-zinc-900 truncate">{t.sub_services?.name ?? t.title}</div>
+                        <div className="text-[13px] font-medium text-zinc-900 truncate">{displayTaskName(t)}</div>
                         <div className="text-[11px] text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
                       </div>
                       <span className={`text-[11px] px-2 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{t.status}</span>
@@ -269,7 +272,7 @@ export default function ClientDetailShell({
             {/* Profile */}
             <div className="tff-card p-6">
               <h3 className="text-[13px] font-semibold text-zinc-700 mb-4">Profile</h3>
-              <ClientFormWrapper groups={groups} owners={owners} initial={client} basePath={basePath} />
+              <ClientFormWrapper groups={groups} owners={owners} initial={client} basePath={basePath} readOnly={!canEdit} />
             </div>
 
           </div>

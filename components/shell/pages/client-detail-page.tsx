@@ -19,6 +19,8 @@ export default async function ClientDetailPage({ params, rolePrefix }: Props) {
   if (!canReadAll && !canEdit) {
     await requireCapabilityOrRedirect(me, 'clients.read.all');
   }
+  // Suppress unused warning; canEdit is used by the dock data check below indirectly
+  void canEdit;
   const client = await getClientById(id);
   if (!client) notFound();
 

@@ -12,7 +12,7 @@ const ROOT = process.cwd();
 const SCAN_DIRS = ['lib', 'app', 'components', 'scripts'];
 
 // Tables/views that have migrations ready but may not be applied yet
-const PENDING_MIGRATIONS = new Set(['v_unified_inbox']);
+const PENDING_MIGRATIONS = new Set<string>([]);
 const ENV_PATH = path.join(ROOT, '.env.local');
 
 // ── Env parser (no dotenv dependency) ──
@@ -74,7 +74,7 @@ async function fetchLiveTables(): Promise<Set<string>> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      query: `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`,
+      query: `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type IN ('BASE TABLE', 'VIEW');`,
     }),
   });
   if (!res.ok) throw new Error(`Schema query failed: ${res.status} ${await res.text()}`);

@@ -6,10 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Pencil, Trash2, Loader2 } from 'lucide-react';
 import { updateWorkDoneAction, deleteWorkDoneAction } from '@/lib/actions/work-done';
+import { displayTaskName } from '@/lib/utils';
 import { useConfirm } from '@/components/ui/use-confirm';
 
 interface WorkDoneEntry {
@@ -136,22 +138,30 @@ function WorkDoneEditDialog({
           <div className="space-y-1"><Label>Note</Label><Textarea value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} rows={3} /></div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1"><Label>Client</Label>
-              <Select value={f.client_id || '__none__'} onValueChange={(v) => setF({ ...f, client_id: v === '__none__' ? '' : v, task_id: '' })}>
-                <SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">None</SelectItem>
-                  {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.business_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[
+                  { value: '__none__', label: 'None', searchString: 'none' },
+                  ...clients.map((c) => ({ value: c.id, label: c.business_name, searchString: c.business_name.toLowerCase() })),
+                ]}
+                value={f.client_id || '__none__'}
+                onChange={(v) => setF({ ...f, client_id: v === '__none__' ? '' : v, task_id: '' })}
+                placeholder="Select client"
+                searchPlaceholder="Search clients..."
+                className="w-full"
+              />
             </div>
             <div className="space-y-1"><Label>Task</Label>
-              <Select value={f.task_id || '__none__'} onValueChange={(v) => setF({ ...f, task_id: v === '__none__' ? '' : v })}>
-                <SelectTrigger><SelectValue placeholder="Select task" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">None</SelectItem>
-                  {filteredTasks.map((t) => <SelectItem key={t.id} value={t.id}>{t.sub_services?.name ?? t.title}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[
+                  { value: '__none__', label: 'None', searchString: 'none' },
+                  ...filteredTasks.map((t) => ({ value: t.id, label: displayTaskName(t), searchString: displayTaskName(t).toLowerCase() })),
+                ]}
+                value={f.task_id || '__none__'}
+                onChange={(v) => setF({ ...f, task_id: v === '__none__' ? '' : v })}
+                placeholder="Select task"
+                searchPlaceholder="Search tasks..."
+                className="w-full"
+              />
             </div>
           </div>
         </div>

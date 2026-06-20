@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { requireRole } from '@/lib/auth/require-role';
+import { requireCapabilityOrRedirect, hasCapability } from '@/lib/auth/require-capability';
 import { cn } from '@/lib/utils';
 import {
   Briefcase,
@@ -18,7 +19,12 @@ interface Props {
 }
 
 export default async function ReportsPage({ rolePrefix }: Props) {
-  await requireRole(['admin', 'team']);
+  const me = await requireRole(['admin', 'team']);
+  if (me.role !== 'admin') {
+    await requireCapabilityOrRedirect(me, ['view_workdone_reports', 'audit.view']);
+  }
+
+  const canViewWorkDone = me.role === 'admin' || await hasCapability(me, 'view_workdone_reports');
 
   const REPORTS = [
     {
@@ -27,6 +33,7 @@ export default async function ReportsPage({ rolePrefix }: Props) {
       description: 'Time logged by team members across clients and tasks.',
       icon: Clock,
       color: 'bg-teal-50 text-teal-600',
+      cap: canViewWorkDone,
     },
     {
       href: `${rolePrefix}/reports/client-services`,
@@ -55,8 +62,9 @@ export default async function ReportsPage({ rolePrefix }: Props) {
       description: 'Client group performance and aggregated metrics.',
       icon: BarChart3,
       color: 'bg-teal-50 text-teal-600',
+      cap: true,
     },
-  ];
+  ].filter((r) => r.cap);
 
   return (
     <div className="space-y-8">
@@ -66,7 +74,7 @@ export default async function ReportsPage({ rolePrefix }: Props) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {REPORTS.map((report) => {
+        {REPORTS.map((report: any) => {
           const Icon = report.icon;
           return (
             <Link

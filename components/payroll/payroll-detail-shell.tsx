@@ -14,9 +14,11 @@ export default function PayrollDetailShell({ run, basePath, isModal }: Props) {
   return (
     <div className={`space-y-8 ${isModal ? 'h-[calc(100vh-6.5rem)] overflow-y-auto pr-2 pb-12' : 'max-w-3xl'}`} style={{ scrollbarWidth: 'thin' }}>
       {!isModal && (
-        <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 font-medium">
-          <ChevronLeft className="h-4 w-4" /> Back
-        </Link>
+        <div className="md:hidden">
+          <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 font-medium">
+            <ChevronLeft className="h-4 w-4" /> Back
+          </Link>
+        </div>
       )}
       <div>
         <h1 className="tff-page-title">Payslip · {r.users_profile?.full_name}</h1>

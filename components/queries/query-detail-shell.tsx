@@ -75,7 +75,7 @@ function QueryFullPage({ data, basePath, canActAsTeam }: Props) {
 
   return (
     <div className="flex flex-col h-[calc(100vh-6.5rem)] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
-      <div className="flex-none mb-4">
+      <div className="flex-none mb-4 md:hidden">
         <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 font-medium">
           <ChevronLeft className="h-4 w-4" /> Back to Queries
         </Link>

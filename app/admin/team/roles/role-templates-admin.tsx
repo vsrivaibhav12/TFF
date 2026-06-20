@@ -38,7 +38,7 @@ const CLUSTERS: Array<{ label: string; caps: readonly string[] }> = [
   { label: 'Compliance & Queries', caps: ['compliance.view', 'compliance.enter', 'manage_compliance_rules', 'queries.view', 'queries.assign'] },
   { label: 'Advisory', caps: ['bizlens.view', 'bizlens.enter', 'vcfo.view', 'vcfo.enter', 'insights.view', 'insights.configure'] },
   { label: 'Documents', caps: ['documents.view'] },
-  { label: 'HR & Payroll', caps: ['payroll.run', 'attendance.approve', 'leave.approve', 'permission.approve'] },
+  { label: 'HR & Payroll', caps: ['payroll.run', 'attendance.view_all', 'attendance.approve', 'leave.approve', 'permission.approve'] },
   { label: 'Billing & Settings', caps: ['manage_billing_entities', 'manage_custom_fields', 'manage_labels'] },
   { label: 'Work & Audit', caps: ['workdone.manage', 'view_workdone_reports', 'audit.view', 'manage_solution_log'] },
 ];
