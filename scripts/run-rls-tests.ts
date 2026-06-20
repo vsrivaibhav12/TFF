@@ -30,6 +30,24 @@ const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const SR = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+const ADMIN_EMAIL = process.env.ADMIN_SEED_EMAIL || 'info@fiscalfulcrum.in';
+const ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD!;
+const TEAM_EMAIL = 'team.demo@fiscalfulcrum.in';
+const TEAM_PASSWORD = process.env.TEAM_SEED_PASSWORD!;
+const CLIENT_EMAIL = 'client.demo@fiscalfulcrum.in';
+const CLIENT_PASSWORD = process.env.CLIENT_SEED_PASSWORD!;
+
+function checkSeedEnv() {
+  const missing: string[] = [];
+  if (!ADMIN_PASSWORD) missing.push('ADMIN_SEED_PASSWORD');
+  if (!TEAM_PASSWORD) missing.push('TEAM_SEED_PASSWORD');
+  if (!CLIENT_PASSWORD) missing.push('CLIENT_SEED_PASSWORD');
+  if (missing.length) {
+    console.error(`Missing env vars: ${missing.join(', ')}. Add them to .env.local.`);
+    process.exit(1);
+  }
+}
+
 interface Result { name: string; pass: boolean; detail?: string }
 const results: Result[] = [];
 
@@ -50,6 +68,7 @@ async function loginAs(email: string, password: string) {
 }
 
 async function main() {
+  checkSeedEnv();
   const sr = createClient(URL, SR, { auth: { persistSession: false } });
 
   // Ensure we have at least 2 demo clients for cross-tenant tests
@@ -79,7 +98,7 @@ async function main() {
   }
 
   // Ensure team demo is assigned to client A but NOT client B
-  const { data: teamUser } = await sr.from('users_profile').select('id').eq('email', 'team.demo@fiscalfulcrum.in').maybeSingle();
+  const { data: teamUser } = await sr.from('users_profile').select('id').eq('email', TEAM_EMAIL).maybeSingle();
   if (teamUser) {
     await sr.from('team_client_assignment').upsert({
       client_id: clientA.id,
@@ -108,7 +127,7 @@ async function main() {
 
   // Test 3: client user can only see their own client
   try {
-    const cli = await loginAs('client.demo@fiscalfulcrum.in', '__CLIENT_SEED_PASSWORD__');
+    const cli = await loginAs(CLIENT_EMAIL, CLIENT_PASSWORD);
     const { data } = await cli.from('clients').select('id, business_name');
     const onlyDemo = (data ?? []).every((r) => r.business_name?.startsWith('[DEMO]'));
     record('3. client sees only own client(s)', !!data && data.length >= 1 && onlyDemo, `rows=${data?.length ?? 0}`);
@@ -118,7 +137,7 @@ async function main() {
 
   // Test 4: client cannot read tasks not assigned (no tasks yet -> 0 rows expected)
   try {
-    const cli = await loginAs('client.demo@fiscalfulcrum.in', '__CLIENT_SEED_PASSWORD__');
+    const cli = await loginAs(CLIENT_EMAIL, CLIENT_PASSWORD);
     const { data } = await cli.from('tasks').select('id').limit(10);
     record('4. client task RLS filter active', Array.isArray(data), `rows=${data?.length ?? 0}`);
   } catch (e: any) {
@@ -133,7 +152,7 @@ async function main() {
 
   // Test 5: team member assigned to client A can read A's tasks
   try {
-    const team = await loginAs('team.demo@fiscalfulcrum.in', '__TEAM_SEED_PASSWORD__');
+    const team = await loginAs(TEAM_EMAIL, TEAM_PASSWORD);
     if (!subServiceId) throw new Error('no sub_service available');
     const { data: task } = await sr.from('tasks').insert({
       client_id: clientA.id,
@@ -157,7 +176,7 @@ async function main() {
 
   // Test 6: team member NOT assigned to client B cannot read B's tasks
   try {
-    const team = await loginAs('team.demo@fiscalfulcrum.in', '__TEAM_SEED_PASSWORD__');
+    const team = await loginAs(TEAM_EMAIL, TEAM_PASSWORD);
     if (!subServiceId) throw new Error('no sub_service available');
     const { data: task } = await sr.from('tasks').insert({
       client_id: clientB.id,
@@ -187,7 +206,7 @@ async function main() {
 
   // Test 8: team can INSERT and UPDATE dsc_records for assigned client
   try {
-    const team = await loginAs('team.demo@fiscalfulcrum.in', '__TEAM_SEED_PASSWORD__');
+    const team = await loginAs(TEAM_EMAIL, TEAM_PASSWORD);
     const { data: inserted, error: insertErr } = await team.from('dsc_records').insert({
       client_id: clientA.id,
       holder_name: 'RLS Test',
@@ -208,7 +227,7 @@ async function main() {
 
   // Test 9: team blocked from INSERT dsc_records for non-assigned client
   try {
-    const team = await loginAs('team.demo@fiscalfulcrum.in', '__TEAM_SEED_PASSWORD__');
+    const team = await loginAs(TEAM_EMAIL, TEAM_PASSWORD);
     const { error } = await team.from('dsc_records').insert({
       client_id: clientB.id,
       holder_name: 'RLS Test Bad',
@@ -224,7 +243,7 @@ async function main() {
 
   // Test 10: team blocked from UPDATE dsc_records client_id to non-assigned client
   try {
-    const team = await loginAs('team.demo@fiscalfulcrum.in', '__TEAM_SEED_PASSWORD__');
+    const team = await loginAs(TEAM_EMAIL, TEAM_PASSWORD);
     const { data: inserted, error: insertErr } = await team.from('dsc_records').insert({
       client_id: clientA.id,
       holder_name: 'RLS Boundary Test',
@@ -246,7 +265,7 @@ async function main() {
 
   // Test 11: admin can INSERT and UPDATE dsc_records for any client
   try {
-    const admin = await loginAs(process.env.ADMIN_SEED_EMAIL || 'info@fiscalfulcrum.in', '__ADMIN_SEED_PASSWORD__');
+    const admin = await loginAs(ADMIN_EMAIL, ADMIN_PASSWORD);
     const { data: inserted, error: insertErr } = await admin.from('dsc_records').insert({
       client_id: clientA.id,
       holder_name: 'RLS Admin Test',
@@ -267,7 +286,7 @@ async function main() {
 
   // Test 12: team can INSERT and UPDATE credentials for assigned client
   try {
-    const team = await loginAs('team.demo@fiscalfulcrum.in', '__TEAM_SEED_PASSWORD__');
+    const team = await loginAs(TEAM_EMAIL, TEAM_PASSWORD);
     const { data: inserted, error: insertErr } = await team.from('credentials').insert({
       client_id: clientA.id,
       portal_name: 'RLS Test Portal',
@@ -285,7 +304,7 @@ async function main() {
 
   // Test 13: admin can INSERT and UPDATE credentials for any client
   try {
-    const admin = await loginAs(process.env.ADMIN_SEED_EMAIL || 'info@fiscalfulcrum.in', '__ADMIN_SEED_PASSWORD__');
+    const admin = await loginAs(ADMIN_EMAIL, ADMIN_PASSWORD);
     const { data: inserted, error: insertErr } = await admin.from('credentials').insert({
       client_id: clientA.id,
       portal_name: 'RLS Admin Portal',
@@ -303,9 +322,9 @@ async function main() {
 
   // Test 14: Audit log captures capability changes
   try {
-    const admin = await loginAs(process.env.ADMIN_SEED_EMAIL || 'info@fiscalfulcrum.in', '__ADMIN_SEED_PASSWORD__');
-    const { data: adminProfile } = await admin.from('users_profile').select('id').eq('email', process.env.ADMIN_SEED_EMAIL || 'info@fiscalfulcrum.in').maybeSingle();
-    const { data: teamProfile } = await admin.from('users_profile').select('id').eq('email', 'team.demo@fiscalfulcrum.in').maybeSingle();
+    const admin = await loginAs(ADMIN_EMAIL, ADMIN_PASSWORD);
+    const { data: adminProfile } = await admin.from('users_profile').select('id').eq('email', ADMIN_EMAIL).maybeSingle();
+    const { data: teamProfile } = await admin.from('users_profile').select('id').eq('email', TEAM_EMAIL).maybeSingle();
     if (adminProfile && teamProfile) {
       // Directly insert an audit row (simulating what setUserCapabilitiesAction does)
       const { error: auditErr } = await sr.from('global_audit_log').insert({
