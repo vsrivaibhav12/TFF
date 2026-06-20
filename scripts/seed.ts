@@ -22,26 +22,6 @@ import { createClient } from '@supabase/supabase-js';
 
 const SEED_TAG = 'PHASE0_DEMO';
 
-function generatePassword(length = 16): string {
-  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  const lower = 'abcdefghijkmnopqrstuvwxyz';
-  const digits = '23456789';
-  const special = '!@#$%^&*';
-  const all = upper + lower + digits + special;
-  let password = '';
-  password += upper[Math.floor(Math.random() * upper.length)];
-  password += lower[Math.floor(Math.random() * lower.length)];
-  password += digits[Math.floor(Math.random() * digits.length)];
-  password += special[Math.floor(Math.random() * special.length)];
-  for (let i = password.length; i < length; i++) {
-    password += all[Math.floor(Math.random() * all.length)];
-  }
-  return password
-    .split('')
-    .sort(() => Math.random() - 0.5)
-    .join('');
-}
-
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -71,26 +51,36 @@ async function upsertProfile(id: string, email: string, full_name: string, role:
   if (error) throw error;
 }
 
+function requireSeedPasswords() {
+  const vars = ['ADMIN_SEED_PASSWORD', 'TEAM_SEED_PASSWORD', 'CLIENT_SEED_PASSWORD'];
+  const missing = vars.filter((v) => !process.env[v]);
+  if (missing.length) {
+    console.error(`Missing seed password env vars: ${missing.join(', ')}. Set them in .env.local.`);
+    process.exit(1);
+  }
+}
+
 async function main() {
   console.log('[seed] starting');
+  requireSeedPasswords();
 
   // 1. Admin
   const adminEmail = process.env.ADMIN_SEED_EMAIL || 'info@fiscalfulcrum.in';
-  const adminPassword = process.env.ADMIN_SEED_PASSWORD || generatePassword();
+  const adminPassword = process.env.ADMIN_SEED_PASSWORD!;
   const adminId = await ensureAuthUser(adminEmail, adminPassword, 'Admin (Fiscal Fulcrum)');
   await upsertProfile(adminId, adminEmail, 'Admin (Fiscal Fulcrum)', 'admin');
   console.log(`[seed] admin: ${adminEmail} / ${adminPassword}`);
 
   // 2. Team
   const teamEmail = 'team.demo@fiscalfulcrum.in';
-  const teamPassword = process.env.TEAM_SEED_PASSWORD || generatePassword();
+  const teamPassword = process.env.TEAM_SEED_PASSWORD!;
   const teamId = await ensureAuthUser(teamEmail, teamPassword, 'Demo Team Member');
   await upsertProfile(teamId, teamEmail, 'Demo Team Member', 'team');
   console.log(`[seed] team:  ${teamEmail} / ${teamPassword}`);
 
   // 3. Client user
   const clientEmail = 'client.demo@fiscalfulcrum.in';
-  const clientPassword = process.env.CLIENT_SEED_PASSWORD || generatePassword();
+  const clientPassword = process.env.CLIENT_SEED_PASSWORD!;
   const clientUserId = await ensureAuthUser(clientEmail, clientPassword, 'Demo Client User');
   await upsertProfile(clientUserId, clientEmail, 'Demo Client User', 'client');
   console.log(`[seed] client:${clientEmail} / ${clientPassword}`);
