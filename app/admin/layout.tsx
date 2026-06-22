@@ -46,6 +46,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: '/admin/services', label: 'Services', icon: 'layers' as const, section: 'System' },
     { href: '/admin/reports', label: 'Reports', icon: 'chart' as const, section: 'System' },
     { href: '/admin/audit', label: 'Audit', icon: 'scroll' as const, section: 'System' },
+    { href: '/admin/super-admins', label: 'Super admins', icon: 'shield' as const, section: 'System' },
     { href: '/admin/settings', label: 'Settings', icon: 'settings' as const, section: 'System' },
   ];
 
