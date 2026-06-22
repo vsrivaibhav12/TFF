@@ -35,7 +35,14 @@ export function formatDateIST(d: string | Date | null | undefined): string {
 
 export function formatTimeIST(d: string | Date | null | undefined): string {
   if (!d) return '—';
-  const date = typeof d === 'string' ? new Date(d) : d;
+  let value = d;
+  if (typeof value === 'string') {
+    // Bare Postgres TIMESTAMP strings have no timezone. Treat them as UTC
+    // because the app previously stored check_in/check_out as toISOString().
+    const hasOffset = /Z$|[+-]\d{2}:?\d{2}$/.test(value);
+    if (!hasOffset) value = `${value}Z`;
+  }
+  const date = typeof value === 'string' ? new Date(value) : value;
   return new Intl.DateTimeFormat('en-IN', {
     hour: '2-digit',
     minute: '2-digit',
@@ -106,11 +113,23 @@ export function todayIST(): string {
 }
 
 /**
- * Returns current IST datetime as an ISO string (with IST offset applied).
+ * Returns current IST datetime as an ISO string with the +05:30 offset.
  * Use for timestamps that should reflect IST wall-clock time.
  */
 export function nowIST(): string {
-  return new Date().toISOString();
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date());
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '00';
+  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}+05:30`;
 }
 
 /**

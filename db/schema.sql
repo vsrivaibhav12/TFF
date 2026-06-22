@@ -1044,8 +1044,8 @@ CREATE TABLE attendance_logs (
   user_id UUID NOT NULL REFERENCES users_profile(id),
   
   attendance_date DATE NOT NULL,
-  check_in_time TIMESTAMP,
-  check_out_time TIMESTAMP,
+  check_in_time TIMESTAMPTZ,
+  check_out_time TIMESTAMPTZ,
   
   status TEXT CHECK (status IN ('present', 'absent', 'leave', 'work_from_home')),
   

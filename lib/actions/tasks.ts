@@ -701,6 +701,23 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
     if (!task) return fail('Task not found', 'NOT_FOUND');
     if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
 
+    const sb = createClient();
+
+    // Validate that a chosen task template belongs to the effective sub-service.
+    const effectiveSubServiceId = updates.sub_service_id !== undefined ? updates.sub_service_id : (task as any).sub_service_id;
+    if (updates.task_template_id) {
+      const { data: tmpl } = await sb.from('task_templates')
+        .select('id, sub_service_id')
+        .eq('id', updates.task_template_id)
+        .eq('is_deleted', false)
+        .eq('is_active', true)
+        .maybeSingle();
+      if (!tmpl) return fail('Selected template not found or inactive', 'NOT_FOUND');
+      if (tmpl.sub_service_id !== effectiveSubServiceId) {
+        return fail('Selected template does not belong to this sub-service', 'VALIDATION');
+      }
+    }
+
     // Regenerate title if sub-service or period changes so the stored title stays consistent.
     const titleNeedsRegen =
       updates.sub_service_id !== undefined ||
@@ -708,7 +725,6 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
       updates.period_month !== undefined ||
       updates.period_quarter !== undefined;
     if (titleNeedsRegen) {
-      const sb = createClient();
       const subServiceId = updates.sub_service_id ?? (task as any).sub_service_id;
       let subServiceName = (task as any).sub_services?.name ?? (task as any).title?.split(' — ')[0] ?? 'Task';
       if (subServiceId) {

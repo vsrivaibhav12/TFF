@@ -6,7 +6,7 @@ import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 import { writeAudit } from '@/lib/services/audit-service';
-import { todayIST } from '@/lib/utils';
+import { todayIST, nowIST } from '@/lib/utils';
 
 const geoSchema = z.object({
   lat: z.number().finite().min(-90).max(90),
@@ -47,7 +47,7 @@ export async function checkInAction(
     }
 
     const today = todayIST();
-    const now = new Date().toISOString();
+    const now = nowIST();
     const { error } = await sb.from('attendance_logs').upsert(
       {
         user_id: me.id,
@@ -77,7 +77,7 @@ export async function checkOutAction(): Promise<ActionResult<void>> {
     const me = await requireRole(['admin', 'team']);
     const sb = createClient();
     const today = todayIST();
-    const now = new Date().toISOString();
+    const now = nowIST();
     const { data: existing } = await sb
       .from('attendance_logs')
       .select('id')
