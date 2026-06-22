@@ -466,8 +466,8 @@ export default function TaskDetailShell({
                     </SelectContent>
                   </Select>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                   </div>
                 </div>
               ) : (
@@ -497,8 +497,8 @@ export default function TaskDetailShell({
                     </SelectContent>
                   </Select>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ task_template_id: selectedTemplateId || null })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ task_template_id: selectedTemplateId || null })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                   </div>
                 </div>
               ) : (
@@ -839,8 +839,8 @@ export default function TaskDetailShell({
                             ))}
                           </SelectContent>
                         </Select>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                       </div>
                     ) : (
                       task.sub_services ? `${task.sub_services.services?.name ?? ''} › ${task.sub_services.name}` : '—'
@@ -864,8 +864,8 @@ export default function TaskDetailShell({
                               ))}
                           </SelectContent>
                         </Select>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ task_template_id: selectedTemplateId || null })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ task_template_id: selectedTemplateId || null })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                       </div>
                     ) : (
                       taskTemplates.find((t: any) => t.id === task.task_template_id)?.title || '—'

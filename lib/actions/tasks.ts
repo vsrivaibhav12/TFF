@@ -749,8 +749,11 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
       updated_at: new Date().toISOString(),
     });
 
-    revalidatePath(`/team/tasks/${task_id}`);
-    revalidatePath(`/admin/tasks/${task_id}`);
+    // Revalidate the task list pages (the [id] routes are only redirects and
+    // should not be revalidated directly).
+    revalidatePath('/admin/tasks');
+    revalidatePath('/team/tasks');
+    revalidatePath('/portal/tasks');
     return ok(undefined);
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
