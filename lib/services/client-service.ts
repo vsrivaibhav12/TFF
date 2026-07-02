@@ -20,6 +20,7 @@ export async function createClientRecord(data: any) {
   if (clientPayload.gstin === '') clientPayload.gstin = null;
   if (clientPayload.primary_contact_email === '') clientPayload.primary_contact_email = null;
   if (clientPayload.group_id === '') clientPayload.group_id = null;
+  if (clientPayload.primary_owner_id === '') clientPayload.primary_owner_id = null;
   if (clientPayload.category === '') clientPayload.category = null;
 
   // Remove portal fields from client insert
@@ -98,6 +99,7 @@ export async function updateClientRecord(id: string, data: any) {
   if (payload.gstin === '') payload.gstin = null;
   if (payload.primary_contact_email === '') payload.primary_contact_email = null;
   if (payload.group_id === '') payload.group_id = null;
+  if (payload.primary_owner_id === '') payload.primary_owner_id = null;
   if (payload.category === '') payload.category = null;
 
   return await clientRepo.updateClientRecord(id, payload);

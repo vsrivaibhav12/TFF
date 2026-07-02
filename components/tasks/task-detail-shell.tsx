@@ -452,7 +452,7 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Service</div>
                 {canEdit && !isClosed && !editingService && (
-                  <button onClick={() => setEditingService(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button onClick={() => setEditingService(true)} className="text-zinc-400 hover:text-zinc-600 opacity-70 hover:opacity-100 transition-opacity" title="Edit service"><Pencil className="h-3 w-3" /></button>
                 )}
               </div>
               {editingService ? (
@@ -482,7 +482,7 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Template</div>
                 {canEdit && !isClosed && !editingTemplate && (
-                  <button onClick={() => setEditingTemplate(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button onClick={() => setEditingTemplate(true)} className="text-zinc-400 hover:text-zinc-600 opacity-70 hover:opacity-100 transition-opacity" title="Edit template"><Pencil className="h-3 w-3" /></button>
                 )}
               </div>
               {editingTemplate ? (
@@ -491,11 +491,15 @@ export default function TaskDetailShell({
                     <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Select template" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="" className="text-xs">None</SelectItem>
-                      {taskTemplates
-                        .filter((t: any) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id))
-                        .map((t: any) => (
+                      {(() => {
+                        const availableTemplates = taskTemplates.filter((t: any) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id));
+                        if (availableTemplates.length === 0) {
+                          return <SelectItem value="__empty__" disabled className="text-xs text-zinc-400">No templates for this sub-service</SelectItem>;
+                        }
+                        return availableTemplates.map((t: any) => (
                           <SelectItem key={t.id} value={t.id} className="text-xs">{t.title}</SelectItem>
-                        ))}
+                        ));
+                      })()}
                     </SelectContent>
                   </Select>
                   <div className="flex gap-1">
@@ -504,7 +508,7 @@ export default function TaskDetailShell({
                   </div>
                 </div>
               ) : (
-                <div className="text-sm font-semibold text-zinc-900">{taskTemplates.find((t: any) => t.id === task.task_template_id)?.title || '—'}</div>
+                <div className="text-sm font-semibold text-zinc-900">{taskTemplates.find((t: any) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-400 font-normal">No template — click to set</span> : '—')}</div>
               )}
             </div>
           </div>
@@ -850,18 +854,22 @@ export default function TaskDetailShell({
                           <SelectTrigger className="h-6 text-[10px] w-44 px-1"><SelectValue placeholder="Select template" /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="" className="text-xs">None</SelectItem>
-                            {taskTemplates
-                              .filter((t: any) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id))
-                              .map((t: any) => (
+                            {(() => {
+                              const availableTemplates = taskTemplates.filter((t: any) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id));
+                              if (availableTemplates.length === 0) {
+                                return <SelectItem value="__empty__" disabled className="text-xs text-zinc-400">No templates for this sub-service</SelectItem>;
+                              }
+                              return availableTemplates.map((t: any) => (
                                 <SelectItem key={t.id} value={t.id} className="text-xs">{t.title}</SelectItem>
-                              ))}
+                              ));
+                            })()}
                           </SelectContent>
                         </Select>
                         <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ task_template_id: selectedTemplateId || null })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
                         <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                       </div>
                     ) : (
-                      taskTemplates.find((t: any) => t.id === task.task_template_id)?.title || '—'
+                      taskTemplates.find((t: any) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-400 font-normal">No template — click to set</span> : '—')
                     )}
                   </dd>
                 </div>
