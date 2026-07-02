@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { DockLink } from '@/components/shell/dock-link';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, AlertTriangle, MessageSquare, Briefcase, ArrowRight } from 'lucide-react';
+import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, AlertTriangle, MessageSquare, Briefcase, ArrowRight, Pencil } from 'lucide-react';
 import AuditTimeline from '@/components/sophistication/audit-timeline';
+import { Button } from '@/components/ui/button';
 import { displayTaskName } from '@/lib/utils';
 import ClientFormWrapper from './client-form-wrapper';
 import ClientServiceManager from '@/app/admin/clients/[id]/service-manager';
@@ -66,21 +67,30 @@ export default function ClientDetailShell({
         <div className="flex-1 min-h-0 flex flex-col gap-4 pb-6 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
           {/* Compact Header */}
           <div className="tff-card p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
-                <Building2 className="h-5 w-5 text-zinc-400" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-base font-semibold tracking-tight text-zinc-900 truncate">{client.business_name}</h1>
-                <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  {client.pan && <span className="text-[11px] text-zinc-500 font-mono">PAN {client.pan}</span>}
-                  {client.gstin && <span className="text-[11px] text-zinc-500 font-mono">GSTIN {client.gstin}</span>}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
+                  <Building2 className="h-5 w-5 text-zinc-400" />
                 </div>
-                <div className="flex items-center gap-2 mt-1.5 text-[11px] text-zinc-400">
-                  {client.city && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{client.city}{client.state ? `, ${client.state}` : ''}</span>}
-                  {client.primary_contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{client.primary_contact_phone}</span>}
+                <div className="min-w-0">
+                  <h1 className="text-base font-semibold tracking-tight text-zinc-900 truncate">{client.business_name}</h1>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    {client.pan && <span className="text-[11px] text-zinc-500 font-mono">PAN {client.pan}</span>}
+                    {client.gstin && <span className="text-[11px] text-zinc-500 font-mono">GSTIN {client.gstin}</span>}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1.5 text-[11px] text-zinc-400">
+                    {client.city && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{client.city}{client.state ? `, ${client.state}` : ''}</span>}
+                    {client.primary_contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{client.primary_contact_phone}</span>}
+                  </div>
                 </div>
               </div>
+              {canEdit && (
+                <Button variant="outline" size="sm" asChild className="shrink-0">
+                  <Link href={`${basePath}/${client.id}/edit`}>
+                    <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
 
@@ -138,6 +148,26 @@ export default function ClientDetailShell({
               </div>
             )}
           </div>
+
+          {/* Profile — editable in the dock for admins/capable users */}
+          {canEdit ? (
+            <div className="tff-card p-4">
+              <h3 className="text-[13px] font-semibold text-zinc-700 mb-3">Profile</h3>
+              <ClientFormWrapper
+                groups={groups}
+                owners={owners}
+                initial={client}
+                basePath={basePath}
+                readOnly={false}
+                canDelete={canDelete}
+              />
+            </div>
+          ) : (
+            <div className="tff-card p-4">
+              <h3 className="text-[13px] font-semibold text-zinc-700 mb-3">Profile</h3>
+              <p className="text-xs text-zinc-500">You do not have permission to edit this client.</p>
+            </div>
+          )}
 
           {/* Services (read-only pills) */}
           <div className="tff-card p-4">
