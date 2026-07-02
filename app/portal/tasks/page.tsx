@@ -11,7 +11,6 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 
-export const dynamic = 'force-dynamic';
 
 export default async function PortalTasks({ searchParams }: { searchParams: { status?: string } }) {
   const me = await requireRole('client');

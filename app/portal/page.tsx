@@ -20,12 +20,12 @@ import {
 import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-container';
 import EmptyState from '@/components/sophistication/empty-state';
 
-export const dynamic = 'force-dynamic';
 
 export default async function ClientPortalDashboard() {
   const me = await requireRole('client');
   const clients = await listAccessibleClients();
   const clientId = clients[0]?.id || '';
+  const clientIds = clients.map((c) => c.id);
 
   // Compute greeting server-side to avoid hydration mismatch
   const hour = new Date().getHours();
@@ -35,15 +35,19 @@ export default async function ClientPortalDashboard() {
 
   const results = await Promise.allSettled([
     clientId ? listTasks({ clientId, limit: 20 }) : Promise.resolve([]),
-    listQueries({ mineOnly: true, userId: me.id }),
+    clientIds.length > 0
+      ? listQueries({ mineOnly: true, userId: me.id, clientIds })
+      : Promise.resolve([]),
     clientId ? bizlensRepo.listReportsByClient(clientId) : Promise.resolve([]),
-    listAllNotices(),
+    clientId ? listAllNotices({ clientId }) : Promise.resolve([]),
+    clientId ? computeComplianceScore(clientId) : Promise.resolve(null),
   ]);
   // Safely unwrap results — individual failures produce empty arrays, not page crashes
   const tasks = results[0].status === 'fulfilled' ? results[0].value : [];
   const queries = results[1].status === 'fulfilled' ? results[1].value : [];
   const bizlensReports = results[2].status === 'fulfilled' ? results[2].value : [];
   const notices = results[3].status === 'fulfilled' ? results[3].value : [];
+  const complianceBreakdown = results[4].status === 'fulfilled' ? results[4].value : null;
 
   const latestReportData = bizlensReports.find((r: any) => r.status === 'published');
   let bizlensSnapshotProps = null;
@@ -60,7 +64,6 @@ export default async function ClientPortalDashboard() {
   const openQueries = queries.filter((q: any) => q.status !== 'resolved' && q.status !== 'closed');
   const openNotices = notices.filter((n) => n.status !== 'closed');
 
-  const complianceBreakdown = clientId ? await computeComplianceScore(clientId) : null;
   const complianceScore = complianceBreakdown?.overall ?? 0;
 
   return (

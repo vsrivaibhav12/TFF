@@ -2,9 +2,9 @@ import Link from 'next/link';
 import { displayTaskName } from '@/lib/utils';
 import { DockLink } from '@/components/shell/dock-link';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { ProgressRing } from '@/components/ui/progress-ring';
 import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, AlertTriangle, MessageSquare, Briefcase, ArrowRight, TrendingUp, Pencil } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import AuditTimeline from '@/components/sophistication/audit-timeline';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
   openTasks: any;
   openNotices: any;
   openQueries: any;
-  canEdit: boolean;
+  canEdit?: boolean;
   basePath: string;
   isModal?: boolean;
 }
@@ -33,7 +33,7 @@ export default function TeamClientDetailShell({
   openTasks,
   openNotices,
   openQueries,
-  canEdit,
+  canEdit = false,
   basePath,
   isModal,
 }: Props) {
@@ -74,7 +74,7 @@ export default function TeamClientDetailShell({
               </div>
               {canEdit && (
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`${basePath}/${client.id}`}><Pencil className="h-4 w-4 mr-1" /> Edit</Link>
+                  <Link href={`/team/clients/${client.id}/edit`}><Pencil className="h-4 w-4 mr-1" /> Edit</Link>
                 </Button>
               )}
             </div>

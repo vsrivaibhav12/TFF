@@ -51,7 +51,10 @@ export async function getComplianceStatusForClients(clientIds: string[]) {
   return result;
 }
 
-export async function listAllUpcomingDueDates(days: number) {
+export async function listAllUpcomingDueDates(
+  days: number,
+  clientIds?: string[]
+) {
   const sb = createClient();
   const { todayIST } = await import('@/lib/utils');
   const from = todayIST();
@@ -59,12 +62,13 @@ export async function listAllUpcomingDueDates(days: number) {
   to.setDate(to.getDate() + days);
   const toStr = to.toISOString().split('T')[0];
 
-  const { data, error } = await sb
+  let query = sb
     .from('compliance_calendar_events')
     .select('due_date, status, period_label, clients!compliance_calendar_events_client_id_fkey(business_name), compliance_calendar_rules!compliance_calendar_events_rule_id_fkey(display_name, service_kind)')
     .gte('due_date', from)
-    .lte('due_date', toStr)
-    .order('due_date');
+    .lte('due_date', toStr);
+  if (clientIds && clientIds.length > 0) query = query.in('client_id', clientIds.slice(0, BATCH_SIZE));
+  const { data, error } = await query.order('due_date');
   if (error) throw error;
 
   type DueItem = { due_date: string; status: string; period_label: string; clients: { business_name: string }; display_name: string };

@@ -53,8 +53,12 @@ function getQuickActions(basePath: string, role: string): CmdItem[] {
       { id: 'act-new-task', label: 'Create new task', group: 'Actions', href: `${basePath}/tasks/bulk-create`, icon: <Plus className="h-3.5 w-3.5" />, keywords: 'add create task new' },
       { id: 'act-new-client', label: 'Add new client', group: 'Actions', href: `${basePath}/clients`, icon: <Plus className="h-3.5 w-3.5" />, keywords: 'add client onboard' },
       { id: 'act-attendance', label: 'Mark attendance', group: 'Actions', href: `${basePath}/attendance`, icon: <ClipboardList className="h-3.5 w-3.5" />, keywords: 'punch check in' },
-      { id: 'act-compliance', label: 'Compliance dashboard', group: 'Navigation', href: `${basePath}/compliance`, icon: <BarChart3 className="h-3.5 w-3.5" /> },
     );
+    if (role === 'admin') {
+      actions.unshift(
+        { id: 'act-compliance', label: 'Compliance dashboard', group: 'Navigation', href: `${basePath}/compliance`, icon: <BarChart3 className="h-3.5 w-3.5" /> },
+      );
+    }
   }
   return actions;
 }
@@ -130,7 +134,6 @@ function parseNaturalLanguage(query: string, basePath: string, role: string): Sm
       'billing': `${basePath}/billing`,
       'bizlens': `${basePath}/bizlens`,
       'vcfo': `${basePath}/vcfo`,
-      'team': `${basePath}/team`,
       'attendance': `${basePath}/attendance`,
       'leave': `${basePath}/leave`,
       'approvals': `${basePath}/approvals`,
@@ -138,9 +141,16 @@ function parseNaturalLanguage(query: string, basePath: string, role: string): Sm
       'settings': `${basePath}/settings`,
       'reports': `${basePath}/reports`,
       'audit': `${basePath}/audit`,
-      'compliance': role === 'client' ? '/portal/calendar' : `${basePath}/compliance`,
-      'calendar': role === 'client' ? '/portal/calendar' : `${basePath}/compliance`,
     };
+    if (role === 'admin') {
+      pageMap['team'] = `${basePath}/team`;
+      pageMap['compliance'] = `${basePath}/compliance`;
+      pageMap['calendar'] = `${basePath}/compliance`;
+    }
+    if (role === 'client') {
+      pageMap['compliance'] = '/portal/calendar';
+      pageMap['calendar'] = '/portal/calendar';
+    }
     for (const [key, href] of Object.entries(pageMap)) {
       if (page.includes(key)) {
         return {
@@ -269,9 +279,9 @@ function parseNaturalLanguage(query: string, basePath: string, role: string): Sm
     };
   }
 
-  // "compliance this month" / "due this month"
+  // "compliance this month" / "due this month" (admin only; portal uses calendar)
   const monthMatch = q.match(/(?:compliance|tasks?|filings?)\s+(?:this month|due this month)/);
-  if (monthMatch) {
+  if (monthMatch && role === 'admin') {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
@@ -384,8 +394,10 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
         for (const n of j.notices ?? []) {
           out.push({ id: `notice-${n.id}`, label: n.subject, group: 'Notices', href: `${basePath}/notices`, icon: <BellRing className="h-3.5 w-3.5" />, keywords: `${n.client_name} ${n.notice_type}` });
         }
-        for (const u of j.team ?? []) {
-          out.push({ id: `team-${u.id}`, label: u.full_name, group: 'Team', href: `${basePath}/team/${u.id}`, icon: <UserCircle className="h-3.5 w-3.5" />, keywords: u.email });
+        if (role === 'admin') {
+          for (const u of j.team ?? []) {
+            out.push({ id: `team-${u.id}`, label: u.full_name, group: 'Team', href: `${basePath}/team/${u.id}`, icon: <UserCircle className="h-3.5 w-3.5" />, keywords: u.email });
+          }
         }
         for (const c of j.credentials ?? []) {
           out.push({ id: `cred-${c.id}`, label: c.portal_name, group: 'Credentials', href: `${basePath}/credentials?q=${encodeURIComponent(c.portal_name)}`, icon: <Key className="h-3.5 w-3.5" />, keywords: c.client_name });
@@ -395,7 +407,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
         setItems([]);
       }
     });
-  }, [q, open, basePath]);
+  }, [q, open, basePath, role]);
 
   // Merge quick actions (filtered) + search results
   const ql = q.toLowerCase().trim();

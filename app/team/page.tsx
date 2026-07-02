@@ -1,14 +1,12 @@
+import { Suspense } from 'react';
 import { requireRole } from '@/lib/auth/require-role';
 import { hasCapability } from '@/lib/auth/require-capability';
-import { listTasks, countTasksByStatus, countOverdueTasks } from '@/lib/repositories/tasks';
+import { listTasks, countTasksByStatus, countOverdueTasks, enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { listLeaveRequests } from '@/lib/repositories/leave';
 import { listPermissionRequests } from '@/lib/repositories/permission';
 import { getDirectReports } from '@/lib/repositories/staff';
 import { getTodayAttendance } from '@/lib/repositories/attendance';
-
-
-import { enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import Link from 'next/link';
 import { DockLink } from '@/components/shell/dock-link';
 import {
@@ -27,16 +25,37 @@ import { PriorityList } from '@/components/dashboard/priority-list';
 import { TeamAttendancePrompt } from '@/components/dashboard/smart-prompts';
 import { TeamQuickActions } from '@/components/dashboard/team-quick-actions';
 
-export const dynamic = 'force-dynamic';
-
 export default async function TeamWorkspace() {
   const me = await requireRole(['team', 'admin']);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">My workspace</h1>
+          <p className="text-sm text-zinc-500 mt-1">Your tasks, clients and approvals in one place.</p>
+        </div>
+      </div>
+
+      <TeamQuickActions />
+
+      <Suspense fallback={<WorkspaceSkeleton />}>
+        <WorkspaceBody me={me} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole>> }) {
   const isAdmin = me.role === 'admin';
-  const directReports = isAdmin ? [] : await getDirectReports(me.id);
+
+  const [directReports, canApproveLeave, canApprovePermission, canApproveAttendance] = await Promise.all([
+    isAdmin ? Promise.resolve([]) : getDirectReports(me.id),
+    hasCapability(me, 'leave.approve'),
+    hasCapability(me, 'permission.approve'),
+    hasCapability(me, 'attendance.approve'),
+  ]);
   const isManager = directReports.length > 0;
-  const canApproveLeave = await hasCapability(me, 'leave.approve');
-  const canApprovePermission = await hasCapability(me, 'permission.approve');
-  const canApproveAttendance = await hasCapability(me, 'attendance.approve');
   const canSeeApprovals = canApproveLeave || canApprovePermission || canApproveAttendance || isManager;
 
   const [counts, overdueCount, dueSoonRaw, clients, pendingLeaveAll, pendingPermissionAll, todayAttendance] = await Promise.all([
@@ -50,7 +69,6 @@ export default async function TeamWorkspace() {
   ]);
 
   const dueSoon = await enrichTasksWithProgress(dueSoonRaw ?? []);
-
 
   const reportIds = directReports.map((r) => r.id);
   let pendingApprovalsCount = 0;
@@ -69,26 +87,13 @@ export default async function TeamWorkspace() {
   return (
     <StaggerContainer className="space-y-6">
       <TeamAttendancePrompt hasAttendance={!!todayAttendance} />
-      {/* Header */}
+
       <StaggerItem>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">My workspace</h1>
-            <p className="text-sm text-zinc-500 mt-1">
-              <span className="tabular-nums">{totalAssigned}</span> tasks assigned · {overdueCount > 0 ? <><span className="tabular-nums">{overdueCount}</span> overdue</> : 'All on track'}
-            </p>
-          </div>
-        </div>
+        <p className="text-sm text-zinc-500">
+          <span className="tabular-nums">{totalAssigned}</span> tasks assigned · {overdueCount > 0 ? <><span className="tabular-nums">{overdueCount}</span> overdue</> : 'All on track'}
+        </p>
       </StaggerItem>
 
-      {/* Quick Actions */}
-      <StaggerItem>
-        <TeamQuickActions />
-      </StaggerItem>
-
-
-
-      {/* Metrics */}
       <StaggerItem>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
@@ -116,7 +121,6 @@ export default async function TeamWorkspace() {
         </div>
       </StaggerItem>
 
-      {/* Manager approval alert */}
       {canSeeApprovals && pendingApprovalsCount > 0 && (
         <StaggerItem>
           <Link
@@ -141,16 +145,12 @@ export default async function TeamWorkspace() {
         </StaggerItem>
       )}
 
-      {/* Tasks + Compliance grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <StaggerItem className="xl:col-span-2">
           <PriorityList tasks={dueSoon} href="/team/tasks" emptyMessage="No pending tasks" />
         </StaggerItem>
-
-
       </div>
 
-      {/* My clients quick access */}
       <StaggerItem>
         <div className="tff-card tff-card-pad">
           <div className="flex items-center justify-between mb-5">
@@ -195,5 +195,19 @@ export default async function TeamWorkspace() {
         </div>
       </StaggerItem>
     </StaggerContainer>
+  );
+}
+
+function WorkspaceSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="tff-card p-3 h-24 bg-zinc-50" />
+        ))}
+      </div>
+      <div className="tff-card h-64 bg-zinc-50" />
+      <div className="tff-card h-48 bg-zinc-50" />
+    </div>
   );
 }

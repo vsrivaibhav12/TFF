@@ -16,11 +16,13 @@ interface ClientFormProps {
   owners: { id: string; full_name: string; email: string }[];
   initial?: any;
   readOnly?: boolean;
+  canDelete?: boolean;
+  redirectTo?: string;
   onSuccess?: (clientId?: string) => void;
   onDeleteSuccess?: () => void;
 }
 
-export default function ClientForm({ groups, owners, initial, readOnly = false, onSuccess, onDeleteSuccess }: ClientFormProps) {
+export default function ClientForm({ groups, owners, initial, readOnly = false, canDelete = false, redirectTo, onSuccess, onDeleteSuccess }: ClientFormProps) {
   const router = useRouter();
   const isEdit = !!initial?.id;
   const [loading, setLoading] = useState(false);
@@ -66,6 +68,8 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
     toast.success(isEdit ? 'Client updated' : 'Client created');
     if (onSuccess) {
       onSuccess(isEdit ? initial.id : (result as any).data?.id);
+    } else if (redirectTo) {
+      router.push(redirectTo);
     } else {
       router.push(isEdit ? `/admin/clients/${initial.id}` : `/admin/clients/${(result as any).data.id}`);
     }
@@ -190,7 +194,7 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
           <Button type="submit" disabled={loading} data-testid="client-submit">
             {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving</> : isEdit ? 'Save changes' : 'Create client'}
           </Button>
-          {isEdit && (
+          {isEdit && canDelete && (
             <Button type="button" variant="destructive" disabled={loading} onClick={onDelete} data-testid="client-delete">
               Delete client
             </Button>

@@ -22,6 +22,7 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'clients.read.all');
   const canAssignServices = await hasCapability(me, 'services.assign');
+  const canDelete = await hasCapability(me, 'clients.delete');
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
 
@@ -125,7 +126,7 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
         />
       ) : (
         <>
-          <ClientsTableClient clients={enrichedClients as any} showBulkAssign={canAssignServices} />
+          <ClientsTableClient clients={enrichedClients as any} showBulkAssign={canAssignServices} canDelete={canDelete} />
 
           {/* Pagination controls */}
           {totalPages > 1 && (

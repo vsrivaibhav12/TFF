@@ -77,10 +77,12 @@ function ComplianceDots({ gst, tds, it }: { gst: string; tds: string; it: string
 export default function ClientsTableClient({
   clients,
   showBulkAssign = false,
+  canDelete = false,
   groups,
 }: {
   clients: EnrichedClient[];
   showBulkAssign?: boolean;
+  canDelete?: boolean;
   groups?: { id: string; name: string }[];
 }) {
   const router = useRouter();
@@ -207,36 +209,42 @@ export default function ClientsTableClient({
   return (
     <div className="space-y-4">
       <ConfirmDialog />
-      <BulkActionsBar
-        ids={Array.from(selectedIds)}
-        onClear={() => setSelectedIds(new Set())}
-        actions={[
-          {
-            type: 'button',
-            label: 'Delete clients',
-            icon: Trash2,
-            variant: 'danger',
-            onApply: async () => {
-              const ok = await confirm({
-                title: 'Delete Clients',
-                description: `Are you sure you want to delete ${selectedIds.size} client(s)?`,
-              });
-              if (!ok) return { success: 0, failed: 0 };
+      {(canDelete || showBulkAssign) && (
+        <BulkActionsBar
+          ids={Array.from(selectedIds)}
+          onClear={() => setSelectedIds(new Set())}
+          actions={[
+            ...(canDelete
+              ? [
+                  {
+                    type: 'button' as const,
+                    label: 'Delete clients',
+                    icon: Trash2,
+                    variant: 'danger' as const,
+                    onApply: async () => {
+                      const ok = await confirm({
+                        title: 'Delete Clients',
+                        description: `Are you sure you want to delete ${selectedIds.size} client(s)?`,
+                      });
+                      if (!ok) return { success: 0, failed: 0 };
 
-              const result = await bulkDeleteClients({ clientIds: Array.from(selectedIds) });
-              if (!result.success) throw new Error(result.error);
-              return { success: selectedIds.size, failed: 0 };
-            },
-          },
-        ]}
-      >
-        {showBulkAssign && (
-          <BulkAssignSubService
-            selectedClientIds={Array.from(selectedIds)}
-            onDone={() => setSelectedIds(new Set())}
-          />
-        )}
-      </BulkActionsBar>
+                      const result = await bulkDeleteClients({ clientIds: Array.from(selectedIds) });
+                      if (!result.success) throw new Error(result.error);
+                      return { success: selectedIds.size, failed: 0 };
+                    },
+                  },
+                ]
+              : []),
+          ]}
+        >
+          {showBulkAssign && (
+            <BulkAssignSubService
+              selectedClientIds={Array.from(selectedIds)}
+              onDone={() => setSelectedIds(new Set())}
+            />
+          )}
+        </BulkActionsBar>
+      )}
 
       {/* Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

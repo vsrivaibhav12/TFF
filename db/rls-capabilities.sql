@@ -718,37 +718,47 @@ CREATE POLICY "solution_log_team_update" ON solution_log
   );
 
 -- ============================================================================
--- DOCUMENTS
+-- DOCUMENTS (guard: table may have been removed in older environments)
 -- ============================================================================
 
-DROP POLICY IF EXISTS "documents_team_view" ON documents;
-DROP POLICY IF EXISTS "documents_team_select" ON documents;
-CREATE POLICY "documents_team_select" ON documents
-  FOR SELECT TO authenticated
-  USING (
-    public.current_user_role() = 'team'
-    AND visible_to_team = TRUE
-    AND (
-      client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
-      OR public.user_has_capability('clients.read.all')
-    )
-  );
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'documents') THEN
+    DROP POLICY IF EXISTS "documents_team_view" ON documents;
+    DROP POLICY IF EXISTS "documents_team_select" ON documents;
+    CREATE POLICY "documents_team_select" ON documents
+      FOR SELECT TO authenticated
+      USING (
+        public.current_user_role() = 'team'
+        AND visible_to_team = TRUE
+        AND (
+          client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+          OR public.user_has_capability('clients.read.all')
+        )
+      );
+  END IF;
+END $$;
 
 -- ============================================================================
--- CLIENT COMMUNICATION LOG
+-- CLIENT COMMUNICATION LOG (guard: table may have been removed)
 -- ============================================================================
 
-DROP POLICY IF EXISTS "communication_log_team_view" ON client_communication_log;
-DROP POLICY IF EXISTS "communication_log_team_select" ON client_communication_log;
-CREATE POLICY "communication_log_team_select" ON client_communication_log
-  FOR SELECT TO authenticated
-  USING (
-    public.current_user_role() = 'team'
-    AND (
-      client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
-      OR public.user_has_capability('clients.read.all')
-    )
-  );
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'client_communication_log') THEN
+    DROP POLICY IF EXISTS "communication_log_team_view" ON client_communication_log;
+    DROP POLICY IF EXISTS "communication_log_team_select" ON client_communication_log;
+    CREATE POLICY "communication_log_team_select" ON client_communication_log
+      FOR SELECT TO authenticated
+      USING (
+        public.current_user_role() = 'team'
+        AND (
+          client_id IN (SELECT client_id FROM team_client_assignment WHERE team_user_id = auth.uid())
+          OR public.user_has_capability('clients.read.all')
+        )
+      );
+  END IF;
+END $$;
 
 -- ============================================================================
 -- CLIENT PORTAL VISIBILITY
@@ -875,18 +885,23 @@ CREATE POLICY "payroll_runs_team_mutate" ON payroll_runs
     AND public.user_has_capability('payroll.run')
   );
 
--- payroll_adjustments: team with payroll.run can manage
-DROP POLICY IF EXISTS "payroll_adj_team_mutate" ON payroll_adjustments;
-CREATE POLICY "payroll_adj_team_mutate" ON payroll_adjustments
-  FOR ALL TO authenticated
-  USING (
-    public.current_user_role() = 'team'
-    AND public.user_has_capability('payroll.run')
-  )
-  WITH CHECK (
-    public.current_user_role() = 'team'
-    AND public.user_has_capability('payroll.run')
-  );
+-- payroll_adjustments: team with payroll.run can manage (guard: table may have been removed)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'payroll_adjustments') THEN
+    DROP POLICY IF EXISTS "payroll_adj_team_mutate" ON payroll_adjustments;
+    CREATE POLICY "payroll_adj_team_mutate" ON payroll_adjustments
+      FOR ALL TO authenticated
+      USING (
+        public.current_user_role() = 'team'
+        AND public.user_has_capability('payroll.run')
+      )
+      WITH CHECK (
+        public.current_user_role() = 'team'
+        AND public.user_has_capability('payroll.run')
+      );
+  END IF;
+END $$;
 
 -- ============================================================================
 -- LEAVE & ATTENDANCE
@@ -958,39 +973,51 @@ CREATE POLICY "compliance_insights_team_mutate" ON compliance_insights
   );
 
 -- ============================================================================
--- VENDORS
+-- VENDORS (guard: table may have been removed)
 -- ============================================================================
 
--- vendors: team with clients.read.all can read all (vendors are client-linked)
-DROP POLICY IF EXISTS "vendors_team_read" ON vendors;
-CREATE POLICY "vendors_team_read" ON vendors
-  FOR SELECT TO authenticated
-  USING (
-    public.current_user_role() = 'team'
-    AND public.user_has_capability('clients.read.all')
-  );
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'vendors') THEN
+    DROP POLICY IF EXISTS "vendors_team_read" ON vendors;
+    CREATE POLICY "vendors_team_read" ON vendors
+      FOR SELECT TO authenticated
+      USING (
+        public.current_user_role() = 'team'
+        AND public.user_has_capability('clients.read.all')
+      );
+  END IF;
+END $$;
 
 -- ============================================================================
--- ENGAGEMENT LETTERS & LIFECYCLE
+-- ENGAGEMENT LETTERS & LIFECYCLE (guard: tables may have been removed)
 -- ============================================================================
 
--- engagement_letters: team with clients.read.all can read all
-DROP POLICY IF EXISTS "engagement_letters_team_read" ON engagement_letters;
-CREATE POLICY "engagement_letters_team_read" ON engagement_letters
-  FOR SELECT TO authenticated
-  USING (
-    public.current_user_role() = 'team'
-    AND public.user_has_capability('clients.read.all')
-  );
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'engagement_letters') THEN
+    DROP POLICY IF EXISTS "engagement_letters_team_read" ON engagement_letters;
+    CREATE POLICY "engagement_letters_team_read" ON engagement_letters
+      FOR SELECT TO authenticated
+      USING (
+        public.current_user_role() = 'team'
+        AND public.user_has_capability('clients.read.all')
+      );
+  END IF;
+END $$;
 
--- client_lifecycle_stage: team with clients.read.all can read all
-DROP POLICY IF EXISTS "client_lifecycle_team_read" ON client_lifecycle_stage;
-CREATE POLICY "client_lifecycle_team_read" ON client_lifecycle_stage
-  FOR SELECT TO authenticated
-  USING (
-    public.current_user_role() = 'team'
-    AND public.user_has_capability('clients.read.all')
-  );
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'client_lifecycle_stage') THEN
+    DROP POLICY IF EXISTS "client_lifecycle_team_read" ON client_lifecycle_stage;
+    CREATE POLICY "client_lifecycle_team_read" ON client_lifecycle_stage
+      FOR SELECT TO authenticated
+      USING (
+        public.current_user_role() = 'team'
+        AND public.user_has_capability('clients.read.all')
+      );
+  END IF;
+END $$;
 
 -- ============================================================================
 -- GRANTS
@@ -1094,14 +1121,19 @@ CREATE POLICY "sub_services_team_view_select" ON sub_services
     AND public.user_has_capability('services.view')
   );
 
--- DOCUMENTS: team with documents.view can read
-DROP POLICY IF EXISTS "documents_team_view_select" ON documents;
-CREATE POLICY "documents_team_view_select" ON documents
-  FOR SELECT TO authenticated
-  USING (
-    public.current_user_role() = 'team'
-    AND public.user_has_capability('documents.view')
-  );
+-- DOCUMENTS: team with documents.view can read (guard: table may have been removed)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'documents') THEN
+    DROP POLICY IF EXISTS "documents_team_view_select" ON documents;
+    CREATE POLICY "documents_team_view_select" ON documents
+      FOR SELECT TO authenticated
+      USING (
+        public.current_user_role() = 'team'
+        AND public.user_has_capability('documents.view')
+      );
+  END IF;
+END $$;
 
 -- COMPLIANCE INSIGHTS: team with insights.view can read
 DROP POLICY IF EXISTS "insights_team_view_select" ON compliance_insights;

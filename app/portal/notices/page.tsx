@@ -1,4 +1,6 @@
 import { ensureModuleVisible } from '@/lib/auth/portal-visibility';
+import { requireRole } from '@/lib/auth/require-role';
+import { listAccessibleClients } from '@/lib/repositories/clients';
 import { listAllNotices } from '@/lib/repositories/notices';
 import { Badge } from '@/components/ui/badge';
 import { formatDateIST, formatCurrencyINR } from '@/lib/utils';
@@ -6,11 +8,13 @@ import { ScrollText } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import ExportButton from '@/components/sophistication/export-button';
 
-export const dynamic = 'force-dynamic';
 
 export default async function PortalNoticesPage() {
   await ensureModuleVisible('portal.notices');
-  const items = await listAllNotices();
+  const me = await requireRole('client');
+  const clients = await listAccessibleClients();
+  const clientIds = clients.map((c) => c.id);
+  const items = clientIds.length > 0 ? await listAllNotices({ clientIds }) : [];
 
   const exportData = items.map((n: any) => ({
     notice_type: n.notice_type,

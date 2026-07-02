@@ -107,6 +107,7 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
   const canImport = me ? await hasCapability(me, 'tasks.create') : false; // reuse create cap until import cap exists
   const canEdit = me ? await hasCapability(me, 'tasks.edit') : false;
   const canComplete = me ? await hasCapability(me, 'tasks.complete') : false;
+  const canDelete = me ? await hasCapability(me, 'tasks.delete') : false;
 
   return (
     <PullToRefreshWrapper>
@@ -159,7 +160,7 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
         ) : (
           <>
             <TaskViewWrapper tasks={tasks ?? []} hrefPrefix="/team/tasks">
-              <TasksTableClient tasks={tasks ?? []} todayIso={todayIso} canEdit={canEdit} canComplete={canComplete} />
+              <TasksTableClient tasks={tasks ?? []} todayIso={todayIso} canEdit={canEdit} canComplete={canComplete} canDelete={canDelete} />
             </TaskViewWrapper>
 
             {/* Pagination */}

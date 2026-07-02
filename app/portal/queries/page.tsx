@@ -12,14 +12,15 @@ import EmptyState from '@/components/sophistication/empty-state';
 import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 import ExportButton from '@/components/sophistication/export-button';
 
-export const dynamic = 'force-dynamic';
 
 export default async function PortalQueries() {
   const me = await requireRole('client');
-  const [items, clients] = await Promise.all([
-    listQueries({ mineOnly: true, userId: me.id }),
-    listAccessibleClients(),
-  ]);
+  const clients = await listAccessibleClients();
+  const clientIds = clients.map((c) => c.id);
+  const items =
+    clientIds.length > 0
+      ? await listQueries({ mineOnly: true, userId: me.id, clientIds })
+      : [];
 
   const exportData = items.map((q: any) => ({
     subject: q.subject,

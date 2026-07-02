@@ -18,7 +18,7 @@ import { ResizableTableHead } from '@/components/ui/resizable-table-head';
 import { useColumnWidths } from '@/lib/hooks/use-column-widths';
 import { formatDateIST, cn, displayTaskName } from '@/lib/utils';
 import {
-  Search, Filter, AlertTriangle, Building2, ArrowUpRight, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck,
+  Search, Filter, AlertTriangle, Building2, ArrowUpRight, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck, Trash2,
 } from 'lucide-react';
 import { TaskLabelPills } from '@/components/tasks/task-label-pills';
 import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
@@ -63,7 +63,7 @@ const DEFAULT_COLUMNS = [
   { key: 'actions', label: 'Actions', visible: true, optional: false },
 ];
 
-export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task[]; todayIso: string; team?: { id: string; full_name: string }[] }) {
+export default function TasksTable({ tasks, todayIso, team = [], canDelete = false }: { tasks: Task[]; todayIso: string; team?: { id: string; full_name: string }[]; canDelete?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -509,12 +509,15 @@ export default function TasksTable({ tasks, todayIso, team = [] }: { tasks: Task
             ],
             onApply: bulkUpdateBillable,
           },
-          {
-            type: 'button',
-            label: 'Delete',
-            variant: 'danger',
-            onApply: bulkDeleteTasks,
-          }
+          ...(canDelete
+            ? [{
+                type: 'button' as const,
+                label: 'Delete',
+                icon: Trash2,
+                variant: 'danger' as const,
+                onApply: bulkDeleteTasks,
+              }]
+            : []),
         ]}
       />
     </div>

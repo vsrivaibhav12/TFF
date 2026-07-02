@@ -23,6 +23,7 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
   const me = await requireRole(['admin', 'team']);
   const canCreate = await hasCapability(me, 'clients.create');
   const canAssignServices = await hasCapability(me, 'services.assign');
+  const canDelete = await hasCapability(me, 'clients.delete');
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
 
@@ -123,7 +124,7 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
         />
       ) : (
         <>
-          <ClientsTableClient clients={enrichedClients} groups={groups} />
+          <ClientsTableClient clients={enrichedClients} groups={groups} canDelete={canDelete} />
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">

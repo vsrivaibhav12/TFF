@@ -1,3 +1,4 @@
+<!-- AGENTS.md — The Fiscal Fulcrum Portal -->
 # AGENTS.md — The Fiscal Fulcrum Portal
 
 > This file is written for AI coding agents. It assumes you know nothing about the project. Read this first before modifying any code.
@@ -6,14 +7,14 @@
 
 ## Project Overview
 
-**The Fiscal Fulcrum (TFF)** is a single-tenant operations portal for an Indian CA/CS practice. It is **not** a multi-tenant SaaS — it serves one firm and that firm's clients.
+**The Fiscal Fulcrum (TFF)** is a single-tenant operations portal for an Indian CA/CS practice based in Coimbatore. It is **not** a multi-tenant SaaS — it serves one firm and that firm's clients.
 
 The portal supports three user roles:
-- **admin** — firm owners; full access
-- **team** — staff members; access scoped by client assignment + capability grants
-- **client** — external business clients; access scoped to their own data + portal visibility settings
+- **admin** — firm owners; full access and every capability implicitly.
+- **team** — staff members; access scoped by client assignment + capability grants.
+- **client** — external business clients; access scoped to their own data + portal visibility settings.
 
-Key functional modules: client management, task engine, compliance tracking (GST/TDS/IT), document vault, credentials vault, DSC tracker, payroll, attendance/leave, vCFO advisory, BizLens financial intelligence, notice tracker, query messenger, and insight engine.
+Key functional modules: client management, task engine, compliance tracking (GST/TDS/IT), document vault, credentials vault, DSC tracker, payroll, attendance/leave, vCFO advisory, BizLens financial intelligence, notice tracker, query messenger, unified inbox, and insight engine.
 
 Production target: `https://portal.fiscalfulcrum.in` deployed on Vercel.
 
@@ -32,13 +33,15 @@ Production target: `https://portal.fiscalfulcrum.in` deployed on Vercel.
 | Validation | Zod |
 | Forms | React Hook Form + `@hookform/resolvers` |
 | Email | Resend |
-| Charts | Recharts |
-| Tables | `@tanstack/react-table` |
+| Charts | Recharts, ECharts |
+| Tables | `@tanstack/react-table` + `@tanstack/react-virtual` |
+| Drag-and-drop | `@dnd-kit/*` |
 | Toast | Sonner |
-| Test Runner | Node.js native test runner (`node:test`) |
-| Dev Proxy | FastAPI (`backend/server.py`) + Node proxy (`proxy.js`) |
+| Test Runner | Node.js native test runner (`node:test`) with `tsx` |
+| Dev Proxy | Node `proxy.js` (8001 → 3000) and `frontend-proxy.js` (3000 → 3001) |
+| FastAPI Proxy | `backend/server.py` (8001 → 3001 by default, dev-only) |
 
-No ESLint or Prettier configuration files are present in the repo. `next lint` is available via `npm run lint`.
+ESLint is configured via `.eslintrc.json` extending `next/core-web-vitals`. No Prettier configuration is present.
 
 ---
 
@@ -46,54 +49,86 @@ No ESLint or Prettier configuration files are present in the repo. `next lint` i
 
 ```
 /app                 # Next.js App Router
-  /account           # Self-service pages (notifications prefs, etc.)
-  /admin             # Admin panel (role-gated)
-  /api               # API routes (cron, webhooks, search)
+  /(marketing)       # Public marketing pages: /, /about, /cbam, /compliance, /contact,
+                     # /insights, /pricing, /process-controls, /virtual-cfo
+  /account           # Self-service pages (notifications preferences, etc.)
+  /admin             # Admin panel (role-gated, full nav)
+  /api               # API routes (cron, cmdk search, notifications, services, etc.)
     /cron            # Vercel Cron endpoints
-  /legal             # Static legal pages (privacy, terms)
-  /login             # Sign-in page
-  /portal            # Client portal (role-gated)
-  /team              # Team workspace (role-gated)
+  /legal             # Static legal pages (privacy, terms, SLA, engagement)
+  /login             # Sign-in page (+ forgot password)
+  /portal            # Client portal (role-gated, mobile-first)
+  /team              # Team workspace (role-gated, desktop-first)
   globals.css        # Tailwind directives + CSS variables
-  layout.tsx         # Root layout (Inter font, Sonner Toaster)
-  page.tsx           # Role-based redirect hub
+  layout.tsx         # Root layout (Inter font, Sonner Toaster, SWR + Dock providers)
+  page.tsx           # Role-based redirect hub or marketing home
 
 /components          # React components by domain
+  /billing           # Billing and invoice components
   /bizlens           # BizLens output dashboard + tabs
+  /charts            # Reusable chart wrappers
+  /clients           # Client forms, tables, hover cards
+  /credentials       # Credentials vault UI
+  /dashboard         # Admin/team dashboard widgets
+  /dsc               # DSC tracker
+  /gst               # GST data entry and views
+  /hearings          # Hearing management
+  /inbox             # Unified inbox components
   /insights          # Inline insight strips
-  /operations        # Compliance calendar, BizLens input form
+  /motion            # Framer Motion wrappers
+  /notices           # Notice tracker
+  /operations        # Compliance calendar, BizLens input form, vCFO
+  /payroll           # Payroll UI
   /portal            # Client portal-specific components
-  /shell             # AppShell, command palette, notifications bell
-  /sophistication    # Saved views, bulk actions, audit timeline, etc.
-  /tasks             # Task dialogs, steps panel, work-done panel
+  /queries           # Query messenger
+  /reports           # Report pages
+  /services          # Service catalogue
+  /settings          # Settings forms
+  /shell             # AppShell, command palette, notifications bell, dock, mobile nav
+  /site              # Marketing site components
+  /sophistication    # Saved views, bulk actions, audit timeline, editable cells
+  /tasks             # Task dialogs, steps panel, work-done panel, Kanban
+  /tax-projections   # Tax projection UI
+  /team              # Team-specific components
   /ui                # shadcn/ui primitives (Button, Card, Dialog, etc.)
+  /vcfo              # vCFO advisory UI
 
 /lib                 # All server-side logic lives here
   /actions           # Server Actions — thin wrappers over services
-  /auth              # Auth helpers (requireRole, requireCapability, portal visibility)
+  /auth              # Auth helpers (requireRole, requireCapability, portal visibility, nav gating)
   /crypto            # AES-256-GCM encrypt/decrypt for credentials vault
   /email             # Resend client and send helpers
+  /hooks             # Shared React hooks (auto-save, cmdk, keyboard shortcuts, etc.)
   /repositories      # DB access only — no business logic
   /services          # Business logic — testable, no HTTP
+  /state             # Global React context state (dock, recent items)
   /supabase          # Supabase clients (server, service-role, middleware)
   /validation        # Zod schemas
-  utils.ts           # cn() helper, INR currency formatter, IST date formatter
+  /utils.ts          # cn() helper, INR currency formatter, IST date helpers
 
 /db                  # SQL schema and migrations
   schema.sql           # Base schema v3 (locked)
   schema-additions.sql # v3.1 additive tables (capabilities, portal visibility, notification prefs)
+  schema-v3-3.sql      # Additional schema additions
+  schema-v3-4.sql      # Further schema additions
+  schema-bizlens.sql   # BizLens tables
+  schema-hr-tables.sql # Attendance / leave / permission tables
+  schema-unified-inbox.sql # Unified inbox view
+  schema-weekly-approval.sql # Weekly approval tables
   rls-additive.sql     # Row Level Security policies
-  seed-compliance-rules.sql
-  schema-bizlens.sql
-  schema-v3-3.sql
+  rls-capabilities.sql # Capability-related RLS
+  seed-compliance-rules.sql # Compliance rule seed data
 
 /scripts             # TypeScript one-off scripts (seed, schema apply, migrations, RLS tests)
 
-/backend             # FastAPI dev proxy (forwards /api/* from port 8001 -> 3000)
+/backend             # FastAPI dev proxy (forwards /api/* from port 8001 → 3001)
   server.py
   requirements.txt
 
-/legacy-bizlens      # Old iframe-based BizLens (deprecated, paths vacant)
+/frontend            # Container shim only
+  package.json       # Runs /app/frontend-proxy.js in Emergent/K8s dev environment
+
+/legacy-bizlens      # Deprecated path; no longer present
 
 /memory              # Design docs and architecture decisions
   DESIGN_SYSTEM.md
@@ -128,26 +163,63 @@ npm run start
 # Lint
 npm run lint
 
-# Proxy for Emergent dev environment (port 8001 -> 3000)
+# Dev proxy (Emergent environment): forwards port 8001 → Next.js on 3000
 npm run proxy
 
 # Database scripts (all use tsx + dotenv)
 npm run db:apply-schema              # Apply base schema
 npm run db:apply-schema-additions    # Apply v3.1 additive schema
+npm run db:apply-rls-capabilities    # Apply capability RLS
+npm run db:apply-rls-additive        # Apply additive RLS (admin policies on clients, etc.)
+npm run db:apply-performance-indexes # Apply performance index migration
+npm run db:apply-phase-2             # Apply phase-2 task enhancements
+npm run db:fix-missing-columns       # Apply missing column fixes
 npm run db:seed                      # Seed demo data
 npm run db:seed-rollback             # Remove seeded demo data
 npm run db:rls-test                  # Run RLS tests
 npm run db:create-buckets            # Create Supabase Storage buckets
+npm run db:apply-weekly-approval     # Apply weekly approval schema
+npm run db:apply-hr-tables           # Apply HR tables
+npm run db:apply-task-indices        # Apply task indices
+npm run db:apply-attendance-rls      # Apply attendance RLS
+npm run db:apply-updated-at-migration # Apply updated_at triggers
+npm run db:apply-unique-constraint-fix # Apply unique constraint fix
+npm run db:wipe-client-data          # Wipe client data
+npm run db:seed-super-admins         # Seed super admin users
+npm run db:apply-migration           # Apply a specific migration
+```
+
+### Test commands
+
+```bash
+# Run all tests
+npm run test
+
+# Watch mode
+npm run test:watch
+
+# Run a single test file
+npm run test:one __tests__/bizlens-service.test.ts
 ```
 
 ### FastAPI dev proxy (alternative)
+
 ```bash
 cd backend
 pip install -r requirements.txt
 uvicorn server:app --host 0.0.0.0 --port 8001
 ```
 
-The FastAPI proxy is **dev-only**. Vercel handles production directly.
+The FastAPI proxy is **dev-only**. It forwards to `NEXT_TARGET` (default `http://127.0.0.1:3001`). Vercel handles production directly.
+
+### Container dev proxies
+
+Two Node proxies exist for the Emergent/K8s dev environment:
+
+- `proxy.js` — listens on `0.0.0.0:8001`, forwards to `127.0.0.1:3000`. Run with `npm run proxy`.
+- `frontend-proxy.js` — spawns Next.js dev on port 3001 and proxies `0.0.0.0:3000 → 127.0.0.1:3001`. Used inside a container where the ingress hits port 3000.
+
+Both proxies manipulate `x-forwarded-host` / `host` headers so Next.js Server Actions CSRF checks pass through K8s ingress.
 
 ---
 
@@ -177,7 +249,7 @@ import { ok, fail, type ActionResult } from '@/lib/actions/result';
 
 export async function doSomething(input: SomeInput): Promise<ActionResult<SomeOutput>> {
   const me = await requireRole(['admin', 'team']);
-  await requireCapability(me.id, 'some.capability');
+  await requireCapability(me, 'some.capability');
   // validate, call service, revalidatePath, return ok/fail
 }
 ```
@@ -257,7 +329,7 @@ Error:         red-600 (#DC2626)
 Three roles: `admin`, `team`, `client`.
 
 - `admin` implicitly holds every capability.
-- `team` holds **no capabilities by default**; admin grants explicitly.
+- `team` holds **no capabilities by default**; admin grants explicitly via role templates or per-user deviations.
 - `client` is scoped entirely by RLS + portal visibility.
 
 ### Middleware (`middleware.ts`)
@@ -265,17 +337,17 @@ Three roles: `admin`, `team`, `client`.
 - Redirects logged-out users from `/portal`, `/team`, `/admin` to `/login`.
 - Redirects logged-in users hitting `/login` to `/` (role-routed).
 - Redirects users hitting a role-prefix that doesn't match their role to their home page.
-- Neutral prefixes (`/account`, `/legal`, `/api/cmdk`, etc.) bypass role checks.
+- Neutral prefixes (`/account`, `/legal`, `/api/cmdk`, `/api/notifications`, `/api/sub-services`) bypass role checks.
 
 ### Auth Helpers
 
 - `requireRole(allowedRoles)` — throws/redirects if user lacks role.
-- `requireCapability(userId, capability)` — throws `ServiceError('CAPABILITY_DENIED')` if user lacks capability.
-- `getCurrentUser()` — returns `{ id, email, role, full_name, is_active }` or `null`.
+- `requireCapability(user, capability)` — throws `ServiceError('NO_CAPABILITY')` if user lacks capability.
+- `getCurrentUser()` — returns `{ id, email, role, full_name, is_active, is_prime_admin }` or `null`.
 
 ### Portal Visibility
 
-Per-client toggle of which modules appear in the client portal. Default on portal-enable: `dashboard + tasks + queries` only. Admin opens additional modules per engagement. Every `/portal/<module>` layout calls `ensureModuleVisible`; missing module → `notFound()`.
+Per-client toggle of which modules appear in the client portal. Default on portal-enable: `dashboard + tasks + queries` only. Admin opens additional modules per engagement. Every `/portal/<module>` page calls `ensureModuleVisible`; missing module → `notFound()`.
 
 ---
 
@@ -294,8 +366,8 @@ RLS is the **primary access-control boundary**. Every new table gets RLS policie
 ### Schema
 
 - Base schema: `db/schema.sql` v3 (locked, ~46 tables).
-- Additive schema: `db/schema-additions.sql` v3.1 (capabilities, portal visibility, notification preferences).
-- RLS policies: `db/rls-additive.sql`.
+- Additive schema files: `db/schema-additions.sql` v3.1, `db/schema-v3-3.sql`, `db/schema-v3-4.sql`, `db/schema-bizlens.sql`, `db/schema-hr-tables.sql`, `db/schema-unified-inbox.sql`, `db/schema-weekly-approval.sql`.
+- RLS policies: `db/rls-additive.sql`, `db/rls-capabilities.sql`, and various fix files.
 
 ### Key Patterns
 
@@ -310,22 +382,33 @@ RLS is the **primary access-control boundary**. Every new table gets RLS policie
 
 ### Unit Tests
 
-The project uses the **Node.js native test runner** (`node:test`) with `assert`.
+The project uses the **Node.js native test runner** (`node:test`) with `tsx` and a setup file that mocks `server-only` / `client-only` for non-Next.js contexts.
 
 ```bash
-# Run all tests
-node --test
-
-# Run with tsx
-npx tsx --test __tests__/bizlens-service.test.ts
+npm run test
+npm run test:watch
+npm run test:one __tests__/some-file.test.ts
 ```
 
-Current test coverage:
-- `__tests__/bizlens-service.test.ts` — BizLens math engine (12 tests covering contribution margin, break-even, working capital cycle, BizLens score, risk assessment, insight engine, AR ageing, opportunities, concentration risk, interest coverage).
+Test setup: `__tests__/setup.js` (CommonJS entry) and `__tests__/setup.ts` (TypeScript source).
+
+Current test coverage includes:
+- `__tests__/bizlens-service.test.ts` — BizLens math engine.
+- `__tests__/task-transitions.test.ts` — Task status transitions and guardrails.
+- `__tests__/compliance-calendar-engine.test.ts` — Compliance calendar logic.
+- `__tests__/encryption.test.ts` — AES-256-GCM credentials vault encryption.
+- `__tests__/validation-schemas.test.ts` — Zod schema validation.
+- `__tests__/utils.test.ts` — Utility helpers.
+- `__tests__/db-smoke.test.ts` — Database smoke tests.
+- `__tests__/runtime-safety.test.ts` — Runtime safety checks.
+- `__tests__/client-visible-status.test.ts` — Client-facing status rules.
+- `__tests__/group-f-polish.test.ts` — Group F polish rules.
+- `__tests__/result-helpers.test.ts` — Action result helpers.
+- `__tests__/task-control-guardrails.test.ts` — Task control guardrails.
 
 ### RLS / Security Tests
 
-Run `npm run db:rls-test` for automated RLS verification. There are also 10 manual access-control tests defined in `memory/DPDP_AND_SECURITY.md` (Day-3 and Day-31 audit checklist).
+Run `npm run db:rls-test` for automated RLS verification. There are also ten manual access-control tests defined in `memory/DPDP_AND_SECURITY.md` (Day-3 and Day-31 audit checklist).
 
 ### Adding Tests
 
@@ -391,15 +474,16 @@ ADMIN_SEED_EMAIL=admin@example.com
 4. **Credentials vault**: AES-256-GCM encryption in application layer (not `pgcrypto`). Decrypt only in `credentials.manage`-gated actions.
 5. **Audit log**: Every capability grant/revoke, portal visibility change, credential decrypt, soft-delete, and bulk action writes to `global_audit_log`.
 6. **2FA**: Mandatory for `admin` and `team` in production Supabase.
-7. **DPDP compliance**: See `memory/DPDP_AND_SECURITY.md` for the full 10-test audit checklist and breach-response guidance.
+7. **DPDP compliance**: See `memory/DPDP_AND_SECURITY.md` for the full ten-test audit checklist and breach-response guidance.
+8. **Security headers**: `next.config.js` sets `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-DNS-Prefetch-Control`, and a strict `Content-Security-Policy`.
 
 ---
 
 ## Deployment
 
 - **Production**: Vercel (linked to GitHub repo).
-- **Domain**: `portal.fiscalfulcrum.in`.
-- **Marketing site**: Separate repo at `fiscalfulcrum.in`.
+- **Domain**: `https://portal.fiscalfulcrum.in`.
+- **Marketing site**: `https://fiscalfulcrum.in` served from the `app/(marketing)` route group on the same deployment.
 - **Sign-out redirect**: Returns to `https://fiscalfulcrum.in/`.
 
 ---
@@ -410,5 +494,6 @@ ADMIN_SEED_EMAIL=admin@example.com
 - **Design system + sophistication bar**: `memory/DESIGN_SYSTEM.md`
 - **Security & DPDP**: `memory/DPDP_AND_SECURITY.md`
 - **Active backlog**: `memory/GO_FORWARD_PLAN.md`
+- **Workflows / UX rules**: `WORKFLOWS.md`
 - **Schema**: `db/schema.sql` + `db/schema-additions.sql`
 - **Historical reasoning**: `memory/PRD.md` + `BUILD_PLAN.md`

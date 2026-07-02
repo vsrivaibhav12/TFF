@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { requireRole } from '@/lib/auth/require-role';
 import { getAdminDashboardData } from '@/lib/services/dashboard-service';
 import { loadComplianceDashboard } from '@/lib/repositories/compliance-dashboard';
@@ -25,30 +26,55 @@ import { AdminQuickActions } from '@/components/dashboard/admin-quick-actions';
 import { NeedsAttentionHub, type AttentionItem } from '@/components/dashboard/needs-attention-hub';
 import { ActivityFeed } from '@/components/dashboard/activity-feed';
 
-export const dynamic = 'force-dynamic';
-
 export default async function AdminDashboard() {
   await requireRole('admin');
 
-  const {
-    activeClients,
-    openTasks,
-    overdueTasks,
-    activeEngagements,
-    recentTasks,
-    upcomingDeadlines,
-    upcomingNotices,
-    attentionTasks,
-    pendingApprovals,
-    attendanceToday,
-    openNoticesCount,
-    openQueriesCount,
-    openQueries,
-    recentAuditLogs,
-  } = await getAdminDashboardData();
+  return (
+    <div className="space-y-6">
+      <AdminPayrollPrompt />
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Firm overview</h1>
+          <p className="text-sm text-zinc-500 mt-1">Everything you need to run the firm — at a glance.</p>
+        </div>
+      </div>
 
-  const complianceCells = await loadComplianceDashboard({ horizonMonths: 3 });
-  // Pick the most imminent period for each unique rule
+      <AdminQuickActions />
+
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardBody />
+      </Suspense>
+    </div>
+  );
+}
+
+async function DashboardBody() {
+  const [
+    {
+      activeClients,
+      openTasks,
+      overdueTasks,
+      activeEngagements,
+      recentTasks,
+      upcomingDeadlines,
+      upcomingNotices,
+      attentionTasks,
+      pendingApprovals,
+      attendanceToday,
+      openQueriesCount,
+      openQueries,
+      recentAuditLogs,
+    },
+    complianceCells,
+    [dsc30, dsc60, dsc90],
+    closureVelocity,
+  ] = await Promise.all([
+    getAdminDashboardData(),
+    loadComplianceDashboard({ horizonMonths: 3 }),
+    Promise.all([listExpiringDsc(30), listExpiringDsc(60), listExpiringDsc(90)]),
+    getTaskClosureVelocity(30),
+  ]);
+
   const bestByRule = new Map<string, typeof complianceCells[0]>();
   for (const cell of complianceCells) {
     const existing = bestByRule.get(cell.rule_code);
@@ -60,22 +86,12 @@ export default async function AdminDashboard() {
     .sort((a, b) => a.period_due_date.localeCompare(b.period_due_date))
     .slice(0, 6);
 
-  // DSC expiry radar
-  const [dsc30, dsc60, dsc90] = await Promise.all([
-    listExpiringDsc(30),
-    listExpiringDsc(60),
-    listExpiringDsc(90),
-  ]);
   const dscSegments = [
     { label: '0-30 days', value: dsc30.length, color: '#DC2626' },
     { label: '31-60 days', value: dsc60.length - dsc30.length, color: '#F59E0B' },
     { label: '61-90 days', value: dsc90.length - dsc60.length, color: '#0D9488' },
   ].filter((s) => s.value > 0);
 
-  // Task closure velocity (last 30 days)
-  const closureVelocity = await getTaskClosureVelocity(30);
-
-  // Build attention items for NeedsAttentionHub
   const attentionItems: AttentionItem[] = [
     ...(attentionTasks ?? []).map((t: any) => ({
       id: t.id,
@@ -108,30 +124,12 @@ export default async function AdminDashboard() {
 
   return (
     <StaggerContainer className="space-y-6">
-      <AdminPayrollPrompt />
-      {/* Header */}
-      <StaggerItem>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Firm overview</h1>
-            <p className="text-sm text-zinc-500 mt-1">Everything you need to run the firm — at a glance.</p>
-          </div>
-        </div>
-      </StaggerItem>
-
-      {/* Quick Actions */}
-      <StaggerItem>
-        <AdminQuickActions />
-      </StaggerItem>
-
-      {/* Needs Attention Hub */}
       {attentionItems.length > 0 && (
         <StaggerItem>
           <NeedsAttentionHub items={attentionItems} />
         </StaggerItem>
       )}
 
-      {/* Stat Cards */}
       <StaggerItem>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Active clients" value={activeClients ?? 0} icon={<Users className="h-5 w-5" />} href="/admin/clients" />
@@ -141,7 +139,6 @@ export default async function AdminDashboard() {
         </div>
       </StaggerItem>
 
-      {/* Compliance Bird's-Eye */}
       {topCompliance.length > 0 && (
         <StaggerItem>
           <div className="space-y-3">
@@ -179,7 +176,6 @@ export default async function AdminDashboard() {
         </StaggerItem>
       )}
 
-      {/* DSC expiry + Task velocity micro-row */}
       {(dscSegments.length > 0 || closureVelocity.length > 0) && (
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -217,7 +213,6 @@ export default async function AdminDashboard() {
         </StaggerItem>
       )}
 
-      {/* Widget Grid */}
       <StaggerItem>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-5">
@@ -244,12 +239,11 @@ export default async function AdminDashboard() {
                 href="/admin/approvals"
               />
             </div>
-            <ActivityFeed items={recentAuditLogs as any} href="/admin/audit-log" />
+            <ActivityFeed items={recentAuditLogs as any} href="/admin/audit" />
           </div>
         </div>
       </StaggerItem>
 
-      {/* Notice deadlines */}
       {(upcomingNotices ?? []).length > 0 && (
         <StaggerItem>
           <div className="tff-card tff-card-pad">
@@ -286,6 +280,30 @@ export default async function AdminDashboard() {
         </StaggerItem>
       )}
     </StaggerContainer>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="tff-card p-3 h-24 bg-zinc-50" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-5 tff-card h-64 bg-zinc-50" />
+        <div className="lg:col-span-7 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="tff-card h-20 bg-zinc-50" />
+            ))}
+          </div>
+          <div className="tff-card h-48 bg-zinc-50" />
+        </div>
+      </div>
+      <div className="tff-card h-40 bg-zinc-50" />
+    </div>
   );
 }
 

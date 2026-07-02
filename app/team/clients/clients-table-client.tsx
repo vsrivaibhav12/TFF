@@ -18,11 +18,15 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { updateClient } from '@/lib/actions/clients';
+import { updateClient, bulkDeleteClients } from '@/lib/actions/clients';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useConfirm } from '@/components/ui/use-confirm';
 import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
+import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 import { ComplianceHealthBar } from '@/components/clients/compliance-health';
 
 interface EnrichedClient {
@@ -72,9 +76,11 @@ function ComplianceDots({ gst, tds, it }: { gst: string; tds: string; it: string
 export default function ClientsTableClient({
   clients,
   groups,
+  canDelete = false,
 }: {
   clients: EnrichedClient[];
   groups?: { id: string; name: string }[];
+  canDelete?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -83,6 +89,8 @@ export default function ClientsTableClient({
   const search = searchParams.get('q') ?? '';
   const [sortKey, setSortKey] = useState<'name' | 'engagements' | 'group'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [ConfirmDialog, confirm] = useConfirm();
   const { density, setDensity } = useTablePrefs('team-clients', [], 'comfortable');
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -168,6 +176,33 @@ export default function ClientsTableClient({
     [router]
   );
 
+  function toggleOne(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    const ns = new Set(selectedIds);
+    if (ns.has(id)) ns.delete(id);
+    else ns.add(id);
+    setSelectedIds(ns);
+  }
+
+  function toggleAll() {
+    if (selectedIds.size === filtered.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(filtered.map((c) => c.id)));
+  }
+
+  async function bulkDelete(ids: string[]) {
+    const ok = await confirm({
+      title: 'Delete Clients',
+      description: `Are you sure you want to delete ${ids.length} client(s)?`,
+    });
+    if (!ok) return { success: 0, failed: 0 };
+
+    const result = await bulkDeleteClients({ clientIds: ids });
+    if (!result.success) throw new Error(result.error);
+    setSelectedIds(new Set());
+    toast.success(`Deleted ${ids.length} clients`);
+    return { success: ids.length, failed: 0 };
+  }
+
   function SortIcon({ col }: { col: typeof sortKey }) {
     if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 text-zinc-300" />;
     return sortDir === 'asc' ? (
@@ -179,6 +214,22 @@ export default function ClientsTableClient({
 
   return (
     <div className="space-y-3">
+      <ConfirmDialog />
+      {canDelete && (
+        <BulkActionsBar
+          ids={Array.from(selectedIds)}
+          onClear={() => setSelectedIds(new Set())}
+          actions={[
+            {
+              type: 'button',
+              label: 'Delete clients',
+              icon: Trash2,
+              variant: 'danger',
+              onApply: bulkDelete,
+            },
+          ]}
+        />
+      )}
       {/* Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative">
@@ -208,8 +259,11 @@ export default function ClientsTableClient({
       <div ref={parentRef} className="overflow-auto rounded-xl border border-zinc-200" style={{ height: '60vh' }}>
         {/* Sticky header */}
         <div className="sticky top-0 z-10 grid grid-cols-12 gap-4 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 bg-white/80 backdrop-blur-sm border-b border-zinc-200">
+          <div className="col-span-1 flex items-center">
+            <Checkbox checked={selectedIds.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} aria-label="Select all" />
+          </div>
           <button
-            className="col-span-5 text-left flex items-center gap-1 hover:text-zinc-600 transition-colors"
+            className="col-span-4 text-left flex items-center gap-1 hover:text-zinc-600 transition-colors"
             onClick={() => toggleSort('name')}
           >
             Client <SortIcon col="name" />
@@ -262,11 +316,20 @@ export default function ClientsTableClient({
                     className={cn(
                       'group grid grid-cols-12 gap-4 items-center px-4 rounded-xl bg-white border border-zinc-200 transition-colors cursor-pointer hover:bg-zinc-50/60',
                       density === 'compact' ? 'py-2' : 'py-3',
+                      selectedIds.has(c.id) ? 'ring-2 ring-teal-500' : '',
                       leftBorder
                     )}
                   >
+                    {/* Checkbox */}
+                    <div
+                      className="col-span-1 flex items-center"
+                      onClick={(e) => toggleOne(e, c.id)}
+                    >
+                      <Checkbox checked={selectedIds.has(c.id)} />
+                    </div>
+
                     {/* Client info */}
-                    <div className="col-span-5 flex items-center gap-3 min-w-0">
+                    <div className="col-span-4 flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
                         <Building2 className="h-5 w-5 text-zinc-400" />
                       </div>

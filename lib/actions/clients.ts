@@ -31,6 +31,8 @@ const ClientBaseSchema = z.object({
   pincode: optionalStr(z.string()),
 
   group_id: optionalStr(z.string().uuid('Invalid group ID')),
+  primary_owner_id: optionalStr(z.string().uuid('Invalid owner ID')),
+  business_registration_number: optionalStr(z.string().max(80)),
   portal_enabled: z.boolean().default(false),
   portal_email: optionalStr(z.string().email('Invalid portal email')),
   portal_password: optionalStr(z.string().min(6, 'Password must be at least 6 characters')),

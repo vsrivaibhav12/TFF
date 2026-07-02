@@ -22,6 +22,7 @@ interface Props {
   openQueries: any;
   basePath: string;
   canEdit?: boolean;
+  canDelete?: boolean;
   isModal?: boolean;
 }
 
@@ -46,6 +47,7 @@ export default function ClientDetailShell({
   openQueries,
   basePath,
   canEdit = false,
+  canDelete = false,
   isModal,
 }: Props) {
   const taskPrefix = basePath.replace('/clients', '/tasks');
@@ -178,12 +180,6 @@ export default function ClientDetailShell({
             <AuditTimeline entries={auditLogs as any} />
           </div>
 
-          {/* Open full profile link */}
-          <div className="pt-1 pb-2">
-            <Link href={`${basePath}/${client.id}`} className="inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700 font-medium">
-              Open full profile <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
         </div>
       ) : (
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-6">
@@ -272,7 +268,7 @@ export default function ClientDetailShell({
             {/* Profile */}
             <div className="tff-card p-6">
               <h3 className="text-[13px] font-semibold text-zinc-700 mb-4">Profile</h3>
-              <ClientFormWrapper groups={groups} owners={owners} initial={client} basePath={basePath} readOnly={!canEdit} />
+              <ClientFormWrapper groups={groups} owners={owners} initial={client} basePath={basePath} readOnly={!canEdit} canDelete={canDelete} />
             </div>
 
           </div>

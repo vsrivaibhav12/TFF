@@ -3,7 +3,6 @@ import { listEffectiveCapabilities } from '@/lib/repositories/staff-capabilities
 import { filterNavByCapabilities } from '@/lib/auth/nav-capabilities';
 import AppShell from '@/components/shell/app-shell';
 
-export const dynamic = 'force-dynamic';
 
 export default async function TeamLayout({ children }: { children: React.ReactNode }) {
   const user = await requireRole(['team', 'admin']);

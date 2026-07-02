@@ -12,7 +12,7 @@ export async function listAccessibleClients(opts: {
   offset?: number;
 } = {}) {
   const sb = createClient();
-  const limit = opts.limit ?? 50000;
+  const limit = opts.limit ?? 1000;
   const offset = opts.offset ?? 0;
 
   const buildQuery = () => {

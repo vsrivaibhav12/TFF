@@ -15,10 +15,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ProgressMicro } from '@/components/ui/progress-micro';
 import { formatDateIST, cn, displayTaskName } from '@/lib/utils';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
-import { transitionTaskAction, updateTaskAction } from '@/lib/actions/tasks';
+import { transitionTaskAction, updateTaskAction, bulkDeleteTasksAction } from '@/lib/actions/tasks';
 import { TaskLabelPills } from '@/components/tasks/task-label-pills';
 import { SwipeableRow } from '@/components/ui/swipeable-row';
-import { ShieldCheck, User, Check, Search, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, User, Check, Search, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
 
@@ -92,7 +92,7 @@ const DEFAULT_COLUMNS = [
   { key: 'verified', label: 'Verified', visible: true, optional: true },
 ];
 
-export default function TasksTableClient({ tasks, todayIso, canEdit = false, canComplete = false }: { tasks: TaskRow[]; todayIso?: string; canEdit?: boolean; canComplete?: boolean }) {
+export default function TasksTableClient({ tasks, todayIso, canEdit = false, canComplete = false, canDelete = false }: { tasks: TaskRow[]; todayIso?: string; canEdit?: boolean; canComplete?: boolean; canDelete?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -184,6 +184,17 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
     else toast.success(`${success} tasks updated`);
     setSelected(new Set());
     return { success, failed };
+  }
+
+  async function bulkDelete(ids: string[]) {
+    const r = await bulkDeleteTasksAction(ids);
+    if (r.success) {
+      toast.success(`Deleted ${ids.length} tasks`);
+      setSelected(new Set());
+      return { success: ids.length, failed: 0 };
+    }
+    toast.error(r.error ?? 'Failed to delete tasks');
+    return { success: 0, failed: ids.length };
   }
 
   async function handleComplete(taskId: string) {
@@ -544,6 +555,15 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
               ],
               onApply: bulkChangeStatus,
             },
+            ...(canDelete
+              ? [{
+                  type: 'button' as const,
+                  label: 'Delete',
+                  icon: Trash2,
+                  variant: 'danger' as const,
+                  onApply: bulkDelete,
+                }]
+              : []),
           ]}
         />
       </div>

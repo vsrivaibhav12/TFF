@@ -62,13 +62,14 @@ export async function getAdminDashboardData() {
     listRecentAuditLogs(8),
   ]);
 
-  const recentTasks = await enrichTasksWithProgress(rawRecentTasks);
+  const [recentTasks, openNoticesCount] = await Promise.all([
+    enrichTasksWithProgress(rawRecentTasks),
+    listUrgentNotices(3).then((n) => n.length),
+  ]);
 
   const presentCount = attendanceToday.filter((a) => a.status === 'present').length;
   const onLeaveCount = attendanceToday.filter((a) => a.status === 'leave').length;
   const teamTotal = teamMembers.filter((m) => m.is_active).length;
-
-  const openNoticesCount = (await listUrgentNotices(3)).length;
 
   return {
     activeClients,

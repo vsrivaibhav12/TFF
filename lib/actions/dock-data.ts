@@ -51,6 +51,8 @@ export async function getTaskDockData(id: string) {
     ]);
 
     const canEdit = await hasCapability(me, 'tasks.edit');
+    const canEditSteps = await hasCapability(me, 'tasks.complete');
+    const canDelete = await hasCapability(me, 'tasks.delete');
 
     return ok({
       task,
@@ -67,6 +69,8 @@ export async function getTaskDockData(id: string) {
       taskTemplates,
       currentUserId: me.id,
       canEdit,
+      canEditSteps,
+      canDelete,
     });
   } catch (e: any) {
     return fail(e.message);
@@ -102,6 +106,8 @@ export async function getClientDockData(id: string) {
     const openTasks = tasks.filter((t) => t.status !== 'completed' && t.status !== 'cancelled');
     const openNotices = notices.filter((n: { status: string }) => n.status !== 'closed');
 
+    const canDelete = await hasCapability(me, 'clients.delete');
+
     return ok({
       client,
       groups,
@@ -115,7 +121,8 @@ export async function getClientDockData(id: string) {
       openNotices,
       openQueries: queries,
       basePath: me.role === 'admin' ? '/admin/clients' : '/team/clients',
-      canEdit: await hasCapability(me, 'clients.edit'),
+      canEdit,
+      canDelete,
     });
   } catch (e: any) {
     return fail(e.message);

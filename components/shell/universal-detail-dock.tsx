@@ -166,7 +166,8 @@ function DockPanelContent({ item }: { item: { type: string; id: string } }) {
           taskTemplates={taskData.taskTemplates ?? []}
           currentUserId={taskData.currentUserId}
           canEdit={taskData.canEdit ?? false}
-          canEditSteps={taskData.canEdit ?? false}
+          canEditSteps={taskData.canEditSteps ?? false}
+          canDelete={taskData.canDelete ?? false}
           basePath={`${prefix}/tasks`}
           clientPath={`${prefix}/clients/${taskData.task.client_id}`}
           isModal={true}
@@ -195,6 +196,7 @@ function DockPanelContent({ item }: { item: { type: string; id: string } }) {
             openQueries={clientData.openQueries}
             basePath={clientData.basePath}
             canEdit={clientData.canEdit ?? false}
+            canDelete={clientData.canDelete ?? false}
             isModal={true}
           />
         </div>

@@ -188,8 +188,22 @@ CREATE POLICY "tasks_team_delete" ON tasks FOR DELETE TO authenticated
 -- task_activity, task_notes, task_document_requests, task_templates
 ALTER TABLE task_activity ENABLE ROW LEVEL SECURITY;
 ALTER TABLE task_notes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE task_document_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE task_templates ENABLE ROW LEVEL SECURITY;
+
+-- task_document_requests may have been dropped in older environments;
+-- guard the policy creation so the script stays idempotent.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'task_document_requests'
+  ) THEN
+    ALTER TABLE task_document_requests ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS "task_doc_req_team" ON task_document_requests;
+    CREATE POLICY "task_doc_req_team" ON task_document_requests FOR ALL TO authenticated
+      USING (public.current_user_role() IN ('admin', 'team'));
+  END IF;
+END $$;
 
 DROP POLICY IF EXISTS "task_activity_visible" ON task_activity;
 CREATE POLICY "task_activity_visible" ON task_activity FOR SELECT TO authenticated
@@ -204,10 +218,6 @@ CREATE POLICY "task_notes_visible" ON task_notes FOR SELECT TO authenticated
 DROP POLICY IF EXISTS "task_notes_insert" ON task_notes;
 CREATE POLICY "task_notes_insert" ON task_notes FOR INSERT TO authenticated
   WITH CHECK (task_id IN (SELECT id FROM tasks));
-
-DROP POLICY IF EXISTS "task_doc_req_team" ON task_document_requests;
-CREATE POLICY "task_doc_req_team" ON task_document_requests FOR ALL TO authenticated
-  USING (public.current_user_role() IN ('admin', 'team'));
 
 DROP POLICY IF EXISTS "task_templates_team" ON task_templates;
 CREATE POLICY "task_templates_team" ON task_templates FOR ALL TO authenticated
@@ -284,6 +294,8 @@ CREATE POLICY "notices_admin_team_select" ON notices FOR SELECT TO authenticated
 -- Replace old schema.sql v3 SELECT policies (inefficient subquery + no admin bypass)
 -- with consistent current_user_role() policies.
 DROP POLICY IF EXISTS "dsc_records_team_only" ON dsc_records;
+DROP POLICY IF EXISTS "dsc_records_admin_select" ON dsc_records;
+DROP POLICY IF EXISTS "dsc_records_team_select" ON dsc_records;
 CREATE POLICY "dsc_records_admin_select" ON dsc_records FOR SELECT TO authenticated
   USING (public.current_user_role() = 'admin');
 CREATE POLICY "dsc_records_team_select" ON dsc_records FOR SELECT TO authenticated
@@ -315,6 +327,8 @@ CREATE POLICY "dsc_records_team_update" ON dsc_records FOR UPDATE TO authenticat
   );
 
 DROP POLICY IF EXISTS "credentials_team_only" ON credentials;
+DROP POLICY IF EXISTS "credentials_admin_select" ON credentials;
+DROP POLICY IF EXISTS "credentials_team_select" ON credentials;
 CREATE POLICY "credentials_admin_select" ON credentials FOR SELECT TO authenticated
   USING (public.current_user_role() = 'admin');
 CREATE POLICY "credentials_team_select" ON credentials FOR SELECT TO authenticated

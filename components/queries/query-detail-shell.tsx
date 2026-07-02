@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ExternalLink } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { formatDateIST } from '@/lib/utils';
 import QueryReply from '@/app/team/queries/[id]/reply';
 
@@ -61,9 +61,6 @@ function QueryDockSummary({ data, basePath, canActAsTeam }: Props) {
         </div>
       )}
 
-      <Link href={`${basePath}/${q.id}`} className="inline-flex items-center gap-1 text-xs text-teal-700 hover:underline font-medium mt-2">
-        Open full query <ExternalLink className="h-3 w-3" />
-      </Link>
     </div>
   );
 }

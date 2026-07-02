@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function listAllNotices(filter?: {
   clientId?: string;
+  clientIds?: string[];
   status?: string | string[];
   noticeType?: string;
   dueFrom?: string;
@@ -15,6 +16,7 @@ export async function listAllNotices(filter?: {
     .eq('is_deleted', false)
     .order('notice_received_date', { ascending: false, nullsFirst: false });
   if (filter?.clientId) q = q.eq('client_id', filter.clientId);
+  if (filter?.clientIds && filter.clientIds.length > 0) q = q.in('client_id', filter.clientIds);
   if (filter?.status) {
     if (Array.isArray(filter.status)) q = q.in('status', filter.status);
     else q = q.eq('status', filter.status);

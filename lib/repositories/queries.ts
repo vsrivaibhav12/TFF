@@ -23,7 +23,15 @@ function normalizeFkArray(row: any, key: string) {
   }
 }
 
-export async function listQueries(opts: { clientId?: string; status?: string[]; mineOnly?: boolean; userId?: string } = {}): Promise<QueryRow[]> {
+export async function listQueries(
+  opts: {
+    clientId?: string;
+    clientIds?: string[];
+    status?: string[];
+    mineOnly?: boolean;
+    userId?: string;
+  } = {}
+): Promise<QueryRow[]> {
   const sb = createClient();
   let q = sb
     .from('queries')
@@ -31,6 +39,7 @@ export async function listQueries(opts: { clientId?: string; status?: string[]; 
     .eq('is_deleted', false)
     .order('updated_at', { ascending: false });
   if (opts.clientId) q = q.eq('client_id', opts.clientId);
+  if (opts.clientIds?.length) q = q.in('client_id', opts.clientIds.slice(0, 100));
   if (opts.status?.length) q = q.in('status', opts.status);
   if (opts.mineOnly && opts.userId) q = q.eq('created_by', opts.userId);
   const { data, error } = await q;

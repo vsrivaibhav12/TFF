@@ -47,6 +47,7 @@ interface Props {
   currentUserId: string;
   canEdit: boolean;
   canEditSteps: boolean;
+  canDelete: boolean;
   basePath: string;
   clientPath: string;
   isModal?: boolean;
@@ -69,6 +70,7 @@ export default function TaskDetailShell({
   currentUserId,
   canEdit,
   canEditSteps,
+  canDelete,
   basePath,
   clientPath,
   isModal,
@@ -715,15 +717,6 @@ export default function TaskDetailShell({
             </div>
           )}
 
-          {/* Open full task link */}
-          <div className="pt-1 pb-2">
-            <button
-              onClick={() => window.open(`${basePath}/${task.id}`, '_blank')}
-              className="inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700 font-medium"
-            >
-              Open full task <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
         </div>
       ) : (
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 pb-6">
@@ -1026,7 +1019,7 @@ export default function TaskDetailShell({
                   )}
                 </div>
               )}
-              {task.status !== 'completed' && (
+              {canDelete && (
                 <div className="pt-2">
                   <DeleteTaskButton taskId={task.id} redirectTo={basePath} onSuccess={() => { /* dock parent handles refresh */ }} />
                 </div>
