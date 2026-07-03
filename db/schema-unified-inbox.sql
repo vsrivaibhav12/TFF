@@ -27,7 +27,7 @@ SELECT
 FROM tasks t
 LEFT JOIN clients c ON c.id = t.client_id
 WHERE t.is_deleted = false
-  AND t.status IN ('pending', 'in_progress', 'awaiting_client')
+  AND t.status IN ('pending', 'in_progress')
 
 UNION ALL
 
@@ -107,7 +107,7 @@ WHERE e.task_id IS NULL
   AND e.is_deleted = false;
 
 -- Indexes for performance (on underlying tables)
-CREATE INDEX IF NOT EXISTS idx_tasks_unified_inbox ON tasks(status, is_deleted, due_date) WHERE is_deleted = false AND status IN ('pending', 'in_progress', 'awaiting_client');
+CREATE INDEX IF NOT EXISTS idx_tasks_unified_inbox ON tasks(status, is_deleted, due_date) WHERE is_deleted = false AND status IN ('pending', 'in_progress');
 CREATE INDEX IF NOT EXISTS idx_notices_unified_inbox ON notices(status, is_deleted, due_date) WHERE is_deleted = false AND status != 'closed';
 CREATE INDEX IF NOT EXISTS idx_queries_unified_inbox ON queries(status, is_deleted, created_at) WHERE is_deleted = false AND status != 'closed';
 CREATE INDEX IF NOT EXISTS idx_compliance_events_unified_inbox ON compliance_calendar_events(task_id, due_date) WHERE task_id IS NULL;

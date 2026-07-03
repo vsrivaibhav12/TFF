@@ -37,7 +37,7 @@ export async function listWorkDone(opts: {
   const sb = createClient();
   let q = sb
     .from('task_workdone')
-    .select('*, tasks(title), clients(business_name), users_profile!task_workdone_user_id_fkey(full_name)')
+    .select('id, task_id, user_id, client_id, work_date, duration_minutes, note, entry_method, started_at, ended_at, created_at, tasks(title), clients(business_name), users_profile!task_workdone_user_id_fkey(full_name)')
     .order('work_date', { ascending: false })
     .limit(200);
 
@@ -50,56 +50,53 @@ export async function listWorkDone(opts: {
 
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as WorkDoneRow[];
+  return (data ?? []) as unknown as WorkDoneRow[];
 }
 
 export async function listWorkDoneForTask(taskId: string): Promise<WorkDoneRow[]> {
   const sb = createClient();
   const { data } = await sb
     .from('task_workdone')
-    .select('*, users_profile!task_workdone_user_id_fkey(full_name)')
+    .select('id, user_id, work_date, duration_minutes, note, entry_method, started_at, ended_at, created_at, users_profile!task_workdone_user_id_fkey(full_name)')
     .eq('task_id', taskId)
     .order('work_date', { ascending: false })
     .limit(200);
-  return (data ?? []) as WorkDoneRow[];
+  return (data ?? []) as unknown as WorkDoneRow[];
 }
 
 export async function listWorkDoneForUser(userId: string, fromIso: string, toIso: string): Promise<WorkDoneRow[]> {
   const sb = createClient();
   const { data } = await sb
     .from('task_workdone')
-    .select('*, tasks(title), clients(business_name)')
+    .select('id, task_id, client_id, work_date, duration_minutes, note, entry_method, started_at, ended_at, created_at, tasks(title), clients(business_name)')
     .eq('user_id', userId)
     .gte('work_date', fromIso)
     .lte('work_date', toIso)
     .order('work_date', { ascending: false })
     .limit(200);
-  return (data ?? []) as WorkDoneRow[];
+  return (data ?? []) as unknown as WorkDoneRow[];
 }
 
 export async function listWorkDoneSummary(fromIso: string, toIso: string): Promise<WorkDoneSummaryRow[]> {
   const sb = createClient();
-  const { data } = await sb
-    .from('task_workdone')
-    .select('user_id, client_id, duration_minutes, users_profile!task_workdone_user_id_fkey(full_name), clients(business_name)')
-    .gte('work_date', fromIso)
-    .lte('work_date', toIso)
-    .limit(1000);
-  const map: Record<string, WorkDoneSummaryRow> = {};
-  for (const r of (data ?? []) as any[]) {
-    const key = `${r.user_id}::${r.client_id}`;
-    if (!map[key]) {
-      map[key] = {
-        user_id: r.user_id,
-        user_name: r.users_profile?.full_name ?? 'Unknown',
-        client_id: r.client_id,
-        client_name: r.clients?.business_name ?? 'Unknown',
-        total_minutes: 0,
-      };
-    }
-    map[key].total_minutes += r.duration_minutes;
-  }
-  return Object.values(map).sort((a, b) => b.total_minutes - a.total_minutes);
+  const { data, error } = await sb.rpc('list_workdone_summary', {
+    p_from: fromIso,
+    p_to: toIso,
+  });
+  if (error) throw error;
+  return ((data ?? []) as Array<{
+    user_id: string;
+    user_name: string;
+    client_id: string;
+    client_name: string;
+    total_minutes: number | string;
+  }>).map((r) => ({
+    user_id: r.user_id,
+    user_name: r.user_name ?? 'Unknown',
+    client_id: r.client_id,
+    client_name: r.client_name ?? 'Unknown',
+    total_minutes: Number(r.total_minutes),
+  }));
 }
 
 export async function addWorkDoneRecord(payload: {

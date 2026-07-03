@@ -257,7 +257,21 @@ export async function getTask(id: string): Promise<TaskDetail | null> {
   const sb = createClient();
   const { data, error } = await sb
     .from('tasks')
-    .select('*, task_template_id, clients!tasks_client_id_fkey(id, business_name), sub_services!tasks_sub_service_id_fkey(code, name, services!sub_services_service_id_fkey(name)), assignee:users_profile!tasks_assigned_to_fkey(id, full_name, email), reviewer:users_profile!tasks_reviewer_id_fkey(id, full_name, email)')
+    .select(`
+      id, task_number, title, description, status, priority,
+      client_id, sub_service_id, task_template_id,
+      assigned_to, reviewer_id,
+      created_date, due_date, started_date, completed_date,
+      period_month, period_year, period_quarter,
+      is_billable, bill_reference, bill_amount, billed, billed_date,
+      is_recurring, arn_reference, is_arn_client_visible,
+      is_verified, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status,
+      created_at, updated_at,
+      clients!tasks_client_id_fkey(id, business_name),
+      sub_services!tasks_sub_service_id_fkey(code, name, services!sub_services_service_id_fkey(name)),
+      assignee:users_profile!tasks_assigned_to_fkey(id, full_name, email),
+      reviewer:users_profile!tasks_reviewer_id_fkey(id, full_name, email)
+    `)
     .eq('id', id)
     .eq('is_deleted', false)
     .maybeSingle();
@@ -310,20 +324,22 @@ export async function listTaskNotes(taskId: string) {
 
 export async function countTasksByStatus(opts: { assignedTo?: string; clientId?: string } = {}) {
   const sb = createClient();
-  const counts: Record<string, number> = {};
-  // Use individual count queries with head:true to avoid fetching all rows
-  const statuses = ['pending', 'in_progress', 'completed', 'cancelled'] as const;
-  await Promise.all(
-    statuses.map(async (status) => {
-      let q = sb.from('tasks').select('id', { count: 'exact', head: true })
-        .eq('is_deleted', false)
-        .eq('status', status);
-      if (opts.assignedTo) q = q.eq('assigned_to', opts.assignedTo);
-      if (opts.clientId) q = q.eq('client_id', opts.clientId);
-      const { count, error } = await q;
-      if (!error) counts[status] = count ?? 0;
-    })
-  );
+  const counts: Record<string, number> = {
+    pending: 0,
+    in_progress: 0,
+    completed: 0,
+    cancelled: 0,
+  };
+
+  const { data, error } = await sb.rpc('count_tasks_by_status', {
+    p_assigned_to: opts.assignedTo || null,
+    p_client_id: opts.clientId || null,
+  });
+
+  if (error) throw error;
+  for (const row of (data ?? []) as Array<{ status: string; count: number | string }>) {
+    counts[row.status] = Number(row.count);
+  }
   return counts;
 }
 
@@ -501,21 +517,12 @@ export async function getTaskClosureVelocity(days = 30): Promise<{ date: string;
   const sb = createClient();
   const { todayIST } = await import('@/lib/utils');
   const today = todayIST();
-  const start = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(new Date(Date.now() - days * 86_400_000));
 
-  const { data } = await sb
-    .from('tasks')
-    .select('updated_at')
-    .eq('status', 'completed')
-    .gte('updated_at', `${start}T00:00:00+05:30`)
-    .order('updated_at', { ascending: true });
+  const { data } = await sb.rpc('get_task_closure_velocity', { p_days: days });
 
   const counts: Record<string, number> = {};
-  for (const row of data ?? []) {
-    const date = (row as any).updated_at.slice(0, 10);
-    counts[date] = (counts[date] ?? 0) + 1;
+  for (const row of (data ?? []) as Array<{ date: string; count: number | string }>) {
+    counts[row.date] = Number(row.count);
   }
 
   // Fill in missing dates with 0
