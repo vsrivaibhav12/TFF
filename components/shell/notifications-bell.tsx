@@ -1,10 +1,11 @@
 'use client';
-import { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { markAllNotificationsReadAction } from '@/lib/actions/notifications';
 import { toast } from 'sonner';
+import useSWR from 'swr';
+import { useState, useTransition } from 'react';
 
 type Item = {
   id: string;
@@ -15,34 +16,29 @@ type Item = {
   created_at: string;
 };
 
+async function fetchNotifications(): Promise<{ count: number; items: Item[] }> {
+  const r = await fetch('/api/notifications/unread', { cache: 'no-store' });
+  if (!r.ok) throw new Error('Failed to fetch notifications');
+  return r.json();
+}
+
 export default function NotificationsBell() {
   const [open, setOpen] = useState(false);
-  const [count, setCount] = useState(0);
-  const [items, setItems] = useState<Item[]>([]);
   const [pending, startTransition] = useTransition();
+  const { data, mutate } = useSWR('notifications/unread', fetchNotifications, {
+    refreshInterval: 30_000,
+    revalidateOnFocus: true,
+  });
 
-  async function refresh() {
-    try {
-      const r = await fetch('/api/notifications/unread', { cache: 'no-store' });
-      if (!r.ok) return;
-      const j = await r.json();
-      setCount(j.count ?? 0);
-      setItems(j.items ?? []);
-    } catch {}
-  }
-
-  useEffect(() => {
-    refresh();
-    const t = setInterval(refresh, 30_000);
-    return () => clearInterval(t);
-  }, []);
+  const count = data?.count ?? 0;
+  const items = data?.items ?? [];
 
   function markAll() {
     startTransition(async () => {
       const res = await markAllNotificationsReadAction();
       if (res.success) {
         toast.success('All marked as read');
-        await refresh();
+        await mutate();
       } else {
         toast.error(res.error);
       }

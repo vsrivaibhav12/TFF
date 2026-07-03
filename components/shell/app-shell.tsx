@@ -17,8 +17,6 @@ import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationsBell from './notifications-bell';
-import CommandPalette from './command-palette';
-import ShortcutsHelp from '@/components/sophistication/shortcuts-help';
 import { QuickActionsDropdown } from './quick-actions';
 import { GlobalTimer } from './global-timer';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -28,7 +26,11 @@ import { ICONS, type NavItem } from './nav-icons';
 export { type NavItem } from './nav-icons';
 import { useGlobalShortcuts } from '@/lib/hooks/use-global-shortcuts';
 import { useDockActions } from '@/lib/state/dock-state';
-import { UniversalDetailDock } from './universal-detail-dock';
+import dynamic from 'next/dynamic';
+
+const CommandPalette = dynamic(() => import('./command-palette'), { ssr: false });
+const ShortcutsHelp = dynamic(() => import('@/components/sophistication/shortcuts-help'), { ssr: false });
+const UniversalDetailDock = dynamic(() => import('./universal-detail-dock').then((m) => ({ default: m.UniversalDetailDock })), { ssr: false });
 
 function getInitials(name: string | null): string {
   if (!name) return 'U';

@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, useMemo } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 export interface DockItem {
@@ -30,12 +30,71 @@ function parseDockQuery(value: string | null): DockItem | null {
 
 export function DockProvider({ children }: { children: ReactNode }) {
   const [stack, setStack] = useState<DockState>([]);
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
   const router = useRouter();
   const isUserAction = useRef(false);
 
-  // Sync URL → stack on external navigation (back/forward, link clicks)
+  const updateUrl = useCallback((nextStack: DockState) => {
+    const params = new URLSearchParams(window.location.search);
+    const top = nextStack[nextStack.length - 1];
+    if (top) params.set('dock', `${top.type}:${top.id}`);
+    else params.delete('dock');
+    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+  }, [router]);
+
+  const push = useCallback((item: DockItem) => {
+    isUserAction.current = true;
+    setStack((prev) => {
+      const next = [...prev, item];
+      updateUrl(next);
+      return next;
+    });
+  }, [updateUrl]);
+
+  const pop = useCallback(() => {
+    isUserAction.current = true;
+    setStack((prev) => {
+      if (prev.length <= 1) {
+        updateUrl([]);
+        return [];
+      }
+      const next = prev.slice(0, -1);
+      updateUrl(next);
+      return next;
+    });
+  }, [updateUrl]);
+
+  const clear = useCallback(() => {
+    isUserAction.current = true;
+    setStack([]);
+    updateUrl([]);
+  }, [updateUrl]);
+
+  const actions = useMemo<DockActions>(() => ({ push, pop, clear }), [push, pop, clear]);
+
+  return (
+    <DockStateContext.Provider value={stack}>
+      <DockActionsContext.Provider value={actions}>
+        {children}
+        <DockUrlSync setStack={setStack} isUserAction={isUserAction} />
+      </DockActionsContext.Provider>
+    </DockStateContext.Provider>
+  );
+}
+
+/**
+ * Reads the URL `?dock=` query and syncs it to the dock stack.
+ * Kept as a separate child so that changes to unrelated query params
+ * do not re-render the DockProvider or the rest of the app tree.
+ */
+function DockUrlSync({
+  setStack,
+  isUserAction,
+}: {
+  setStack: React.Dispatch<React.SetStateAction<DockState>>;
+  isUserAction: React.MutableRefObject<boolean>;
+}) {
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     if (isUserAction.current) {
       isUserAction.current = false;
@@ -44,61 +103,14 @@ export function DockProvider({ children }: { children: ReactNode }) {
     const dockQuery = searchParams.get('dock');
     const item = parseDockQuery(dockQuery);
     setStack((prev) => {
-      // Only update if the top item actually changed to prevent loops
       const top = prev[prev.length - 1];
       if (!item && prev.length === 0) return prev;
       if (item && top && top.type === item.type && top.id === item.id) return prev;
       return item ? [item] : [];
     });
-  }, [searchParams]);
+  }, [searchParams, setStack, isUserAction]);
 
-  const push = useCallback(
-    (item: DockItem) => {
-      isUserAction.current = true;
-      setStack((prev) => {
-        const newStack = [...prev, item];
-        const params = new URLSearchParams(window.location.search);
-        params.set('dock', `${item.type}:${item.id}`);
-        router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
-        return newStack;
-      });
-    },
-    [router]
-  );
-
-  const pop = useCallback(() => {
-    isUserAction.current = true;
-    setStack((prev) => {
-      if (prev.length <= 1) {
-        const params = new URLSearchParams(window.location.search);
-        params.delete('dock');
-        router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
-        return [];
-      }
-      const newStack = prev.slice(0, -1);
-      const top = newStack[newStack.length - 1];
-      const params = new URLSearchParams(window.location.search);
-      params.set('dock', `${top.type}:${top.id}`);
-      router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
-      return newStack;
-    });
-  }, [router]);
-
-  const clear = useCallback(() => {
-    isUserAction.current = true;
-    setStack([]);
-    const params = new URLSearchParams(window.location.search);
-    params.delete('dock');
-    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
-  }, [router]);
-
-  return (
-    <DockStateContext.Provider value={stack}>
-      <DockActionsContext.Provider value={{ push, pop, clear }}>
-        {children}
-      </DockActionsContext.Provider>
-    </DockStateContext.Provider>
-  );
+  return null;
 }
 
 export function useDockState() {

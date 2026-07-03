@@ -61,6 +61,17 @@ const nextConfig = {
     ];
   },
   experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      'recharts',
+      'echarts',
+      '@tanstack/react-table',
+      '@tanstack/react-virtual',
+      '@dnd-kit/core',
+      '@dnd-kit/sortable',
+      '@dnd-kit/utilities',
+    ],
     serverActions: {
       bodySizeLimit: '10mb',
       // Allow the preview domain (request goes through K8s ingress + FastAPI proxy on 8001 -> 3000)

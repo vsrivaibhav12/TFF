@@ -1,7 +1,7 @@
 'use client';
 
-import { useDockState, useDockActions } from '@/lib/state/dock-state';
-import { useEffect, useState, useCallback } from 'react';
+import { useDockState, useDockActions, type DockItem } from '@/lib/state/dock-state';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { X, ArrowLeft, Loader2 } from 'lucide-react';
 import { getTaskDockData, getClientDockData, getQueryDockData, getNoticeDockData, getTeamMemberDockData } from '@/lib/actions/dock-data';
@@ -11,6 +11,24 @@ import TeamClientDetailShell from '@/components/clients/team-client-detail-shell
 import QueryDetailShell from '@/components/queries/query-detail-shell';
 import NoticeDetailShell from '@/components/notices/notice-detail-shell';
 import TeamDetailShell from '@/components/team/team-detail-shell';
+import useSWR from 'swr';
+import { ENABLE_STREAMED_DOCK } from '@/lib/flags';
+
+const fetchers = {
+  task: getTaskDockData,
+  client: getClientDockData,
+  query: getQueryDockData,
+  notice: getNoticeDockData,
+  team: getTeamMemberDockData,
+};
+
+type DockItemType = keyof typeof fetchers;
+
+type TaskDockData = NonNullable<Extract<Awaited<ReturnType<typeof getTaskDockData>>, { success: true }>['data']>;
+type ClientDockData = NonNullable<Extract<Awaited<ReturnType<typeof getClientDockData>>, { success: true }>['data']>;
+type QueryDockData = NonNullable<Extract<Awaited<ReturnType<typeof getQueryDockData>>, { success: true }>['data']>;
+type NoticeDockData = NonNullable<Extract<Awaited<ReturnType<typeof getNoticeDockData>>, { success: true }>['data']>;
+type TeamDockData = NonNullable<Extract<Awaited<ReturnType<typeof getTeamMemberDockData>>, { success: true }>['data']>;
 
 export function UniversalDetailDock() {
   const stack = useDockState();
@@ -55,22 +73,45 @@ export function UniversalDetailDock() {
           </button>
         </div>
         <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
-           <DockPanelContent item={topItem} />
+          {ENABLE_STREAMED_DOCK ? (
+            <Suspense fallback={<PanelSkeleton />}>
+              <DockPanelAsync item={topItem} />
+            </Suspense>
+          ) : (
+            <DockPanelLegacy item={topItem} />
+          )}
         </div>
       </div>
     </>
   );
 }
 
-type TaskDockData = NonNullable<Extract<Awaited<ReturnType<typeof getTaskDockData>>, { success: true }>['data']>;
-type ClientDockData = NonNullable<Extract<Awaited<ReturnType<typeof getClientDockData>>, { success: true }>['data']>;
-type QueryDockData = NonNullable<Extract<Awaited<ReturnType<typeof getQueryDockData>>, { success: true }>['data']>;
-type NoticeDockData = NonNullable<Extract<Awaited<ReturnType<typeof getNoticeDockData>>, { success: true }>['data']>;
-type TeamDockData = NonNullable<Extract<Awaited<ReturnType<typeof getTeamMemberDockData>>, { success: true }>['data']>;
+function PanelSkeleton() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+    </div>
+  );
+}
 
-function DockPanelContent({ item }: { item: { type: string; id: string } }) {
-  const pathname = usePathname();
-  const prefix = pathname.startsWith('/team') ? '/team' : pathname.startsWith('/portal') ? '/portal' : '/admin';
+function DockPanelAsync({ item }: { item: DockItem }) {
+  const prefix = usePathnamePrefix();
+  const fetcher = fetchers[item.type] as (id: string) => Promise<any>;
+
+  const { data, error } = useSWR(
+    ['dock', item.type, item.id],
+    () => fetcher(item.id),
+    { suspense: true, revalidateOnFocus: false }
+  );
+
+  if (error) return <div className="p-6 text-center text-sm text-red-500">{error.message || 'Failed to load'}</div>;
+  if (!data?.success) return <div className="p-6 text-center text-sm text-red-500">{data?.error || 'Failed to load'}</div>;
+
+  return renderPanel(item.type, data.data, prefix);
+}
+
+function DockPanelLegacy({ item }: { item: DockItem }) {
+  const prefix = usePathnamePrefix();
   const [taskData, setTaskData] = useState<TaskDockData | null>(null);
   const [clientData, setClientData] = useState<ClientDockData | null>(null);
   const [queryData, setQueryData] = useState<QueryDockData | null>(null);
@@ -132,71 +173,67 @@ function DockPanelContent({ item }: { item: { type: string; id: string } }) {
     return () => { active = false; };
   }, [item, refreshKey]);
 
-  if (loading) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
-      </div>
-    );
-  }
+  if (loading) return <PanelSkeleton />;
+  if (error) return <div className="p-6 text-center text-sm text-red-500">{error}</div>;
 
-  if (error) {
-    return (
-      <div className="p-6 text-center text-sm text-red-500">
-        {error}
-      </div>
-    );
-  }
+  return renderPanel(item.type, taskData ?? clientData ?? queryData ?? noticeData ?? teamData, prefix, refresh);
+}
 
-  if (item.type === 'task' && taskData) {
+function usePathnamePrefix() {
+  const pathname = usePathname();
+  return pathname.startsWith('/team') ? '/team' : pathname.startsWith('/portal') ? '/portal' : '/admin';
+}
+
+function renderPanel(type: string, data: any, prefix: string, onRefresh?: () => void) {
+  if (type === 'task' && data?.task) {
     return (
       <div className="px-2 md:px-4 py-4 min-h-full">
         <TaskDetailShell
-          task={taskData.task}
-          activity={taskData.activity}
-          notes={taskData.notes}
-          team={taskData.team}
-          steps={taskData.steps}
-          cfDefs={taskData.cfDefs}
-          cfValues={taskData.cfValues}
-          allLabels={taskData.allLabels}
-          assignedLabels={taskData.assignedLabels}
-          workdone={taskData.workdone}
-          subServices={taskData.subServices ?? []}
-          taskTemplates={taskData.taskTemplates ?? []}
-          currentUserId={taskData.currentUserId}
-          canEdit={taskData.canEdit ?? false}
-          canEditSteps={taskData.canEditSteps ?? false}
-          canDelete={taskData.canDelete ?? false}
+          task={data.task}
+          activity={data.activity}
+          notes={data.notes}
+          team={data.team}
+          steps={data.steps}
+          cfDefs={data.cfDefs}
+          cfValues={data.cfValues}
+          allLabels={data.allLabels}
+          assignedLabels={data.assignedLabels}
+          workdone={data.workdone}
+          subServices={data.subServices ?? []}
+          taskTemplates={data.taskTemplates ?? []}
+          currentUserId={data.currentUserId}
+          canEdit={data.canEdit ?? false}
+          canEditSteps={data.canEditSteps ?? false}
+          canDelete={data.canDelete ?? false}
           basePath={`${prefix}/tasks`}
-          clientPath={`${prefix}/clients/${taskData.task.client_id}`}
+          clientPath={`${prefix}/clients/${data.task.client_id}`}
           isModal={true}
-          onRefresh={refresh}
+          onRefresh={onRefresh}
         />
       </div>
     );
   }
 
-  if (item.type === 'client' && clientData) {
-    const isAdmin = !clientData.basePath.startsWith('/team');
+  if (type === 'client' && data?.client) {
+    const isAdmin = !data.basePath.startsWith('/team');
     if (isAdmin) {
       return (
         <div className="px-2 md:px-4 py-4 min-h-full">
           <ClientDetailShell
-            client={clientData.client}
-            groups={clientData.groups}
-            owners={clientData.owners}
-            clientServices={clientData.clientServices}
-            clientSubServices={clientData.clientSubServices}
-            clientUsers={clientData.clientUsers}
-            teamAssignments={clientData.teamAssignments}
-            auditLogs={clientData.auditLogs}
-            openTasks={clientData.openTasks}
-            openNotices={clientData.openNotices}
-            openQueries={clientData.openQueries}
-            basePath={clientData.basePath}
-            canEdit={clientData.canEdit ?? false}
-            canDelete={clientData.canDelete ?? false}
+            client={data.client}
+            groups={data.groups}
+            owners={data.owners}
+            clientServices={data.clientServices}
+            clientSubServices={data.clientSubServices}
+            clientUsers={data.clientUsers}
+            teamAssignments={data.teamAssignments}
+            auditLogs={data.auditLogs}
+            openTasks={data.openTasks}
+            openNotices={data.openNotices}
+            openQueries={data.openQueries}
+            basePath={data.basePath}
+            canEdit={data.canEdit ?? false}
+            canDelete={data.canDelete ?? false}
             isModal={true}
           />
         </div>
@@ -205,40 +242,40 @@ function DockPanelContent({ item }: { item: { type: string; id: string } }) {
     return (
       <div className="px-2 md:px-4 py-4 min-h-full">
         <TeamClientDetailShell
-          client={clientData.client}
-          subs={clientData.clientSubServices}
-          auditLogs={clientData.auditLogs}
-          openTasks={clientData.openTasks}
-          openNotices={clientData.openNotices}
-          openQueries={clientData.openQueries}
-          canEdit={clientData.canEdit ?? false}
-          basePath={clientData.basePath}
+          client={data.client}
+          subs={data.clientSubServices}
+          auditLogs={data.auditLogs}
+          openTasks={data.openTasks}
+          openNotices={data.openNotices}
+          openQueries={data.openQueries}
+          canEdit={data.canEdit ?? false}
+          basePath={data.basePath}
           isModal={true}
         />
       </div>
     );
   }
 
-  if (item.type === 'query' && queryData) {
+  if (type === 'query' && data?.data) {
     return (
       <div className="px-2 md:px-4 py-4 min-h-full">
         <QueryDetailShell
-          data={queryData.data}
-          basePath={queryData.basePath}
-          canActAsTeam={queryData.canActAsTeam}
+          data={data.data}
+          basePath={data.basePath}
+          canActAsTeam={data.canActAsTeam}
           isModal={true}
         />
       </div>
     );
   }
 
-  if (item.type === 'notice' && noticeData) {
+  if (type === 'notice' && data?.notice) {
     return (
       <div className="px-2 md:px-4 py-4 min-h-full">
         <NoticeDetailShell
-          notice={noticeData.notice}
-          hearings={noticeData.hearings}
-          auditLogs={noticeData.auditLogs}
+          notice={data.notice}
+          hearings={data.hearings}
+          auditLogs={data.auditLogs}
           clientBasePath={`${prefix}/clients`}
           isModal={true}
         />
@@ -246,19 +283,19 @@ function DockPanelContent({ item }: { item: { type: string; id: string } }) {
     );
   }
 
-  if (item.type === 'team' && teamData) {
+  if (type === 'team' && data?.user) {
     return (
       <div className="px-2 md:px-4 py-4 min-h-full">
         <TeamDetailShell
-          user={teamData.user}
-          caps={teamData.caps}
-          templates={teamData.templates}
-          teamList={teamData.teamList}
-          payroll={teamData.payroll}
-          activeTemplate={teamData.activeTemplate}
-          isDiverged={teamData.isDiverged}
-          canPromote={teamData.canPromote}
-          canDemote={teamData.canDemote}
+          user={data.user}
+          caps={data.caps}
+          templates={data.templates}
+          teamList={data.teamList}
+          payroll={data.payroll}
+          activeTemplate={data.activeTemplate}
+          isDiverged={data.isDiverged}
+          canPromote={data.canPromote}
+          canDemote={data.canDemote}
           basePath={`${prefix}/team`}
           isModal={true}
         />
@@ -266,5 +303,5 @@ function DockPanelContent({ item }: { item: { type: string; id: string } }) {
     );
   }
 
-  return <div className="p-6 text-sm text-zinc-500">View for {item.type} not implemented yet.</div>;
+  return <div className="p-6 text-sm text-zinc-500">View for {type} not implemented yet.</div>;
 }

@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { LayoutList, Columns3 } from 'lucide-react';
-import { TaskBoard } from './task-board';
+import dynamic from 'next/dynamic';
+
+const TaskBoard = dynamic(() => import('./task-board').then((m) => ({ default: m.TaskBoard })), { ssr: false });
 
 interface Task {
   id: string;

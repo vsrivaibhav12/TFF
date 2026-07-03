@@ -7,10 +7,12 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { CheckCircle2, Clock, AlertTriangle, CalendarDays, Briefcase, Timer, TrendingUp } from 'lucide-react';
-import ComplianceBarChart from './compliance-bar-chart';
+import dynamic from 'next/dynamic';
 import ExportButton from '@/components/sophistication/export-button';
 
-export const dynamic = 'force-dynamic';
+const ComplianceBarChart = dynamic(() => import('./compliance-bar-chart'), { ssr: false });
+
+export const revalidate = 60;
 
 export default async function AdminCompliancePage() {
   await requireRole('admin');

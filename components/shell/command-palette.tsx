@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useState, useTransition, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
 import {
   Search,
   Briefcase,
@@ -314,7 +315,6 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
   const [q, setQ] = useState('');
   const [active, setActive] = useState(0);
   const [items, setItems] = useState<CmdItem[]>([]);
-  const [pending, startTransition] = useTransition();
 
   const basePath = role === 'admin' ? '/admin' : role === 'client' ? '/portal' : '/team';
   const quickActions = getQuickActions(basePath, role);
@@ -371,17 +371,24 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
     };
   }, []);
 
-  // When query changes, fetch dynamic suggestions
+  // Fetch dynamic suggestions via SWR
+  const { data: searchData, isValidating } = useSWR(
+    open && q.length >= 2 ? ['cmdk/search', q] : null,
+    async ([, query]) => {
+      const r = await fetch(`/api/cmdk/search?q=${encodeURIComponent(query)}`, { cache: 'no-store' });
+      if (!r.ok) throw new Error('Search failed');
+      return r.json();
+    },
+    { revalidateOnFocus: false }
+  );
+
   useEffect(() => {
-    if (!open || q.length < 2) {
+    if (!searchData) {
       setItems([]);
       return;
     }
-    startTransition(async () => {
-      try {
-        const r = await fetch(`/api/cmdk/search?q=${encodeURIComponent(q)}`, { cache: 'no-store' });
-        const j = await r.json();
-        const out: CmdItem[] = [];
+    const j = searchData;
+    const out: CmdItem[] = [];
         for (const c of j.clients ?? []) {
           out.push({ id: `client-${c.id}`, label: c.business_name, group: 'Clients', href: `${basePath}/clients/${c.id}`, icon: <Users className="h-3.5 w-3.5" /> });
         }
@@ -402,12 +409,8 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
         for (const c of j.credentials ?? []) {
           out.push({ id: `cred-${c.id}`, label: c.portal_name, group: 'Credentials', href: `${basePath}/credentials?q=${encodeURIComponent(c.portal_name)}`, icon: <Key className="h-3.5 w-3.5" />, keywords: c.client_name });
         }
-        setItems(out);
-      } catch {
-        setItems([]);
-      }
-    });
-  }, [q, open, basePath, role]);
+    setItems(out);
+  }, [searchData, basePath, role]);
 
   // Merge quick actions (filtered) + search results
   const ql = q.toLowerCase().trim();
@@ -545,7 +548,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
         </div>
         <div className="px-5 py-2.5 border-t border-zinc-100 text-[10px] text-zinc-400 flex items-center justify-between">
           <span>↑↓ navigate · ↵ open · esc close</span>
-          {pending && <span className="text-teal-500">Searching...</span>}
+          {isValidating && <span className="text-teal-500">Searching...</span>}
         </div>
       </div>
     </div>
