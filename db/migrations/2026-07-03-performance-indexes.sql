@@ -100,7 +100,7 @@ BEGIN
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'tds_filings') THEN
     CREATE INDEX IF NOT EXISTS idx_tds_filings_client_period
-      ON tds_filings (client_id, period_year, period_month);
+      ON tds_filings (client_id, period_year, period_quarter);
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'income_tax_filings') THEN
@@ -114,8 +114,8 @@ $$;
 -- Audit / activity feeds
 -- ============================================================================
 
-CREATE INDEX IF NOT EXISTS idx_global_audit_log_created_at
-  ON global_audit_log (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_global_audit_log_performed_at
+  ON global_audit_log (performed_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_global_audit_log_actor_action
-  ON global_audit_log (actor_id, action, created_at DESC);
+  ON global_audit_log (performed_by, action, performed_at DESC);
