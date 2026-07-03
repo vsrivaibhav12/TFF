@@ -11,7 +11,7 @@
     "db:apply-schema-additions": "tsx scripts/apply-schema-additions.ts",
     "db:apply-rls-capabilities": "tsx scripts/apply-rls-capabilities.ts",
     "db:apply-rls-additive": "tsx scripts/apply-rls-additive.ts",
-    "db:apply-performance-indexes": "tsx scripts/apply-migration.ts db/migrations/2026-07-01-performance-indexes.sql",
+    "db:apply-performance-indexes": "tsx scripts/apply-migration.ts db/migrations/2026-07-03-performance-indexes.sql",
     "db:apply-phase-2": "tsx scripts/apply-phase-2-task-enhancements.ts",
     "db:fix-missing-columns": "tsx scripts/apply-fix-all-missing-columns.ts",
     "db:seed": "tsx scripts/seed.ts",
