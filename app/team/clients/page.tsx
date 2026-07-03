@@ -3,10 +3,10 @@ import { getComplianceStatusForClients } from '@/lib/repositories/compliance';
 import { countActiveEngagementsForClients } from '@/lib/repositories/client-sub-services';
 import { listSavedViews } from '@/lib/actions/saved-views';
 import { requireRole } from '@/lib/auth/require-role';
-import { hasCapability } from '@/lib/auth/require-capability';
+import { hasCapabilities } from '@/lib/auth/capabilities-cache';
 import Link from 'next/link';
 import NewClientDialog from '@/components/clients/new-client-dialog';
-import { Users, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ExportButton from '@/components/sophistication/export-button';
 import EmptyState from '@/components/sophistication/empty-state';
@@ -15,15 +15,13 @@ import FilterBar from '@/components/sophistication/filter-bar';
 import ClientsTableClient from './clients-table-client';
 import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 const PAGE_SIZE = 50;
 
 export default async function TeamClientsList({ searchParams }: { searchParams: { group?: string; city?: string; q?: string; page?: string } }) {
   const me = await requireRole(['admin', 'team']);
-  const canCreate = await hasCapability(me, 'clients.create');
-  const canAssignServices = await hasCapability(me, 'services.assign');
-  const canDelete = await hasCapability(me, 'clients.delete');
+
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
 
@@ -32,6 +30,10 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
     city: searchParams.city,
     q: searchParams.q,
   };
+
+  const caps = await hasCapabilities(me, ['clients.create', 'services.assign', 'clients.delete']);
+  const canCreate = me.role === 'admin' || caps.has('clients.create');
+  const canDelete = me.role === 'admin' || caps.has('clients.delete');
 
   const [clients, groups, views, totalCount] = await Promise.all([
     listAccessibleClients({

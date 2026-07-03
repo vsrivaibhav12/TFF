@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { requireRole } from '@/lib/auth/require-role';
-import { hasCapability } from '@/lib/auth/require-capability';
+import { hasCapabilities } from '@/lib/auth/capabilities-cache';
 import { listTasks, countTasksByStatus, countOverdueTasks, enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { listLeaveRequests } from '@/lib/repositories/leave';
@@ -49,20 +49,21 @@ export default async function TeamWorkspace() {
 async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole>> }) {
   const isAdmin = me.role === 'admin';
 
-  const [directReports, canApproveLeave, canApprovePermission, canApproveAttendance] = await Promise.all([
+  const [directReports, approvalCaps] = await Promise.all([
     isAdmin ? Promise.resolve([]) : getDirectReports(me.id),
-    hasCapability(me, 'leave.approve'),
-    hasCapability(me, 'permission.approve'),
-    hasCapability(me, 'attendance.approve'),
+    hasCapabilities(me, ['leave.approve', 'permission.approve', 'attendance.approve']),
   ]);
   const isManager = directReports.length > 0;
+  const canApproveLeave = me.role === 'admin' || approvalCaps.has('leave.approve');
+  const canApprovePermission = me.role === 'admin' || approvalCaps.has('permission.approve');
+  const canApproveAttendance = me.role === 'admin' || approvalCaps.has('attendance.approve');
   const canSeeApprovals = canApproveLeave || canApprovePermission || canApproveAttendance || isManager;
 
   const [counts, overdueCount, dueSoonRaw, clients, pendingLeaveAll, pendingPermissionAll, todayAttendance] = await Promise.all([
     countTasksByStatus({ assignedTo: me.id }),
     countOverdueTasks({ assignedTo: me.id }),
     listTasks({ assignedTo: me.id, status: ['pending', 'in_progress'], limit: 6 }),
-    listAccessibleClients(),
+    listAccessibleClients({ limit: 8 }),
     canSeeApprovals ? listLeaveRequests({ status: 'pending' }) : Promise.resolve([]),
     canSeeApprovals ? listPermissionRequests({ status: 'pending' }) : Promise.resolve([]),
     getTodayAttendance(me.id),

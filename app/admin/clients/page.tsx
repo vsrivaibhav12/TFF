@@ -1,5 +1,6 @@
 import { requireRole } from '@/lib/auth/require-role';
-import { requireCapabilityOrRedirect, hasCapability } from '@/lib/auth/require-capability';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
+import { hasCapabilities } from '@/lib/auth/capabilities-cache';
 import Link from 'next/link';
 import NewClientDialog from '@/components/clients/new-client-dialog';
 import { listAccessibleClients, listClientGroups, countAccessibleClients } from '@/lib/repositories/clients';
@@ -14,15 +15,14 @@ import FilterBar from '@/components/sophistication/filter-bar';
 import ClientsTableClient from './clients-table-client';
 import ExportButton from '@/components/sophistication/export-button';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 const PAGE_SIZE = 50;
 
 export default async function AdminClientsList({ searchParams }: { searchParams: { group?: string; city?: string; q?: string; page?: string } }) {
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'clients.read.all');
-  const canAssignServices = await hasCapability(me, 'services.assign');
-  const canDelete = await hasCapability(me, 'clients.delete');
+
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
 
@@ -31,6 +31,10 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
     city: searchParams.city,
     q: searchParams.q,
   };
+
+  const caps = await hasCapabilities(me, ['services.assign', 'clients.delete']);
+  const canAssignServices = me.role === 'admin' || caps.has('services.assign');
+  const canDelete = me.role === 'admin' || caps.has('clients.delete');
 
   const [clients, groups, views, totalCount] = await Promise.all([
     listAccessibleClients({
