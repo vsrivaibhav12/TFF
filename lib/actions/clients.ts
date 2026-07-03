@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import * as clientService from '@/lib/services/client-service';
+import { listAccessibleClients } from '@/lib/repositories/clients';
 import { writeAudit } from '@/lib/services/audit-service';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 
@@ -237,5 +238,38 @@ export async function deleteClientGroup(id: string): Promise<ActionResult<void>>
     return ok(undefined);
   } catch (err: any) {
     return fail(err.message || 'Failed to delete group', err.code || 'INTERNAL_ERROR');
+  }
+}
+
+const SearchClientsSchema = z.object({
+  q: z.string().max(100).default(''),
+  limit: z.number().int().min(1).max(100).default(25),
+});
+
+export type ClientSearchResult = { id: string; business_name: string; pan: string | null };
+
+/**
+ * Server-side client search for dropdowns/comboboxes.
+ * Gated by role and capability; RLS enforces which rows the user can see.
+ */
+export async function searchClients(input: z.infer<typeof SearchClientsSchema>): Promise<ActionResult<ClientSearchResult[]>> {
+  try {
+    // Rely on RLS for row-level scoping; any admin/team user who can reach the task/client
+    // workflows can search the clients they are authorized to see.
+    await requireRole(['admin', 'team']);
+
+    const parsed = SearchClientsSchema.safeParse(input);
+    if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
+
+    const { q, limit } = parsed.data;
+    const clients = await listAccessibleClients({
+      q: q.trim() || undefined,
+      limit,
+      fields: ['id', 'business_name', 'pan'],
+    });
+
+    return ok(clients.map((c: any) => ({ id: c.id, business_name: c.business_name, pan: c.pan ?? null })));
+  } catch (err: any) {
+    return fail(err.message || 'Failed to search clients', err.code || 'INTERNAL_ERROR');
   }
 }

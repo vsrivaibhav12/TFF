@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DockLink } from '@/components/shell/dock-link';
 import Link from 'next/link';
@@ -90,6 +90,12 @@ export default function TaskDetailShell({
   const [editingTemplate, setEditingTemplate] = useState(false);
   const [selectedSubServiceId, setSelectedSubServiceId] = useState(task.sub_service_id || '');
   const [selectedTemplateId, setSelectedTemplateId] = useState(task.task_template_id || '');
+
+  // Resync local edit state when the task data refreshes (e.g. after a successful save).
+  useEffect(() => {
+    setSelectedSubServiceId(task.sub_service_id || '');
+    setSelectedTemplateId(task.task_template_id || '');
+  }, [task.id, task.sub_service_id, task.task_template_id]);
   const [description, setDescription] = useState(task.description || '');
   const [periodYear, setPeriodYear] = useState(task.period_year ?? '');
   const [periodMonth, setPeriodMonth] = useState(task.period_month ?? '');
@@ -272,7 +278,7 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Priority</div>
                 {canEdit && !isClosed && !editingPriority && (
-                  <button onClick={() => setEditingPriority(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingPriority(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
                 )}
               </div>
               {editingPriority ? (
@@ -281,8 +287,8 @@ export default function TaskDetailShell({
                     <SelectTrigger className="h-7 text-xs w-24 px-1"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="urgent">Urgent</SelectItem></SelectContent>
                   </Select>
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ priority })) setEditingPriority(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPriority(task.priority); setEditingPriority(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ priority })) setEditingPriority(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPriority(task.priority); setEditingPriority(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                 </div>
               ) : (
                 <div className="text-sm font-semibold text-zinc-900 capitalize">{task.priority}</div>
@@ -294,14 +300,14 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Due date</div>
                 {canEdit && !isClosed && !editingDueDate && (
-                  <button onClick={() => setEditingDueDate(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingDueDate(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
                 )}
               </div>
               {editingDueDate ? (
                 <div className="flex items-center gap-1">
                   <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-7 text-[10px] w-28 px-1" />
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ due_date: dueDate || null })) setEditingDueDate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setDueDate(task.due_date ? task.due_date.slice(0, 10) : ''); setEditingDueDate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ due_date: dueDate || null })) setEditingDueDate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setDueDate(task.due_date ? task.due_date.slice(0, 10) : ''); setEditingDueDate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                 </div>
               ) : (
                 <div className="text-sm font-semibold text-zinc-900">{task.due_date ? formatDateIST(task.due_date) : '—'}</div>
@@ -313,7 +319,7 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Period</div>
                 {canEdit && !isClosed && !editingPeriod && (
-                  <button onClick={() => setEditingPeriod(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingPeriod(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
                 )}
               </div>
               {editingPeriod ? (
@@ -321,8 +327,8 @@ export default function TaskDetailShell({
                   <Input type="number" value={periodYear} onChange={(e) => setPeriodYear(e.target.value)} className="w-14 h-6 text-[10px] px-1" placeholder="YYYY" />
                   <Input type="number" value={periodMonth} onChange={(e) => setPeriodMonth(e.target.value)} className="w-10 h-6 text-[10px] px-1" placeholder="MM" />
                   <Input type="number" value={periodQuarter} onChange={(e) => setPeriodQuarter(e.target.value)} className="w-10 h-6 text-[10px] px-1" placeholder="Q" />
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ period_year: periodYear ? parseInt(periodYear) : null, period_month: periodMonth ? parseInt(periodMonth) : null, period_quarter: periodQuarter ? parseInt(periodQuarter) : null })) setEditingPeriod(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(task.period_year ?? ''); setPeriodMonth(task.period_month ?? ''); setPeriodQuarter(task.period_quarter ?? ''); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ period_year: periodYear ? parseInt(periodYear) : null, period_month: periodMonth ? parseInt(periodMonth) : null, period_quarter: periodQuarter ? parseInt(periodQuarter) : null })) setEditingPeriod(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(task.period_year ?? ''); setPeriodMonth(task.period_month ?? ''); setPeriodQuarter(task.period_quarter ?? ''); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                 </div>
               ) : (
                 <div className="text-sm font-semibold text-zinc-900">{task.period_month && task.period_year ? `${task.period_month}/${task.period_year}${task.period_quarter ? ` · Q${task.period_quarter}` : ''}` : '—'}</div>
@@ -334,7 +340,7 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Assignees</div>
                 {!isClosed && !editingAssignee && (
-                  <button onClick={() => setEditingAssignee(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingAssignee(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
                 )}
               </div>
               {editingAssignee ? (
@@ -355,7 +361,7 @@ export default function TaskDetailShell({
                     searchPlaceholder="Search team..."
                   />
                   <div className="flex items-center gap-1">
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
                       setSaving(true);
                       const r = await assignTaskAction({ task_id: task.id, assigned_to: assigneeIds, reviewer_id: reviewerIds });
                       setSaving(false);
@@ -364,7 +370,7 @@ export default function TaskDetailShell({
                       setEditingAssignee(false);
                       onRefresh?.();
                     }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
                       setAssigneeIds((task as any).assignees?.map((a: any) => a.id) ?? (task.assigned_to ? [task.assigned_to] : []));
                       setReviewerIds((task as any).reviewers?.map((r: any) => r.id) ?? (task.reviewer_id ? [task.reviewer_id] : []));
                       setEditingAssignee(false);
@@ -383,7 +389,7 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Billing</div>
                 {canEdit && !isClosed && !editingBilling && (
-                  <button onClick={() => setEditingBilling(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingBilling(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
                 )}
               </div>
               {editingBilling ? (
@@ -399,11 +405,11 @@ export default function TaskDetailShell({
                     </div>
                   )}
                   <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
                       const numAmount = parseFloat(billAmount as string);
                       if (await saveField({ is_billable: billable, bill_reference: billRef || null, bill_amount: isNaN(numAmount) ? null : numAmount })) setEditingBilling(false);
                     }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
                       setBillable(task.is_billable ?? false);
                       setBillRef(task.bill_reference ?? '');
                       setBillAmount(task.bill_amount ?? '');
@@ -421,7 +427,7 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider">ARN</div>
                 {canEdit && !isClosed && !editingArn && (
-                  <button onClick={() => setEditingArn(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingArn(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
                 )}
               </div>
               {editingArn ? (
@@ -432,10 +438,10 @@ export default function TaskDetailShell({
                     <Switch checked={arnVisible} onCheckedChange={setArnVisible} />
                   </div>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
                       if (await saveField({ arn_reference: arnRef || null, is_arn_client_visible: arnVisible })) setEditingArn(false);
                     }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
                       setArnRef(task.arn_reference ?? '');
                       setArnVisible(task.is_arn_client_visible ?? false);
                       setEditingArn(false);
@@ -452,7 +458,7 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Service</div>
                 {canEdit && !isClosed && !editingService && (
-                  <button onClick={() => setEditingService(true)} className="text-zinc-400 hover:text-zinc-600 opacity-70 hover:opacity-100 transition-opacity" title="Edit service"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingService(true)} className="text-zinc-400 hover:text-zinc-600 opacity-70 hover:opacity-100 transition-opacity" title="Edit service"><Pencil className="h-3 w-3" /></button>
                 )}
               </div>
               {editingService ? (
@@ -468,8 +474,8 @@ export default function TaskDetailShell({
                     </SelectContent>
                   </Select>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                   </div>
                 </div>
               ) : (
@@ -482,7 +488,7 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Template</div>
                 {canEdit && !isClosed && !editingTemplate && (
-                  <button onClick={() => setEditingTemplate(true)} className="text-zinc-400 hover:text-zinc-600 opacity-70 hover:opacity-100 transition-opacity" title="Edit template"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingTemplate(true)} className="text-zinc-400 hover:text-zinc-600 opacity-70 hover:opacity-100 transition-opacity" title="Edit template"><Pencil className="h-3 w-3" /></button>
                 )}
               </div>
               {editingTemplate ? (
@@ -503,8 +509,8 @@ export default function TaskDetailShell({
                     </SelectContent>
                   </Select>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ task_template_id: selectedTemplateId || null })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const taskTemplateId = selectedTemplateId && selectedTemplateId !== '__empty__' ? selectedTemplateId : null; if (await saveField({ task_template_id: taskTemplateId })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                   </div>
                 </div>
               ) : (
@@ -549,15 +555,15 @@ export default function TaskDetailShell({
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-[13px] font-semibold text-zinc-700">Description</h3>
               {canEdit && !isClosed && !editingDesc && (
-                <button onClick={() => setEditingDesc(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                <button type="button" onClick={() => setEditingDesc(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
               )}
             </div>
             {editingDesc ? (
               <div className="space-y-2">
                 <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} autoFocus className="text-sm" />
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={async () => { if (await saveField({ description: description || null })) setEditingDesc(false); }} disabled={saving}>Save</Button>
-                  <Button size="sm" variant="outline" onClick={() => { setDescription(task.description || ''); setEditingDesc(false); }}>Cancel</Button>
+                  <Button type="button" size="sm" onClick={async () => { if (await saveField({ description: description || null })) setEditingDesc(false); }} disabled={saving}>Save</Button>
+                  <Button type="button" size="sm" variant="outline" onClick={() => { setDescription(task.description || ''); setEditingDesc(false); }}>Cancel</Button>
                 </div>
               </div>
             ) : (
@@ -566,7 +572,7 @@ export default function TaskDetailShell({
                   {task.description || <span className="text-zinc-400 italic">No description provided.</span>}
                 </p>
                 {task.description && task.description.length > 120 && (
-                  <button onClick={() => setDescExpanded(!descExpanded)} className="mt-2 text-xs text-teal-600 hover:text-teal-700 font-medium">
+                  <button type="button" onClick={() => setDescExpanded(!descExpanded)} className="mt-2 text-xs text-teal-600 hover:text-teal-700 font-medium">
                     {descExpanded ? 'Show less' : 'Show more'}
                   </button>
                 )}
@@ -584,7 +590,7 @@ export default function TaskDetailShell({
                 <Clock className="h-3.5 w-3.5 text-teal-600" /> Work log
               </h3>
               {!showWorkLog && !isClosed && (
-                <Button size="sm" variant="outline" onClick={() => setShowWorkLog(true)}>
+                <Button type="button" size="sm" variant="outline" onClick={() => setShowWorkLog(true)}>
                   <Plus className="h-3.5 w-3.5 mr-1" /> Log work
                 </Button>
               )}
@@ -598,8 +604,8 @@ export default function TaskDetailShell({
                   <Input value={workDesc} onChange={(e) => setWorkDesc(e.target.value)} placeholder="What did you work on? (optional)" className="flex-1 h-8 text-xs" />
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={submitWorkLog} disabled={loggingWork || !workMinutes}>Log entry</Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setShowWorkLog(false); setWorkMinutes(''); setWorkDesc(''); setWorkStartTime(''); setWorkEndTime(''); }}>Cancel</Button>
+                  <Button type="button" size="sm" onClick={submitWorkLog} disabled={loggingWork || !workMinutes}>Log entry</Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => { setShowWorkLog(false); setWorkMinutes(''); setWorkDesc(''); setWorkStartTime(''); setWorkEndTime(''); }}>Cancel</Button>
                 </div>
               </div>
             )}
@@ -620,7 +626,7 @@ export default function TaskDetailShell({
                       {e.note && <div className="text-xs text-zinc-500 truncate">{e.note}</div>}
                     </div>
                     {e.user_id === currentUserId && (
-                      <button onClick={() => removeWorkEntry(e.id)} disabled={workPending} className="text-zinc-400 hover:text-red-600 p-1" aria-label="Delete entry">
+                      <button type="button" onClick={() => removeWorkEntry(e.id)} disabled={workPending} className="text-zinc-400 hover:text-red-600 p-1" aria-label="Delete entry">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     )}
@@ -641,7 +647,7 @@ export default function TaskDetailShell({
             <div className="border border-zinc-200 rounded-xl p-3 bg-zinc-50 space-y-3 mb-3">
               <Textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Add an internal note…" rows={2} className="border-0 focus-visible:ring-0 p-0 text-sm resize-none bg-transparent" />
               <div className="flex justify-end pt-2 border-t border-zinc-200/50">
-                <Button size="sm" onClick={addNote} disabled={addingNote || !newNote.trim()} className="h-7 text-xs">
+                <Button type="button" size="sm" onClick={addNote} disabled={addingNote || !newNote.trim()} className="h-7 text-xs">
                   {addingNote ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null} Save
                 </Button>
               </div>
@@ -668,29 +674,29 @@ export default function TaskDetailShell({
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap gap-2">
                 {nextStatuses(task.status).includes('in_progress') && (
-                  <Button size="sm" variant="outline" className="flex-1" onClick={() => handleTransition('in_progress')} disabled={isPending}>
+                  <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => handleTransition('in_progress')} disabled={isPending}>
                     Start
                   </Button>
                 )}
                 {nextStatuses(task.status).includes('completed') && (
-                  <Button size="sm" variant="outline" className="flex-1 border-teal-200 text-teal-700 hover:bg-teal-50" onClick={() => handleTransition('completed')} disabled={isPending}>
+                  <Button type="button" size="sm" variant="outline" className="flex-1 border-teal-200 text-teal-700 hover:bg-teal-50" onClick={() => handleTransition('completed')} disabled={isPending}>
                     Complete
                   </Button>
                 )}
                 {task.status !== 'pending' && (
-                  <Button size="sm" variant="outline" className="flex-1" onClick={() => handleTransition('pending')} disabled={isPending}>
+                  <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => handleTransition('pending')} disabled={isPending}>
                     Move to pending
                   </Button>
                 )}
-                <Button size="sm" variant={task.is_blocked_on_client ? 'default' : 'outline'} className="flex-1" onClick={handleBlockedToggle} disabled={isPending}>
+                <Button type="button" size="sm" variant={task.is_blocked_on_client ? 'default' : 'outline'} className="flex-1" onClick={handleBlockedToggle} disabled={isPending}>
                   {task.is_blocked_on_client ? 'Unblock' : 'Blocked'}
                 </Button>
                 {task.is_stuck ? (
-                  <Button size="sm" variant="default" className="flex-1" onClick={handleUnstuck} disabled={isPending}>
+                  <Button type="button" size="sm" variant="default" className="flex-1" onClick={handleUnstuck} disabled={isPending}>
                     Unstuck
                   </Button>
                 ) : (
-                  <Button size="sm" variant="outline" className="flex-1" onClick={() => setShowStuckPicker(true)} disabled={isPending}>
+                  <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => setShowStuckPicker(true)} disabled={isPending}>
                     Stuck
                   </Button>
                 )}
@@ -713,8 +719,8 @@ export default function TaskDetailShell({
                     </SelectContent>
                   </Select>
                   <div className="flex gap-2">
-                    <Button size="sm" className="h-7 text-xs" onClick={handleMarkStuck} disabled={isPending || !stuckReason}>Mark stuck</Button>
-                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setShowStuckPicker(false); setStuckReason(''); }} disabled={isPending}>Cancel</Button>
+                    <Button type="button" size="sm" className="h-7 text-xs" onClick={handleMarkStuck} disabled={isPending || !stuckReason}>Mark stuck</Button>
+                    <Button type="button" size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setShowStuckPicker(false); setStuckReason(''); }} disabled={isPending}>Cancel</Button>
                   </div>
                 </div>
               )}
@@ -770,15 +776,15 @@ export default function TaskDetailShell({
               <dl className="space-y-2 text-sm">
                 
                 <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
-                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Period {canEdit && !isClosed && <Button size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingPeriod(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Period {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingPeriod(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
                   <dd className="font-semibold text-zinc-900">
                     {editingPeriod ? (
                       <div className="flex items-center gap-1">
                         <Input type="number" value={periodYear} onChange={(e) => setPeriodYear(e.target.value)} className="w-14 h-6 text-[10px] px-1" placeholder="YYYY" />
                         <Input type="number" value={periodMonth} onChange={(e) => setPeriodMonth(e.target.value)} className="w-10 h-6 text-[10px] px-1" placeholder="MM" />
                         <Input type="number" value={periodQuarter} onChange={(e) => setPeriodQuarter(e.target.value)} className="w-10 h-6 text-[10px] px-1" placeholder="Q" />
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ period_year: periodYear ? parseInt(periodYear) : null, period_month: periodMonth ? parseInt(periodMonth) : null, period_quarter: periodQuarter ? parseInt(periodQuarter) : null })) setEditingPeriod(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(task.period_year ?? ''); setPeriodMonth(task.period_month ?? ''); setPeriodQuarter(task.period_quarter ?? ''); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ period_year: periodYear ? parseInt(periodYear) : null, period_month: periodMonth ? parseInt(periodMonth) : null, period_quarter: periodQuarter ? parseInt(periodQuarter) : null })) setEditingPeriod(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(task.period_year ?? ''); setPeriodMonth(task.period_month ?? ''); setPeriodQuarter(task.period_quarter ?? ''); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                       </div>
                     ) : (
                       task.period_month && task.period_year ? `${task.period_month}/${task.period_year}${task.period_quarter ? ` · Q${task.period_quarter}` : ''}` : '—'
@@ -787,7 +793,7 @@ export default function TaskDetailShell({
                 </div>
 
                 <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
-                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Priority {canEdit && !isClosed && <Button size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingPriority(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Priority {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingPriority(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
                   <dd className="font-semibold text-zinc-900">
                     {editingPriority ? (
                       <div className="flex items-center gap-1">
@@ -795,8 +801,8 @@ export default function TaskDetailShell({
                           <SelectTrigger className="h-6 text-[10px] w-20 px-1"><SelectValue /></SelectTrigger>
                           <SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="urgent">Urgent</SelectItem></SelectContent>
                         </Select>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ priority })) setEditingPriority(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPriority(task.priority); setEditingPriority(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ priority })) setEditingPriority(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPriority(task.priority); setEditingPriority(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                       </div>
                     ) : (
                       <span className="capitalize">{task.priority}</span>
@@ -805,13 +811,13 @@ export default function TaskDetailShell({
                 </div>
 
                 <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
-                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Due Date {canEdit && !isClosed && <Button size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingDueDate(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Due Date {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingDueDate(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
                   <dd className="font-semibold text-zinc-900">
                     {editingDueDate ? (
                       <div className="flex items-center gap-1">
                         <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-6 text-[10px] w-28 px-1" />
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ due_date: dueDate || null })) setEditingDueDate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setDueDate(task.due_date ? task.due_date.slice(0, 10) : ''); setEditingDueDate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ due_date: dueDate || null })) setEditingDueDate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setDueDate(task.due_date ? task.due_date.slice(0, 10) : ''); setEditingDueDate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                       </div>
                     ) : (
                       task.due_date ? formatDateIST(task.due_date) : '—'
@@ -822,7 +828,7 @@ export default function TaskDetailShell({
                 <DetailItem label="Assignees" value={((task as any).assignees?.length ? (task as any).assignees : task.assignee ? [task.assignee] : []).map((a: any) => a.full_name).join(', ') || '—'} />
                 <DetailItem label="Reviewers" value={((task as any).reviewers?.length ? (task as any).reviewers : task.reviewer ? [task.reviewer] : []).map((r: any) => r.full_name).join(', ') || '—'} />
                 <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
-                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Service {canEdit && !isClosed && <Button size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingService(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Service {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingService(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
                   <dd className="font-semibold text-zinc-900 text-right">
                     {editingService ? (
                       <div className="flex items-center gap-1 justify-end">
@@ -836,8 +842,8 @@ export default function TaskDetailShell({
                             ))}
                           </SelectContent>
                         </Select>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                       </div>
                     ) : (
                       task.sub_services ? `${task.sub_services.services?.name ?? ''} › ${task.sub_services.name}` : '—'
@@ -846,7 +852,7 @@ export default function TaskDetailShell({
                 </div>
 
                 <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
-                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Template {canEdit && !isClosed && <Button size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingTemplate(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Template {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingTemplate(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
                   <dd className="font-semibold text-zinc-900 text-right">
                     {editingTemplate ? (
                       <div className="flex items-center gap-1 justify-end">
@@ -865,8 +871,8 @@ export default function TaskDetailShell({
                             })()}
                           </SelectContent>
                         </Select>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ task_template_id: selectedTemplateId || null })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const taskTemplateId = selectedTemplateId && selectedTemplateId !== '__empty__' ? selectedTemplateId : null; if (await saveField({ task_template_id: taskTemplateId })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                       </div>
                     ) : (
                       taskTemplates.find((t: any) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-400 font-normal">No template — click to set</span> : '—')
@@ -885,7 +891,7 @@ export default function TaskDetailShell({
             <div className="tff-card p-5 relative group">
               <h3 className="font-semibold mb-3 text-zinc-900 tracking-tight text-sm">Finance & Ref</h3>
               {canEdit && !isClosed && !editingFinance && (
-                <Button size="sm" variant="ghost" className="absolute top-4 right-4 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingFinance(true)}>
+                <Button type="button" size="sm" variant="ghost" className="absolute top-4 right-4 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingFinance(true)}>
                   <Pencil className="h-3.5 w-3.5 text-zinc-400" />
                 </Button>
               )}
@@ -918,7 +924,7 @@ export default function TaskDetailShell({
                     </div>
                   </div>
                   <div className="flex items-center gap-2 pt-2 border-t border-zinc-100">
-                    <Button size="sm" className="h-7 px-2 text-xs" onClick={async () => {
+                    <Button type="button" size="sm" className="h-7 px-2 text-xs" onClick={async () => {
                       const numAmount = parseFloat(billAmount as string);
                       const ok = await saveField({ 
                         is_billable: billable, 
@@ -929,7 +935,7 @@ export default function TaskDetailShell({
                       });
                       if (ok) setEditingFinance(false);
                     }} disabled={saving}>Save</Button>
-                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => {
+                    <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => {
                       setBillable(task.is_billable ?? false);
                       setBillRef(task.bill_reference ?? '');
                       setBillAmount(task.bill_amount ?? '');
@@ -969,7 +975,7 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-zinc-900 tracking-tight text-sm">Description</h3>
                 {canEdit && !isClosed && !editingDesc && (
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setEditingDesc(true)}>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setEditingDesc(true)}>
                     <Pencil className="h-3.5 w-3.5 text-zinc-400" />
                   </Button>
                 )}
@@ -978,10 +984,10 @@ export default function TaskDetailShell({
                 <div className="space-y-2">
                   <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} autoFocus className="text-sm" />
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={async () => { if (await saveField({ description: description || null })) setEditingDesc(false); }} disabled={saving}>
+                    <Button type="button" size="sm" onClick={async () => { if (await saveField({ description: description || null })) setEditingDesc(false); }} disabled={saving}>
                       {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => { setDescription(task.description || ''); setEditingDesc(false); }}>Cancel</Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => { setDescription(task.description || ''); setEditingDesc(false); }}>Cancel</Button>
                   </div>
                 </div>
               ) : (
@@ -1045,7 +1051,7 @@ export default function TaskDetailShell({
                   <div className="border border-zinc-200 rounded-xl p-3 bg-zinc-50 space-y-3">
                     <Textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Add an internal note…" rows={2} className="border-0 focus-visible:ring-0 p-0 text-sm resize-none bg-transparent" />
                     <div className="flex justify-end pt-2 border-t border-zinc-200/50">
-                      <Button size="sm" onClick={addNote} disabled={addingNote || !newNote.trim()} className="h-7 text-xs">
+                      <Button type="button" size="sm" onClick={addNote} disabled={addingNote || !newNote.trim()} className="h-7 text-xs">
                         {addingNote ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null} Save
                       </Button>
                     </div>

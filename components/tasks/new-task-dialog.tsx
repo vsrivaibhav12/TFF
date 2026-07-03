@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { ClientSearchCombobox } from '@/components/clients/client-search-combobox';
 import { createTaskAction } from '@/lib/actions/tasks';
 import { linkSubServiceAction } from '@/lib/actions/services';
 import { toast } from 'sonner';
@@ -39,6 +40,7 @@ export default function NewTaskDialog({ clients, team, allSubServices = [], defa
   const [pending, startTransition] = useTransition();
   const [showMore, setShowMore] = useState(false);
   const [clientSubServices, setClientSubServices] = useState<any[]>([]);
+  const [selectedClient, setSelectedClient] = useState<{ id: string; business_name: string; pan?: string | null } | null>(null);
   const [taskTemplates, setTaskTemplates] = useState<any[]>([]);
   const [linkingSubService, setLinkingSubService] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -74,7 +76,7 @@ export default function NewTaskDialog({ clients, team, allSubServices = [], defa
   // Auto-generate title when client + sub-service or period changes
   useEffect(() => {
     if (!f.client_id || !f.sub_service_id) return;
-    const clientName = clients.find((c) => c.id === f.client_id)?.business_name ?? '';
+    const clientName = selectedClient?.business_name ?? clients.find((c) => c.id === f.client_id)?.business_name ?? '';
     const subName = clientSubServices.find((cs: any) => cs.sub_service_id === f.sub_service_id)?.sub_services?.name ?? '';
     if (clientName && subName) {
       const newTitle = buildTaskTitle({
@@ -86,12 +88,21 @@ export default function NewTaskDialog({ clients, team, allSubServices = [], defa
       });
       setAutoTitle(newTitle);
     }
-  }, [f.client_id, f.sub_service_id, f.period_year, f.period_month, f.period_quarter, clientSubServices, clients]);
+  }, [f.client_id, f.sub_service_id, f.period_year, f.period_month, f.period_quarter, clientSubServices, clients, selectedClient]);
 
-  // Load this client's sub-services when client changes
+  // Load this client's sub-services and basic info when client changes
   useEffect(() => {
-    if (!f.client_id) { setClientSubServices([]); return; }
-    fetch(`/api/clients/${f.client_id}/sub-services`).then((r) => r.json()).then((j) => setClientSubServices(j.items ?? [])).catch(() => setClientSubServices([]));
+    if (!f.client_id) { setClientSubServices([]); setSelectedClient(null); return; }
+    fetch(`/api/clients/${f.client_id}/sub-services`)
+      .then((r) => r.json())
+      .then((j) => {
+        setClientSubServices(j.items ?? []);
+        if (j.client) setSelectedClient(j.client);
+      })
+      .catch(() => {
+        setClientSubServices([]);
+        setSelectedClient(null);
+      });
   }, [f.client_id]);
 
   const linkedSubServiceIds = new Set(clientSubServices.map((cs: any) => cs.sub_service_id));
@@ -190,12 +201,8 @@ export default function NewTaskDialog({ clients, team, allSubServices = [], defa
           {!defaultClientId && (
             <div className="space-y-2">
               <Label>Client *</Label>
-              <SearchableSelect
-                options={clients.map((c) => ({
-                  value: c.id,
-                  label: c.pan ? `${c.business_name} (${c.pan})` : c.business_name,
-                  searchString: `${c.business_name} ${c.pan ?? ''}`.toLowerCase(),
-                }))}
+              <ClientSearchCombobox
+                async
                 value={f.client_id}
                 onChange={(v) => { setF((p) => ({ ...p, client_id: v, sub_service_id: '', task_template_id: '' })); setErrors((e) => { const copy = { ...e }; delete copy.client_id; return copy; }); }}
                 placeholder="Choose a client..."

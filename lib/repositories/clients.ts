@@ -3,6 +3,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 
+const DEFAULT_CLIENT_FIELDS =
+  'id, business_name, pan, gstin, category, primary_contact_person, primary_contact_email, primary_contact_phone, primary_owner_id, group_id, portal_enabled, city, created_at, updated_at, client_groups!clients_group_id_fkey(name)';
+
 export async function listAccessibleClients(opts: {
   groupId?: string;
   stage?: string;
@@ -10,25 +13,32 @@ export async function listAccessibleClients(opts: {
   q?: string;
   limit?: number;
   offset?: number;
+  fields?: string[];
 } = {}) {
   const sb = createClient();
   const limit = opts.limit ?? 1000;
   const offset = opts.offset ?? 0;
+  const selectFields = opts.fields ? opts.fields.join(', ') : DEFAULT_CLIENT_FIELDS;
 
   const buildQuery = () => {
-    let query = sb
-      .from('clients')
-      .select('id, business_name, pan, gstin, category, primary_contact_person, primary_contact_email, primary_contact_phone, primary_owner_id, group_id, portal_enabled, city, created_at, updated_at, client_groups!clients_group_id_fkey(name)')
-      .eq('is_deleted', false);
+    let query = sb.from('clients').select(selectFields).eq('is_deleted', false);
     if (opts.groupId) query = query.eq('group_id', opts.groupId);
     if (opts.city) query = query.ilike('city', `%${opts.city}%`);
     if (opts.q) query = query.or(`business_name.ilike.%${opts.q}%,pan.ilike.%${opts.q}%`);
     return query.order('business_name', { ascending: true });
   };
 
-  const allData = await fetchAll<any>(buildQuery, limit);
-  // Apply manual offset if provided, though typically pagination isn't used deeply with fetchAll
-  return allData.slice(offset);
+  // For small page sizes (<= 1000) use Supabase range directly — this is efficient and
+  // avoids the fetchAll overhead for paginated list views.
+  // For large/unbounded sets use fetchAll so we are not capped by Supabase max_rows.
+  if (limit <= 1000) {
+    const { data, error } = await buildQuery().range(offset, offset + limit - 1);
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  const allData = await fetchAll<any>(buildQuery, limit, 1000);
+  return allData.slice(offset, offset + limit);
 }
 
 export async function countAccessibleClients(opts: {

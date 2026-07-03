@@ -74,7 +74,7 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
 
   const [rawTasks, clients, team, subServices, views, totalCount, allLabels] = await Promise.all([
     listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
-    listAccessibleClients(),
+    listAccessibleClients({ limit: 5000 }),
     listTeamUsers(),
     listSubServices(),
     listSavedViews('team.tasks'),

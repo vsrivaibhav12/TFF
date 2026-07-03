@@ -13,7 +13,7 @@ export default async function BulkTaskCreatePage({ searchParams }: { searchParam
   const sb = createClient();
 
   const [allClients, { data: team }, { data: groups }] = await Promise.all([
-    listAccessibleClients(),
+    listAccessibleClients({ limit: 5000 }),
     sb.from('users_profile').select('id, full_name').eq('role', 'team').eq('is_active', true).order('full_name'),
     sb.from('client_groups').select('id, name').order('name'),
   ]);
