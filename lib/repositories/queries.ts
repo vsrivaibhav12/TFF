@@ -30,14 +30,17 @@ export async function listQueries(
     status?: string[];
     mineOnly?: boolean;
     userId?: string;
+    limit?: number;
   } = {}
 ): Promise<QueryRow[]> {
   const sb = createClient();
+  const limit = opts.limit ?? 20;
   let q = sb
     .from('queries')
     .select('id, subject, status, priority, created_at, updated_at, client_id, created_by, assigned_to, clients!queries_client_id_fkey(business_name), creator:users_profile!queries_created_by_fkey(full_name)')
     .eq('is_deleted', false)
-    .order('updated_at', { ascending: false });
+    .order('updated_at', { ascending: false })
+    .limit(limit);
   if (opts.clientId) q = q.eq('client_id', opts.clientId);
   if (opts.clientIds?.length) q = q.in('client_id', opts.clientIds.slice(0, 100));
   if (opts.status?.length) q = q.in('status', opts.status);

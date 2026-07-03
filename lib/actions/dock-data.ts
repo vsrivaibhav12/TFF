@@ -1,7 +1,8 @@
 'use server';
 
 import { requireRole } from '@/lib/auth/require-role';
-import { requireCapability, hasCapability } from '@/lib/auth/require-capability';
+import { requireCapability } from '@/lib/auth/require-capability';
+import { hasCapabilities } from '@/lib/auth/capabilities-cache';
 import { getTask, listTaskActivity, listTaskNotes, listTasks, enrichTasksWithProgress } from '@/lib/repositories/tasks';
 import { getClientById, listTeamUsers, listClientGroups, listClientUsers, listTeamAssignments } from '@/lib/repositories/clients';
 import { listClientServices, listClientSubServices } from '@/lib/repositories/services';
@@ -23,12 +24,10 @@ export async function getTaskDockData(id: string) {
 
     // Enforce task access capability (defense in depth beyond RLS).
     // Any meaningful task permission grants dock access; tasks.view is the read-all capability.
-    const canAccess = await hasCapability(me, 'tasks.view')
-      || await hasCapability(me, 'tasks.edit')
-      || await hasCapability(me, 'tasks.assign')
-      || await hasCapability(me, 'tasks.complete')
-      || await hasCapability(me, 'tasks.delete')
-      || await hasCapability(me, 'tasks.create');
+    const taskAccessCaps = await hasCapabilities(me, [
+      'tasks.view', 'tasks.edit', 'tasks.assign', 'tasks.complete', 'tasks.delete', 'tasks.create',
+    ]);
+    const canAccess = taskAccessCaps.size > 0;
     if (!canAccess) {
       await requireCapability(me, 'tasks.view');
     }
@@ -50,9 +49,10 @@ export async function getTaskDockData(id: string) {
       listTaskTemplates(),
     ]);
 
-    const canEdit = await hasCapability(me, 'tasks.edit');
-    const canEditSteps = await hasCapability(me, 'tasks.complete');
-    const canDelete = await hasCapability(me, 'tasks.delete');
+    const taskCaps = await hasCapabilities(me, ['tasks.edit', 'tasks.complete', 'tasks.delete']);
+    const canEdit = taskCaps.has('tasks.edit');
+    const canEditSteps = taskCaps.has('tasks.complete');
+    const canDelete = taskCaps.has('tasks.delete');
 
     return ok({
       task,
@@ -80,8 +80,9 @@ export async function getTaskDockData(id: string) {
 export async function getClientDockData(id: string) {
   try {
     const me = await requireRole(['admin', 'team']);
-    const canReadAll = await hasCapability(me, 'clients.read.all');
-    const canEdit = await hasCapability(me, 'clients.edit');
+    const clientCaps = await hasCapabilities(me, ['clients.read.all', 'clients.edit']);
+    const canReadAll = clientCaps.has('clients.read.all');
+    const canEdit = clientCaps.has('clients.edit');
     if (!canReadAll && !canEdit) {
       await requireCapability(me, 'clients.read.all');
     }
@@ -106,7 +107,7 @@ export async function getClientDockData(id: string) {
     const openTasks = tasks.filter((t) => t.status !== 'completed' && t.status !== 'cancelled');
     const openNotices = notices.filter((n: { status: string }) => n.status !== 'closed');
 
-    const canDelete = await hasCapability(me, 'clients.delete');
+    const canDelete = (await hasCapabilities(me, 'clients.delete')).has('clients.delete');
 
     return ok({
       client,

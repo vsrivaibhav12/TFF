@@ -8,13 +8,16 @@ export async function listAllNotices(filter?: {
   noticeType?: string;
   dueFrom?: string;
   dueTo?: string;
+  limit?: number;
 }) {
   const sb = createClient();
+  const limit = filter?.limit ?? 20;
   let q = sb
     .from('notices')
     .select('id, client_id, notice_type, notice_number, issuing_authority, notice_received_date, due_date, status, subject, amount_involved, assigned_to, clients!notices_client_id_fkey(business_name), users_profile!notices_assigned_to_fkey(full_name)')
     .eq('is_deleted', false)
-    .order('notice_received_date', { ascending: false, nullsFirst: false });
+    .order('notice_received_date', { ascending: false, nullsFirst: false })
+    .limit(limit);
   if (filter?.clientId) q = q.eq('client_id', filter.clientId);
   if (filter?.clientIds && filter.clientIds.length > 0) q = q.in('client_id', filter.clientIds);
   if (filter?.status) {

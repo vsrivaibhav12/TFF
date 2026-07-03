@@ -299,25 +299,27 @@ export async function getTask(id: string): Promise<TaskDetail | null> {
   return data as TaskDetail | null;
 }
 
-export async function listTaskActivity(taskId: string) {
+export async function listTaskActivity(taskId: string, limit = 100) {
   const sb = createClient();
   const { data, error } = await sb
     .from('task_activity')
     .select('id, action, field_name, old_value, new_value, created_at, users_profile!task_activity_changed_by_fkey(full_name, email)')
     .eq('task_id', taskId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(limit);
   if (error) throw error;
   return data ?? [];
 }
 
-export async function listTaskNotes(taskId: string) {
+export async function listTaskNotes(taskId: string, limit = 100) {
   const sb = createClient();
   const { data, error } = await sb
     .from('task_notes')
     .select('id, note_text, created_at, users_profile!task_notes_created_by_fkey(full_name, email, role)')
     .eq('task_id', taskId)
     .eq('is_deleted', false)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(limit);
   if (error) throw error;
   return data ?? [];
 }
