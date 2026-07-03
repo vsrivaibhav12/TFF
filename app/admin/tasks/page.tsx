@@ -1,7 +1,8 @@
 import { requireRole } from '@/lib/auth/require-role';
-import { requireCapabilityOrRedirect, hasCapability } from '@/lib/auth/require-capability';
+import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
+import { hasCapabilities } from '@/lib/auth/capabilities-cache';
 import { listTasks, countTasks, enrichTasksWithLabels, enrichTasksWithProgress } from '@/lib/repositories/tasks';
-import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
+import { listTeamUsers } from '@/lib/repositories/clients';
 import { listSubServices } from '@/lib/repositories/services';
 import { listLabels } from '@/lib/repositories/task-custom-fields';
 import { listSavedViews } from '@/lib/actions/saved-views';
@@ -16,11 +17,10 @@ import { TaskViewWrapper } from '@/components/tasks/task-view-wrapper';
 import EmptyState from '@/components/sophistication/empty-state';
 import NewTaskDialog from '@/components/tasks/new-task-dialog';
 import SavedViewsBar from '@/components/sophistication/saved-views-bar';
-import FilterBar from '@/components/sophistication/filter-bar';
 import { Button } from '@/components/ui/button';
 import { TaskLabelFilterBar } from '@/components/tasks/task-label-filter-bar';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 const PAGE_SIZE = 50;
 
@@ -41,7 +41,6 @@ function buildTaskUrl(base: string, sp: Record<string, string | string[] | undef
 export default async function AdminTasksPage({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string; page?: string; period_year?: string; period_month?: string; is_billable?: string; is_stuck?: string; is_verified?: string; label?: string | string[]; q?: string } }) {
   const me = await requireRole(['admin', 'team']);
   await requireCapabilityOrRedirect(me, 'tasks.view');
-  const canDelete = await hasCapability(me, 'tasks.delete');
 
   const status = (searchParams.status?.split(',').filter(Boolean) ?? []) as Array<import('@/lib/validation/schemas').TaskStatus | 'blocked' | 'stuck'>;
   const priority = searchParams.priority?.split(',').filter(Boolean) ?? [];
@@ -71,9 +70,11 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
     q: searchParams.q,
   };
 
-  const [rawTasks, clients, team, subServices, views, totalCount, allLabels] = await Promise.all([
+  const caps = await hasCapabilities(me, ['tasks.delete']);
+  const canDelete = me.role === 'admin' || caps.has('tasks.delete');
+
+  const [rawTasks, team, subServices, views, totalCount, allLabels] = await Promise.all([
     listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
-    listAccessibleClients({ limit: 5000 }),
     listTeamUsers(),
     listSubServices(),
     listSavedViews('admin.tasks'),
@@ -81,8 +82,12 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
     listLabels(),
   ]);
 
-  let tasks = await enrichTasksWithLabels(rawTasks);
-  tasks = await enrichTasksWithProgress(tasks);
+  // Parallelize independent enrichment passes.
+  const [tasksWithLabels, tasksWithProgress] = await Promise.all([
+    enrichTasksWithLabels(rawTasks),
+    enrichTasksWithProgress(rawTasks),
+  ]);
+  const tasks = tasksWithLabels.map((t, i) => ({ ...t, ...tasksWithProgress[i] }));
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -110,7 +115,7 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
         actions={
           <>
             <ExportButton data={exportData} filename="tasks-export" format="csv" />
-            <NewTaskDialog clients={clients ?? []} team={team ?? []} allSubServices={subServices ?? []} triggerLabel="New task" triggerVariant="default" mode="admin" currentUserId={me.id} />
+            <NewTaskDialog team={team ?? []} allSubServices={subServices ?? []} triggerLabel="New task" triggerVariant="default" mode="admin" currentUserId={me.id} />
             <Link href="/admin/tasks/import">
               <Button variant="outline" size="sm"><Inbox className="h-4 w-4 mr-1" /> Import</Button>
             </Link>
@@ -129,7 +134,6 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
 
       <div className="space-y-3">
         <AdvancedTaskFilters 
-          clients={clients ?? []} 
           team={team ?? []} 
           subServices={subServices ?? []} 
         />

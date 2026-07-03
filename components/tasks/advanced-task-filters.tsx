@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { ClientSearchCombobox } from '@/components/clients/client-search-combobox';
+import { searchClients } from '@/lib/actions/clients';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -12,16 +14,18 @@ import { Filter, X, Calendar as CalendarIcon, SlidersHorizontal, CheckCircle2 } 
 import { Checkbox } from '@/components/ui/checkbox';
 
 interface AdvancedTaskFiltersProps {
-  clients: { id: string; business_name: string; pan?: string | null }[];
+  /** Optional pre-loaded clients. When omitted, the client picker uses server-side async search. */
+  clients?: { id: string; business_name: string; pan?: string | null }[];
   team: { id: string; full_name: string }[];
   subServices: { id: string; name: string }[];
   templates?: { id: string; name: string }[];
 }
 
-export default function AdvancedTaskFilters({ clients, team, subServices, templates = [] }: AdvancedTaskFiltersProps) {
+export default function AdvancedTaskFilters({ clients: initialClients = [], team, subServices, templates = [] }: AdvancedTaskFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const isAsyncClients = initialClients.length === 0;
 
   // Initialize state from URL params
   const [f, setF] = useState<Record<string, string>>(() => {
@@ -31,6 +35,30 @@ export default function AdvancedTaskFilters({ clients, team, subServices, templa
   });
 
   const [isOpen, setIsOpen] = useState(false);
+  const [activeClientName, setActiveClientName] = useState<string | null>(null);
+
+  // For async client filters, resolve the selected client's name for the active-filter badge.
+  useEffect(() => {
+    if (!isAsyncClients || !f.client) {
+      setActiveClientName(null);
+      return;
+    }
+    const client = initialClients.find((c) => c.id === f.client);
+    if (client) {
+      setActiveClientName(client.business_name);
+      return;
+    }
+    let active = true;
+    searchClients({ id: f.client, q: '', limit: 1 })
+      .then((r) => {
+        if (!active) return;
+        setActiveClientName(r.success && r.data[0] ? r.data[0].business_name : null);
+      })
+      .catch(() => {
+        if (active) setActiveClientName(null);
+      });
+    return () => { active = false; };
+  }, [isAsyncClients, f.client, initialClients]);
 
   const apply = useCallback((next: Record<string, string>) => {
     const sp = new URLSearchParams();
@@ -39,8 +67,7 @@ export default function AdvancedTaskFilters({ clients, team, subServices, templa
         sp.set(k, val);
       }
     }
-    // preserve page parameter if we're not changing filters that affect count?
-    // actually changing filters should reset to page 1
+    // Changing filters should reset to page 1
     sp.delete('page');
     router.push(`${pathname}?${sp.toString()}`);
   }, [router, pathname]);
@@ -106,21 +133,32 @@ export default function AdvancedTaskFilters({ clients, team, subServices, templa
           </SelectContent>
         </Select>
 
-        <SearchableSelect
-          options={[
-            { value: 'all', label: 'Any client', searchString: 'any client' },
-            ...clients.map((c) => ({
-              value: c.id,
-              label: c.pan ? `${c.business_name} (${c.pan})` : c.business_name,
-              searchString: `${c.business_name} ${c.pan ?? ''}`.toLowerCase(),
-            })),
-          ]}
-          value={f.client || 'all'}
-          onChange={(v) => update('client', v)}
-          placeholder="Client"
-          searchPlaceholder="Search by name or PAN..."
-          className="w-48 h-8 text-xs bg-zinc-50 border-dashed"
-        />
+        {isAsyncClients ? (
+          <ClientSearchCombobox
+            async
+            value={f.client || ''}
+            onChange={(v) => update('client', v)}
+            placeholder="Client"
+            searchPlaceholder="Search by name or PAN..."
+            className="w-48 h-8 text-xs bg-zinc-50 border-dashed"
+          />
+        ) : (
+          <SearchableSelect
+            options={[
+              { value: 'all', label: 'Any client', searchString: 'any client' },
+              ...initialClients.map((c) => ({
+                value: c.id,
+                label: c.pan ? `${c.business_name} (${c.pan})` : c.business_name,
+                searchString: `${c.business_name} ${c.pan ?? ''}`.toLowerCase(),
+              })),
+            ]}
+            value={f.client || 'all'}
+            onChange={(v) => update('client', v)}
+            placeholder="Client"
+            searchPlaceholder="Search by name or PAN..."
+            className="w-48 h-8 text-xs bg-zinc-50 border-dashed"
+          />
+        )}
 
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
@@ -211,7 +249,7 @@ export default function AdvancedTaskFilters({ clients, team, subServices, templa
             if (k === 'status') label = `Status: ${v.replace('_', ' ')}`;
             if (k === 'priority') label = `Priority: ${v}`;
             if (k === 'assigned') label = `Assignee: ${v === 'unassigned' ? 'Unassigned' : team.find(t => t.id === v)?.full_name || v}`;
-            if (k === 'client') label = `Client: ${clients.find(c => c.id === v)?.business_name || v}`;
+            if (k === 'client') label = `Client: ${activeClientName || initialClients.find(c => c.id === v)?.business_name || v}`;
             if (k === 'is_billable') label = `Billable Only`;
             if (k === 'is_stuck') label = `Stuck Only`;
             if (k === 'is_verified') label = `Verified Only`;

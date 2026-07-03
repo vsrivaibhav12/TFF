@@ -16,7 +16,8 @@ import { Plus, ChevronDown } from 'lucide-react';
 import { todayIST, buildTaskTitle } from '@/lib/utils';
 
 interface Props {
-  clients: { id: string; business_name: string; pan?: string | null }[];
+  /** Pre-loaded clients for synchronous title generation fallback. When omitted, async search is used. */
+  clients?: { id: string; business_name: string; pan?: string | null }[];
   team: { id: string; full_name: string }[];
   allSubServices?: { id: string; name: string; code?: string | null }[];
   defaultClientId?: string;
@@ -34,7 +35,7 @@ function getTomorrowIST(): string {
   return date.toISOString().slice(0, 10);
 }
 
-export default function NewTaskDialog({ clients, team, allSubServices = [], defaultClientId, triggerLabel = 'New task', triggerVariant = 'default', mode = 'admin', currentUserId }: Props) {
+export default function NewTaskDialog({ clients = [], team, allSubServices = [], defaultClientId, triggerLabel = 'New task', triggerVariant = 'default', mode = 'admin', currentUserId }: Props) {
   const isAdmin = mode === 'admin';
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();

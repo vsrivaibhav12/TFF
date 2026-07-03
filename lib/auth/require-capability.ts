@@ -4,57 +4,21 @@ import { redirect } from 'next/navigation';
 import { ServiceError } from '@/lib/actions/result';
 import type { AppUser } from '@/lib/auth/require-role';
 import { type Capability } from '@/lib/auth/capabilities';
-import { listEffectiveCapabilities as repoListEffectiveCapabilities } from '@/lib/repositories/staff-capabilities';
+import { getCachedCapabilities } from '@/lib/auth/capabilities-cache';
 
 /**
- * Returns true if the user has the capability.
- * Resolution order (team users only; admin implicitly has all):
- *  1. Explicit deviation in staff_capabilities (not revoked) → ALLOW
- *  2. Explicit revocation in staff_capabilities (revoked_at set) → DENY
- *  3. Active role template has the capability → ALLOW
- *  4. Otherwise → DENY
+ * Returns true if the user has the capability (or any capability in the array).
+ * Admin implicitly passes. Team users are resolved against the per-request cached
+ * effective capability set to avoid repeated DB round trips.
  */
 export async function hasCapability(user: AppUser, capability: Capability | Capability[]): Promise<boolean> {
   if (user.role === 'admin') return true;
-  const caps = Array.isArray(capability) ? capability : [capability];
-  for (const cap of caps) {
-    if (await hasSingleCapability(user, cap)) return true;
-  }
-  return false;
-}
 
-async function hasSingleCapability(user: AppUser, capability: Capability): Promise<boolean> {
-  const sb = createClient();
+  const wanted = Array.isArray(capability) ? capability : [capability];
+  if (wanted.length === 0) return true;
 
-  // 1. Check explicit deviation (grant or revoke)
-  const { data: deviation } = await sb
-    .from('staff_capabilities')
-    .select('revoked_at')
-    .eq('user_id', user.id)
-    .eq('capability', capability)
-    .maybeSingle();
-
-  if (deviation) {
-    return deviation.revoked_at === null; // granted if not revoked
-  }
-
-  // 2. Fallback to active role template
-  const { data: profile } = await sb
-    .from('users_profile')
-    .select('active_role_template_id')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  if (!profile?.active_role_template_id) return false;
-
-  const { data: templateCap } = await sb
-    .from('staff_role_template_capabilities')
-    .select('id')
-    .eq('template_id', profile.active_role_template_id)
-    .eq('capability', capability)
-    .maybeSingle();
-
-  return !!templateCap;
+  const effective = await getCachedCapabilities(user.id);
+  return wanted.some((cap) => effective.has(cap));
 }
 
 export async function requireCapability(user: AppUser, capability: Capability | Capability[]): Promise<void> {
@@ -74,11 +38,11 @@ export async function requireCapabilityOrRedirect(user: AppUser, capability: Cap
 
 /**
  * Return the effective capability set for a user.
- * Merges active role template capabilities with explicit deviations.
- * Delegates to the repository for a single source of truth.
+ * Delegates to the cache/repository for a single source of truth.
  */
 export async function listEffectiveCapabilities(userId: string): Promise<Capability[]> {
-  return repoListEffectiveCapabilities(userId);
+  const effective = await getCachedCapabilities(userId);
+  return [...effective];
 }
 
 /**
@@ -86,5 +50,5 @@ export async function listEffectiveCapabilities(userId: string): Promise<Capabil
  * Prefer listEffectiveCapabilities in new code.
  */
 export async function listCapabilitiesForUser(userId: string): Promise<Capability[]> {
-  return repoListEffectiveCapabilities(userId);
+  return listEffectiveCapabilities(userId);
 }

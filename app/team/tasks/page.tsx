@@ -1,12 +1,11 @@
 import Link from 'next/link';
 import { requireRole } from '@/lib/auth/require-role';
-import { hasCapability, requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
+import { hasCapabilities } from '@/lib/auth/capabilities-cache';
 import { listTasks, countTasks, enrichTasksWithLabels, enrichTasksWithProgress } from '@/lib/repositories/tasks';
-import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
+import { listTeamUsers } from '@/lib/repositories/clients';
 import { listSubServices } from '@/lib/repositories/services';
 import { listLabels } from '@/lib/repositories/task-custom-fields';
 import { listSavedViews } from '@/lib/actions/saved-views';
-import { getCurrentUser } from '@/lib/auth/require-role';
 import { PageHeader } from '@/components/ui/page-header';
 import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 import ExportButton from '@/components/sophistication/export-button';
@@ -21,7 +20,7 @@ import AdvancedTaskFilters from '@/components/tasks/advanced-task-filters';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 const PAGE_SIZE = 50;
 
@@ -41,11 +40,9 @@ function buildTaskUrl(base: string, sp: Record<string, string | string[] | undef
 
 export default async function TeamTasksList({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string; page?: string; period_year?: string; period_month?: string; is_billable?: string; is_stuck?: string; is_verified?: string; label?: string | string[]; q?: string } }) {
   const me = await requireRole(['admin', 'team']);
-  const canViewAll = await hasCapability(me, 'tasks.view');
+
   const status = (searchParams.status?.split(',').filter(Boolean) ?? []) as Array<import('@/lib/validation/schemas').TaskStatus | 'blocked' | 'stuck'>;
   const priority = searchParams.priority?.split(',').filter(Boolean) ?? [];
-  // Default to showing the current user's assigned tasks unless they have view-all cap and don't specify assignee
-  const assignedTo = searchParams.assigned ?? (canViewAll ? undefined : me.id);
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
 
@@ -58,7 +55,6 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
   const filterOpts = {
     status,
     priority,
-    assignedTo,
     clientId: searchParams.client,
     subServiceIds: searchParams.sub_service ? [searchParams.sub_service] : undefined,
     dueFrom: searchParams.due_from,
@@ -72,18 +68,39 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
     q: searchParams.q,
   };
 
-  const [rawTasks, clients, team, subServices, views, totalCount, allLabels] = await Promise.all([
-    listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
-    listAccessibleClients({ limit: 5000 }),
+  // Resolve all capability checks in a single cached DB call.
+  const caps = await hasCapabilities(me, [
+    'tasks.view',
+    'tasks.create',
+    'tasks.edit',
+    'tasks.complete',
+    'tasks.delete',
+  ]);
+  const canViewAll = me.role === 'admin' || caps.has('tasks.view');
+  const canCreate = me.role === 'admin' || caps.has('tasks.create');
+  const canImport = canCreate; // reuse create cap until import cap exists
+  const canEdit = me.role === 'admin' || caps.has('tasks.edit');
+  const canComplete = me.role === 'admin' || caps.has('tasks.complete');
+  const canDelete = me.role === 'admin' || caps.has('tasks.delete');
+
+  // Default to showing the current user's assigned tasks unless they have view-all cap and don't specify assignee
+  const assignedTo = searchParams.assigned ?? (canViewAll ? undefined : me.id);
+
+  const [rawTasks, team, subServices, views, totalCount, allLabels] = await Promise.all([
+    listTasks({ ...filterOpts, assignedTo, limit: PAGE_SIZE, offset }),
     listTeamUsers(),
     listSubServices(),
     listSavedViews('team.tasks'),
-    countTasks(filterOpts),
+    countTasks({ ...filterOpts, assignedTo }),
     listLabels(),
   ]);
 
-  let tasks = await enrichTasksWithLabels(rawTasks);
-  tasks = await enrichTasksWithProgress(tasks);
+  // Parallelize independent enrichment passes.
+  const [tasksWithLabels, tasksWithProgress] = await Promise.all([
+    enrichTasksWithLabels(rawTasks),
+    enrichTasksWithProgress(rawTasks),
+  ]);
+  const tasks = tasksWithLabels.map((t, i) => ({ ...t, ...tasksWithProgress[i] }));
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -103,12 +120,6 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
     assigned_to: t.users_profile?.full_name ?? '',
   }));
 
-  const canCreate = me ? await hasCapability(me, 'tasks.create') : false;
-  const canImport = me ? await hasCapability(me, 'tasks.create') : false; // reuse create cap until import cap exists
-  const canEdit = me ? await hasCapability(me, 'tasks.edit') : false;
-  const canComplete = me ? await hasCapability(me, 'tasks.complete') : false;
-  const canDelete = me ? await hasCapability(me, 'tasks.delete') : false;
-
   return (
     <PullToRefreshWrapper>
       <div className="space-y-6">
@@ -119,7 +130,7 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
             <>
               <ExportButton data={exportData} filename="tasks-export" format="csv" />
               {canCreate && (
-                <NewTaskDialog clients={clients ?? []} team={team ?? []} allSubServices={subServices ?? []} mode="team" currentUserId={me?.id} />
+                <NewTaskDialog team={team ?? []} allSubServices={subServices ?? []} mode="team" currentUserId={me?.id} />
               )}
               {canImport && (
                 <>
@@ -143,7 +154,6 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
 
         <div className="space-y-3">
           <AdvancedTaskFilters
-            clients={clients ?? []}
             team={team ?? []}
             subServices={subServices ?? []}
           />
