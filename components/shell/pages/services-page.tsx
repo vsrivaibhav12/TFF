@@ -14,6 +14,46 @@ import { Layers } from 'lucide-react';
 import ServiceSearchWrapper from '@/components/services/service-search-wrapper';
 import ServiceCard from '@/components/services/service-card';
 
+interface ServiceCategory {
+  id: string;
+  name: string;
+  description?: string | null;
+  display_order?: number | null;
+}
+
+interface Service {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  category_id?: string | null;
+}
+
+interface SubService {
+  id: string;
+  code: string;
+  name: string;
+  service_id: string;
+  frequency?: string | null;
+  is_billable?: boolean;
+  is_recurring?: boolean;
+  requires_client_input?: boolean;
+  is_active?: boolean;
+  services?: { code?: string | null; name?: string | null } | null;
+}
+
+interface TaskTemplate {
+  id: string;
+  sub_service_id: string;
+  title: string;
+}
+
+interface TaskTemplateStep {
+  id: string;
+  task_template_id: string;
+  title: string;
+}
+
 export const dynamic = 'force-dynamic';
 
 export default async function ServicesPage() {
@@ -26,9 +66,9 @@ export default async function ServicesPage() {
   ]);
 
   // Fetch task templates for all sub-services
-  const templatesBySub: Record<string, any[]> = {};
-  const stepsByTemplate: Record<string, any[]> = {};
-  for (const ss of subServices as any[]) {
+  const templatesBySub: Record<string, TaskTemplate[]> = {};
+  const stepsByTemplate: Record<string, TaskTemplateStep[]> = {};
+  for (const ss of subServices as SubService[]) {
     const templates = await listTaskTemplates(ss.id);
     templatesBySub[ss.id] = templates;
     for (const t of templates) {
@@ -36,17 +76,17 @@ export default async function ServicesPage() {
     }
   }
 
-  const exportData = (services as any[]).map((s) => ({
+  const exportData = (services as Service[]).map((s) => ({
     name: s.name,
     code: s.code,
     description: s.description ?? '',
-    category: categories.find((c: any) => c.id === s.category_id)?.name ?? 'Uncategorized',
-    sub_services: (subServices as any[]).filter((ss) => ss.service_id === s.id).map((ss) => ss.name).join(', '),
+    category: (categories as ServiceCategory[]).find((c) => c.id === s.category_id)?.name ?? 'Uncategorized',
+    sub_services: (subServices as SubService[]).filter((ss) => ss.service_id === s.id).map((ss) => ss.name).join(', '),
   }));
 
   // Group services
-  const servicesWithCategory = (services as any[]).filter((s) => s.category_id);
-  const servicesWithoutCategory = (services as any[]).filter((s) => !s.category_id);
+  const servicesWithCategory = (services as Service[]).filter((s) => s.category_id);
+  const servicesWithoutCategory = (services as Service[]).filter((s) => !s.category_id);
 
   return (
     <div className="space-y-6">
@@ -56,8 +96,8 @@ export default async function ServicesPage() {
         actions={
           <>
             <ExportButton data={exportData} filename="services-export" format="csv" />
-            <CategoryManager categories={categories as any} />
-            <ServiceDialog categories={categories as any}>
+            <CategoryManager categories={categories as ServiceCategory[]} />
+            <ServiceDialog categories={categories as ServiceCategory[]}>
               <Button data-testid="new-service">New service</Button>
             </ServiceDialog>
           </>
@@ -66,9 +106,9 @@ export default async function ServicesPage() {
 
       {/* Search wrapper with all data for client-side filtering */}
       <ServiceSearchWrapper
-        categories={categories as any}
-        services={services as any}
-        subServices={subServices as any}
+        categories={categories as ServiceCategory[]}
+        services={services as Service[]}
+        subServices={subServices as SubService[]}
         templatesBySub={templatesBySub}
         stepsByTemplate={stepsByTemplate}
       />
@@ -83,19 +123,19 @@ export default async function ServicesPage() {
           />
         ) : (
           <div className="space-y-8">
-            {(categories as any[]).map((cat) => {
-              const catServices = (services as any[]).filter((s) => s.category_id === cat.id);
+            {(categories as ServiceCategory[]).map((cat) => {
+              const catServices = (services as Service[]).filter((s) => s.category_id === cat.id);
               if (catServices.length === 0) return null;
               return (
                 <section key={cat.id} className="space-y-3">
                   <h2 className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">{cat.name}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {catServices.map((s: any) => (
+                    {catServices.map((s) => (
                       <ServiceCard
                         key={s.id}
                         s={s}
-                        categories={categories as any}
-                        subServices={subServices as any}
+                        categories={categories as ServiceCategory[]}
+                        subServices={subServices as SubService[]}
                         templatesBySub={templatesBySub}
                         stepsByTemplate={stepsByTemplate}
                       />
@@ -108,12 +148,12 @@ export default async function ServicesPage() {
               <section className="space-y-3">
                 <h2 className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">Uncategorized</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {servicesWithoutCategory.map((s: any) => (
+                  {servicesWithoutCategory.map((s) => (
                     <ServiceCard
                       key={s.id}
                       s={s}
-                      categories={categories as any}
-                      subServices={subServices as any}
+                      categories={categories as ServiceCategory[]}
+                      subServices={subServices as SubService[]}
                       templatesBySub={templatesBySub}
                       stepsByTemplate={stepsByTemplate}
                     />

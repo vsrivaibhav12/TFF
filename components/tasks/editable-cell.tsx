@@ -3,6 +3,7 @@ import { useState, useTransition, useEffect, useRef } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { onEnterSpace } from '@/lib/utils';
 
 interface Option {
   value: string;
@@ -52,8 +53,12 @@ export function EditableCell({
   if (!isEditing) {
     return (
       <div
+        role="button"
+        tabIndex={0}
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }}
+        onKeyDown={onEnterSpace(() => setIsEditing(true))}
         className={`cursor-pointer hover:ring-2 hover:ring-teal-500/20 rounded-md transition-all inline-block ${isPending ? 'opacity-50' : ''}`}
+        aria-label="Edit value"
       >
         {type === 'badge' ? (
           <Badge variant={(activeOption?.color as 'default' | 'teal' | 'success' | 'warning' | 'danger' | 'destructive' | 'outline' | 'ghost') || 'outline'}>
@@ -67,7 +72,13 @@ export function EditableCell({
   }
 
   return (
-    <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); } }}
+      aria-label="Edit value"
+    >
       <Select value={optimisticValue} onValueChange={handleUpdate} open={isEditing} onOpenChange={setIsEditing}>
         <SelectTrigger className="h-8 w-full min-w-[120px] text-xs">
           <SelectValue />

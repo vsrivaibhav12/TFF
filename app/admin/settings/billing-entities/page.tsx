@@ -8,7 +8,7 @@ import { ChevronLeft } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 export default async function BillingEntitiesPage() {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'manage_billing_entities');
   const sb = createClient();
   const [{ data: entities }, { data: pcs }, { data: users }] = await Promise.all([

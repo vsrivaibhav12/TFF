@@ -31,8 +31,8 @@ export async function upsertServiceCategoryAction(input: z.infer<typeof category
     if (error) return fail(error.message, 'DB');
     revalidatePath('/admin/services');
     return ok({ id: data.id });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -47,8 +47,8 @@ export async function deleteServiceCategoryAction(id: string): Promise<ActionRes
     if (error) return fail(error.message, 'DB');
     revalidatePath('/admin/services');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -79,8 +79,8 @@ export async function upsertServiceAction(input: z.infer<typeof serviceSchema>):
     if (error) return fail(error.message, 'DB');
     revalidatePath('/admin/services');
     return ok({ id: data.id });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -93,8 +93,8 @@ export async function deleteServiceAction(id: string): Promise<ActionResult<void
     if (error) return fail(error.message, 'DB');
     revalidatePath('/admin/services');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -131,8 +131,8 @@ export async function upsertSubServiceAction(input: z.infer<typeof subServiceSch
     if (error) return fail(error.message, 'DB');
     revalidatePath('/admin/services');
     return ok({ id: data.id });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -145,8 +145,8 @@ export async function deleteSubServiceAction(id: string): Promise<ActionResult<v
     if (error) return fail(error.message, 'DB');
     revalidatePath('/admin/services');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -174,7 +174,7 @@ export async function upsertSopStepAction(input: z.infer<typeof sopStepSchema>):
       // Sync to open tasks
       const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', rest.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
       if (openTasks && openTasks.length > 0) {
-        const taskIds = openTasks.map((t: any) => t.id);
+        const taskIds = openTasks.map((t: { id: string }) => t.id);
         await sb.from('task_steps')
           .update({ title: rest.title, description: rest.description || null, is_required: rest.is_required })
           .eq('source_sop_step_id', id)
@@ -192,7 +192,7 @@ export async function upsertSopStepAction(input: z.infer<typeof sopStepSchema>):
     // Sync to open tasks (append)
     const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', rest.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
     if (openTasks && openTasks.length > 0) {
-      const rows = openTasks.map((t: any) => ({
+      const rows = openTasks.map((t: { id: string }) => ({
         task_id: t.id,
         step_order: rest.step_order,
         title: rest.title,
@@ -205,8 +205,8 @@ export async function upsertSopStepAction(input: z.infer<typeof sopStepSchema>):
 
     revalidatePath('/admin/services');
     return ok({ id: data.id });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -223,15 +223,15 @@ export async function deleteSopStepAction(id: string): Promise<ActionResult<void
     if (step) {
       const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', step.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
       if (openTasks && openTasks.length > 0) {
-        const taskIds = openTasks.map((t: any) => t.id);
+        const taskIds = openTasks.map((t: { id: string }) => t.id);
         await sb.from('task_steps').delete().eq('source_sop_step_id', id).in('task_id', taskIds);
       }
     }
 
     revalidatePath('/admin/services');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -251,7 +251,7 @@ export async function reorderSopStepsAction(input: { sub_service_id: string; ids
     // Sync to open tasks
     const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', input.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
     if (openTasks && openTasks.length > 0) {
-      const taskIds = openTasks.map((t: any) => t.id);
+      const taskIds = openTasks.map((t: { id: string }) => t.id);
       for (let i = 0; i < input.ids_in_order.length; i++) {
         await sb.from('task_steps').update({ step_order: i + 1 }).eq('source_sop_step_id', input.ids_in_order[i]).in('task_id', taskIds);
       }
@@ -259,7 +259,7 @@ export async function reorderSopStepsAction(input: { sub_service_id: string; ids
 
     revalidatePath('/admin/services');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }

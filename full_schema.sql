@@ -1,3 +1,7 @@
+-- DEPRECATED: This consolidated schema file is manually maintained and may drift from migrations.
+-- Prefer applying migrations in db/migrations/ in filename order for a reproducible database state.
+-- Last audited: 2026-07-03. Some stale references (e.g. awaiting_client, notices.authority) were repaired.
+
 -- Fix missing INSERT/UPDATE RLS policies on attendance_logs
 -- (Only SELECT policies existed, causing check-in/check-out to fail silently)
 
@@ -1440,7 +1444,7 @@ SELECT
 FROM tasks t
 LEFT JOIN clients c ON c.id = t.client_id
 WHERE t.is_deleted = false
-  AND t.status IN ('pending', 'in_progress', 'awaiting_client')
+  AND t.status IN ('pending', 'in_progress')
 
 UNION ALL
 
@@ -1520,7 +1524,7 @@ WHERE e.task_id IS NULL
   AND e.is_deleted = false;
 
 -- Indexes for performance (on underlying tables)
-CREATE INDEX IF NOT EXISTS idx_tasks_unified_inbox ON tasks(status, is_deleted, due_date) WHERE is_deleted = false AND status IN ('pending', 'in_progress', 'awaiting_client');
+CREATE INDEX IF NOT EXISTS idx_tasks_unified_inbox ON tasks(status, is_deleted, due_date) WHERE is_deleted = false AND status IN ('pending', 'in_progress');
 CREATE INDEX IF NOT EXISTS idx_notices_unified_inbox ON notices(status, is_deleted, due_date) WHERE is_deleted = false AND status != 'closed';
 CREATE INDEX IF NOT EXISTS idx_queries_unified_inbox ON queries(status, is_deleted, created_at) WHERE is_deleted = false AND status != 'closed';
 CREATE INDEX IF NOT EXISTS idx_compliance_events_unified_inbox ON compliance_calendar_events(task_id, due_date) WHERE task_id IS NULL;
@@ -3344,7 +3348,7 @@ CREATE POLICY "task_steps_client_read" ON task_steps
         SELECT client_id FROM client_users
         WHERE user_id = auth.uid() AND is_active = TRUE
       )
-      AND status IN ('awaiting_client', 'completed')
+      AND status IN ('in_progress', 'completed') AND is_blocked_on_client = TRUE
     )
   );
 
@@ -3730,7 +3734,7 @@ SELECT
 FROM tasks t
 LEFT JOIN clients c ON c.id = t.client_id
 WHERE t.is_deleted = false
-  AND t.status IN ('pending', 'in_progress', 'awaiting_client')
+  AND t.status IN ('pending', 'in_progress')
 
 UNION ALL
 
@@ -3750,7 +3754,7 @@ SELECT
   NULL::text AS related_entity_type,
   jsonb_build_object(
     'notice_type', n.notice_type,
-    'authority', n.authority,
+    'authority', n.issuing_authority,
     'amount_involved', n.amount_involved
   ) AS meta
 FROM notices n
@@ -3810,7 +3814,7 @@ WHERE e.task_id IS NULL
   AND e.is_deleted = false;
 
 -- Indexes for performance (on underlying tables)
-CREATE INDEX IF NOT EXISTS idx_tasks_unified_inbox ON tasks(status, is_deleted, due_date) WHERE is_deleted = false AND status IN ('pending', 'in_progress', 'awaiting_client');
+CREATE INDEX IF NOT EXISTS idx_tasks_unified_inbox ON tasks(status, is_deleted, due_date) WHERE is_deleted = false AND status IN ('pending', 'in_progress');
 CREATE INDEX IF NOT EXISTS idx_notices_unified_inbox ON notices(status, is_deleted, due_date) WHERE is_deleted = false AND status != 'closed';
 CREATE INDEX IF NOT EXISTS idx_queries_unified_inbox ON queries(status, is_deleted, created_at) WHERE is_deleted = false AND status != 'closed';
 CREATE INDEX IF NOT EXISTS idx_compliance_events_unified_inbox ON compliance_calendar_events(task_id, due_date) WHERE task_id IS NULL;
@@ -5796,7 +5800,7 @@ USING (
     SELECT client_id FROM client_users
     WHERE user_id = auth.uid() AND is_active = TRUE
   )
-  AND status IN ('awaiting_client', 'completed')
+  AND status IN ('in_progress', 'completed') AND is_blocked_on_client = TRUE
 );
 
 -- Team sees all tasks for assigned clients

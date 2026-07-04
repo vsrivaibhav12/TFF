@@ -22,6 +22,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { parseNaturalLanguage, type SmartSuggestion } from '@/lib/cmdk/natural-language';
 
 interface CmdItem {
   id: string;
@@ -31,13 +32,6 @@ interface CmdItem {
   icon?: React.ReactNode;
   keywords?: string;
   action?: () => void;
-}
-
-interface SmartSuggestion {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-  description: string;
 }
 
 // Quick actions shown when query is empty
@@ -62,251 +56,6 @@ function getQuickActions(basePath: string, role: string): CmdItem[] {
     }
   }
   return actions;
-}
-
-// Natural language pattern parser
-function parseNaturalLanguage(query: string, basePath: string, role: string): SmartSuggestion | null {
-  const q = query.toLowerCase().trim();
-
-  // "tasks due tomorrow" / "tasks due this week" / "overdue tasks"
-  const dueMatch = q.match(/(?:tasks?|work)\s+(?:due|for|by)\s+(tomorrow|today|this week|next week|overdue)/);
-  if (dueMatch) {
-    const when = dueMatch[1];
-    let dateParam = '';
-    const today = new Date().toISOString().slice(0, 10);
-    if (when === 'tomorrow') {
-      const tmr = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-      dateParam = `?due_from=${today}&due_to=${tmr}`;
-    } else if (when === 'today') {
-      dateParam = `?due_from=${today}&due_to=${today}`;
-    } else if (when === 'this week') {
-      const endOfWeek = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-      dateParam = `?due_from=${today}&due_to=${endOfWeek}`;
-    } else if (when === 'overdue') {
-      dateParam = `?overdue=true`;
-    }
-    return {
-      label: `Tasks due ${when}`,
-      href: `${basePath}/tasks${dateParam}`,
-      icon: <Calendar className="h-3.5 w-3.5" />,
-      description: `Show all tasks due ${when}`,
-    };
-  }
-
-  // "find client [name]" / "search client [name]"
-  const clientMatch = q.match(/(?:find|search|look up|show)\s+(?:client|customer)\s+(.+)/);
-  if (clientMatch) {
-    const name = clientMatch[1].trim();
-    return {
-      label: `Search clients for "${name}"`,
-      href: `${basePath}/clients?q=${encodeURIComponent(name)}`,
-      icon: <Users className="h-3.5 w-3.5" />,
-      description: `Filter clients by "${name}"`,
-    };
-  }
-
-  // "find task [name]"
-  const taskMatch = q.match(/(?:find|search|look up|show)\s+(?:task|work)\s+(.+)/);
-  if (taskMatch) {
-    const name = taskMatch[1].trim();
-    return {
-      label: `Search tasks for "${name}"`,
-      href: `${basePath}/tasks?q=${encodeURIComponent(name)}`,
-      icon: <Briefcase className="h-3.5 w-3.5" />,
-      description: `Filter tasks by "${name}"`,
-    };
-  }
-
-  // "go to [page]" / "open [page]"
-  const goMatch = q.match(/(?:go to|open|navigate to|show me)\s+(.+)/);
-  if (goMatch) {
-    const page = goMatch[1].trim();
-    const pageMap: Record<string, string> = {
-      'dashboard': `/${role}`,
-      'home': `/${role}`,
-      'inbox': `${basePath}/inbox`,
-      'clients': `${basePath}/clients`,
-      'tasks': `${basePath}/tasks`,
-      'queries': `${basePath}/queries`,
-      'notices': `${basePath}/notices`,
-      'hearings': `${basePath}/hearings`,
-      'gst': `${basePath}/gst`,
-      'payroll': `${basePath}/payroll`,
-      'billing': `${basePath}/billing`,
-      'bizlens': `${basePath}/bizlens`,
-      'vcfo': `${basePath}/vcfo`,
-      'attendance': `${basePath}/attendance`,
-      'leave': `${basePath}/leave`,
-      'approvals': `${basePath}/approvals`,
-      'credentials': `${basePath}/credentials`,
-      'settings': `${basePath}/settings`,
-      'reports': `${basePath}/reports`,
-      'audit': `${basePath}/audit`,
-    };
-    if (role === 'admin') {
-      pageMap['team'] = `${basePath}/team`;
-      pageMap['compliance'] = `${basePath}/compliance`;
-      pageMap['calendar'] = `${basePath}/compliance`;
-    }
-    if (role === 'client') {
-      pageMap['compliance'] = '/portal/calendar';
-      pageMap['calendar'] = '/portal/calendar';
-    }
-    for (const [key, href] of Object.entries(pageMap)) {
-      if (page.includes(key)) {
-        return {
-          label: `Go to ${key}`,
-          href,
-          icon: <ArrowRight className="h-3.5 w-3.5" />,
-          description: `Navigate to ${key} page`,
-        };
-      }
-    }
-  }
-
-  // "new task for [client]"
-  const newTaskMatch = q.match(/(?:new|create|add)\s+(?:task|work)\s+(?:for\s+)?(.+)?/);
-  if (newTaskMatch && (q.includes('new task') || q.includes('create task') || q.includes('add task'))) {
-    const clientHint = newTaskMatch[1]?.trim();
-    return {
-      label: clientHint ? `Create task for ${clientHint}` : 'Create new task',
-      href: clientHint ? `${basePath}/tasks/bulk-create?client_hint=${encodeURIComponent(clientHint)}` : `${basePath}/tasks/bulk-create`,
-      icon: <Plus className="h-3.5 w-3.5" />,
-      description: clientHint ? `Start creating a task for ${clientHint}` : 'Open task creation form',
-    };
-  }
-
-  // "new client [name]"
-  const newClientMatch = q.match(/(?:new|create|add)\s+(?:client|customer)\s*(.+)?/);
-  if (newClientMatch && (q.includes('new client') || q.includes('create client') || q.includes('add client'))) {
-    const nameHint = newClientMatch[1]?.trim();
-    return {
-      label: nameHint ? `Add client "${nameHint}"` : 'Add new client',
-      href: `${basePath}/clients`,
-      icon: <Plus className="h-3.5 w-3.5" />,
-      description: 'Open client creation form',
-    };
-  }
-
-  // "mark attendance" / "punch in"
-  if (q.includes('attendance') || q.includes('punch in') || q.includes('check in')) {
-    return {
-      label: 'Mark attendance',
-      href: `${basePath}/attendance`,
-      icon: <ClipboardList className="h-3.5 w-3.5" />,
-      description: 'Open attendance page',
-    };
-  }
-
-  // "high priority tasks" / "urgent tasks"
-  if (q.includes('high priority') || q.includes('urgent') || q.includes('critical')) {
-    return {
-      label: 'High priority tasks',
-      href: `${basePath}/tasks?priority=high`,
-      icon: <Zap className="h-3.5 w-3.5" />,
-      description: 'Show all high priority tasks',
-    };
-  }
-
-  // "stuck tasks" / "blocked tasks"
-  if (q.includes('stuck') || q.includes('blocked')) {
-    return {
-      label: 'Blocked tasks',
-      href: `${basePath}/tasks?blocked=true`,
-      icon: <BellRing className="h-3.5 w-3.5" />,
-      description: 'Show tasks blocked on client or stuck',
-    };
-  }
-
-  // "my tasks" / "assigned to me"
-  if (q.includes('my tasks') || q.includes('assigned to me') || q.match(/tasks?\s+(?:for|by)\s+me/)) {
-    return {
-      label: 'My tasks',
-      href: `${basePath}/tasks?assigned=me`,
-      icon: <Briefcase className="h-3.5 w-3.5" />,
-      description: 'Show tasks assigned to you',
-    };
-  }
-
-  // "my inbox" / "unread"
-  if (q.includes('my inbox') || q.includes('inbox')) {
-    return {
-      label: 'Go to inbox',
-      href: `${basePath}/inbox`,
-      icon: <Inbox className="h-3.5 w-3.5" />,
-      description: 'Open your unified inbox',
-    };
-  }
-
-  // "overdue notices" / "show notices"
-  if (q.includes('notice') || q.includes('gstr') || q.includes('show cause')) {
-    if (q.includes('overdue')) {
-      return {
-        label: 'Overdue notices',
-        href: `${basePath}/notices?status=overdue`,
-        icon: <BellRing className="h-3.5 w-3.5" />,
-        description: 'Show overdue notices',
-      };
-    }
-    return {
-      label: 'Go to notices',
-      href: `${basePath}/notices`,
-      icon: <BellRing className="h-3.5 w-3.5" />,
-      description: 'Open notices page',
-    };
-  }
-
-  // "tasks for [person]"
-  const assignedMatch = q.match(/(?:tasks?|work)\s+(?:for|assigned to|by)\s+(.+)/);
-  if (assignedMatch && !q.includes('for me')) {
-    const person = assignedMatch[1].trim();
-    return {
-      label: `Tasks for ${person}`,
-      href: `${basePath}/tasks?q=${encodeURIComponent(person)}`,
-      icon: <UserCircle className="h-3.5 w-3.5" />,
-      description: `Search tasks related to ${person}`,
-    };
-  }
-
-  // "[client] tasks" / "work for [client]"
-  const clientTaskMatch = q.match(/^(.+?)\s+(?:tasks?|work)/);
-  if (clientTaskMatch) {
-    const clientName = clientTaskMatch[1].trim();
-    return {
-      label: `Tasks for ${clientName}`,
-      href: `${basePath}/tasks?q=${encodeURIComponent(clientName)}`,
-      icon: <Building2 className="h-3.5 w-3.5" />,
-      description: `Search tasks for ${clientName}`,
-    };
-  }
-
-  // "compliance this month" / "due this month" (admin only; portal uses calendar)
-  const monthMatch = q.match(/(?:compliance|tasks?|filings?)\s+(?:this month|due this month)/);
-  if (monthMatch && role === 'admin') {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
-    return {
-      label: 'Compliance this month',
-      href: `${basePath}/compliance?from=${start}&to=${end}`,
-      icon: <Calendar className="h-3.5 w-3.5" />,
-      description: 'Show compliance events this month',
-    };
-  }
-
-  // "BizLens for [client]" / "run BizLens"
-  if (q.includes('bizlens') || q.includes('financial report')) {
-    const bizMatch = q.match(/(?:bizlens|financial report)\s+(?:for\s+)?(.+)?/);
-    const clientHint = bizMatch?.[1]?.trim();
-    return {
-      label: clientHint ? `BizLens for ${clientHint}` : 'Open BizLens',
-      href: clientHint ? `${basePath}/bizlens?q=${encodeURIComponent(clientHint)}` : `${basePath}/bizlens`,
-      icon: <BarChart3 className="h-3.5 w-3.5" />,
-      description: clientHint ? `Run BizLens for ${clientHint}` : 'Open BizLens dashboard',
-    };
-  }
-
-  return null;
 }
 
 export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'client' }) {
@@ -459,18 +208,23 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
   if (!open) return null;
   return (
     <div
+      role="button"
+      tabIndex={-1}
+      aria-label="Close command palette"
       className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh] bg-zinc-900/40 backdrop-blur-sm"
-      onClick={() => { setOpen(false); setQ(''); }}
+      onClick={(e) => { if (e.target === e.currentTarget) { setOpen(false); setQ(''); } }}
+      onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setOpen(false); setQ(''); } }}
       data-testid="cmdk-overlay"
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
         className="w-full max-w-xl mx-4 rounded-2xl border border-zinc-200/50 bg-white/90 backdrop-blur-2xl shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-100">
           <Search className="h-4 w-4 text-zinc-400 shrink-0" />
           <input
-            autoFocus
             value={q}
             onChange={(e) => { setQ(e.target.value); setActive(0); }}
             onKeyDown={(e) => {
@@ -497,7 +251,10 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
               className="w-full flex items-center gap-3 text-left"
             >
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-teal-100 text-teal-700">
-                <Sparkles className="h-3.5 w-3.5" />
+                {(() => {
+                  const Icon = smartSuggestion.icon;
+                  return <Icon className="h-3.5 w-3.5" />;
+                })()}
               </span>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-teal-900">{smartSuggestion.label}</div>

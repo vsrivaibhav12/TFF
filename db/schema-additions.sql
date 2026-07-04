@@ -362,7 +362,8 @@ CREATE POLICY "task_steps_client_read" ON task_steps
         SELECT client_id FROM client_users
         WHERE user_id = auth.uid() AND is_active = TRUE
       )
-      AND status IN ('awaiting_client', 'completed')
+      AND status IN ('in_progress', 'completed')
+      AND (status != 'in_progress' OR is_blocked_on_client = TRUE)
     )
   );
 

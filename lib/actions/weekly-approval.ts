@@ -23,7 +23,7 @@ export async function submitWeekForApprovalAction(input: z.infer<typeof submitSc
 
     // Read manager_id
     const { data: profile } = await sb.from('users_profile').select('reports_to, full_name').eq('id', me.id).maybeSingle();
-    const managerId = (profile as any)?.reports_to;
+    const managerId = (profile as { reports_to?: string | null } | null)?.reports_to;
 
     // Compute summary from attendance logs
     const summary = await computeWeekSummary(me.id, parsed.data.week_start, parsed.data.week_end);
@@ -49,27 +49,27 @@ export async function submitWeekForApprovalAction(input: z.infer<typeof submitSc
         user_id: managerId,
         type: 'team_alert',
         title: 'Weekly timesheet submitted',
-        message: `${(profile as any)?.full_name ?? me.email} submitted their weekly timesheet (${parsed.data.week_start} to ${parsed.data.week_end}).`,
+        message: `${(profile as { full_name?: string | null } | null)?.full_name ?? me.email} submitted their weekly timesheet (${parsed.data.week_start} to ${parsed.data.week_end}).`,
       });
     }
 
     // Also notify all admins (fallback if no manager or admin wants visibility)
     const { data: admins } = await sb.from('users_profile').select('id').eq('role', 'admin').eq('is_active', true);
     for (const a of admins ?? []) {
-      if ((a as any).id === me.id || (a as any).id === managerId) continue;
+      if ((a as { id: string }).id === me.id || (a as { id: string }).id === managerId) continue;
       await notify({
-        user_id: (a as any).id,
+        user_id: (a as { id: string }).id,
         type: 'team_alert',
         title: 'Weekly timesheet submitted',
-        message: `${(profile as any)?.full_name ?? me.email} submitted their weekly timesheet (${parsed.data.week_start} to ${parsed.data.week_end}).`,
+        message: `${(profile as { full_name?: string | null } | null)?.full_name ?? me.email} submitted their weekly timesheet (${parsed.data.week_start} to ${parsed.data.week_end}).`,
       });
     }
 
     revalidatePath('/team/attendance');
     revalidatePath('/team/approvals');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -89,8 +89,9 @@ export async function reviewWeekAction(input: z.infer<typeof reviewSchema>): Pro
     const sb = createClient();
     const { data: row } = await sb.from('weekly_timesheet_submissions').select('user_id, week_start, week_end, status').eq('id', parsed.data.id).maybeSingle();
     if (!row) return fail('Not found', 'NOT_FOUND');
-    if ((row as any).status !== 'submitted') {
-      return fail(`This timesheet is already ${(row as any).status}`, 'ALREADY_REVIEWED');
+    const rowStatus = (row as { status: string }).status;
+    if (rowStatus !== 'submitted') {
+      return fail(`This timesheet is already ${rowStatus}`, 'ALREADY_REVIEWED');
     }
 
     const { error } = await sb.from('weekly_timesheet_submissions').update({
@@ -103,16 +104,16 @@ export async function reviewWeekAction(input: z.infer<typeof reviewSchema>): Pro
     if (error) return fail(error.message, 'DB');
 
     await notify({
-      user_id: (row as any).user_id,
+      user_id: (row as { user_id: string }).user_id,
       type: 'team_alert',
       title: `Weekly timesheet ${parsed.data.approve ? 'approved' : 'rejected'}`,
-      message: `Your weekly timesheet (${(row as any).week_start} to ${(row as any).week_end}) was ${parsed.data.approve ? 'approved' : 'rejected'}.`,
+      message: `Your weekly timesheet (${(row as { week_start: string }).week_start} to ${(row as { week_end: string }).week_end}) was ${parsed.data.approve ? 'approved' : 'rejected'}.`,
     });
 
     revalidatePath('/team/attendance');
     revalidatePath('/team/approvals');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }

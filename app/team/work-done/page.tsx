@@ -72,7 +72,7 @@ export default async function WorkDonePage({ searchParams }: { searchParams?: { 
             canViewAll={canViewAll}
             canManage={canManageWorkDone}
             currentUserId={me.id}
-            role="team"
+            userRole="team"
           />
         </div>
       </div>

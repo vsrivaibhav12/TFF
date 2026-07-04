@@ -20,7 +20,7 @@ export const revalidate = 60;
 const PAGE_SIZE = 50;
 
 export default async function AdminClientsList({ searchParams }: { searchParams: { group?: string; city?: string; q?: string; page?: string } }) {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'clients.read.all');
 
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);

@@ -16,7 +16,7 @@ export default async function AdminQueriesPage({ searchParams }: { searchParams:
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const mePromise = requireRole(['admin', 'team']);
+  const mePromise = requireRole('admin');
   let queryBuilder = sb
     .from('queries')
     .select('id, subject, status, created_at, clients(business_name), users_profile:created_by(full_name)', { count: 'exact' });

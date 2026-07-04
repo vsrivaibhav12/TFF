@@ -6,7 +6,7 @@ import { InboxFeed } from '@/components/inbox/inbox-feed';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminInboxPage() {
-  await requireRole(['admin', 'team']);
+  await requireRole('admin');
   const items = await listUnifiedInbox({ limit: 200 });
 
   return (

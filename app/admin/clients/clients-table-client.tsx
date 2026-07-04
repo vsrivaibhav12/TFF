@@ -26,7 +26,7 @@ import { toast } from 'sonner';
 import { bulkDeleteClients, updateClient } from '@/lib/actions/clients';
 import BulkAssignSubService from '@/components/clients/bulk-assign-subservice';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
-import { cn } from '@/lib/utils';
+import { cn, onEnterSpace } from '@/lib/utils';
 import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
 import { ComplianceHealthBar } from '@/components/clients/compliance-health';
 
@@ -173,7 +173,7 @@ export default function ClientsTableClient({
     }
   }
 
-  const toggleOne = (e: React.MouseEvent, id: string) => {
+  const toggleOne = (e: { stopPropagation(): void }, id: string) => {
     e.stopPropagation();
     const next = new Set(selectedIds);
     if (next.has(id)) next.delete(id);
@@ -338,8 +338,12 @@ export default function ClientsTableClient({
                   >
                     {/* Checkbox */}
                     <div
+                      role="button"
+                      tabIndex={0}
                       className="col-span-1 md:col-span-1 flex items-center"
                       onClick={(e) => toggleOne(e, c.id)}
+                      onKeyDown={onEnterSpace(() => toggleOne({ stopPropagation: () => {} }, c.id))}
+                      aria-label={selectedIds.has(c.id) ? 'Deselect client' : 'Select client'}
                     >
                       <Checkbox checked={selectedIds.has(c.id)} />
                     </div>
@@ -380,8 +384,12 @@ export default function ClientsTableClient({
 
                     {/* Group — inline editable */}
                     <div
+                      role="button"
+                      tabIndex={0}
                       className="col-span-2 hidden md:block"
                       onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); } }}
+                      aria-label="Edit group"
                     >
                       <EditableCell
                         value={c.group_id ?? '__none__'}

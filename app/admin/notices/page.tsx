@@ -19,7 +19,7 @@ import { MicroBarChart } from '@/components/charts/micro-bar-chart';
 export const dynamic = 'force-dynamic';
 
 async function requireNoticesGuard() {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'notices.manage');
   return me;
 }

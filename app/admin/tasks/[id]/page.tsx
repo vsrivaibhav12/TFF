@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminTaskDetail({ params }: { params: { id: string } }) {
   const { id } = parseParams(params, IdParamSchema);
-  await requireRole(['admin', 'team']);
+  await requireRole('admin');
   const task = await getTask(id);
   if (!task) notFound();
   redirect(`/admin/tasks?dock=task:${id}`);

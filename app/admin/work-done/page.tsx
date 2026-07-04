@@ -71,7 +71,7 @@ export default async function AdminWorkDonePage({ searchParams }: { searchParams
             canViewAll
             canManage={canManageWorkDone}
             currentUserId={me.id}
-            role="admin"
+            userRole="admin"
           />
         </div>
       </div>

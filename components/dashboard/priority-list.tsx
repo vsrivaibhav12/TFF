@@ -112,7 +112,14 @@ export function PriorityList({ tasks, href, emptyMessage = 'No urgent tasks' }: 
                   urgencyBorder(t)
                 )}
               >
-                <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); } }}
+                  aria-label="Toggle task completion"
+                >
                   <input
                     type="checkbox"
                     className="h-4 w-4 rounded border-zinc-300 text-teal-600 focus:ring-teal-600 cursor-pointer"

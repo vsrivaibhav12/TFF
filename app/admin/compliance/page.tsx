@@ -7,10 +7,20 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { CheckCircle2, Clock, AlertTriangle, CalendarDays, Briefcase, Timer, TrendingUp } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import ExportButton from '@/components/sophistication/export-button';
+import SimpleBarChart from '@/components/compliance/simple-bar-chart';
 
-const ComplianceBarChart = dynamic(() => import('./compliance-bar-chart'), { ssr: false });
+interface ComplianceEvent {
+  id: string;
+  rule_code: string;
+  period_label: string;
+  due_date: string;
+  status: string;
+  task_id: string | null;
+  compliance_calendar_rules: { display_name: string | null; service_kind: string | null } | null;
+  sub_services: { name: string | null } | null;
+  tasks: { status: string | null; completed_date: string | null; due_date: string | null; is_stuck: boolean | null } | null;
+}
 
 export const revalidate = 60;
 
@@ -26,12 +36,13 @@ export default async function AdminCompliancePage() {
     .select(`
       id, rule_code, period_label, due_date, status, task_id,
       compliance_calendar_rules(display_name, service_kind),
-      sub_services(id, name, code, services(name)),
+      sub_services(name),
       tasks(status, completed_date, due_date, is_stuck)
     `)
     .gte('due_date', todayIso)
     .lte('due_date', horizonIso)
-    .limit(1000);
+    .limit(1000)
+    .returns<ComplianceEvent[]>();
 
   // Aggregate metrics
   let total = 0;
@@ -57,28 +68,28 @@ export default async function AdminCompliancePage() {
   }> = {};
 
   for (const e of events ?? []) {
-    const taskStatus = (e as any).tasks?.status as string | null | undefined;
-    const taskCompleted = (e as any).tasks?.completed_date as string | null | undefined;
-    const taskDue = (e as any).tasks?.due_date as string | null | undefined;
-    const taskStuck = !!(e as any).tasks?.is_stuck;
-    const dueDate = (e as any).due_date as string;
+    const taskStatus = e.tasks?.status;
+    const taskCompleted = e.tasks?.completed_date;
+    const taskDue = e.tasks?.due_date;
+    const taskStuck = !!e.tasks?.is_stuck;
+    const dueDate = e.due_date;
     const isPastDue = dueDate < todayIso;
-    const serviceKind = (e as any).compliance_calendar_rules?.service_kind
-      ?? ((e as any).sub_services ? 'service_driven' : 'other');
-    const ruleName = (e as any).compliance_calendar_rules?.display_name
-      ?? (e as any).sub_services?.name
-      ?? (e as any).rule_code;
-    const key = `${(e as any).rule_code}::${(e as any).period_label}`;
+    const serviceKind = e.compliance_calendar_rules?.service_kind
+      ?? (e.sub_services ? 'service_driven' : 'other');
+    const ruleName = e.compliance_calendar_rules?.display_name
+      ?? e.sub_services?.name
+      ?? e.rule_code;
+    const key = `${e.rule_code}::${e.period_label}`;
 
     total += 1;
 
     if (!serviceMap[serviceKind]) serviceMap[serviceKind] = { filed: 0, pending: 0, overdue: 0 };
     if (!periodMap[key]) {
       periodMap[key] = {
-        rule_code: (e as any).rule_code,
+        rule_code: e.rule_code,
         rule_name: ruleName,
         service_kind: serviceKind,
-        period_label: (e as any).period_label,
+        period_label: e.period_label,
         due_date: dueDate,
         total: 0,
         filed: 0,
@@ -103,7 +114,7 @@ export default async function AdminCompliancePage() {
         delayed += 1;
         p.delayed += 1;
       }
-    } else if ((e as any).task_id) {
+    } else if (e.task_id) {
       tasksCreated += 1;
       if (taskStuck || isPastDue) {
         overdue += 1;
@@ -162,7 +173,7 @@ export default async function AdminCompliancePage() {
       {serviceKinds.length > 0 && (
         <div className="tff-card tff-card-pad">
           <h2 className="tff-section-title mb-4">Filing by service kind</h2>
-          <ComplianceBarChart categories={chartCategories} series={chartSeries} height={280} />
+          <SimpleBarChart categories={chartCategories} series={chartSeries} height={280} />
         </div>
       )}
 

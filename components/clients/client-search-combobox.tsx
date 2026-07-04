@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Check, ChevronsUpDown, Search, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, onEnterSpace } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDebouncedSearch } from '@/lib/hooks/use-debounced-search';
@@ -111,7 +111,6 @@ export function ClientSearchCombobox({
             placeholder={searchPlaceholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            autoFocus
           />
           {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin text-zinc-400" />}
         </div>
@@ -125,12 +124,18 @@ export function ClientSearchCombobox({
               <div
                 key={c.id}
                 role="option"
+                tabIndex={0}
                 aria-selected={value === c.id}
                 onClick={() => {
                   onChange(c.id);
                   setOpen(false);
                   clear();
                 }}
+                onKeyDown={onEnterSpace(() => {
+                  onChange(c.id);
+                  setOpen(false);
+                  clear();
+                })}
                 className={cn(
                   'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-zinc-100 hover:text-zinc-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                   value === c.id ? 'bg-zinc-100 text-zinc-900 font-medium' : ''

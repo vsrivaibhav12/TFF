@@ -26,6 +26,59 @@ import ExportButton from '@/components/sophistication/export-button';
 
 export const dynamic = 'force-dynamic';
 
+interface AttendanceLog {
+  id: string;
+  user_id: string;
+  attendance_date: string;
+  check_in_time: string | null;
+  check_out_time: string | null;
+  status: string;
+  leave_type?: string | null;
+  check_in_lat?: number | null;
+  check_in_lng?: number | null;
+  check_in_accuracy_m?: number | null;
+  override_reason: string | null;
+  is_manually_created?: boolean;
+}
+
+interface LeaveRequest {
+  id: string;
+  user_id: string;
+  leave_type: string;
+  from_date: string;
+  to_date: string;
+  number_of_days: number;
+  reason: string | null;
+  status: string;
+  review_remarks?: string | null;
+  users_profile?: { full_name: string | null; email?: string | null } | null;
+}
+
+interface PermissionRequest {
+  id: string;
+  user_id: string;
+  request_date: string;
+  from_time?: string | null;
+  to_time?: string | null;
+  reason: string | null;
+  status: string;
+  review_remarks?: string | null;
+  users_profile?: { full_name: string | null; email?: string | null } | null;
+}
+
+interface TeamUser {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+}
+
+interface UserProfile {
+  geo_check_in_required?: boolean | null;
+  paid_leaves_per_month?: number | null;
+  reports_to?: string | null;
+  full_name?: string | null;
+}
+
 export default async function AttendancePage({ searchParams }: { searchParams?: { date?: string } }) {
   const me = await requireRole(['admin', 'team']);
   const sb = createClient();
@@ -49,7 +102,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
   const [teamUsers, allLogs] = canViewAllAttendance
     ? await Promise.all([listTeamUsers(), listAttendanceForAllUsers(selectedDate)])
     : [[], []];
-  const logByUser = new Map<string, any>();
+  const logByUser = new Map<string, AttendanceLog>();
   for (const l of allLogs) {
     logByUser.set(l.user_id, l);
   }
@@ -80,27 +133,28 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
 
   // Filter pending items to manager's direct reports (if not admin)
   const pendingLeave = isAdmin
-    ? pendingLeaveAll
-    : pendingLeaveAll.filter((r: any) => reportIds.includes(r.user_id));
+    ? (pendingLeaveAll as unknown as LeaveRequest[])
+    : (pendingLeaveAll as unknown as LeaveRequest[]).filter((r) => reportIds.includes(r.user_id));
   const pendingPermissions = isAdmin
-    ? pendingPermissionAll
-    : pendingPermissionAll.filter((r: any) => reportIds.includes(r.user_id));
+    ? (pendingPermissionAll as unknown as PermissionRequest[])
+    : (pendingPermissionAll as unknown as PermissionRequest[]).filter((r) => reportIds.includes(r.user_id));
   const pendingWeeks = isAdmin
     ? pendingWeeksAll
-    : pendingWeeksAll.filter((r: any) => reportIds.includes(r.user_id));
+    : pendingWeeksAll.filter((r: { user_id: string }) => reportIds.includes(r.user_id));
 
-  const geoRequired = !!(profile as any)?.geo_check_in_required;
-  const paidLeavesPerMonth = ((profile as any)?.paid_leaves_per_month as number) ?? 0;
-  const present = monthLogs.filter((l: any) => l.status === 'present').length;
-  const onLeave = monthLogs.filter((l: any) => l.status === 'leave').length;
+  const typedProfile = profile as UserProfile | null;
+  const geoRequired = !!typedProfile?.geo_check_in_required;
+  const paidLeavesPerMonth = typedProfile?.paid_leaves_per_month ?? 0;
+  const present = (monthLogs as AttendanceLog[]).filter((l) => l.status === 'present').length;
+  const onLeave = (monthLogs as AttendanceLog[]).filter((l) => l.status === 'leave').length;
 
   // Compute leave balance
-  const approvedLeaveDays = (myLeave as any[])
+  const approvedLeaveDays = (myLeave as unknown as LeaveRequest[])
     .filter((r) => r.status === 'approved' && r.from_date >= yearStart)
     .reduce((sum, r) => sum + (r.number_of_days || 0), 0);
   const leaveBalance = Math.max(0, paidLeavesPerMonth * 12 - approvedLeaveDays);
 
-  const exportData = monthLogs.map((l: any) => ({
+  const exportData = (monthLogs as AttendanceLog[]).map((l) => ({
     attendance_date: l.attendance_date,
     status: l.status,
     check_in_time: l.check_in_time ? formatTimeIST(l.check_in_time) : '',
@@ -117,7 +171,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
         <div className="flex items-center gap-2 flex-wrap">
           <ExportButton data={exportData} filename="my-attendance" format="excel" />
           {isAdmin && <ManualAttendanceForm />}
-          <CheckInOut today={today as any} geoRequired={geoRequired} />
+          <CheckInOut today={today as AttendanceLog | null} geoRequired={geoRequired} />
           <div className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
             Attendance is tracked automatically. Your manager reviews it at the end of each week.
           </div>
@@ -128,7 +182,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Metric label="Present this month" value={`${present}d`} icon={<ShieldCheck className="h-4 w-4" />} />
         <Metric label="On leave this month" value={`${onLeave}d`} icon={<CalendarDays className="h-4 w-4" />} />
-        <Metric label="Today" value={today ? ((today as any).status ?? 'present') : 'Not marked'} icon={<Clock className="h-4 w-4" />} />
+        <Metric label="Today" value={today ? ((today as AttendanceLog | null)?.status ?? 'present') : 'Not marked'} icon={<Clock className="h-4 w-4" />} />
         <Metric label="Leave balance" value={`${leaveBalance}d`} icon={<CalendarDays className="h-4 w-4" />} color="text-teal-600" bg="bg-teal-50" border="border-teal-100" />
       </div>
 
@@ -187,7 +241,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
                     </TableCell>
                   </TableRow>
                 ) : (
-                  monthLogs.map((l: any) => (
+                  (monthLogs as unknown as AttendanceLog[]).map((l) => (
                     <TableRow key={l.id}>
                       <TableCell>{formatDateIST(l.attendance_date)}</TableCell>
                       <TableCell>
@@ -228,7 +282,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
           <TabsContent value="all-staff" className="space-y-6">
             <AdminAttendanceRoster
               date={selectedDate}
-              teamUsers={teamUsers as any}
+              teamUsers={teamUsers as TeamUser[]}
               logs={logByUser}
               currentUserId={me.id}
               readOnly
@@ -262,7 +316,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pendingLeave.map((r: any) => (
+                    {(pendingLeave as LeaveRequest[]).map((r) => (
                       <TableRow key={r.id}>
                         <TableCell>{r.users_profile?.full_name}</TableCell>
                         <TableCell>
@@ -305,7 +359,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {myLeave.map((r: any) => (
+                    {(myLeave as unknown as LeaveRequest[]).map((r) => (
                       <TableRow key={r.id}>
                         <TableCell>
                           <Badge variant="outline">{r.leave_type}</Badge>
@@ -353,7 +407,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pendingPermissions.map((r: any) => (
+                    {(pendingPermissions as PermissionRequest[]).map((r) => (
                       <TableRow key={r.id}>
                         <TableCell>{r.users_profile?.full_name}</TableCell>
                         <TableCell>{formatDateIST(r.request_date)}</TableCell>
@@ -393,7 +447,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {myPermissions.map((r: any) => (
+                    {(myPermissions as PermissionRequest[]).map((r) => (
                       <TableRow key={r.id}>
                         <TableCell>{formatDateIST(r.request_date)}</TableCell>
                         <TableCell className="text-xs">

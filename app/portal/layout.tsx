@@ -29,7 +29,7 @@ export default async function PortalLayout({ children }: { children: React.React
   const displayUser = businessName ? { ...user, full_name: businessName } : user;
 
   return (
-    <AppShell user={displayUser} role="client" nav={nav}>
+    <AppShell user={displayUser} userRole="client" nav={nav}>
       <div className="pb-20 md:pb-0">{children}</div>
       <MobileBottomNav visibleModules={Array.from(visible)} />
     </AppShell>

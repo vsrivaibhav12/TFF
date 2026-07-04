@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { getLatestProjection, computeProjectedTax } from '@/lib/services/tax-projection';
 
 export interface InsightOutput {
   rule: string;
@@ -134,25 +135,20 @@ export async function computeInsightsForClient(clientId: string): Promise<Insigh
     }
   }
 
-  // Rule 5: Advance-tax adequacy (vs latest projection if any)
+  // Rule 5: Advance-tax adequacy (vs latest tax projection for current FY)
   {
-    const { data } = await sb
-      .from('compliance_insights')
-      .select('raw_value, benchmark_value')
-      .eq('client_id', clientId)
-      .eq('insight_type', 'other')
-      .order('created_at', { ascending: false })
-      .maybeSingle();
-    if (data && (data as any).raw_value && (data as any).benchmark_value !== null) {
-      const grossIncome = (data as any).raw_value;
-      const tdsPaid = (data as any).benchmark_value;
-      const proxy = grossIncome * 0.2; // proxy expected tax
-      const coverage = proxy > 0 ? (tdsPaid / proxy) * 100 : 0;
+    const fy = new Date().getFullYear();
+    const projection = await getLatestProjection(clientId, fy);
+    if (projection && projection.raw_value != null && projection.benchmark_value != null) {
+      const grossIncome = Number(projection.raw_value);
+      const tdsPaid = Number(projection.benchmark_value);
+      const { tax: estimatedTax } = computeProjectedTax(grossIncome, 0);
+      const coverage = estimatedTax > 0 ? (tdsPaid / estimatedTax) * 100 : 0;
       if (coverage < 90) {
         out.push({
           rule: 'advance_tax_adequacy',
           headline: 'Advance tax may be short',
-          narrative: `TDS paid covers only ${coverage.toFixed(0)}% of estimated tax liability. Plan instalments to avoid 234C interest.`,
+          narrative: `Projected TDS paid covers only ${coverage.toFixed(0)}% of estimated tax liability. Plan instalments to avoid 234C interest.`,
           severity: coverage < 60 ? 'critical' : 'warning',
           raw_value: coverage,
           benchmark_value: 100,

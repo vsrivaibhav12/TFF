@@ -41,9 +41,13 @@ export function UniversalDetailDock() {
 
   return (
     <>
-      <div 
+      <div
+        role="button"
+        tabIndex={-1}
+        aria-label="Close detail panel"
         className="fixed inset-0 z-[100] bg-zinc-900/30 backdrop-blur-sm transition-opacity"
         onClick={clear}
+        onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); clear(); } }}
       />
       <div
         className="fixed right-0 top-0 bottom-0 w-[50vw] min-w-[640px] max-w-[90vw] bg-white shadow-2xl z-[101] flex flex-col border-l border-zinc-200 transition-transform duration-200 ease-out"

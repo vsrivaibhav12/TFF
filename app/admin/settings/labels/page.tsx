@@ -8,7 +8,7 @@ import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 export const dynamic = 'force-dynamic';
 
 export default async function LabelsPage() {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'manage_labels');
   const labels = await listLabels();
   return (

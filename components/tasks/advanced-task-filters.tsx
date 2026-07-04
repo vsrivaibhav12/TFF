@@ -217,16 +217,16 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
               <div className="space-y-1.5 col-span-2 border-t border-zinc-100 pt-3">
                 <Label className="text-xs text-zinc-500 mb-2 block">Attributes</Label>
                 <div className="flex items-center gap-4 flex-wrap">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox checked={f.is_billable === 'true'} onCheckedChange={(c) => update('is_billable', c ? 'true' : 'false')} />
+                  <label htmlFor="filter-billable" className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox id="filter-billable" checked={f.is_billable === 'true'} onCheckedChange={(c) => update('is_billable', c ? 'true' : 'false')} />
                     <span className="text-xs">Billable tasks</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox checked={f.is_stuck === 'true'} onCheckedChange={(c) => update('is_stuck', c ? 'true' : 'false')} />
+                  <label htmlFor="filter-stuck" className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox id="filter-stuck" checked={f.is_stuck === 'true'} onCheckedChange={(c) => update('is_stuck', c ? 'true' : 'false')} />
                     <span className="text-xs">Marked as Stuck</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox checked={f.is_verified === 'true'} onCheckedChange={(c) => update('is_verified', c ? 'true' : 'false')} />
+                  <label htmlFor="filter-verified" className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox id="filter-verified" checked={f.is_verified === 'true'} onCheckedChange={(c) => update('is_verified', c ? 'true' : 'false')} />
                     <span className="text-xs">Verified by Manager</span>
                   </label>
                 </div>

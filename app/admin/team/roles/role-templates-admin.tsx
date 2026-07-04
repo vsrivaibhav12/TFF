@@ -283,10 +283,12 @@ function RoleEditorDialog({
                       const meta = CAPABILITY_DETAILS[c];
                       return (
                         <label
+                          htmlFor={`cap-${c}`}
                           key={c}
                           className="flex items-start gap-2 text-xs cursor-pointer hover:text-zinc-900"
                         >
                           <Checkbox
+                            id={`cap-${c}`}
                             checked={caps.has(c)}
                             onCheckedChange={() => toggleCap(c)}
                             className="mt-0.5"

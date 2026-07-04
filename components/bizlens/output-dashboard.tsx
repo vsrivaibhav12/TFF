@@ -1,10 +1,13 @@
 'use client';
 
+import { useTransition } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileDown } from 'lucide-react';
 import Link from 'next/link';
+import { exportBizlensPdfAction } from '@/lib/actions/bizlens-export';
+import { toast } from 'sonner';
 
 import SummaryTab from './tab-summary';
 import OperatingTab from './tab-operating';
@@ -20,6 +23,28 @@ export default function BizlensOutputDashboard({
   trends, projections,
 }: any) {
   const basePath = isPortal ? '/portal' : '/admin';
+  const [pdfPending, startPdf] = useTransition();
+
+  function downloadPdf() {
+    startPdf(async () => {
+      const r = await exportBizlensPdfAction(data?.id);
+      if (!r.success) {
+        toast.error(r.error);
+        return;
+      }
+      const bytes = Uint8Array.from(atob(r.data.pdfBase64), (c) => c.charCodeAt(0));
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = r.data.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('PDF downloaded');
+    });
+  }
 
   return (
     <div className="tff-stack-lg">
@@ -39,11 +64,16 @@ export default function BizlensOutputDashboard({
           </p>
         </div>
         {!isPortal && (
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`${basePath}/bizlens/${data?.id}/input`}>
-              <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to inputs
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={downloadPdf} disabled={pdfPending}>
+              <FileDown className="mr-1.5 h-4 w-4" /> {pdfPending ? 'Exporting…' : 'Export PDF'}
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`${basePath}/bizlens/${data?.id}/input`}>
+                <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to inputs
+              </Link>
+            </Button>
+          </div>
         )}
       </div>
 

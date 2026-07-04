@@ -1,8 +1,22 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import type { KeyboardEvent } from 'react';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Keyboard handler helper for divs/spans that act as buttons.
+ * Triggers the provided callback on Enter or Space.
+ */
+export function onEnterSpace(handler: () => void) {
+  return (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handler();
+    }
+  };
 }
 
 export function formatCurrencyINR(value: number | null | undefined, opts?: { compact?: boolean }) {

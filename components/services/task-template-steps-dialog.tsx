@@ -131,7 +131,7 @@ export default function TaskTemplateStepsDialog({
                 <div className="flex-1 min-w-0">
                   {isEditing ? (
                     <div className="space-y-2">
-                      <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Step title" className="text-sm" autoFocus />
+                      <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Step title" className="text-sm" />
                       <Textarea value={editGuidance} onChange={(e) => setEditGuidance(e.target.value)} placeholder="Guidance notes (optional)" rows={2} className="text-sm" />
                       <div className="flex items-center gap-2">
                         <Button size="sm" onClick={() => saveEdit(step.id)} disabled={pending || !editTitle.trim()}><Check className="h-3 w-3" /> Save</Button>

@@ -6,17 +6,22 @@ export const runtime = 'nodejs';
 
 /**
  * Nightly refresh of compliance_calendar_events.
- * Authenticated via CRON_SECRET (Vercel cron header) OR the request must come
- * from a Vercel cron (User-Agent contains 'vercel-cron'). Local dev: query ?secret=…
+ * Authenticated via CRON_SECRET query param or x-vercel-cron header.
+ * Local dev: ?secret=CRON_SECRET
  */
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const secret = url.searchParams.get('secret') ?? req.headers.get('x-cron-secret');
-  const ua = req.headers.get('user-agent') ?? '';
-  const isVercelCron = ua.toLowerCase().includes('vercel-cron');
-  if (!isVercelCron && secret !== process.env.CRON_SECRET) {
+  const vercelCron = req.headers.get('x-vercel-cron');
+
+  const isAuthorized =
+    (vercelCron === '1' && secret === process.env.CRON_SECRET) ||
+    secret === process.env.CRON_SECRET;
+
+  if (!isAuthorized) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
+
   try {
     const [r1, r2] = await Promise.all([
       refreshComplianceEvents(),
@@ -24,6 +29,7 @@ export async function GET(req: NextRequest) {
     ]);
     return NextResponse.json({ ok: true, rules: r1, services: r2 });
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message ?? 'unknown' }, { status: 500 });
+    console.error('[cron/refresh-compliance-events]', e);
+    return NextResponse.json({ ok: false, error: 'refresh_failed' }, { status: 500 });
   }
 }

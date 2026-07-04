@@ -22,6 +22,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: '/admin/hearings', label: 'Hearings', icon: 'gavel' as const, section: 'Operations' },
     { href: '/admin/queries', label: 'Queries', icon: 'message' as const, section: 'Operations' },
     { href: '/admin/gst', label: 'GST', icon: 'calculator' as const, section: 'Operations' },
+    { href: '/admin/tds', label: 'TDS', icon: 'calculator' as const, section: 'Operations' },
+    { href: '/admin/it', label: 'Income tax', icon: 'calculator' as const, section: 'Operations' },
     { href: '/admin/tax-projections', label: 'Tax projections', icon: 'receipt' as const, section: 'Operations' },
     { href: '/admin/dsc', label: 'DSC', icon: 'key' as const, section: 'Operations' },
 
@@ -54,7 +56,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <AppShell
       user={user}
-      role="admin"
+      userRole="admin"
       nav={nav}
     >
       <div data-admin-only>

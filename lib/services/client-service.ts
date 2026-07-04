@@ -1,5 +1,6 @@
 import 'server-only';
 import * as clientRepo from '@/lib/repositories/clients';
+import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 
 export async function createClientRecord(data: any) {
@@ -38,9 +39,12 @@ export async function createClientRecord(data: any) {
 
   // 2. If portal enabled with credentials, create auth user + profile + link
   if (clientPayload.portal_enabled && portal_email && portal_password) {
-    const sb = createServiceClient();
+    // Auth admin API requires the service-role key.
+    const authSb = createServiceClient();
+    // Profile/link inserts go through the regular server client so RLS policies apply.
+    const sb = createClient();
 
-    const { data: created, error: createErr } = await sb.auth.admin.createUser({
+    const { data: created, error: createErr } = await authSb.auth.admin.createUser({
       email: portal_email.toLowerCase().trim(),
       password: portal_password,
       email_confirm: true,

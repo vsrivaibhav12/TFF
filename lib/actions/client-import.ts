@@ -6,6 +6,7 @@ import { requireCapability } from '@/lib/auth/require-capability';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 import { parseClientsBuffer, type ParsedClientRow } from '@/lib/services/client-import-service';
 import { parseGstnPasteText } from '@/lib/services/gstn-paste-service';
+import { validateImportFile } from '@/lib/validation/file-import';
 
 export interface ImportPreview {
   rows: ParsedClientRow[];
@@ -30,10 +31,11 @@ export async function previewClientImportAction(formData: FormData): Promise<Act
     await requireCapability(me, 'clients.create');
     const file = formData.get('file');
     if (!(file instanceof File)) return fail('No file provided', 'VALIDATION');
-    if (file.size === 0) return fail('Empty file', 'VALIDATION');
-    if (file.size > 5 * 1024 * 1024) return fail('File exceeds 5 MB limit', 'VALIDATION');
 
     const ab = await file.arrayBuffer();
+    const validation = validateImportFile(file, ab);
+    if (!validation.ok) return fail(validation.error, 'VALIDATION');
+
     const buf = Buffer.from(ab);
     const rows = parseClientsBuffer(buf, file.name);
     if (rows.length === 0) return fail('No data rows found in the file', 'EMPTY');

@@ -13,7 +13,7 @@ import BackButton from '@/components/sophistication/back-button';
 export const dynamic = 'force-dynamic';
 
 export default async function ServiceWiseReportPage({ searchParams }: { searchParams: { fy?: string } }) {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'view_workdone_reports');
   const sb = createClient();
 

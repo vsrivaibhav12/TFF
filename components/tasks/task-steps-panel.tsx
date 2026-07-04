@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { ListChecks, HelpCircle } from 'lucide-react';
 import { formatDateIST, cn } from '@/lib/utils';
 
-interface Step {
+export interface Step {
   id: string;
   step_order: number;
   title: string;

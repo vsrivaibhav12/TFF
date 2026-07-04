@@ -78,7 +78,7 @@ export default function SavedViewsBar({ scope, views }: { scope: string; views: 
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Save current filters as a view</DialogTitle></DialogHeader>
           <div className="space-y-2">
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. ‘Q3 GST overdue’" autoFocus />
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. ‘Q3 GST overdue’" />
             <div className="text-xs text-zinc-500">This view captures the URL filters currently applied.</div>
           </div>
           <DialogFooter><Button onClick={saveCurrent} disabled={pending}>{pending ? 'Saving…' : 'Save'}</Button></DialogFooter>

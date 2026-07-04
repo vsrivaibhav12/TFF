@@ -114,7 +114,6 @@ export default function LinkClientForm({ subServiceId, allClients, linkedClientI
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search clients by name or PAN..."
               className="pl-9"
-              autoFocus
             />
             {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-zinc-400" />}
           </div>

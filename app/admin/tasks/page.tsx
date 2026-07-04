@@ -39,7 +39,7 @@ function buildTaskUrl(base: string, sp: Record<string, string | string[] | undef
 }
 
 export default async function AdminTasksPage({ searchParams }: { searchParams: { status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string; due_from?: string; due_to?: string; page?: string; period_year?: string; period_month?: string; is_billable?: string; is_stuck?: string; is_verified?: string; label?: string | string[]; q?: string } }) {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'tasks.view');
 
   const status = (searchParams.status?.split(',').filter(Boolean) ?? []) as Array<import('@/lib/validation/schemas').TaskStatus | 'blocked' | 'stuck'>;

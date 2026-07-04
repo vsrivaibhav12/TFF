@@ -81,13 +81,19 @@ export default function ShortcutsHelp({
   if (!open) return null;
   return (
     <div
+      role="button"
+      tabIndex={-1}
+      aria-label="Close keyboard shortcuts"
       className="fixed inset-0 z-[60] flex items-center justify-center bg-zinc-900/40 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } }}
       data-testid="shortcuts-overlay"
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Keyboard shortcuts"
         className="max-w-md w-[90%] rounded-2xl border border-zinc-200/50 bg-white/90 backdrop-blur-2xl shadow-2xl p-6"
-        onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-base font-semibold flex items-center gap-2 tracking-tight">
           <Keyboard className="h-4 w-4 text-teal-600" />

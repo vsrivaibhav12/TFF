@@ -35,8 +35,8 @@ export async function addWorkDoneAction(input: z.infer<typeof workDoneSchema>): 
     revalidatePath('/team/work-done');
     revalidatePath('/admin/work-done');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -49,7 +49,7 @@ const manualSchema = z.object({
   ended_at: z.string().optional().nullable(),
 });
 
-export async function addManualWorkDoneAction(input: any): Promise<ActionResult<{ id: string }>> {
+export async function addManualWorkDoneAction(input: Record<string, unknown>): Promise<ActionResult<{ id: string }>> {
   try {
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'workdone.manage');
@@ -58,13 +58,14 @@ export async function addManualWorkDoneAction(input: any): Promise<ActionResult<
     const sb = createClient();
     const { data: task } = await sb.from('tasks').select('client_id, status, is_deleted').eq('id', parsed.data.task_id).maybeSingle();
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+    const typedTask = task as { client_id: string | null; status: string; is_deleted: boolean | null };
+    if (!canModifyTask(typedTask)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
     const { data, error } = await sb
       .from('task_workdone')
       .insert({
         task_id: parsed.data.task_id,
         user_id: me.id,
-        client_id: (task as any).client_id,
+        client_id: typedTask.client_id,
         work_date: parsed.data.work_date,
         duration_minutes: parsed.data.duration_minutes,
         note: parsed.data.note ?? null,
@@ -78,8 +79,8 @@ export async function addManualWorkDoneAction(input: any): Promise<ActionResult<
     await writeAudit({ action: 'workdone.create', entity_type: 'work_done', entity_id: data.id, performed_by: me.id, details: { task_id: parsed.data.task_id, duration_minutes: parsed.data.duration_minutes } });
     revalidatePath(`/team/tasks/${parsed.data.task_id}`);
     return ok({ id: data.id });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -90,7 +91,7 @@ const timerSchema = z.object({
   note: z.string().max(500).optional().nullable(),
 });
 
-export async function logTimerWorkDoneAction(input: any): Promise<ActionResult<{ id: string; duration_minutes: number }>> {
+export async function logTimerWorkDoneAction(input: Record<string, unknown>): Promise<ActionResult<{ id: string; duration_minutes: number }>> {
   try {
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'workdone.manage');
@@ -103,13 +104,14 @@ export async function logTimerWorkDoneAction(input: any): Promise<ActionResult<{
     const sb = createClient();
     const { data: task } = await sb.from('tasks').select('client_id, status, is_deleted').eq('id', parsed.data.task_id).maybeSingle();
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+    const typedTask = task as { client_id: string | null; status: string; is_deleted: boolean | null };
+    if (!canModifyTask(typedTask)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
     const { data, error } = await sb
       .from('task_workdone')
       .insert({
         task_id: parsed.data.task_id,
         user_id: me.id,
-        client_id: (task as any).client_id,
+        client_id: typedTask.client_id,
         work_date: start.toISOString().slice(0, 10),
         duration_minutes: minutes,
         note: parsed.data.note ?? null,
@@ -123,8 +125,8 @@ export async function logTimerWorkDoneAction(input: any): Promise<ActionResult<{
     await writeAudit({ action: 'workdone.create', entity_type: 'work_done', entity_id: data.id, performed_by: me.id, details: { task_id: parsed.data.task_id, duration_minutes: minutes } });
     revalidatePath(`/team/tasks/${parsed.data.task_id}`);
     return ok({ id: data.id, duration_minutes: minutes });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -135,12 +137,13 @@ export async function deleteWorkDoneAction(id: string): Promise<ActionResult<voi
     const sb = createClient();
     const { data: row } = await sb.from('task_workdone').select('user_id, task_id').eq('id', id).maybeSingle();
     if (!row) return fail('Not found', 'NOT_FOUND');
-    if (me.role !== 'admin' && (row as any).user_id !== me.id) {
+    const typedRow = row as { user_id: string; task_id: string | null };
+    if (me.role !== 'admin' && typedRow.user_id !== me.id) {
       return fail('You can only delete your own entries', 'FORBIDDEN');
     }
-    if ((row as any).task_id) {
-      const { data: task } = await sb.from('tasks').select('status, is_deleted').eq('id', (row as any).task_id).maybeSingle();
-      if (task && !canModifyTask(task as any)) {
+    if (typedRow.task_id) {
+      const { data: task } = await sb.from('tasks').select('status, is_deleted').eq('id', typedRow.task_id).maybeSingle();
+      if (task && !canModifyTask(task as { status: string; is_deleted: boolean | null })) {
         return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
       }
     }
@@ -149,10 +152,10 @@ export async function deleteWorkDoneAction(id: string): Promise<ActionResult<voi
     await writeAudit({ action: 'workdone.delete', entity_type: 'work_done', entity_id: id, performed_by: me.id });
     revalidatePath('/team/work-done');
     revalidatePath('/admin/work-done');
-    revalidatePath(`/team/tasks/${(row as any).task_id}`);
+    revalidatePath(`/team/tasks/${typedRow.task_id}`);
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }
 
@@ -177,12 +180,13 @@ export async function updateWorkDoneAction(input: z.infer<typeof updateWorkDoneS
     const sb = createClient();
     const { data: row } = await sb.from('task_workdone').select('user_id, task_id').eq('id', parsed.data.id).maybeSingle();
     if (!row) return fail('Not found', 'NOT_FOUND');
-    if (me.role !== 'admin' && (row as any).user_id !== me.id) {
+    const typedRow = row as { user_id: string; task_id: string | null };
+    if (me.role !== 'admin' && typedRow.user_id !== me.id) {
       return fail('You can only edit your own entries', 'FORBIDDEN');
     }
-    if ((row as any).task_id) {
-      const { data: task } = await sb.from('tasks').select('status, is_deleted').eq('id', (row as any).task_id).maybeSingle();
-      if (task && !canModifyTask(task as any)) {
+    if (typedRow.task_id) {
+      const { data: task } = await sb.from('tasks').select('status, is_deleted').eq('id', typedRow.task_id).maybeSingle();
+      if (task && !canModifyTask(task as { status: string; is_deleted: boolean | null })) {
         return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
       }
     }
@@ -201,9 +205,9 @@ export async function updateWorkDoneAction(input: z.infer<typeof updateWorkDoneS
     if (error) return fail(error.message, 'DB');
     revalidatePath('/team/work-done');
     revalidatePath('/admin/work-done');
-    revalidatePath(`/team/tasks/${(row as any).task_id}`);
+    revalidatePath(`/team/tasks/${typedRow.task_id}`);
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(e instanceof Error ? e.message : 'unknown', (e as { code?: string })?.code ?? 'UNKNOWN');
   }
 }

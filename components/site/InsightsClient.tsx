@@ -2,16 +2,16 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Linkedin } from 'lucide-react'
+import { insightArticles, type InsightArticle } from '@/lib/content/insights'
 
 const categories = ['All', 'Compliance', 'Virtual CFO', 'CBAM & ESG', 'Process & Controls']
-
-// In future, articles will live here or come from a CMS / MDX folder
-const articles = []
 
 export default function InsightsClient() {
   const [active, setActive] = useState('All')
 
-  const filtered = active === 'All' ? articles : articles.filter(a => a.category === active)
+  const filtered = active === 'All'
+    ? insightArticles
+    : insightArticles.filter((a: InsightArticle) => a.category === active)
 
   return (
     <div>
@@ -47,7 +47,7 @@ export default function InsightsClient() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map(a => (
+            {filtered.map((a: InsightArticle) => (
               <Link key={a.slug} href={`/insights/${a.slug}`} className="service-card block rounded-xl border border-[#E4E4E7] bg-white p-6 hover:shadow-md hover:border-[#0D9488]/40 transition-all">
                 <span className="inline-block text-xs uppercase tracking-[0.2em] text-[#0D9488] font-bold">{a.category}</span>
                 <h3 className="mt-3 text-[20px] font-semibold text-[#18181B]">{a.title}</h3>

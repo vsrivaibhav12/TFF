@@ -53,7 +53,19 @@ export const ResizableTableHead = React.forwardRef<HTMLTableCellElement, Resizab
           <span className="truncate">{children}</span>
           {onResize && (
             <span
+              role="button"
+              tabIndex={0}
+              aria-label="Drag to resize column"
               onMouseDown={startResize}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowLeft') {
+                  e.preventDefault();
+                  onResize?.(Math.max(60, (width ?? 150) - 10));
+                } else if (e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  onResize?.(Math.max(60, (width ?? 150) + 10));
+                }
+              }}
               className={cn(
                 'absolute right-0 top-0 bottom-0 w-3 cursor-col-resize z-20 flex items-center justify-end pr-0.5',
                 'hover:bg-teal-600/10',

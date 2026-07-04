@@ -14,7 +14,7 @@ import ExportButton from '@/components/sophistication/export-button';
 export const dynamic = 'force-dynamic';
 
 export default async function GstMonthlyDataPage() {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'compliance.enter');
   const sb = createClient();
   const clients = await listAccessibleClients();

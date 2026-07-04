@@ -67,12 +67,12 @@ function formatToday(): string {
 
 export default function AppShell({
   user,
-  role,
+  userRole,
   nav,
   children,
 }: {
   user: { email: string; full_name: string | null; role: string };
-  role: 'admin' | 'team' | 'client';
+  userRole: 'admin' | 'team' | 'client';
   nav: NavItem[];
   children: React.ReactNode;
 }) {
@@ -133,7 +133,7 @@ export default function AppShell({
     router.refresh();
   }
 
-  const roleBadge = getRoleBadge(role);
+  const roleBadge = getRoleBadge(userRole);
 
   // Build breadcrumbs from pathname
   const breadcrumbSegments = pathname
@@ -153,20 +153,20 @@ export default function AppShell({
 
       <div className="flex flex-1">
         {/* Desktop Navigation */}
-        <PersistentSidebar role={role} nav={nav} user={user} onLogout={logout} />
+        <PersistentSidebar role={userRole} nav={nav} user={user} onLogout={logout} />
 
         {/* Mobile header */}
         <div className="md:hidden fixed top-0 inset-x-0 z-30 flex items-center justify-between border-b border-white/10 bg-teal-900/95 backdrop-blur-lg px-4 py-3">
-          <Link href={`/${role}`} className="flex items-center gap-2">
+          <Link href={`/${userRole}`} className="flex items-center gap-2">
             <Image src="/logo.png" width={140} height={28} className="h-7 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
             <span className="text-sm font-bold text-white">TFF</span>
           </Link>
           <div className="flex items-center gap-1">
-            <GlobalTimer role={role} />
+            <GlobalTimer role={userRole} />
             <ErrorBoundary>
               <NotificationsBell />
             </ErrorBoundary>
-            <QuickActionsDropdown role={role} />
+            <QuickActionsDropdown role={userRole} />
             <button onClick={() => setMobileOpen((v) => !v)} className="p-2 text-teal-100" aria-label="menu">
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -270,8 +270,8 @@ export default function AppShell({
           <div className="hidden md:flex items-center justify-between gap-4 px-8 pt-8 pb-4 sticky top-0 z-20 bg-zinc-50/80 backdrop-blur-xl">
             {/* Breadcrumbs */}
             <div className="flex items-center gap-1.5 text-sm text-zinc-500">
-              <Link href={`/${role}`} className="hover:text-zinc-900 transition-colors capitalize">
-                {role === 'client' ? 'Portal' : role}
+              <Link href={`/${userRole}`} className="hover:text-zinc-900 transition-colors capitalize">
+                {userRole === 'client' ? 'Portal' : userRole}
               </Link>
               {breadcrumbSegments.map((segment, i) => (
                 <span key={`bc-${segment}-${i}`} className="flex items-center gap-1.5">
@@ -312,11 +312,11 @@ export default function AppShell({
               </button>
 
               <div className="bg-white/60 backdrop-blur-lg border border-zinc-200/80 rounded-xl shadow-sm flex items-center p-1">
-                <GlobalTimer role={role} />
+                <GlobalTimer role={userRole} />
                 <ErrorBoundary>
                   <NotificationsBell />
                 </ErrorBoundary>
-                <QuickActionsDropdown role={role} />
+                <QuickActionsDropdown role={userRole} />
               </div>
 
               {/* User avatar dropdown */}
@@ -333,7 +333,14 @@ export default function AppShell({
                 </button>
                 {userMenuOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+                    <div
+                      role="button"
+                      tabIndex={-1}
+                      aria-label="Close user menu"
+                      className="fixed inset-0 z-40"
+                      onClick={() => setUserMenuOpen(false)}
+                      onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setUserMenuOpen(false); } }}
+                    />
                     <div
                       id="user-menu"
                       className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-zinc-200 bg-white shadow-floating z-50 py-2"
@@ -372,16 +379,16 @@ export default function AppShell({
         </main>
 
         {/* Mobile bottom nav for staff and admin */}
-        {(role === 'team' || role === 'admin') && <MobileBottomNavTeam nav={nav} role={role} />}
+        {(userRole === 'team' || userRole === 'admin') && <MobileBottomNavTeam nav={nav} role={userRole} />}
 
         {/* Detail dock */}
         <UniversalDetailDock />
 
         {/* Global overlays */}
         <ErrorBoundary>
-          <CommandPalette role={role} />
+          <CommandPalette role={userRole} />
         </ErrorBoundary>
-        <ShortcutsHelp role={role} open={showHelp} onClose={() => setShowHelp(false)} />
+        <ShortcutsHelp role={userRole} open={showHelp} onClose={() => setShowHelp(false)} />
       </div>
     </div>
   );

@@ -3,13 +3,26 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Briefcase, Calendar, MessageSquare } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Briefcase,
+  Calendar,
+  MessageSquare,
+  TrendingUp,
+  ChartColumn,
+  Scroll,
+  Receipt,
+} from 'lucide-react';
 
 const ALL_TABS = [
   { href: '/portal', label: 'Home', icon: LayoutDashboard, gate: 'portal.dashboard' },
   { href: '/portal/tasks', label: 'Work', icon: Briefcase, gate: 'portal.tasks' },
   { href: '/portal/calendar', label: 'Calendar', icon: Calendar, gate: 'portal.compliance_calendar' },
   { href: '/portal/queries', label: 'Queries', icon: MessageSquare, gate: 'portal.queries' },
+  { href: '/portal/notices', label: 'Notices', icon: Scroll, gate: 'portal.notices' },
+  { href: '/portal/bizlens', label: 'BizLens', icon: ChartColumn, gate: 'portal.bizlens' },
+  { href: '/portal/vcfo', label: 'vCFO', icon: TrendingUp, gate: 'portal.vcfo' },
+  { href: '/portal/projection', label: 'Tax', icon: Receipt, gate: 'portal.tax_projection' },
 ];
 
 interface MobileBottomNavProps {
@@ -19,6 +32,8 @@ interface MobileBottomNavProps {
 export default function MobileBottomNav({ visibleModules }: MobileBottomNavProps) {
   const pathname = usePathname();
   const tabs = ALL_TABS.filter((t) => visibleModules?.includes(t.gate) ?? true);
+  if (tabs.length === 0) return null;
+
   return (
     <nav
       data-testid="mobile-bottom-nav"

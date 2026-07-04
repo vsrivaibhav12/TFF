@@ -11,6 +11,19 @@ import ExportButton from '@/components/sophistication/export-button';
 import { AlertTriangle } from 'lucide-react';
 import BackButton from '@/components/sophistication/back-button';
 
+interface BillingTask {
+  id: string;
+  task_number?: string | null;
+  title: string;
+  status: string;
+  bill_amount?: number | null;
+  bill_reference?: string | null;
+  completed_date?: string | null;
+  client_id?: string | null;
+  clients?: { business_name?: string | null } | null;
+  sub_services?: { name?: string | null; services?: { name?: string | null } | null } | null;
+}
+
 export const dynamic = 'force-dynamic';
 
 export default async function PendingBillingReportPage() {
@@ -27,15 +40,16 @@ export default async function PendingBillingReportPage() {
     .order('completed_date', { ascending: false, nullsFirst: false })
     .limit(200);
 
-  const totalPending = (tasks ?? []).reduce((sum: number, t: any) => sum + (t.bill_amount || 0), 0);
+  const typedTasks = (tasks ?? []) as BillingTask[];
+  const totalPending = typedTasks.reduce((sum: number, t) => sum + (t.bill_amount || 0), 0);
 
   // Group by client for summary
   const byClient: Record<string, { name: string; count: number; amount: number }> = {};
-  for (const t of tasks ?? []) {
-    const clientName = (t.clients as any)?.business_name ?? '—';
+  for (const t of typedTasks) {
+    const clientName = t.clients?.business_name ?? '—';
     if (!byClient[clientName]) byClient[clientName] = { name: clientName, count: 0, amount: 0 };
     byClient[clientName].count++;
-    byClient[clientName].amount += (t as any).bill_amount || 0;
+    byClient[clientName].amount += t.bill_amount || 0;
   }
 
   return (
@@ -64,12 +78,12 @@ export default async function PendingBillingReportPage() {
       </div>
 
       <div className="flex justify-end">
-        <ExportButton data={(tasks ?? []).map((t: any) => ({
+        <ExportButton data={typedTasks.map((t) => ({
           'task number': t.task_number ?? '—',
           title: t.title,
-          client: (t.clients as any)?.business_name ?? '—',
-          service: (t.sub_services as any)?.services?.name ?? '—',
-          'sub service': (t.sub_services as any)?.name ?? '—',
+          client: t.clients?.business_name ?? '—',
+          service: t.sub_services?.services?.name ?? '—',
+          'sub service': t.sub_services?.name ?? '—',
           amount: t.bill_amount || 0,
           completed: t.completed_date ?? '—',
           status: t.status,
@@ -95,18 +109,18 @@ export default async function PendingBillingReportPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tasks.map((t: any) => (
+              {typedTasks.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell>
                     <div className="font-medium text-zinc-900">{t.title}</div>
                     <div className="text-xs text-zinc-500 font-mono">{t.task_number ?? '—'}</div>
                   </TableCell>
-                  <TableCell className="text-sm text-zinc-700">{(t.clients as any)?.business_name ?? '—'}</TableCell>
+                  <TableCell className="text-sm text-zinc-700">{t.clients?.business_name ?? '—'}</TableCell>
                   <TableCell className="text-sm text-zinc-500">
-                    {(t.sub_services as any)?.services?.name ?? '—'} · {(t.sub_services as any)?.name ?? '—'}
+                    {t.sub_services?.services?.name ?? '—'} · {t.sub_services?.name ?? '—'}
                   </TableCell>
                   <TableCell className="text-right font-medium text-zinc-900">
-                    {(t as any).bill_amount ? `₹${(t as any).bill_amount.toLocaleString('en-IN')}` : '—'}
+                    {t.bill_amount ? `₹${t.bill_amount.toLocaleString('en-IN')}` : '—'}
                   </TableCell>
                   <TableCell className="text-sm text-zinc-500 tabular-nums">
                     {formatDateIST(t.completed_date) || '—'}

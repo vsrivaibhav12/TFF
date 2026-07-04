@@ -98,6 +98,9 @@ export function SwipeableRow({ children, leftActions, rightActions, className }:
 
       {/* Foreground content */}
       <div
+        role="button"
+        tabIndex={0}
+        aria-label="Swipeable row"
         className="relative bg-white"
         style={{
           transform: `translateX(${translateX}px)`,

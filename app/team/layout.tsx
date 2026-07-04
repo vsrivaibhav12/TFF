@@ -25,6 +25,8 @@ export default async function TeamLayout({ children }: { children: React.ReactNo
     /* ── Delegated admin functions (capability-gated) ── */
     { href: '/team/dsc', label: 'DSC', icon: 'key' as const, section: 'Operations' },
     { href: '/team/gst', label: 'GST', icon: 'calculator' as const, section: 'Operations' },
+    { href: '/team/tds', label: 'TDS', icon: 'calculator' as const, section: 'Operations' },
+    { href: '/team/it', label: 'Income tax', icon: 'calculator' as const, section: 'Operations' },
     { href: '/team/tax-projections', label: 'Tax projections', icon: 'receipt' as const, section: 'Operations' },
     { href: '/team/bizlens', label: 'BizLens', icon: 'trending' as const, section: 'Finance' },
     { href: '/team/vcfo', label: 'vCFO', icon: 'chart' as const, section: 'Finance' },
@@ -48,7 +50,7 @@ export default async function TeamLayout({ children }: { children: React.ReactNo
   return (
     <AppShell
       user={user}
-      role="team"
+      userRole="team"
       nav={nav}
     >
       {children}

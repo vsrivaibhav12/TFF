@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminNoticeDetail({ params }: { params: { id: string } }) {
   const { id } = parseParams(params, IdParamSchema);
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'notices.manage');
   const notice = await getNoticeById(id);
   if (!notice) notFound();

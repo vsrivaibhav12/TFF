@@ -15,6 +15,14 @@ import { seedTaskStepsFromSop, seedTaskStepsFromTemplate } from '@/lib/services/
 import { notify } from '@/lib/services/notification-service';
 import { writeAudit } from '@/lib/services/audit-service';
 import { buildTaskTitle } from '@/lib/utils';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : 'unknown';
+}
+function errorCode(e: unknown): string {
+  return (e as { code?: string })?.code ?? 'UNKNOWN';
+}
 
 export async function createTaskAction(input: CreateTaskInput): Promise<ActionResult<{ id: string }>> {
   try {
@@ -58,7 +66,7 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
     if (parsed.data.task_template_id) {
       try {
         const sb = createClient();
-        await seedTaskStepsFromTemplate(sb as any, { task_id: data.id, task_template_id: parsed.data.task_template_id });
+        await seedTaskStepsFromTemplate(sb as unknown as SupabaseClient, { task_id: data.id, task_template_id: parsed.data.task_template_id });
       } catch {
         // Non-critical: template step seeding failure does not block task creation
       }
@@ -66,7 +74,7 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
       // Auto-load SOP steps if no specific template is chosen
       try {
         const sb = createClient();
-        await seedTaskStepsFromSop(sb as any, { task_id: data.id, sub_service_id: parsed.data.sub_service_id });
+        await seedTaskStepsFromSop(sb as unknown as SupabaseClient, { task_id: data.id, sub_service_id: parsed.data.sub_service_id });
       } catch {
         // Non-critical: SOP step seeding failure does not block task creation
       }
@@ -79,8 +87,8 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
     revalidatePath(`/team/clients/${parsed.data.client_id}`);
     revalidatePath(`/admin/clients/${parsed.data.client_id}`);
     return ok({ id: data.id });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -93,11 +101,11 @@ export async function transitionTaskAction(input: { task_id: string; to_status: 
     
     const task = await taskRepo.getTask(parsed.data.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task as any, parsed.data.to_status)) {
+    if (!canModifyTask(task, parsed.data.to_status)) {
       return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
     }
     if (parsed.data.to_status === 'completed') {
-      const check = canCompleteTask(task as any, {
+      const check = canCompleteTask(task, {
         bill_reference: parsed.data.bill_reference ?? undefined,
         bill_amount: parsed.data.bill_amount ?? undefined,
       });
@@ -121,8 +129,8 @@ export async function transitionTaskAction(input: { task_id: string; to_status: 
     revalidatePath(`/admin/tasks/${parsed.data.task_id}`);
     revalidatePath('/portal/tasks');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -138,8 +146,8 @@ export async function addTaskNoteAction(input: { task_id: string; body: string }
     revalidatePath(`/admin/tasks/${input.task_id}`);
     revalidatePath(`/portal/tasks/${input.task_id}`);
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -150,7 +158,7 @@ export async function assignTaskAction(input: { task_id: string; assigned_to?: s
 
     const task = await taskRepo.getTask(input.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+    if (!canModifyTask(task)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
 
     const assigneeIds = input.assigned_to
       ? (Array.isArray(input.assigned_to) ? input.assigned_to : [input.assigned_to]).filter(Boolean)
@@ -177,8 +185,8 @@ export async function assignTaskAction(input: { task_id: string; assigned_to?: s
     revalidatePath(`/team/tasks/${input.task_id}`);
     revalidatePath(`/admin/tasks/${input.task_id}`);
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -190,7 +198,7 @@ export async function sendTaskReminderAction(input: { task_id: string; message?:
     
     const task = await taskRepo.getTask(input.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!(task as any).is_blocked_on_client) {
+    if (!task.is_blocked_on_client) {
       return fail('Reminders can only be sent for tasks waiting on the client', 'INVALID_STATE');
     }
 
@@ -215,13 +223,13 @@ export async function sendTaskReminderAction(input: { task_id: string; message?:
     const { data: clientUsers } = await sb
       .from('client_users')
       .select('user_id')
-      .eq('client_id', (task as any).client_id)
+      .eq('client_id', task.client_id)
       .eq('is_active', true);
 
-    const userIds = (clientUsers ?? []).map((u: any) => u.user_id).filter(Boolean);
-    const subject = `Reminder: ${(task as any).title}`;
+    const userIds = (clientUsers ?? []).map((u: { user_id: string }) => u.user_id).filter(Boolean);
+    const subject = `Reminder: ${task.title}`;
     const body = input.message?.trim()
-      || `We're waiting on inputs for "${(task as any).title}". Please respond at your earliest convenience.`;
+      || `We're waiting on inputs for "${task.title}". Please respond at your earliest convenience.`;
 
     for (const uid of userIds) {
       await notify({
@@ -248,8 +256,8 @@ export async function sendTaskReminderAction(input: { task_id: string; message?:
     revalidatePath('/team/tasks');
     revalidatePath('/admin/tasks');
     return ok({ recipients: userIds.length });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -259,7 +267,7 @@ export async function updateTaskLabelsAction(taskId: string, labels: string[]): 
     await requireCapability(me, 'tasks.edit');
     const task = await taskRepo.getTask(taskId);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+    if (!canModifyTask(task)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
 
     const sb = createClient();
     // Remove existing labels
@@ -283,18 +291,18 @@ export async function updateTaskLabelsAction(taskId: string, labels: string[]): 
     revalidatePath(`/team/tasks/${taskId}`);
     revalidatePath(`/admin/tasks/${taskId}`);
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
-export async function updateTaskCustomFieldsAction(taskId: string, fields: Record<string, any>): Promise<ActionResult<void>> {
+export async function updateTaskCustomFieldsAction(taskId: string, fields: Record<string, unknown>): Promise<ActionResult<void>> {
   try {
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'manage_custom_fields');
     const task = await taskRepo.getTask(taskId);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+    if (!canModifyTask(task)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
 
     const sb = createClient();
     for (const [definitionId, value] of Object.entries(fields)) {
@@ -310,9 +318,9 @@ export async function updateTaskCustomFieldsAction(taskId: string, fields: Recor
       }
 
       const t = typeof value;
-      if (t === 'boolean') valueBool = value;
-      else if (t === 'number') valueNumber = value;
-      else if (t === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) valueDate = value;
+      if (t === 'boolean') valueBool = value as boolean;
+      else if (t === 'number') valueNumber = value as number;
+      else if (t === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value as string)) valueDate = value as string;
       else valueText = String(value);
 
       const { error } = await sb.from('task_custom_field_values').upsert({
@@ -338,8 +346,8 @@ export async function updateTaskCustomFieldsAction(taskId: string, fields: Recor
     revalidatePath(`/team/tasks/${taskId}`);
     revalidatePath(`/admin/tasks/${taskId}`);
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -355,8 +363,8 @@ export async function softDeleteTaskAction(taskId: string): Promise<ActionResult
     revalidatePath('/team/tasks');
     revalidatePath('/portal/tasks');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -375,8 +383,8 @@ export async function bulkDeleteTasksAction(taskIds: string[]): Promise<ActionRe
     revalidatePath('/team/tasks');
     revalidatePath('/portal/tasks');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -389,7 +397,7 @@ export async function updateTaskBillingAction(input: { task_id: string; is_billa
     
     const task = await taskRepo.getTask(parsed.data.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if ((task as any).is_deleted) {
+    if (task.is_deleted) {
       return fail('Deleted tasks cannot be modified', 'IMMUTABLE');
     }
     
@@ -413,8 +421,8 @@ export async function updateTaskBillingAction(input: { task_id: string; is_billa
     revalidatePath('/team/tasks');
     revalidatePath('/admin/tasks');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -424,7 +432,7 @@ export async function markTaskBilledAction(taskId: string): Promise<ActionResult
     await requireCapability(me, 'tasks.edit');
     const task = await taskRepo.getTask(taskId);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!(task as any).is_billable) {
+    if (!task.is_billable) {
       return fail('Task is not billable', 'INVALID_STATE');
     }
     await taskRepo.updateTaskRecord(taskId, {
@@ -443,8 +451,8 @@ export async function markTaskBilledAction(taskId: string): Promise<ActionResult
     revalidatePath(`/admin/tasks/${taskId}`);
     revalidatePath('/admin/billing');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -457,7 +465,7 @@ export async function updateTaskArnAction(input: { task_id: string; arn_referenc
     
     const task = await taskRepo.getTask(parsed.data.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if ((task as any).is_deleted) {
+    if (task.is_deleted) {
       return fail('Deleted tasks cannot be modified', 'IMMUTABLE');
     }
     
@@ -480,8 +488,8 @@ export async function updateTaskArnAction(input: { task_id: string; arn_referenc
     revalidatePath('/team/tasks');
     revalidatePath('/admin/tasks');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -494,10 +502,10 @@ export async function reopenTaskAction(input: { task_id: string; reason: string 
     
     const task = await taskRepo.getTask(parsed.data.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if ((task as any).is_deleted) {
+    if (task.is_deleted) {
       return fail('Deleted tasks cannot be reopened', 'IMMUTABLE');
     }
-    if ((task as any).status !== 'completed') {
+    if (task.status !== 'completed') {
       return fail('Only completed tasks can be reopened', 'INVALID_STATE');
     }
     
@@ -525,8 +533,8 @@ export async function reopenTaskAction(input: { task_id: string; reason: string 
     revalidatePath('/team/tasks');
     revalidatePath('/admin/tasks');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -602,8 +610,8 @@ export async function bulkCreateTasksAction(input: z.infer<typeof bulkCreateTask
     revalidatePath('/admin/tasks');
     revalidatePath('/portal/tasks');
     return ok({ created });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -633,12 +641,12 @@ export async function bulkUpdateTasksAction(input: z.infer<typeof bulkUpdateTask
     // For a few dozen tasks, this loop is fine.
     for (const taskId of parsed.data.task_ids) {
       const task = await taskRepo.getTask(taskId);
-      if (!task || !canModifyTask(task as any)) {
+      if (!task || !canModifyTask(task)) {
         failedCount++;
         continue;
       }
       
-      const payload: any = { updated_at: new Date().toISOString() };
+      const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
       if ('assigned_to' in parsed.data.updates) payload.assigned_to = parsed.data.updates.assigned_to;
       if ('reviewer_id' in parsed.data.updates) payload.reviewer_id = parsed.data.updates.reviewer_id;
       if ('priority' in parsed.data.updates) payload.priority = parsed.data.updates.priority;
@@ -666,8 +674,8 @@ export async function bulkUpdateTasksAction(input: z.infer<typeof bulkUpdateTask
     revalidatePath('/admin/tasks');
     revalidatePath('/portal/tasks');
     return ok({ success: successCount, failed: failedCount });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -699,12 +707,12 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
     const { task_id, ...updates } = parsed.data;
     const task = await taskRepo.getTask(task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+    if (!canModifyTask(task)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
 
     const sb = createClient();
 
     // Validate that a chosen task template belongs to the effective sub-service.
-    const effectiveSubServiceId = updates.sub_service_id !== undefined ? updates.sub_service_id : (task as any).sub_service_id;
+    const effectiveSubServiceId = updates.sub_service_id !== undefined ? updates.sub_service_id : task.sub_service_id;
     if (updates.task_template_id) {
       const { data: tmpl } = await sb.from('task_templates')
         .select('id, sub_service_id')
@@ -725,8 +733,8 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
       updates.period_month !== undefined ||
       updates.period_quarter !== undefined;
     if (titleNeedsRegen) {
-      const subServiceId = updates.sub_service_id ?? (task as any).sub_service_id;
-      let subServiceName = (task as any).sub_services?.name ?? (task as any).title?.split(' — ')[0] ?? 'Task';
+      const subServiceId = updates.sub_service_id ?? task.sub_service_id;
+      let subServiceName = task.sub_services?.name ?? task.title?.split(' — ')[0] ?? 'Task';
       if (subServiceId) {
         const { data: sub } = await sb.from('sub_services').select('name, is_billable').eq('id', subServiceId).maybeSingle();
         if (sub?.name) subServiceName = sub.name;
@@ -737,10 +745,10 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
       }
       updates.title = buildTaskTitle({
         subServiceName,
-        clientName: (task as any).clients?.business_name ?? undefined,
-        periodYear: updates.period_year ?? (task as any).period_year ?? null,
-        periodMonth: updates.period_month ?? (task as any).period_month ?? null,
-        periodQuarter: updates.period_quarter ?? (task as any).period_quarter ?? null,
+        clientName: task.clients?.business_name ?? undefined,
+        periodYear: updates.period_year ?? task.period_year ?? null,
+        periodMonth: updates.period_month ?? task.period_month ?? null,
+        periodQuarter: updates.period_quarter ?? task.period_quarter ?? null,
       });
     }
 
@@ -755,8 +763,8 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
     revalidatePath('/team/tasks');
     revalidatePath('/portal/tasks');
     return ok(undefined);
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -768,16 +776,16 @@ export async function loadTemplateStepsAction(input: { task_id: string; task_tem
 
     const task = await taskRepo.getTask(input.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+    if (!canModifyTask(task)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
 
     const sb = createClient();
-    const count = await seedTaskStepsFromTemplate(sb as any, { task_id: input.task_id, task_template_id: input.task_template_id });
+    const count = await seedTaskStepsFromTemplate(sb as unknown as SupabaseClient, { task_id: input.task_id, task_template_id: input.task_template_id });
 
     revalidatePath(`/team/tasks/${input.task_id}`);
     revalidatePath(`/admin/tasks/${input.task_id}`);
     return ok({ count });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }
 
@@ -788,15 +796,15 @@ export async function loadSopStepsAction(input: { task_id: string; sub_service_i
 
     const task = await taskRepo.getTask(input.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task as any)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+    if (!canModifyTask(task)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
 
     const sb = createClient();
-    const count = await seedTaskStepsFromSop(sb as any, { task_id: input.task_id, sub_service_id: input.sub_service_id });
+    const count = await seedTaskStepsFromSop(sb as unknown as SupabaseClient, { task_id: input.task_id, sub_service_id: input.sub_service_id });
 
     revalidatePath(`/team/tasks/${input.task_id}`);
     revalidatePath(`/admin/tasks/${input.task_id}`);
     return ok({ count });
-  } catch (e: any) {
-    return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
   }
 }

@@ -7,7 +7,7 @@ import TaskImportForm from '@/components/tasks/task-import-form';
 export const metadata = { title: 'Bulk Import Tasks | The Fiscal Fulcrum' };
 
 export default async function TaskImportPage() {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapability(me, 'tasks.create');
 
   return (

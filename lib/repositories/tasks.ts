@@ -2,6 +2,7 @@ import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import type { TaskStatus } from '@/lib/validation/schemas';
 import { todayIST } from '@/lib/utils';
+import { mergeById, wrapLike } from '@/lib/supabase/safe-search';
 
 export interface TaskRow {
   id: string;
@@ -45,10 +46,11 @@ export interface TaskDetail extends TaskRow {
   started_date: string | null;
 }
 
-function normalizeFkArray(row: any, key: string) {
-  if (row && Array.isArray(row[key]) && row[key].length > 0) {
-    row[key] = row[key][0];
-  } else if (row && Array.isArray(row[key])) {
+function normalizeFkArray(row: Record<string, unknown>, key: string) {
+  const value = row[key];
+  if (row && Array.isArray(value) && value.length > 0) {
+    row[key] = value[0];
+  } else if (row && Array.isArray(value)) {
     row[key] = null;
   }
 }
@@ -80,7 +82,7 @@ export async function listTasks(opts: {
       .from('task_label_assignments')
       .select('task_id')
       .in('label_code', opts.labels);
-    labelTaskIds = [...new Set((la ?? []).map((d: any) => d.task_id))];
+    labelTaskIds = [...new Set((la ?? []).map((d: { task_id: string }) => d.task_id))];
     if (labelTaskIds.length === 0) return [];
   }
 
@@ -108,19 +110,31 @@ export async function listTasks(opts: {
   }
 
   if (opts.q?.trim()) {
-    const term = opts.q.trim().toLowerCase();
-    // PostgREST cannot mix local and foreign columns in a single .or() string,
-    // so we search clients separately and include matching IDs.
-    const [{ data: clientMatches }, { data: subServiceMatches }] = await Promise.all([
-      sb.from('clients').select('id').ilike('business_name', `%${term}%`).eq('is_deleted', false),
-      sb.from('sub_services').select('id').ilike('name', `%${term}%`).eq('is_deleted', false),
+    const term = wrapLike(opts.q.trim());
+    // Search related tables and local columns with separate queries to avoid
+    // PostgREST `.or()` injection from user input.
+    const [
+      { data: titleMatches },
+      { data: numberMatches },
+      { data: clientMatches },
+      { data: subServiceMatches },
+    ] = await Promise.all([
+      sb.from('tasks').select('id').ilike('title', term).eq('is_deleted', false),
+      sb.from('tasks').select('id').ilike('task_number', term).eq('is_deleted', false),
+      sb.from('clients').select('id').ilike('business_name', term).eq('is_deleted', false),
+      sb.from('sub_services').select('id').ilike('name', term).eq('is_deleted', false),
     ]);
-    const clientIds = (clientMatches ?? []).map((c: any) => c.id);
-    const subServiceIds = (subServiceMatches ?? []).map((s: any) => s.id);
-    const orParts: string[] = [`title.ilike.%${term}%`, `task_number.ilike.%${term}%`];
-    if (clientIds.length > 0) orParts.push(`client_id.in.(${clientIds.join(',')})`);
-    if (subServiceIds.length > 0) orParts.push(`sub_service_id.in.(${subServiceIds.join(',')})`);
-    q = q.or(orParts.join(','));
+    const matchedIds = mergeById([
+      titleMatches ?? [],
+      numberMatches ?? [],
+      clientMatches ?? [],
+      subServiceMatches ?? [],
+    ]).map((r) => r.id);
+    if (matchedIds.length === 0) {
+      // No matches — force empty result without issuing another query.
+      return [];
+    }
+    q = q.in('id', matchedIds);
   }
 
   if (opts.status?.length) {
@@ -152,7 +166,7 @@ export async function listTasks(opts: {
   q = q.range(offset, offset + limit - 1);
   const { data, error } = await q;
   if (error) throw error;
-  for (const row of (data ?? []) as any[]) {
+  for (const row of (data ?? []) as Record<string, unknown>[]) {
     normalizeFkArray(row, 'users_profile');
     normalizeFkArray(row, 'clients');
     normalizeFkArray(row, 'sub_services');
@@ -184,7 +198,7 @@ export async function countTasks(opts: {
       .from('task_label_assignments')
       .select('task_id')
       .in('label_code', opts.labels);
-    labelTaskIds = [...new Set((la ?? []).map((d: any) => d.task_id))];
+    labelTaskIds = [...new Set((la ?? []).map((d: { task_id: string }) => d.task_id))];
     if (labelTaskIds.length === 0) return 0;
   }
 
@@ -211,17 +225,28 @@ export async function countTasks(opts: {
   }
 
   if (opts.q?.trim()) {
-    const term = opts.q.trim().toLowerCase();
-    const [{ data: clientMatches }, { data: subServiceMatches }] = await Promise.all([
-      sb.from('clients').select('id').ilike('business_name', `%${term}%`).eq('is_deleted', false),
-      sb.from('sub_services').select('id').ilike('name', `%${term}%`).eq('is_deleted', false),
+    const term = wrapLike(opts.q.trim());
+    const [
+      { data: titleMatches },
+      { data: numberMatches },
+      { data: clientMatches },
+      { data: subServiceMatches },
+    ] = await Promise.all([
+      sb.from('tasks').select('id').ilike('title', term).eq('is_deleted', false),
+      sb.from('tasks').select('id').ilike('task_number', term).eq('is_deleted', false),
+      sb.from('clients').select('id').ilike('business_name', term).eq('is_deleted', false),
+      sb.from('sub_services').select('id').ilike('name', term).eq('is_deleted', false),
     ]);
-    const clientIds = (clientMatches ?? []).map((c: any) => c.id);
-    const subServiceIds = (subServiceMatches ?? []).map((s: any) => s.id);
-    const orParts: string[] = [`title.ilike.%${term}%`, `task_number.ilike.%${term}%`];
-    if (clientIds.length > 0) orParts.push(`client_id.in.(${clientIds.join(',')})`);
-    if (subServiceIds.length > 0) orParts.push(`sub_service_id.in.(${subServiceIds.join(',')})`);
-    q = q.or(orParts.join(','));
+    const matchedIds = mergeById([
+      titleMatches ?? [],
+      numberMatches ?? [],
+      clientMatches ?? [],
+      subServiceMatches ?? [],
+    ]).map((r) => r.id);
+    if (matchedIds.length === 0) {
+      return 0;
+    }
+    q = q.in('id', matchedIds);
   }
 
   if (opts.status?.length) {
@@ -282,19 +307,19 @@ export async function getTask(id: string): Promise<TaskDetail | null> {
     normalizeFkArray(data, 'clients');
     normalizeFkArray(data, 'sub_services');
     if (data.sub_services) {
-      normalizeFkArray(data.sub_services, 'services');
+      normalizeFkArray(data.sub_services as unknown as Record<string, unknown>, 'services');
     }
     const { data: assignees } = await sb
       .from('task_assignees')
       .select('role, users_profile!task_assignees_user_id_fkey(id, full_name, email)')
       .eq('task_id', id);
-    const rows = (assignees ?? []) as any[];
-    const extractUser = (r: any) => {
+    const rows = (assignees ?? []) as Array<{ role: string; users_profile: unknown }>;
+    const extractUser = (r: { role: string; users_profile: unknown }) => {
       const u = Array.isArray(r.users_profile) ? r.users_profile[0] : r.users_profile;
-      return u && u.id ? u : null;
+      return u && (u as { id?: string }).id ? u : null;
     };
-    (data as any).assignees = rows.filter((r) => r.role === 'assignee').map(extractUser).filter(Boolean);
-    (data as any).reviewers = rows.filter((r) => r.role === 'reviewer').map(extractUser).filter(Boolean);
+    (data as Record<string, unknown>).assignees = rows.filter((r) => r.role === 'assignee').map(extractUser).filter(Boolean);
+    (data as Record<string, unknown>).reviewers = rows.filter((r) => r.role === 'reviewer').map(extractUser).filter(Boolean);
   }
   return data as TaskDetail | null;
 }
@@ -358,7 +383,7 @@ export async function countOverdueTasks(opts: { assignedTo?: string } = {}) {
   return count ?? 0;
 }
 
-export async function createTaskRecord(payload: any) {
+export async function createTaskRecord(payload: Record<string, unknown>) {
   const sb = createClient();
   const { data, error } = await sb.from('tasks').insert(payload).select('id').single();
   if (error) throw error;
@@ -379,7 +404,7 @@ export async function setTaskAssignees(taskId: string, assigneeIds: string[], re
   }
 }
 
-export async function updateTaskRecord(id: string, payload: any) {
+export async function updateTaskRecord(id: string, payload: Record<string, unknown>) {
   const sb = createClient();
   const { error } = await sb.from('tasks').update(payload).eq('id', id);
   if (error) throw error;
@@ -420,7 +445,7 @@ export async function generateNextTaskNumber(): Promise<string> {
  * Create a task with an auto-generated task number, retrying on unique constraint violations.
  * This combines number generation and insertion to prevent race conditions.
  */
-export async function createTaskWithAutoNumber(payload: any, maxRetries = 5): Promise<{ id: string; task_number: string }> {
+export async function createTaskWithAutoNumber(payload: Record<string, unknown>, maxRetries = 5): Promise<{ id: string; task_number: string }> {
   const sb = createClient();
   const yy = new Date().getFullYear().toString().slice(-2);
   const prefix = `T-${yy}-`;
@@ -441,7 +466,7 @@ export async function createTaskWithAutoNumber(payload: any, maxRetries = 5): Pr
 
     const { data: inserted, error } = await sb
       .from('tasks')
-      .insert({ ...payload, task_number: candidate })
+      .insert({ ...payload, task_number: candidate } as Record<string, unknown>)
       .select('id, task_number')
       .single();
 
@@ -457,13 +482,13 @@ export async function createTaskWithAutoNumber(payload: any, maxRetries = 5): Pr
   throw new Error('Failed to generate unique task number after maximum retries');
 }
 
-export async function addTaskActivity(payload: any) {
+export async function addTaskActivity(payload: Record<string, unknown>) {
   const sb = createClient();
   const { error } = await sb.from('task_activity').insert(payload);
   if (error) throw error;
 }
 
-export async function addTaskNoteRecord(payload: any) {
+export async function addTaskNoteRecord(payload: Record<string, unknown>) {
   const sb = createClient();
   const { error } = await sb.from('task_notes').insert(payload);
   if (error) throw error;
@@ -495,7 +520,7 @@ export async function getSubServiceRequiresVerification(subServiceId: string) {
  * Enrich a list of tasks with progress_pct from task_steps.
  * Efficiently batches progress lookups (single query for all tasks).
  */
-export async function enrichTasksWithProgress(tasks: any[]): Promise<any[]> {
+export async function enrichTasksWithProgress<T extends { id: string }>(tasks: T[]): Promise<T[]> {
   if (tasks.length === 0) return tasks;
   const { getTaskStepCompletionBatch } = await import('./task-steps');
   const taskIds = tasks.map((t) => t.id);
@@ -507,7 +532,7 @@ export async function enrichTasksWithProgress(tasks: any[]): Promise<any[]> {
   });
 }
 
-export async function enrichTasksWithLabels(tasks: any[]): Promise<any[]> {
+export async function enrichTasksWithLabels<T extends { id: string }>(tasks: T[]): Promise<T[]> {
   if (tasks.length === 0) return tasks;
   const { listLabelsForTasks } = await import('./task-custom-fields');
   const taskIds = tasks.map((t) => t.id);

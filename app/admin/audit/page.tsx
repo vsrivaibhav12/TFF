@@ -15,7 +15,7 @@ import { Pagination } from '@/components/ui/pagination';
 export const dynamic = 'force-dynamic';
 
 export default async function AuditPage({ searchParams }: { searchParams: { actor?: string; action?: string; entity?: string; from?: string; to?: string; page?: string } }) {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'audit.view');
   const sb = createClient();
   const page = parseInt(searchParams.page || '1', 10);

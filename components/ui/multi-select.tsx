@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { cn } from '@/lib/utils';
+import { cn, onEnterSpace } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -72,8 +72,12 @@ export function MultiSelect({
               <Badge key={o.value} variant="default" className="font-normal text-xs gap-1 pr-1">
                 {o.label}
                 <span
+                  role="button"
+                  tabIndex={0}
                   onClick={(e) => { e.stopPropagation(); remove(o.value); }}
+                  onKeyDown={onEnterSpace(() => remove(o.value))}
                   className="cursor-pointer hover:text-red-600"
+                  aria-label={`Remove ${o.label}`}
                 >
                   <X className="h-3 w-3" />
                 </span>
@@ -101,7 +105,11 @@ export function MultiSelect({
               return (
                 <div
                   key={o.value}
+                  role="option"
+                  tabIndex={0}
+                  aria-selected={checked}
                   onClick={() => toggle(o.value)}
+                  onKeyDown={onEnterSpace(() => toggle(o.value))}
                   className={cn(
                     'flex items-center gap-2 px-2 py-1.5 text-sm rounded cursor-pointer',
                     checked ? 'bg-teal-50 text-teal-900' : 'hover:bg-zinc-50'

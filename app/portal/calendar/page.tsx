@@ -2,6 +2,7 @@ import { ensureModuleVisible } from '@/lib/auth/portal-visibility';
 import { listAccessibleClients } from '@/lib/repositories/clients';
 import { listAllUpcomingDueDates } from '@/lib/repositories/compliance';
 import ComplianceCalendar from '@/components/operations/compliance-calendar';
+import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 
 
 export default async function PortalCalendarPage() {
@@ -39,6 +40,7 @@ export default async function PortalCalendarPage() {
       severity: f.status === 'filed' ? 'info' : 'warning',
     });
   return (
+    <PullToRefreshWrapper>
     <div className="space-y-8">
       <div>
         <h1 className="tff-page-title">Compliance calendar</h1>
@@ -46,5 +48,6 @@ export default async function PortalCalendarPage() {
       </div>
       <ComplianceCalendar events={events} />
     </div>
+    </PullToRefreshWrapper>
   );
 }

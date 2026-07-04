@@ -10,7 +10,7 @@ import ClientGroupsClient from './client-groups-client';
 export const dynamic = 'force-dynamic';
 
 export default async function ClientGroupsPage() {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'clients.read.all');
   const groups = await listClientGroups();
 

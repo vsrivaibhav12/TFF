@@ -3,6 +3,9 @@
 import { Button } from '@/components/ui/button';
 import { Download, FileSpreadsheet, FileText } from 'lucide-react';
 import { useState } from 'react';
+import { convertToCsv } from '@/lib/csv-utils';
+import { exportTableDataToExcelAction } from '@/lib/actions/export';
+import { toast } from 'sonner';
 
 interface ExportButtonProps {
   data?: Record<string, any>[];
@@ -31,7 +34,6 @@ export default function ExportButton({
         rows = await onExport();
       }
       if (!rows || rows.length === 0) {
-        setLoading(false);
         return;
       }
 
@@ -39,11 +41,21 @@ export default function ExportButton({
         const csv = convertToCsv(rows);
         downloadBlob(csv, `${filename}.csv`, 'text/csv');
       } else {
-        const XLSX = await import('xlsx');
-        const ws = XLSX.utils.json_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, sheetName);
-        XLSX.writeFile(wb, `${filename}.xlsx`);
+        const r = await exportTableDataToExcelAction(rows, sheetName);
+        if (!r.success) {
+          toast.error(r.error || 'Excel export failed');
+          return;
+        }
+        const bytes = Buffer.from(r.data.base64, 'base64');
+        const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
     } finally {
       setLoading(false);
@@ -58,23 +70,6 @@ export default function ExportButton({
       {loading ? 'Exporting…' : 'Export'}
     </Button>
   );
-}
-
-function convertToCsv(rows: Record<string, any>[]): string {
-  if (rows.length === 0) return '';
-  const headers = Object.keys(rows[0]);
-  const escape = (val: any) => {
-    const s = val === null || val === undefined ? '' : String(val);
-    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-      return `"${s.replace(/"/g, '""')}"`;
-    }
-    return s;
-  };
-  const lines = [
-    headers.join(','),
-    ...rows.map((row) => headers.map((h) => escape(row[h])).join(',')),
-  ];
-  return lines.join('\n');
 }
 
 function downloadBlob(content: string, filename: string, mimeType: string) {

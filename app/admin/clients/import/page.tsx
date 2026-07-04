@@ -32,7 +32,7 @@ async function getRecentBatches() {
 }
 
 export default async function ClientImportPage() {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'clients.create');
   const batches = await getRecentBatches();
   return (

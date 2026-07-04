@@ -1,12 +1,14 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { notFound } from 'next/navigation'
+import { insightArticles } from '@/lib/content/insights'
 
-// Future-ready stub. Articles will be looked up here.
-const articles: Record<string, any> = {}
+export function generateStaticParams() {
+  return insightArticles.map((a) => ({ slug: a.slug }))
+}
 
 export function generateMetadata({ params }: { params: { slug: string } }) {
-  const a = articles[params.slug]
+  const a = insightArticles.find((x) => x.slug === params.slug)
   if (!a) return { title: 'Article — The Fiscal Fulcrum' }
   return {
     title: `${a.title} | The Fiscal Fulcrum Insights`,
@@ -15,7 +17,7 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
 }
 
 export default function ArticlePage({ params }: { params: { slug: string } }) {
-  const a = articles[params.slug]
+  const a = insightArticles.find((x) => x.slug === params.slug)
   if (!a) return notFound()
   return (
     <article className="bg-white py-24">
@@ -26,7 +28,10 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
         <p className="mt-8 text-xs uppercase tracking-[0.2em] text-[#0D9488] font-bold">{a.category}</p>
         <h1 className="mt-3 text-[40px] sm:text-[56px] font-bold text-[#18181B] tracking-tight leading-[1.05]">{a.title}</h1>
         <p className="mt-3 text-[14px] text-[#A1A1AA]">{a.date}</p>
-        <div className="mt-10 prose prose-lg text-[#71717A] leading-[1.7]">{a.body}</div>
+        <div
+          className="mt-10 prose prose-lg text-[#71717A] leading-[1.7]"
+          dangerouslySetInnerHTML={{ __html: a.body }}
+        />
       </div>
     </article>
   )

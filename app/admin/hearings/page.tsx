@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 export const dynamic = 'force-dynamic';
 
 async function requireHearingsGuard() {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'hearings.manage');
   return me;
 }

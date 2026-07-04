@@ -11,7 +11,7 @@ import { ChevronLeft } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminClientEditPage({ params }: { params: { id: string } }) {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'clients.edit');
 
   const { id } = parseParams(params, IdParamSchema);

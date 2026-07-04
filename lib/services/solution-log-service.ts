@@ -1,5 +1,5 @@
 import 'server-only';
-import { createServiceClient } from '@/lib/supabase/service-role';
+import { createClient } from '@/lib/supabase/server';
 
 /**
  * Solution Log auto-population helpers.
@@ -8,7 +8,7 @@ import { createServiceClient } from '@/lib/supabase/service-role';
  * tax-projection finalize) calls one of these wrappers and we insert a
  * `solution_log` row capturing the value delivered. Best-effort — failure to
  * write a log entry must NEVER break the underlying business action, so each
- * helper swallows errors and logs them.
+ * helper catches errors and logs them.
  */
 
 interface BaseEntry {
@@ -27,7 +27,7 @@ interface BaseEntry {
 
 async function writeSolutionLog(entry: BaseEntry) {
   try {
-    const sb = createServiceClient();
+    const sb = createClient();
     const { todayIST } = await import('@/lib/utils');
     const today = todayIST();
     await sb.from('solution_log').insert({
@@ -44,8 +44,9 @@ async function writeSolutionLog(entry: BaseEntry) {
       identified_by: entry.identifiedBy,
       implemented_by: entry.status === 'implemented' ? entry.identifiedBy : null,
     });
-  } catch {
+  } catch (err) {
     // Never block the calling action. Failures are acceptable for non-critical audit writes.
+    console.error('[solution-log-service] failed to write solution log', err);
   }
 }
 

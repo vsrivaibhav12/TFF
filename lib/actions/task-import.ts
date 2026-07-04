@@ -8,6 +8,7 @@ import { ok, fail, type ActionResult } from '@/lib/actions/result';
 import { parseTasksBuffer, type ParsedTaskRow } from '@/lib/services/task-import-service';
 import { createTaskAction } from '@/lib/actions/tasks';
 import { buildTaskTitle } from '@/lib/utils';
+import { validateImportFile } from '@/lib/validation/file-import';
 
 export interface TaskImportPreview {
   rows: ParsedTaskRow[];
@@ -27,10 +28,11 @@ export async function previewTaskImportAction(formData: FormData): Promise<Actio
     await requireCapability(me, 'tasks.create');
     const file = formData.get('file');
     if (!(file instanceof File)) return fail('No file provided', 'VALIDATION');
-    if (file.size === 0) return fail('Empty file', 'VALIDATION');
-    if (file.size > 5 * 1024 * 1024) return fail('File exceeds 5 MB limit', 'VALIDATION');
 
     const ab = await file.arrayBuffer();
+    const validation = validateImportFile(file, ab);
+    if (!validation.ok) return fail(validation.error, 'VALIDATION');
+
     const buf = Buffer.from(ab);
     const rows = parseTasksBuffer(buf, file.name);
     if (rows.length === 0) return fail('No data rows found in the file', 'EMPTY');

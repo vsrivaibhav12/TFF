@@ -19,6 +19,7 @@ import {
 } from '@/lib/services/client-visible-status';
 import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-container';
 import EmptyState from '@/components/sophistication/empty-state';
+import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 
 
 export default async function ClientPortalDashboard() {
@@ -67,6 +68,7 @@ export default async function ClientPortalDashboard() {
   const complianceScore = complianceBreakdown?.overall ?? 0;
 
   return (
+    <PullToRefreshWrapper>
     <StaggerContainer className="space-y-8">
       {/* Welcome Hero */}
       <StaggerItem>
@@ -260,5 +262,6 @@ export default async function ClientPortalDashboard() {
         </div>
       </div>
     </StaggerContainer>
+    </PullToRefreshWrapper>
   );
 }

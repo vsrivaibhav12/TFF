@@ -5,7 +5,7 @@ export async function listDscRecords(filter?: { clientId?: string; status?: stri
   const sb = createClient();
   let q = sb
     .from('dsc_records')
-    .select('id, client_id, holder_name, holder_contact_email, dsc_class, dsc_type, certificate_serial, certificate_issuer, issued_date, expiry_date, registered_portals, status, custodian_name, physical_location, clients(business_name)')
+    .select('id, client_id, holder_name, holder_contact_email, dsc_class, dsc_type, certificate_serial, certificate_issuer, issued_date, expiry_date, registered_portals, status, custodian_name, physical_location, certificate_file_path, certificate_file_name, clients(business_name)')
     .eq('is_deleted', false)
     .order('expiry_date', { ascending: true });
   if (filter?.clientId) q = q.eq('client_id', filter.clientId);

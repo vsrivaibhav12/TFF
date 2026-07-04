@@ -7,6 +7,7 @@ import { formatDateIST, formatCurrencyINR } from '@/lib/utils';
 import { ScrollText } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import ExportButton from '@/components/sophistication/export-button';
+import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 
 
 export default async function PortalNoticesPage() {
@@ -25,6 +26,7 @@ export default async function PortalNoticesPage() {
     status: n.status,
   }));
   return (
+    <PullToRefreshWrapper>
     <div className="space-y-8">
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
@@ -55,5 +57,6 @@ export default async function PortalNoticesPage() {
         </div>
       )}
     </div>
+    </PullToRefreshWrapper>
   );
 }

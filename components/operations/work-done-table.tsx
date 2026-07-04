@@ -16,13 +16,13 @@ interface Props {
   canViewAll: boolean;
   canManage: boolean;
   currentUserId: string;
-  role: 'admin' | 'team';
+  userRole: 'admin' | 'team';
 }
 
 const COL_KEYS = ['date', 'staff', 'time', 'activity', 'duration', 'context', 'actions'];
 
-export default function WorkDoneTable({ logs, clients, tasks, canViewAll, canManage, currentUserId, role }: Props) {
-  const { widths, setWidth, loaded } = useColumnWidths(`work-done-${role}`, {
+export default function WorkDoneTable({ logs, clients, tasks, canViewAll, canManage, currentUserId, userRole }: Props) {
+  const { widths, setWidth, loaded } = useColumnWidths(`work-done-${userRole}`, {
     date: 110,
     staff: 140,
     time: 110,
@@ -93,7 +93,7 @@ export default function WorkDoneTable({ logs, clients, tasks, canViewAll, canMan
                   <TableCell>
                     <WorkDoneRowActions
                       entry={l}
-                      canEdit={canManage && (role === 'admin' || l.user_id === currentUserId)}
+                      canEdit={canManage && (userRole === 'admin' || l.user_id === currentUserId)}
                       clients={clients}
                       tasks={tasks}
                     />

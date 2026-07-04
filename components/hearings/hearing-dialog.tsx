@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,18 @@ export default function HearingDialog({ clients, triggerLabel = 'New hearing' }:
   });
 
   function set<K extends keyof typeof f>(k: K, v: any) { setF((p) => ({ ...p, [k]: v })); }
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        save();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, f]);
 
   function save() {
     if (!f.client_id) { toast.error('Pick a client'); return; }
@@ -58,7 +70,7 @@ export default function HearingDialog({ clients, triggerLabel = 'New hearing' }:
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader><DialogTitle className="flex items-center gap-2"><Gavel className="h-5 w-5 text-teal-600" /> Schedule hearing</DialogTitle></DialogHeader>
-        <div className="space-y-3" onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); save(); } }}>
+        <form className="space-y-3">
           <div className="space-y-2">
             <Label>Client *</Label>
             <Select value={f.client_id} onValueChange={(v) => set('client_id', v)}>
@@ -104,7 +116,7 @@ export default function HearingDialog({ clients, triggerLabel = 'New hearing' }:
             <Label>Venue</Label>
             <Input value={f.venue} onChange={(e) => set('venue', e.target.value)} placeholder="e.g. GST Bhavan, Chennai" />
           </div>
-        </div>
+        </form>
         <DialogFooter><Button onClick={save} disabled={pending}>{pending ? 'Scheduling...' : 'Schedule hearing'}</Button></DialogFooter>
       </DialogContent>
     </Dialog>

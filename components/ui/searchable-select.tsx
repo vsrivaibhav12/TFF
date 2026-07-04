@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Check, ChevronsUpDown, Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, onEnterSpace } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
@@ -81,11 +81,19 @@ export function SearchableSelect({
             filteredOptions.map((opt) => (
               <div
                 key={opt.value}
+                role="option"
+                tabIndex={0}
+                aria-selected={value === opt.value}
                 onClick={() => {
                   onChange(opt.value);
                   setOpen(false);
                   setSearch('');
                 }}
+                onKeyDown={onEnterSpace(() => {
+                  onChange(opt.value);
+                  setOpen(false);
+                  setSearch('');
+                })}
                 className={cn(
                   'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-zinc-100 hover:text-zinc-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                   value === opt.value ? 'bg-zinc-100 text-zinc-900 font-medium' : ''

@@ -24,7 +24,7 @@ export default function AuditTimeline({ entries }: { entries: AuditEntry[] }) {
 
   return (
     <div className="flow-root">
-      <ul role="list" className="-mb-8">
+      <ul className="-mb-8">
         {entries.map((entry, idx) => (
           <li key={entry.id}>
             <div className="relative pb-8">

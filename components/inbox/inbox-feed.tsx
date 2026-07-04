@@ -14,7 +14,7 @@ import {
   HelpCircle,
   Loader2,
 } from 'lucide-react';
-import { cn, formatDateIST, timeAgo } from '@/lib/utils';
+import { cn, formatDateIST, timeAgo, onEnterSpace } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import type { UnifiedInboxItem } from '@/lib/repositories/inbox';
@@ -249,8 +249,11 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span
+                          role="button"
+                          tabIndex={0}
                           className="text-sm font-medium text-zinc-900 truncate cursor-pointer hover:text-teal-700"
                           onClick={() => router.push(detailPath)}
+                          onKeyDown={onEnterSpace(() => router.push(detailPath))}
                         >
                           {item.title}
                         </span>

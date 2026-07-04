@@ -31,19 +31,90 @@ import { nextStatuses } from '@/lib/services/task-transitions';
 import { toast } from 'sonner';
 import { useConfirm } from '@/components/ui/use-confirm';
 
+interface Task {
+  id: string;
+  task_number?: string | null;
+  title: string;
+  description?: string | null;
+  status: string;
+  priority: string;
+  due_date?: string | null;
+  period_year?: number | null;
+  period_month?: number | null;
+  period_quarter?: number | null;
+  assigned_to?: string | null;
+  reviewer_id?: string | null;
+  client_id: string;
+  sub_service_id?: string | null;
+  task_template_id?: string | null;
+  is_billable?: boolean;
+  bill_reference?: string | null;
+  bill_amount?: number | null;
+  arn_reference?: string | null;
+  is_arn_client_visible?: boolean;
+  is_blocked_on_client?: boolean;
+  is_stuck?: boolean;
+  stuck_reason_code?: string | null;
+  stuck_reason_note?: string | null;
+  is_verified?: boolean;
+  verification_note?: string | null;
+  created_date?: string | null;
+  completed_date?: string | null;
+  assignees?: { id: string; full_name: string }[];
+  reviewers?: { id: string; full_name: string }[];
+  assignee?: { id: string; full_name: string } | null;
+  reviewer?: { id: string; full_name: string } | null;
+  sub_services?: { name: string; services?: { name?: string | null } | null } | null;
+  clients?: { business_name?: string | null } | null;
+}
+
+interface Activity {
+  id: string;
+  action: string;
+  created_at: string;
+  field_name?: string | null;
+  old_value?: string | null;
+  new_value?: string | null;
+  users_profile?: { full_name?: string | null } | null;
+}
+
+interface Note {
+  id: string;
+  note_text: string;
+  created_at: string;
+  users_profile?: { full_name?: string | null } | null;
+}
+
+interface TeamMember {
+  id: string;
+  full_name: string;
+}
+
+
+interface SubService {
+  sub_service_id: string;
+  sub_services?: { name?: string | null; services?: { name?: string | null } | null } | null;
+}
+
+interface TaskTemplate {
+  id: string;
+  sub_service_id: string;
+  title: string;
+}
+
 interface Props {
-  task: any;
-  activity: any[];
-  notes: any[];
-  team: any[];
-  steps: any[];
-  cfDefs: any[];
-  cfValues: any[];
-  allLabels: any[];
-  assignedLabels: any[];
-  workdone: any[];
-  subServices: any[];
-  taskTemplates: any[];
+  task: Task;
+  activity: Activity[];
+  notes: Note[];
+  team: TeamMember[];
+  steps: import('@/components/tasks/task-steps-panel').Step[];
+  cfDefs: import('@/lib/repositories/task-custom-fields').CustomFieldDefinition[];
+  cfValues: import('@/lib/repositories/task-custom-fields').CustomFieldValue[];
+  allLabels: import('@/lib/repositories/task-custom-fields').TaskLabel[];
+  assignedLabels: string[];
+  workdone: import('@/lib/repositories/work-done').WorkDoneRow[];
+  subServices: SubService[];
+  taskTemplates: TaskTemplate[];
   currentUserId: string;
   canEdit: boolean;
   canEditSteps: boolean;
@@ -97,19 +168,19 @@ export default function TaskDetailShell({
     setSelectedTemplateId(task.task_template_id || '');
   }, [task.id, task.sub_service_id, task.task_template_id]);
   const [description, setDescription] = useState(task.description || '');
-  const [periodYear, setPeriodYear] = useState(task.period_year ?? '');
-  const [periodMonth, setPeriodMonth] = useState(task.period_month ?? '');
-  const [periodQuarter, setPeriodQuarter] = useState(task.period_quarter ?? '');
+  const [periodYear, setPeriodYear] = useState<string>(String(task.period_year ?? ''));
+  const [periodMonth, setPeriodMonth] = useState<string>(String(task.period_month ?? ''));
+  const [periodQuarter, setPeriodQuarter] = useState<string>(String(task.period_quarter ?? ''));
   const [priority, setPriority] = useState(task.priority);
-  const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.slice(0, 10) : '');
-  const [assignedTo, setAssignedTo] = useState(task.assigned_to || '');
-  const [assigneeIds, setAssigneeIds] = useState<string[]>((task as any).assignees?.map((a: any) => a.id) ?? (task.assigned_to ? [task.assigned_to] : []));
-  const [reviewerIds, setReviewerIds] = useState<string[]>((task as any).reviewers?.map((r: any) => r.id) ?? (task.reviewer_id ? [task.reviewer_id] : []));
+  const [dueDate, setDueDate] = useState<string>(task.due_date ? task.due_date.slice(0, 10) : '');
+  const [assignedTo, setAssignedTo] = useState<string>(task.assigned_to || '');
+  const [assigneeIds, setAssigneeIds] = useState<string[]>(task.assignees?.map((a) => a.id) ?? (task.assigned_to ? [task.assigned_to] : []));
+  const [reviewerIds, setReviewerIds] = useState<string[]>(task.reviewers?.map((r) => r.id) ?? (task.reviewer_id ? [task.reviewer_id] : []));
   
   const [billable, setBillable] = useState(task.is_billable ?? false);
-  const [billRef, setBillRef] = useState(task.bill_reference ?? '');
-  const [billAmount, setBillAmount] = useState(task.bill_amount ?? '');
-  const [arnRef, setArnRef] = useState(task.arn_reference ?? '');
+  const [billRef, setBillRef] = useState<string>(task.bill_reference ?? '');
+  const [billAmount, setBillAmount] = useState<string>(String(task.bill_amount ?? ''));
+  const [arnRef, setArnRef] = useState<string>(task.arn_reference ?? '');
   const [arnVisible, setArnVisible] = useState(task.is_arn_client_visible ?? false);
 
   const [saving, setSaving] = useState(false);
@@ -142,7 +213,7 @@ export default function TaskDetailShell({
     onRefresh?.();
   }
 
-  async function saveField(updates: any, onSuccess?: () => void) {
+  async function saveField(updates: Record<string, unknown>, onSuccess?: () => void) {
     setSaving(true);
     const r = await updateTaskAction({ task_id: task.id, ...updates });
     setSaving(false);
@@ -153,9 +224,9 @@ export default function TaskDetailShell({
     return true;
   }
 
-  function handleTransition(toStatus: string) {
+  function handleTransition(toStatus: import('@/lib/validation/schemas').TaskStatus) {
     startTransition(async () => {
-      const r = await transitionTaskAction({ task_id: task.id, to_status: toStatus as any });
+      const r = await transitionTaskAction({ task_id: task.id, to_status: toStatus as import('@/lib/validation/schemas').TaskStatus });
       if (!r.success) toast.error(r.error);
       else {
         toast.success(`Moved to ${toStatus.replace('_', ' ')}`);
@@ -177,7 +248,7 @@ export default function TaskDetailShell({
   function handleMarkStuck() {
     if (!stuckReason) return;
     startTransition(async () => {
-      const r = await setTaskStuckAction({ task_id: task.id, is_stuck: true, reason_code: stuckReason as any, reason_note: null });
+      const r = await setTaskStuckAction({ task_id: task.id, is_stuck: true, reason_code: stuckReason as 'client_clarification' | 'gst_portal_down' | 'itd_portal_down' | 'mcadown' | 'mismatch_investigation' | 'awaiting_third_party' | 'awaiting_management' | 'dsc_issue' | 'payment_pending' | 'other', reason_note: null });
       if (!r.success) toast.error(r.error);
       else { toast.success('Task marked as stuck'); setShowStuckPicker(false); setStuckReason(''); }
       onRefresh?.();
@@ -283,7 +354,7 @@ export default function TaskDetailShell({
               </div>
               {editingPriority ? (
                 <div className="flex items-center gap-1">
-                  <Select value={priority} onValueChange={(v) => setPriority(v as any)}>
+                  <Select value={priority} onValueChange={(v) => setPriority(v as Task['priority'])}>
                     <SelectTrigger className="h-7 text-xs w-24 px-1"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="urgent">Urgent</SelectItem></SelectContent>
                   </Select>
@@ -328,7 +399,7 @@ export default function TaskDetailShell({
                   <Input type="number" value={periodMonth} onChange={(e) => setPeriodMonth(e.target.value)} className="w-10 h-6 text-[10px] px-1" placeholder="MM" />
                   <Input type="number" value={periodQuarter} onChange={(e) => setPeriodQuarter(e.target.value)} className="w-10 h-6 text-[10px] px-1" placeholder="Q" />
                   <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ period_year: periodYear ? parseInt(periodYear) : null, period_month: periodMonth ? parseInt(periodMonth) : null, period_quarter: periodQuarter ? parseInt(periodQuarter) : null })) setEditingPeriod(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(task.period_year ?? ''); setPeriodMonth(task.period_month ?? ''); setPeriodQuarter(task.period_quarter ?? ''); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(String(task.period_year ?? '')); setPeriodMonth(String(task.period_month ?? '')); setPeriodQuarter(String(task.period_quarter ?? '')); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                 </div>
               ) : (
                 <div className="text-sm font-semibold text-zinc-900">{task.period_month && task.period_year ? `${task.period_month}/${task.period_year}${task.period_quarter ? ` · Q${task.period_quarter}` : ''}` : '—'}</div>
@@ -346,7 +417,7 @@ export default function TaskDetailShell({
               {editingAssignee ? (
                 <div className="space-y-2">
                   <MultiSelect
-                    options={team.map((u: any) => ({ value: u.id, label: u.full_name, searchString: u.full_name.toLowerCase() }))}
+                    options={team.map((u) => ({ value: u.id, label: u.full_name, searchString: u.full_name.toLowerCase() }))}
                     value={assigneeIds}
                     onChange={setAssigneeIds}
                     placeholder="Select assignees"
@@ -354,7 +425,7 @@ export default function TaskDetailShell({
                   />
                   <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Reviewers</div>
                   <MultiSelect
-                    options={team.map((u: any) => ({ value: u.id, label: u.full_name, searchString: u.full_name.toLowerCase() }))}
+                    options={team.map((u) => ({ value: u.id, label: u.full_name, searchString: u.full_name.toLowerCase() }))}
                     value={reviewerIds}
                     onChange={setReviewerIds}
                     placeholder="Select reviewers"
@@ -371,15 +442,15 @@ export default function TaskDetailShell({
                       onRefresh?.();
                     }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
                     <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
-                      setAssigneeIds((task as any).assignees?.map((a: any) => a.id) ?? (task.assigned_to ? [task.assigned_to] : []));
-                      setReviewerIds((task as any).reviewers?.map((r: any) => r.id) ?? (task.reviewer_id ? [task.reviewer_id] : []));
+                      setAssigneeIds(task.assignees?.map((a) => a.id) ?? (task.assigned_to ? [task.assigned_to] : []));
+                      setReviewerIds(task.reviewers?.map((r) => r.id) ?? (task.reviewer_id ? [task.reviewer_id] : []));
                       setEditingAssignee(false);
                     }}><X className="h-3 w-3 text-zinc-400" /></Button>
                   </div>
                 </div>
               ) : (
                 <div className="text-sm font-semibold text-zinc-900">
-                  {((task as any).assignees?.length ? (task as any).assignees : task.assignee ? [task.assignee] : []).map((a: any) => a.full_name).join(', ') || '—'}
+                  {(task.assignees?.length ? task.assignees : task.assignee ? [task.assignee] : []).map((a) => a.full_name).join(', ') || '—'}
                 </div>
               )}
             </div>
@@ -406,13 +477,13 @@ export default function TaskDetailShell({
                   )}
                   <div className="flex gap-1">
                     <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
-                      const numAmount = parseFloat(billAmount as string);
+                      const numAmount = parseFloat(billAmount);
                       if (await saveField({ is_billable: billable, bill_reference: billRef || null, bill_amount: isNaN(numAmount) ? null : numAmount })) setEditingBilling(false);
                     }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
                     <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
                       setBillable(task.is_billable ?? false);
                       setBillRef(task.bill_reference ?? '');
-                      setBillAmount(task.bill_amount ?? '');
+                      setBillAmount(String(task.bill_amount ?? ''));
                       setEditingBilling(false);
                     }}><X className="h-3 w-3 text-zinc-400" /></Button>
                   </div>
@@ -466,7 +537,7 @@ export default function TaskDetailShell({
                   <Select value={selectedSubServiceId} onValueChange={(v) => { setSelectedSubServiceId(v); setSelectedTemplateId(''); }}>
                     <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Select service" /></SelectTrigger>
                     <SelectContent>
-                      {subServices.map((s: any) => (
+                      {subServices.map((s) => (
                         <SelectItem key={s.sub_service_id} value={s.sub_service_id} className="text-xs">
                           {s.sub_services?.services?.name ? `${s.sub_services.services.name} › ` : ''}{s.sub_services?.name || s.sub_service_id}
                         </SelectItem>
@@ -498,11 +569,11 @@ export default function TaskDetailShell({
                     <SelectContent>
                       <SelectItem value="" className="text-xs">None</SelectItem>
                       {(() => {
-                        const availableTemplates = taskTemplates.filter((t: any) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id));
+                        const availableTemplates = taskTemplates.filter((t) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id));
                         if (availableTemplates.length === 0) {
                           return <SelectItem value="__empty__" disabled className="text-xs text-zinc-400">No templates for this sub-service</SelectItem>;
                         }
-                        return availableTemplates.map((t: any) => (
+                        return availableTemplates.map((t) => (
                           <SelectItem key={t.id} value={t.id} className="text-xs">{t.title}</SelectItem>
                         ));
                       })()}
@@ -514,7 +585,7 @@ export default function TaskDetailShell({
                   </div>
                 </div>
               ) : (
-                <div className="text-sm font-semibold text-zinc-900">{taskTemplates.find((t: any) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-400 font-normal">No template — click to set</span> : '—')}</div>
+                <div className="text-sm font-semibold text-zinc-900">{taskTemplates.find((t) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-400 font-normal">No template — click to set</span> : '—')}</div>
               )}
             </div>
           </div>
@@ -525,13 +596,13 @@ export default function TaskDetailShell({
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-[13px] font-semibold text-zinc-700">Progress</h3>
                 <span className="text-[11px] text-zinc-500">
-                  {steps.filter((s: any) => s.completed_at).length} of {steps.length} completed
+                  {steps.filter((s) => s.completed_at).length} of {steps.length} completed
                 </span>
               </div>
               <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
                 <div 
                   className="h-full bg-teal-600 transition-all rounded-full" 
-                  style={{ width: `${steps.length === 0 ? 0 : Math.round((steps.filter((s: any) => s.completed_at).length / steps.length) * 100)}%` }} 
+                  style={{ width: `${steps.length === 0 ? 0 : Math.round((steps.filter((s) => s.completed_at).length / steps.length) * 100)}%` }} 
                 />
               </div>
             </div>
@@ -543,10 +614,10 @@ export default function TaskDetailShell({
               <div className="flex items-center gap-2 mb-3">
                 <h3 className="text-[13px] font-semibold text-zinc-700">Checklist — tick off as you complete</h3>
                 <span className="text-[11px] text-zinc-500">
-                  {steps.filter((s: any) => s.completed_at).length} of {steps.length}
+                  {steps.filter((s) => s.completed_at).length} of {steps.length}
                 </span>
               </div>
-              <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} currentUserName={team.find(u => u.id === currentUserId)?.full_name ?? 'You'} />
+              <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status as import('@/lib/validation/schemas').TaskStatus} currentUserName={team.find(u => u.id === currentUserId)?.full_name ?? 'You'} />
             </div>
           )}
 
@@ -560,7 +631,7 @@ export default function TaskDetailShell({
             </div>
             {editingDesc ? (
               <div className="space-y-2">
-                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} autoFocus className="text-sm" />
+                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="text-sm" />
                 <div className="flex gap-2">
                   <Button type="button" size="sm" onClick={async () => { if (await saveField({ description: description || null })) setEditingDesc(false); }} disabled={saving}>Save</Button>
                   <Button type="button" size="sm" variant="outline" onClick={() => { setDescription(task.description || ''); setEditingDesc(false); }}>Cancel</Button>
@@ -611,7 +682,7 @@ export default function TaskDetailShell({
             )}
             {workdone.length > 0 && (
               <ul className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                {workdone.slice(0, 10).map((e: any) => (
+                {workdone.slice(0, 10).map((e) => (
                   <li key={e.id} className="flex items-center justify-between gap-2 text-sm">
                     <div className="flex-1 min-w-0">
                       <span className="font-medium tabular-nums text-xs">{fmtHM(e.duration_minutes)}</span>
@@ -656,7 +727,7 @@ export default function TaskDetailShell({
               <p className="text-xs text-zinc-400 italic">No notes yet.</p>
             ) : (
               <div className="space-y-2">
-                {notes.slice(-2).map((n: any) => (
+                {notes.slice(-2).map((n) => (
                   <div key={n.id} className="bg-zinc-50 p-3 rounded-lg border border-zinc-100">
                     <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 flex justify-between">
                       <span>{n.users_profile?.full_name}</span>
@@ -673,12 +744,12 @@ export default function TaskDetailShell({
           {!isClosed && (
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap gap-2">
-                {nextStatuses(task.status).includes('in_progress') && (
+                {nextStatuses(task.status as import('@/lib/validation/schemas').TaskStatus).includes('in_progress') && (
                   <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => handleTransition('in_progress')} disabled={isPending}>
                     Start
                   </Button>
                 )}
-                {nextStatuses(task.status).includes('completed') && (
+                {nextStatuses(task.status as import('@/lib/validation/schemas').TaskStatus).includes('completed') && (
                   <Button type="button" size="sm" variant="outline" className="flex-1 border-teal-200 text-teal-700 hover:bg-teal-50" onClick={() => handleTransition('completed')} disabled={isPending}>
                     Complete
                   </Button>
@@ -784,7 +855,7 @@ export default function TaskDetailShell({
                         <Input type="number" value={periodMonth} onChange={(e) => setPeriodMonth(e.target.value)} className="w-10 h-6 text-[10px] px-1" placeholder="MM" />
                         <Input type="number" value={periodQuarter} onChange={(e) => setPeriodQuarter(e.target.value)} className="w-10 h-6 text-[10px] px-1" placeholder="Q" />
                         <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ period_year: periodYear ? parseInt(periodYear) : null, period_month: periodMonth ? parseInt(periodMonth) : null, period_quarter: periodQuarter ? parseInt(periodQuarter) : null })) setEditingPeriod(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(task.period_year ?? ''); setPeriodMonth(task.period_month ?? ''); setPeriodQuarter(task.period_quarter ?? ''); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(String(task.period_year ?? '')); setPeriodMonth(String(task.period_month ?? '')); setPeriodQuarter(String(task.period_quarter ?? '')); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                       </div>
                     ) : (
                       task.period_month && task.period_year ? `${task.period_month}/${task.period_year}${task.period_quarter ? ` · Q${task.period_quarter}` : ''}` : '—'
@@ -797,7 +868,7 @@ export default function TaskDetailShell({
                   <dd className="font-semibold text-zinc-900">
                     {editingPriority ? (
                       <div className="flex items-center gap-1">
-                        <Select value={priority} onValueChange={(v) => setPriority(v as any)}>
+                        <Select value={priority} onValueChange={(v) => setPriority(v as Task['priority'])}>
                           <SelectTrigger className="h-6 text-[10px] w-20 px-1"><SelectValue /></SelectTrigger>
                           <SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="urgent">Urgent</SelectItem></SelectContent>
                         </Select>
@@ -825,8 +896,8 @@ export default function TaskDetailShell({
                   </dd>
                 </div>
 
-                <DetailItem label="Assignees" value={((task as any).assignees?.length ? (task as any).assignees : task.assignee ? [task.assignee] : []).map((a: any) => a.full_name).join(', ') || '—'} />
-                <DetailItem label="Reviewers" value={((task as any).reviewers?.length ? (task as any).reviewers : task.reviewer ? [task.reviewer] : []).map((r: any) => r.full_name).join(', ') || '—'} />
+                <DetailItem label="Assignees" value={(task.assignees?.length ? task.assignees : task.assignee ? [task.assignee] : []).map((a) => a.full_name).join(', ') || '—'} />
+                <DetailItem label="Reviewers" value={(task.reviewers?.length ? task.reviewers : task.reviewer ? [task.reviewer] : []).map((r) => r.full_name).join(', ') || '—'} />
                 <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
                   <dt className="text-zinc-500 text-xs flex items-center gap-1">Service {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingService(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
                   <dd className="font-semibold text-zinc-900 text-right">
@@ -835,7 +906,7 @@ export default function TaskDetailShell({
                         <Select value={selectedSubServiceId} onValueChange={(v) => { setSelectedSubServiceId(v); setSelectedTemplateId(''); }}>
                           <SelectTrigger className="h-6 text-[10px] w-44 px-1"><SelectValue placeholder="Select service" /></SelectTrigger>
                           <SelectContent>
-                            {subServices.map((s: any) => (
+                            {subServices.map((s) => (
                               <SelectItem key={s.sub_service_id} value={s.sub_service_id} className="text-xs">
                                 {s.sub_services?.services?.name ? `${s.sub_services.services.name} › ` : ''}{s.sub_services?.name || s.sub_service_id}
                               </SelectItem>
@@ -861,11 +932,11 @@ export default function TaskDetailShell({
                           <SelectContent>
                             <SelectItem value="" className="text-xs">None</SelectItem>
                             {(() => {
-                              const availableTemplates = taskTemplates.filter((t: any) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id));
+                              const availableTemplates = taskTemplates.filter((t) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id));
                               if (availableTemplates.length === 0) {
                                 return <SelectItem value="__empty__" disabled className="text-xs text-zinc-400">No templates for this sub-service</SelectItem>;
                               }
-                              return availableTemplates.map((t: any) => (
+                              return availableTemplates.map((t) => (
                                 <SelectItem key={t.id} value={t.id} className="text-xs">{t.title}</SelectItem>
                               ));
                             })()}
@@ -875,7 +946,7 @@ export default function TaskDetailShell({
                         <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
                       </div>
                     ) : (
-                      taskTemplates.find((t: any) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-400 font-normal">No template — click to set</span> : '—')
+                      taskTemplates.find((t) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-400 font-normal">No template — click to set</span> : '—')
                     )}
                   </dd>
                 </div>
@@ -925,7 +996,7 @@ export default function TaskDetailShell({
                   </div>
                   <div className="flex items-center gap-2 pt-2 border-t border-zinc-100">
                     <Button type="button" size="sm" className="h-7 px-2 text-xs" onClick={async () => {
-                      const numAmount = parseFloat(billAmount as string);
+                      const numAmount = parseFloat(billAmount);
                       const ok = await saveField({ 
                         is_billable: billable, 
                         bill_reference: billRef || null, 
@@ -938,7 +1009,7 @@ export default function TaskDetailShell({
                     <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => {
                       setBillable(task.is_billable ?? false);
                       setBillRef(task.bill_reference ?? '');
-                      setBillAmount(task.bill_amount ?? '');
+                      setBillAmount(String(task.bill_amount ?? ''));
                       setArnRef(task.arn_reference ?? '');
                       setArnVisible(task.is_arn_client_visible ?? false);
                       setEditingFinance(false);
@@ -982,7 +1053,7 @@ export default function TaskDetailShell({
               </div>
               {editingDesc ? (
                 <div className="space-y-2">
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} autoFocus className="text-sm" />
+                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="text-sm" />
                   <div className="flex gap-2">
                     <Button type="button" size="sm" onClick={async () => { if (await saveField({ description: description || null })) setEditingDesc(false); }} disabled={saving}>
                       {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save
@@ -999,7 +1070,7 @@ export default function TaskDetailShell({
 
             <div className="w-full">
               <h3 className="font-semibold text-zinc-900 mb-4 tracking-tight">Step-by-step Execution</h3>
-              <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status} currentUserName={team.find(u => u.id === currentUserId)?.full_name ?? 'You'} />
+              <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status as import('@/lib/validation/schemas').TaskStatus} currentUserName={team.find(u => u.id === currentUserId)?.full_name ?? 'You'} />
             </div>
             
             <div className="w-full">
@@ -1058,7 +1129,7 @@ export default function TaskDetailShell({
                   </div>
                   
                   <div className="space-y-3">
-                    {notes.map((n: any) => (
+                    {notes.map((n) => (
                       <div key={n.id} className="bg-white p-3 rounded-xl border border-zinc-100 shadow-sm">
                         <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5 flex justify-between">
                           <span>{n.users_profile?.full_name}</span>
@@ -1073,7 +1144,7 @@ export default function TaskDetailShell({
 
                 <TabsContent value="activity" className="flex-1 overflow-y-auto p-4 m-0" style={{ scrollbarWidth: 'thin' }}>
                   <div className="relative pl-4 border-l border-zinc-100 space-y-5">
-                    {activity.map((a: any) => (
+                    {activity.map((a) => (
                       <div key={a.id} className="relative">
                         <div className="absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-white border border-teal-500" />
                         <div className="text-[10px] font-bold text-zinc-400 mb-0.5">{timeAgo(a.created_at)}</div>

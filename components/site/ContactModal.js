@@ -40,8 +40,20 @@ function ContactPopup({ type, value, onClose }) {
   const Icon = type === 'phone' ? Phone : Mail
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="bg-white rounded-xl border border-[#E4E4E7] w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+    <div
+      role="button"
+      tabIndex={-1}
+      aria-label="Close contact popup"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="bg-white rounded-xl border border-[#E4E4E7] w-full max-w-md"
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E4E4E7]">
           <div className="flex items-center gap-2">
             <Icon className="w-5 h-5 text-[#0D9488]" />

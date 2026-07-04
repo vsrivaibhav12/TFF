@@ -172,6 +172,19 @@ CREATE POLICY its_read_all ON income_tax_slabs FOR SELECT TO authenticated USING
 -- ----------------------------------------------------------------------------
 -- SECURITY INVOKER ensures RLS on underlying tables is respected.
 -- All underlying queries filter is_deleted = false (or equivalent status filter).
+
+-- Guard: compliance_calendar_events gained is_deleted in a later migration.
+-- Add it idempotently so this file can run independently.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'compliance_calendar_events' AND column_name = 'is_deleted'
+  ) THEN
+    ALTER TABLE compliance_calendar_events ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+  END IF;
+END $$;
+
 CREATE OR REPLACE VIEW v_unified_inbox
 WITH (security_invoker = true) AS
 
@@ -197,7 +210,7 @@ SELECT
 FROM tasks t
 LEFT JOIN clients c ON c.id = t.client_id
 WHERE t.is_deleted = false
-  AND t.status IN ('pending', 'in_progress', 'awaiting_client')
+  AND t.status IN ('pending', 'in_progress')
 
 UNION ALL
 
@@ -277,7 +290,7 @@ WHERE e.task_id IS NULL
   AND e.is_deleted = false;
 
 -- Indexes for performance (on underlying tables)
-CREATE INDEX IF NOT EXISTS idx_tasks_unified_inbox ON tasks(status, is_deleted, due_date) WHERE is_deleted = false AND status IN ('pending', 'in_progress', 'awaiting_client');
+CREATE INDEX IF NOT EXISTS idx_tasks_unified_inbox ON tasks(status, is_deleted, due_date) WHERE is_deleted = false AND status IN ('pending', 'in_progress');
 CREATE INDEX IF NOT EXISTS idx_notices_unified_inbox ON notices(status, is_deleted, due_date) WHERE is_deleted = false AND status != 'closed';
 CREATE INDEX IF NOT EXISTS idx_queries_unified_inbox ON queries(status, is_deleted, created_at) WHERE is_deleted = false AND status != 'closed';
 CREATE INDEX IF NOT EXISTS idx_compliance_events_unified_inbox ON compliance_calendar_events(task_id, due_date) WHERE task_id IS NULL;

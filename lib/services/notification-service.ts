@@ -1,5 +1,5 @@
 import 'server-only';
-import { createServiceClient } from '@/lib/supabase/service-role';
+import { createClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
 import { escapeHtml } from '@/lib/utils';
 
@@ -24,10 +24,13 @@ export interface NotifyInput {
  * and optionally sends email immediately when the user prefers 'immediate' OR when
  * caller passes immediate=true (e.g. cron-emitted DSC alert).
  *
+ * Uses the regular server client. RLS policies allow admin/team to insert/update
+ * notifications for other users.
+ *
  * Idempotency: callers should de-dupe at the source (we do not de-dupe here).
  */
 export async function notify(input: NotifyInput) {
-  const sb = createServiceClient();
+  const sb = createClient();
 
   // Read user's prefs (creating defaults if absent)
   const { data: prefRow } = await sb
@@ -61,7 +64,7 @@ export async function notify(input: NotifyInput) {
   }
 }
 
-async function sendOneOffEmail(sb: ReturnType<typeof createServiceClient>, input: NotifyInput, notificationId: string | null) {
+async function sendOneOffEmail(sb: ReturnType<typeof createClient>, input: NotifyInput, notificationId: string | null) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL || 'noreply@thefiscalfulcrum.com';
   if (!apiKey) return;

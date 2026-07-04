@@ -36,7 +36,14 @@ export function QuickActionsDropdown({ role }: { role: string }) {
       
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            role="button"
+            tabIndex={-1}
+            aria-label="Close quick actions"
+            className="fixed inset-0 z-40"
+            onClick={() => setOpen(false)}
+            onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setOpen(false); } }}
+          />
           <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-zinc-200 bg-white shadow-lg z-50 py-1 overflow-hidden">
             <div className="px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-zinc-500 bg-zinc-50/50 border-b border-zinc-100">
               Quick Create

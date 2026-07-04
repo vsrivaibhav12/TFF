@@ -74,6 +74,18 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
 
   function set<K extends keyof typeof f>(k: K, v: any) { setF((p) => ({ ...p, [k]: v })); }
 
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        save();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, f]);
+
   // Auto-generate title when client + sub-service or period changes
   useEffect(() => {
     if (!f.client_id || !f.sub_service_id) return;
@@ -198,7 +210,7 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader><DialogTitle>New task</DialogTitle></DialogHeader>
-        <div className="space-y-3" onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); save(); } }}>
+        <form className="space-y-3">
           {!defaultClientId && (
             <div className="space-y-2">
               <Label>Client *</Label>
@@ -313,7 +325,7 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
               </div>
             </div>
           )}
-        </div>
+        </form>
         <DialogFooter><Button onClick={save} disabled={pending} data-testid="task-save">{pending ? 'Creating...' : 'Create task'}</Button></DialogFooter>
       </DialogContent>
     </Dialog>

@@ -12,7 +12,7 @@ import RuleRowToggle from './rule-row-toggle';
 export const dynamic = 'force-dynamic';
 
 export default async function ComplianceRulesPage() {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'manage_compliance_rules');
   const sb = createClient();
   const { data: rules } = await sb

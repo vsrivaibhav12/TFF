@@ -25,44 +25,46 @@ export async function fetchUnifiedInbox(opts: {
   const limit = opts.limit ?? 100;
   const offset = opts.offset ?? 0;
 
-  // Fetch tasks
-  const { data: tasks } = await sb
-    .from('tasks')
-    .select('id, title, status, priority, due_date, created_at, client_id, assigned_to, clients:business_name, users_profile:assigned_to(full_name)')
-    .eq('is_deleted', false)
-    .not('status', 'in', '(completed,cancelled)')
-    .order('due_date', { ascending: true })
-    .limit(limit);
-
-  // Fetch notices
-  const { data: notices } = await sb
-    .from('notices')
-    .select('id, subject, status, due_date, created_at, client_id, clients:business_name, notice_type')
-    .eq('is_deleted', false)
-    .not('status', 'eq', 'closed')
-    .order('due_date', { ascending: true })
-    .limit(limit);
-
-  // Fetch queries
-  const { data: queries } = await sb
-    .from('queries')
-    .select('id, subject, status, created_at, client_id, clients:business_name')
-    .eq('is_deleted', false)
-    .not('status', 'eq', 'resolved')
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  // Fetch compliance events
+  // Fetch all item types in parallel.
   const today = new Date().toISOString().slice(0, 10);
   const weekAhead = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-  const { data: compliance } = await sb
-    .from('compliance_calendar_events')
-    .select('id, title, event_type, due_date, created_at, client_id, clients:business_name')
-    .eq('is_deleted', false)
-    .gte('due_date', today)
-    .lte('due_date', weekAhead)
-    .order('due_date', { ascending: true })
-    .limit(limit);
+
+  const [
+    { data: tasks },
+    { data: notices },
+    { data: queries },
+    { data: compliance },
+  ] = await Promise.all([
+    sb
+      .from('tasks')
+      .select('id, title, status, priority, due_date, created_at, client_id, assigned_to, clients:business_name, users_profile:assigned_to(full_name)')
+      .eq('is_deleted', false)
+      .not('status', 'in', '(completed,cancelled)')
+      .order('due_date', { ascending: true })
+      .limit(limit),
+    sb
+      .from('notices')
+      .select('id, subject, status, due_date, created_at, client_id, clients:business_name, notice_type')
+      .eq('is_deleted', false)
+      .not('status', 'eq', 'closed')
+      .order('due_date', { ascending: true })
+      .limit(limit),
+    sb
+      .from('queries')
+      .select('id, subject, status, created_at, client_id, clients:business_name')
+      .eq('is_deleted', false)
+      .not('status', 'eq', 'resolved')
+      .order('created_at', { ascending: false })
+      .limit(limit),
+    sb
+      .from('compliance_calendar_events')
+      .select('id, title, event_type, due_date, created_at, client_id, clients:business_name')
+      .eq('is_deleted', false)
+      .gte('due_date', today)
+      .lte('due_date', weekAhead)
+      .order('due_date', { ascending: true })
+      .limit(limit),
+  ]);
 
   const items: InboxItem[] = [];
 

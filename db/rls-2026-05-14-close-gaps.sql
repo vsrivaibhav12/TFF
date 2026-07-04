@@ -14,21 +14,35 @@ CREATE POLICY notif_self_select ON public.notifications FOR SELECT TO authentica
 DROP POLICY IF EXISTS notif_self_insert ON public.notifications;
 CREATE POLICY notif_self_insert ON public.notifications FOR INSERT TO authenticated
   WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS notif_staff_insert ON public.notifications;
+CREATE POLICY notif_staff_insert ON public.notifications FOR INSERT TO authenticated
+  WITH CHECK (public.current_user_role() IN ('admin', 'team'));
 DROP POLICY IF EXISTS notif_self_update ON public.notifications;
 CREATE POLICY notif_self_update ON public.notifications FOR UPDATE TO authenticated
   USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS notif_staff_update ON public.notifications;
+CREATE POLICY notif_staff_update ON public.notifications FOR UPDATE TO authenticated
+  USING (public.current_user_role() IN ('admin', 'team'))
+  WITH CHECK (public.current_user_role() IN ('admin', 'team'));
 DROP POLICY IF EXISTS notif_self_delete ON public.notifications;
 CREATE POLICY notif_self_delete ON public.notifications FOR DELETE TO authenticated
   USING (user_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
--- 2. global_audit_log — server-only writes; admin read
+-- 2. global_audit_log — admin read, authenticated self-insert
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.global_audit_log ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS audit_admin_select ON public.global_audit_log;
 CREATE POLICY audit_admin_select ON public.global_audit_log FOR SELECT TO authenticated
   USING (public.current_user_role() = 'admin');
--- No INSERT/UPDATE/DELETE for authenticated — service_role bypasses RLS
+
+DROP POLICY IF EXISTS audit_auth_insert ON public.global_audit_log;
+CREATE POLICY audit_auth_insert ON public.global_audit_log FOR INSERT TO authenticated
+  WITH CHECK (performed_by = auth.uid());
+
+-- No UPDATE/DELETE for authenticated — service_role bypasses RLS if needed
 
 -- ---------------------------------------------------------------------------
 -- 3. leave_requests — self + admin

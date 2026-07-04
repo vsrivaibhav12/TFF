@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
+import { getCurrentUser } from '@/lib/auth/require-role';
+import { hasCapability } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const me = await getCurrentUser();
+  if (!me) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  if (!(await hasCapability(me, 'clients.read.all'))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const supabase = createClient();
   const { data: client, error: clientError } = await supabase
     .from('clients')
     .select('business_name, primary_contact_name')

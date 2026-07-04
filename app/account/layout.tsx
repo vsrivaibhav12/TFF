@@ -13,7 +13,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
   return (
     <AppShell
       user={user}
-      role={role}
+      userRole={role}
       nav={[
         { href: '/account/notifications', label: 'Notifications', icon: 'message' },
         {

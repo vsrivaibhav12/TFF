@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminQueryDetail({ params }: { params: { id: string } }) {
   const { id } = parseParams(params, IdParamSchema);
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'queries.assign');
   const data = await getQueryWithMessages(id);
   if (!data) notFound();

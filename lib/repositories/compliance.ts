@@ -121,9 +121,44 @@ export async function listTdsFilings(clientId: string): Promise<TdsFilingRow[]> 
   return (data ?? []) as TdsFilingRow[];
 }
 
+export async function listTdsFilingsForClients(clientIds: string[]) {
+  if (clientIds.length === 0) return [];
+  const sb = createClient();
+  const result: any[] = [];
+  for (let i = 0; i < clientIds.length; i += BATCH_SIZE) {
+    const batch = clientIds.slice(i, i + BATCH_SIZE);
+    const { data, error } = await sb
+      .from('tds_filings')
+      .select('id, client_id, period_quarter, period_year, status, filed_date, ack_number, total_deductions, deductee_count')
+      .in('client_id', batch)
+      .order('period_year', { ascending: false })
+      .order('period_quarter', { ascending: false });
+    if (error) throw error;
+    result.push(...(data ?? []));
+  }
+  return result;
+}
+
 export async function listItFilings(clientId: string): Promise<ItFilingRow[]> {
   const sb = createClient();
   const { data, error } = await sb.from('it_filings').select('id, client_id, fy_ending_year, status, filed_date, ack_number, gross_income, deductions_claimed, taxable_income, tax_liability').eq('client_id', clientId).order('fy_ending_year', { ascending: false });
   if (error) throw error;
   return (data ?? []) as ItFilingRow[];
+}
+
+export async function listItFilingsForClients(clientIds: string[]) {
+  if (clientIds.length === 0) return [];
+  const sb = createClient();
+  const result: any[] = [];
+  for (let i = 0; i < clientIds.length; i += BATCH_SIZE) {
+    const batch = clientIds.slice(i, i + BATCH_SIZE);
+    const { data, error } = await sb
+      .from('it_filings')
+      .select('id, client_id, fy_ending_year, status, filed_date, ack_number, gross_income, deductions_claimed, taxable_income, tax_liability')
+      .in('client_id', batch)
+      .order('fy_ending_year', { ascending: false });
+    if (error) throw error;
+    result.push(...(data ?? []));
+  }
+  return result;
 }

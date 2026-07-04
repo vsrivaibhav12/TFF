@@ -1,19 +1,43 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { upsertDscAction, deleteDscAction } from '@/lib/actions/dsc';
+import { uploadDscCertificateAction, getDscCertificateUrlAction } from '@/lib/actions/dsc-upload';
 import { toast } from 'sonner';
 import { useConfirm } from '@/components/ui/use-confirm';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Upload, Download } from 'lucide-react';
 
-export default function DscDialog({ clients, initial, children }: { clients: { id: string; business_name: string }[]; initial?: any; children: React.ReactNode }) {
+interface DscDialogProps {
+  clients: { id: string; business_name: string }[];
+  initial?: {
+    id?: string;
+    client_id?: string;
+    holder_name?: string;
+    holder_contact_email?: string;
+    dsc_class?: string;
+    dsc_type?: string;
+    certificate_serial?: string;
+    certificate_issuer?: string;
+    issued_date?: string;
+    expiry_date?: string;
+    status?: string;
+    custodian_name?: string;
+    physical_location?: string;
+    certificate_file_name?: string | null;
+  };
+  children: React.ReactNode;
+}
+
+export default function DscDialog({ clients, initial, children }: DscDialogProps) {
   const [open, setOpen] = useState(false);
   const [ConfirmDialog, confirm] = useConfirm();
   const [pending, startTransition] = useTransition();
+  const [uploadPending, startUpload] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     id: initial?.id ?? undefined,
     client_id: initial?.client_id ?? '',
@@ -31,8 +55,9 @@ export default function DscDialog({ clients, initial, children }: { clients: { i
     pin: '',
     password: '',
   });
+  const [fileName, setFileName] = useState(initial?.certificate_file_name ?? '');
 
-  function set<K extends keyof typeof form>(k: K, v: any) { setForm((f) => ({ ...f, [k]: v })); }
+  function set<K extends keyof typeof form>(k: K, v: string) { setForm((f) => ({ ...f, [k]: v })); }
 
   function save() {
     startTransition(async () => {
@@ -50,6 +75,38 @@ export default function DscDialog({ clients, initial, children }: { clients: { i
       const r = await deleteDscAction(form.id!);
       if (r.success) { toast.success('Deleted'); setOpen(false); }
       else toast.error(r.error);
+    });
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !form.id) return;
+    startUpload(async () => {
+      const r = await uploadDscCertificateAction(form.id!, file);
+      if (r.success) {
+        setFileName(r.data.name);
+        toast.success('Certificate uploaded');
+      } else {
+        toast.error(r.error);
+      }
+    });
+  }
+
+  function downloadCertificate() {
+    const id = form.id;
+    if (!id) return;
+    startUpload(async () => {
+      const r = await getDscCertificateUrlAction(id);
+      if (r.success) {
+        const a = document.createElement('a');
+        a.href = r.data.url;
+        a.download = r.data.name ?? 'certificate';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        toast.error(r.error);
+      }
     });
   }
 
@@ -91,6 +148,43 @@ export default function DscDialog({ clients, initial, children }: { clients: { i
           </div>
           <div className="space-y-2"><Label>Certificate serial</Label><Input value={form.certificate_serial} onChange={(e) => set('certificate_serial', e.target.value)} /></div>
           <div className="space-y-2"><Label>Certificate issuer</Label><Input value={form.certificate_issuer} onChange={(e) => set('certificate_issuer', e.target.value)} /></div>
+
+          {initial?.id && (
+            <div className="border border-zinc-200 rounded-lg p-3 space-y-2">
+              <Label>Certificate file</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.pfx,.p12"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadPending}
+                >
+                  <Upload className="h-4 w-4 mr-1" /> Upload
+                </Button>
+                {fileName && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={downloadCertificate}
+                    disabled={uploadPending}
+                  >
+                    <Download className="h-4 w-4 mr-1" /> {fileName}
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-zinc-500">PDF, PNG, JPG or PFX up to 5 MB.</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2"><Label>Custodian name</Label><Input value={form.custodian_name} onChange={(e) => set('custodian_name', e.target.value)} /></div>
             <div className="space-y-2"><Label>Physical location</Label><Input value={form.physical_location} onChange={(e) => set('physical_location', e.target.value)} /></div>

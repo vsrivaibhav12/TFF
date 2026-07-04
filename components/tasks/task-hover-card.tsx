@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDateIST } from '@/lib/utils';
 import { Briefcase, Calendar, User, FileText } from 'lucide-react';
+import useSWR from 'swr';
 
 interface TaskPreview {
   title: string;
@@ -22,41 +23,31 @@ interface TaskPreview {
 }
 
 async function fetchTaskPreview(taskId: string): Promise<TaskPreview | null> {
-  try {
-    const res = await fetch(`/api/tasks/${taskId}/preview`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
+  const res = await fetch(`/api/tasks/${taskId}/preview`, { cache: 'no-store' });
+  if (!res.ok) return null;
+  return res.json();
 }
 
 export function TaskHoverCard({ taskId, children }: { taskId: string; children: React.ReactNode }) {
-  const [data, setData] = useState<TaskPreview | null>(null);
-  const [loading, setLoading] = useState(false);
   const [opened, setOpened] = useState(false);
-
-  useEffect(() => {
-    if (opened && !data && !loading) {
-      setLoading(true);
-      fetchTaskPreview(taskId)
-        .then(setData)
-        .finally(() => setLoading(false));
-    }
-  }, [opened, data, loading, taskId]);
+  const { data, isLoading } = useSWR(
+    opened ? ['task-preview', taskId] : null,
+    () => fetchTaskPreview(taskId),
+    { revalidateOnFocus: false }
+  );
 
   return (
     <HoverCard openDelay={300} closeDelay={100} onOpenChange={(open) => open && setOpened(true)}>
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
       <HoverCardContent side="top" align="start" className="w-80">
-        {loading && (
+        {isLoading && (
           <div className="space-y-2">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-3 w-1/2" />
             <Skeleton className="h-3 w-2/3" />
           </div>
         )}
-        {!loading && !data && (
+        {!isLoading && !data && (
           <div className="text-sm text-zinc-500">Unable to load preview.</div>
         )}
         {data && (

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDateIST } from '@/lib/utils';
 import { ScrollText, Calendar, Building2, AlertTriangle } from 'lucide-react';
+import useSWR from 'swr';
 
 interface NoticePreview {
   subject: string;
@@ -26,31 +27,25 @@ async function fetchNoticePreview(noticeId: string): Promise<NoticePreview | nul
 }
 
 export function NoticeHoverCard({ noticeId, children }: { noticeId: string; children: React.ReactNode }) {
-  const [data, setData] = useState<NoticePreview | null>(null);
-  const [loading, setLoading] = useState(false);
   const [opened, setOpened] = useState(false);
-
-  useEffect(() => {
-    if (opened && !data && !loading) {
-      setLoading(true);
-      fetchNoticePreview(noticeId)
-        .then(setData)
-        .finally(() => setLoading(false));
-    }
-  }, [opened, data, loading, noticeId]);
+  const { data, isLoading } = useSWR(
+    opened ? ['notice-preview', noticeId] : null,
+    () => fetchNoticePreview(noticeId),
+    { revalidateOnFocus: false }
+  );
 
   return (
     <HoverCard openDelay={300} closeDelay={100} onOpenChange={(open) => open && setOpened(true)}>
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
       <HoverCardContent side="top" align="start" className="w-72">
-        {loading && (
+        {isLoading && (
           <div className="space-y-2">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-3 w-1/2" />
             <Skeleton className="h-3 w-2/3" />
           </div>
         )}
-        {!loading && !data && (
+        {!isLoading && !data && (
           <div className="text-sm text-zinc-500">Unable to load preview.</div>
         )}
         {data && (

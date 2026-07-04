@@ -11,11 +11,44 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useConfirm } from '@/components/ui/use-confirm';
 
+interface Service {
+  id: string;
+  code: string;
+  name: string;
+}
+
+interface SubService {
+  id: string;
+  code: string;
+  name: string;
+  frequency?: string | null;
+  services?: { name?: string | null } | null;
+}
+
+interface ClientService {
+  id: string;
+  services?: { id?: string; name?: string | null; code?: string | null } | null;
+  start_date?: string | null;
+  service_head_id?: string | null;
+}
+
+interface ClientSubService {
+  id: string;
+  sub_services?: { id?: string; name?: string | null; code?: string | null; frequency?: string | null; services?: { name?: string | null } | null } | null;
+  is_active?: boolean;
+}
+
+interface TeamUser {
+  id: string;
+  full_name?: string | null;
+  email?: string | null;
+}
+
 interface Props {
   clientId: string;
-  existingSubServices: any[];
-  existingServices: any[];
-  teamUsers: any[];
+  existingSubServices: ClientSubService[];
+  existingServices: ClientService[];
+  teamUsers: TeamUser[];
 }
 
 export default function ClientServiceManager({ clientId, existingSubServices, existingServices, teamUsers }: Props) {
@@ -28,8 +61,8 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
   const [pickedServiceHeadId, setPickedServiceHeadId] = useState('__none__');
   const [ConfirmDialog, confirm] = useConfirm();
 
-  const [allSubServices, setAllSubServices] = useState<any[]>([]);
-  const [allServices, setAllServices] = useState<any[]>([]);
+  const [allSubServices, setAllSubServices] = useState<SubService[]>([]);
+  const [allServices, setAllServices] = useState<Service[]>([]);
   const [loadedAll, setLoadedAll] = useState(false);
 
   async function loadAll() {
@@ -100,11 +133,11 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
     });
   }
 
-  const linkedSubIds = new Set(existingSubServices.map((x: any) => x.sub_services?.id).filter(Boolean));
-  const availableSubs = allSubServices.filter((s: any) => !linkedSubIds.has(s.id));
+  const linkedSubIds = new Set(existingSubServices.map((x) => x.sub_services?.id).filter(Boolean));
+  const availableSubs = allSubServices.filter((s) => !linkedSubIds.has(s.id));
 
-  const linkedServiceIds = new Set(existingServices.map((x: any) => x.services?.id).filter(Boolean));
-  const availableServices = allServices.filter((s: any) => !linkedServiceIds.has(s.id));
+  const linkedServiceIds = new Set(existingServices.map((x) => x.services?.id).filter(Boolean));
+  const availableServices = allServices.filter((s) => !linkedServiceIds.has(s.id));
 
   return (
     <div className="space-y-12">
@@ -125,7 +158,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
                 <Select value={pickedServiceId} onValueChange={setPickedServiceId}>
                   <SelectTrigger data-testid="pick-service"><SelectValue placeholder="Select service..." /></SelectTrigger>
                   <SelectContent>
-                    {availableServices.map((s: any) => (
+                    {availableServices.map((s) => (
                       <SelectItem key={s.id} value={s.id}>{s.name} ({s.code})</SelectItem>
                     ))}
                   </SelectContent>
@@ -134,7 +167,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
                   <SelectTrigger><SelectValue placeholder="Service head (optional)..." /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">None</SelectItem>
-                    {teamUsers.map((u: any) => (
+                    {teamUsers.map((u) => (
                       <SelectItem key={u.id} value={u.id}>{u.full_name ?? u.email}</SelectItem>
                     ))}
                   </SelectContent>
@@ -157,13 +190,13 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {existingServices.map((s: any) => (
+            {existingServices.map((s) => (
               <div key={s.id} className="flex flex-col gap-3 p-5 tff-card hover:border-teal-200 transition-colors">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-bold text-zinc-900">{s.services?.name}</div>
                     <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
-                      {s.services?.code} · Subscribed {formatDateIST(s.start_date)}
+                      {s.services?.code} · Subscribed {formatDateIST(s.start_date ?? '')}
                     </div>
                   </div>
                   <Badge variant="success" className="bg-teal-50 text-teal-600 border-teal-100">Active</Badge>
@@ -174,7 +207,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
                     <SelectTrigger className="h-8 text-xs w-full max-w-xs"><SelectValue placeholder="Select head..." /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">None assigned</SelectItem>
-                      {teamUsers.map((u: any) => (
+                      {teamUsers.map((u) => (
                         <SelectItem key={u.id} value={u.id}>{u.full_name ?? u.email}</SelectItem>
                       ))}
                     </SelectContent>
@@ -201,11 +234,12 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
                 <p className="text-sm text-zinc-500">Select one or more sub-services to link.</p>
                 <div className="max-h-80 overflow-y-auto space-y-2 border border-zinc-100 rounded-md p-2">
                   {availableSubs.length === 0 && <p className="text-sm text-zinc-500 text-center py-4">All sub-services already linked.</p>}
-                  {availableSubs.map((s: any) => (
-                    <label key={s.id} className="flex items-start gap-3 p-2 hover:bg-zinc-50 rounded-md cursor-pointer">
-                      <Checkbox 
-                        checked={pickedSubServiceIds.has(s.id)} 
-                        onCheckedChange={() => toggleSubService(s.id)} 
+                  {availableSubs.map((s) => (
+                    <label htmlFor={`sub-service-${s.id}`} key={s.id} className="flex items-start gap-3 p-2 hover:bg-zinc-50 rounded-md cursor-pointer">
+                      <Checkbox
+                        id={`sub-service-${s.id}`}
+                        checked={pickedSubServiceIds.has(s.id)}
+                        onCheckedChange={() => toggleSubService(s.id)}
                         className="mt-1"
                       />
                       <div className="flex-1">
@@ -234,7 +268,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
           </div>
         ) : (
           <div className="tff-card overflow-hidden divide-y divide-zinc-100">
-            {existingSubServices.map((s: any) => (
+            {existingSubServices.map((s) => (
               <div key={s.id} className="flex items-center justify-between p-5 hover:bg-zinc-50 transition-colors">
                 <div>
                   <div className="font-bold text-zinc-900">{s.sub_services?.name}</div>

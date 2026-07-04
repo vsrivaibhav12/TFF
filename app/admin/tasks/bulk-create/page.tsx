@@ -8,7 +8,7 @@ import { listAccessibleClients } from '@/lib/repositories/clients';
 export const dynamic = 'force-dynamic';
 
 export default async function BulkTaskCreatePage({ searchParams }: { searchParams: { sub_service_id?: string } }) {
-  const me = await requireRole(['admin', 'team']);
+  const me = await requireRole('admin');
   await requireCapabilityOrRedirect(me, 'tasks.create');
   const sb = createClient();
 

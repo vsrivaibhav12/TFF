@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import EmptyState from '@/components/sophistication/empty-state';
+import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +24,7 @@ export default async function PortalBizLensPage() {
 
   if (!clientId) {
     return (
+      <PullToRefreshWrapper>
       <div className="space-y-6">
         <div>
           <h1 className="tff-page-title">BizLens</h1>
@@ -34,6 +36,7 @@ export default async function PortalBizLensPage() {
           icon={<BarChart3 className="h-6 w-6 text-zinc-400" />}
         />
       </div>
+      </PullToRefreshWrapper>
     );
   }
 
@@ -41,6 +44,7 @@ export default async function PortalBizLensPage() {
   const publishedReports = allReports.filter(r => r.status === 'published');
 
   return (
+    <PullToRefreshWrapper>
     <div className="space-y-6">
       <div>
         <h1 className="tff-page-title">BizLens</h1>
@@ -75,5 +79,6 @@ export default async function PortalBizLensPage() {
         </div>
       )}
     </div>
+    </PullToRefreshWrapper>
   );
 }
