@@ -48,7 +48,7 @@ export default async function AdminWorkDonePage({ searchParams }: { searchParams
           <WorkDoneForm clients={clients} tasks={tasks} />
           
           <div className="p-6 tff-card">
-            <div className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Total logged (firm)</div>
+            <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Total logged (firm)</div>
             <div className="mt-2 text-4xl font-bold text-zinc-900">{totalHours}h</div>
             <div className="text-sm text-zinc-500 mt-1">across {logs.length} entries</div>
           </div>

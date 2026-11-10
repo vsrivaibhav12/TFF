@@ -80,7 +80,7 @@ export function ProgressRing({
         )}
       </div>
       {label && <span className="text-xs font-medium text-zinc-700">{label}</span>}
-      {sublabel && <span className="text-xs text-zinc-400">{sublabel}</span>}
+      {sublabel && <span className="text-xs text-zinc-500">{sublabel}</span>}
     </div>
   );
 }

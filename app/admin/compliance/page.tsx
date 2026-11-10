@@ -7,6 +7,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { CheckCircle2, Clock, AlertTriangle, CalendarDays, Briefcase, Timer, TrendingUp } from 'lucide-react';
+import EmptyState from '@/components/sophistication/empty-state';
 import ExportButton from '@/components/sophistication/export-button';
 import SimpleBarChart from '@/components/compliance/simple-bar-chart';
 
@@ -150,21 +151,31 @@ export default async function AdminCompliancePage() {
         <div>
           <h1 className="tff-page-title">Compliance dashboard</h1>
           <p className="tff-page-subtitle">
-            Filing health across your portfolio. Track what&apos;s on time, what&apos;s delayed, and what&apos;s overdue.
+            Filing health across your portfolio. Track what is on time, delayed or overdue.
           </p>
         </div>
         <ExportButton data={periodRows} filename="compliance-dashboard" format="excel" />
       </div>
 
+      {total === 0 ? (
+        <EmptyState
+          variant="chart"
+          title="No compliance events in the next 12 months"
+          body="Events appear once compliance rules generate filing dates for your clients. Add or review rules to start tracking due dates here."
+          actionHref="/admin/settings/compliance-rules"
+          actionLabel="Review compliance rules"
+        />
+      ) : (
+      <>
       {/* Metric cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard label="Total events" value={total} icon={<CalendarDays className="h-5 w-5" />} color="text-zinc-700" bg="bg-zinc-100" border="border-zinc-200" />
-        <MetricCard label="Tasks created" value={tasksCreated} icon={<Briefcase className="h-5 w-5" />} color="text-blue-600" bg="bg-blue-50" border="border-blue-100" />
+        <MetricCard label="Tasks created" value={tasksCreated} icon={<Briefcase className="h-5 w-5" />} color="text-zinc-600" bg="bg-zinc-100" border="border-zinc-200" />
         <MetricCard label="Filed" value={filed} icon={<CheckCircle2 className="h-5 w-5" />} color="text-teal-600" bg="bg-teal-50" border="border-teal-100" />
         <MetricCard label="Pending" value={pending} icon={<Clock className="h-5 w-5" />} color="text-amber-600" bg="bg-amber-50" border="border-amber-100" />
         <MetricCard label="Overdue" value={overdue} icon={<AlertTriangle className="h-5 w-5" />} color="text-red-600" bg="bg-red-50" border="border-red-100" highlight={overdue > 0} />
         <MetricCard label="On time" value={onTime} icon={<TrendingUp className="h-5 w-5" />} color="text-teal-600" bg="bg-teal-50" border="border-teal-100" />
-        <MetricCard label="Delayed" value={delayed} icon={<Timer className="h-5 w-5" />} color="text-orange-600" bg="bg-orange-50" border="border-orange-100" highlight={delayed > 0} />
+        <MetricCard label="Delayed" value={delayed} icon={<Timer className="h-5 w-5" />} color="text-amber-600" bg="bg-amber-50" border="border-amber-100" highlight={delayed > 0} />
         <MetricCard label="On-time %" value={filed > 0 ? `${Math.round((onTime / filed) * 100)}%` : '—'} icon={<CheckCircle2 className="h-5 w-5" />} color="text-teal-600" bg="bg-teal-50" border="border-teal-100" />
       </div>
 
@@ -218,7 +229,7 @@ export default async function AdminCompliancePage() {
                     <TableCell className="text-right text-teal-600">{r.filed}</TableCell>
                     <TableCell className="text-right text-amber-600">{r.pending}</TableCell>
                     <TableCell className="text-right text-red-600">{r.overdue}</TableCell>
-                    <TableCell className="text-right text-orange-600">{r.delayed}</TableCell>
+                    <TableCell className="text-right text-amber-600">{r.delayed}</TableCell>
                   </TableRow>
                 ))
               )}
@@ -226,6 +237,8 @@ export default async function AdminCompliancePage() {
           </Table>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }
@@ -254,8 +267,8 @@ function MetricCard({
           {icon}
         </div>
         <div>
-          <div className="text-xs font-semibold uppercase tracking-widest text-zinc-500">{label}</div>
-          <div className={`text-3xl font-bold tabular-nums mt-0.5 ${highlight ? 'text-red-600' : 'text-zinc-900'}`}>
+          <div className="text-xs font-medium text-zinc-600">{label}</div>
+          <div className={`text-2xl font-semibold tabular-nums mt-0.5 ${highlight ? 'text-red-600' : 'text-zinc-900'}`}>
             {value}
           </div>
         </div>

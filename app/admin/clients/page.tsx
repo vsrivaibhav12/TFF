@@ -83,7 +83,7 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Clients</h1>
-          <p className="text-sm text-zinc-500 mt-1">{totalCount} client{totalCount !== 1 ? 's' : ''} in your firm&apos;s roster.</p>
+          <p className="text-sm text-zinc-500 mt-1">{totalCount.toLocaleString('en-IN')} client{totalCount !== 1 ? 's' : ''} in your firm&apos;s roster.</p>
         </div>
         <div className="flex gap-2">
           <FullExport source={{ kind: 'clients', filters: { group: searchParams.group, city: searchParams.city, q: searchParams.q } }} label="clients" filename="clients" total={totalCount} />
@@ -103,7 +103,6 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
         ]}
         inputs={[
           { key: 'city', placeholder: 'City', type: 'text' },
-          { key: 'q', placeholder: 'Search name / PAN', type: 'text' },
         ]}
       />
 

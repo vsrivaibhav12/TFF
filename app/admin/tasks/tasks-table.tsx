@@ -243,7 +243,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
       <ConfirmDialog />
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <input
             type="text"
             placeholder="Search tasks…"
@@ -348,7 +348,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                   {colVisible('sub_service') && (
                     <TableCell className={rowPadding}>
                       {!colVisible('task_number') && t.task_number && (
-                        <span className="block text-xs font-mono tabular-nums text-zinc-400">{t.task_number}</span>
+                        <span className="block text-xs font-mono tabular-nums text-zinc-500">{t.task_number}</span>
                       )}
                       <TaskHoverCard taskId={t.id}>
                         <DockLink item={{ type: 'task', id: t.id }} href={`/admin/tasks/${t.id}`} className="font-semibold text-zinc-900 hover:text-teal-700 text-sm block">
@@ -413,7 +413,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                           <span className="text-xs text-zinc-700">{t.users_profile.full_name}</span>
                         </div>
                       ) : (
-                        <span className="text-xs text-zinc-400">Unassigned</span>
+                        <span className="text-xs text-zinc-500">Unassigned</span>
                       )}
                     </TableCell>
                   )}
@@ -428,7 +428,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                               </span>
                             ))}
                             {t.labels.length > 3 && (
-                              <span className="text-xs text-zinc-400">+{t.labels.length - 3}</span>
+                              <span className="text-xs text-zinc-500">+{t.labels.length - 3}</span>
                             )}
                           </>
                         ) : (
@@ -454,7 +454,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                       <DockLink
                         item={{ type: 'task', id: t.id }}
                         href={`/admin/tasks/${t.id}`}
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-md text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-md text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
                         aria-label="Open task"
                       >
                         <ArrowUpRight className="h-4 w-4" />

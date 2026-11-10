@@ -89,14 +89,14 @@ export default async function AdminLeavePage({ searchParams }: { searchParams: {
                   <TableRow key={r.id} data-row>
                     <TableCell>
                       <div className="flex items-center gap-2 text-zinc-900 font-medium">
-                        <User className="h-4 w-4 text-zinc-400" />
+                        <User className="h-4 w-4 text-zinc-500" />
                         {r.users_profile?.full_name ?? '—'}
                       </div>
                     </TableCell>
                     <TableCell><Badge variant="outline">{r.leave_type}</Badge></TableCell>
                     <TableCell className="text-zinc-700 tabular-nums">
                       <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-zinc-400" />
+                        <Calendar className="h-3.5 w-3.5 text-zinc-500" />
                         {formatDateIST(r.from_date)} — {formatDateIST(r.to_date)}
                       </div>
                     </TableCell>
@@ -142,7 +142,7 @@ export default async function AdminLeavePage({ searchParams }: { searchParams: {
                   <TableRow key={r.id} data-row>
                     <TableCell>
                       <div className="flex items-center gap-2 text-zinc-900 font-medium">
-                        <User className="h-4 w-4 text-zinc-400" />
+                        <User className="h-4 w-4 text-zinc-500" />
                         {r.users_profile?.full_name ?? '—'}
                       </div>
                     </TableCell>
@@ -162,7 +162,7 @@ export default async function AdminLeavePage({ searchParams }: { searchParams: {
                     </TableCell>
                     <TableCell className="text-zinc-700 tabular-nums">
                       <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-zinc-400" />
+                        <Calendar className="h-3.5 w-3.5 text-zinc-500" />
                         {formatDateIST(r.from_date)} — {formatDateIST(r.to_date)}
                       </div>
                     </TableCell>

@@ -198,7 +198,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' }) {
         className="w-full max-w-xl mx-4 rounded-2xl border border-zinc-200/50 bg-white/90 backdrop-blur-2xl shadow-2xl overflow-hidden"
       >
         <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-100">
-          <Search className="h-4 w-4 text-zinc-400 shrink-0" />
+          <Search className="h-4 w-4 text-zinc-500 shrink-0" />
           <input
             value={q}
             onChange={(e) => { setQ(e.target.value); setActive(0); }}
@@ -208,10 +208,10 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' }) {
               else if (e.key === 'Enter') { e.preventDefault(); if (flatItems[active]) go(flatItems[active]); }
             }}
             placeholder="Search or type a command..."
-            className="flex-1 outline-none text-sm placeholder:text-zinc-400 bg-transparent"
+            className="flex-1 outline-none text-sm placeholder:text-zinc-500 bg-transparent"
             data-testid="cmdk-input"
           />
-          <kbd className="text-xs text-zinc-400 font-mono bg-zinc-100 px-1.5 py-0.5 rounded">esc</kbd>
+          <kbd className="text-xs text-zinc-500 font-mono bg-zinc-100 px-1.5 py-0.5 rounded">esc</kbd>
         </div>
 
         {/* Smart suggestion banner */}
@@ -243,7 +243,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' }) {
         <div className="max-h-[360px] overflow-y-auto">
           {orderedGroups.map(([gname, groupItems]) => (
             <div key={gname}>
-              <div className="px-5 pt-3 pb-1 text-xs text-zinc-400 font-semibold flex items-center gap-1.5">
+              <div className="px-5 pt-3 pb-1 text-xs text-zinc-500 font-semibold flex items-center gap-1.5">
                 {gname === 'Actions' && <Zap className="h-3 w-3" />}
                 {gname}
               </div>
@@ -262,7 +262,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' }) {
                     )}
                     data-testid={`cmdk-item-${i.id}`}
                   >
-                    <span className={cn('shrink-0', idx === active ? 'text-teal-600' : 'text-zinc-400')}>
+                    <span className={cn('shrink-0', idx === active ? 'text-teal-600' : 'text-zinc-500')}>
                       {i.icon}
                     </span>
                     <span className="flex-1 truncate">{i.label}</span>
@@ -278,7 +278,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' }) {
             <div className="p-8 text-sm text-center text-zinc-500">No matches found.</div>
           )}
         </div>
-        <div className="px-5 py-2.5 border-t border-zinc-100 text-xs text-zinc-400 flex items-center justify-between">
+        <div className="px-5 py-2.5 border-t border-zinc-100 text-xs text-zinc-500 flex items-center justify-between">
           <span>↑↓ navigate · ↵ open · esc close</span>
           {isValidating && <span className="text-teal-500">Searching...</span>}
         </div>

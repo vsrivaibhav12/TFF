@@ -44,12 +44,12 @@ export function NotFoundState({
       <div className="space-y-4 max-w-md">
         {Icon && !isRoot && (
           <div className="h-16 w-16 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto">
-            <Icon className="h-8 w-8 text-zinc-400" />
+            <Icon className="h-8 w-8 text-zinc-500" />
           </div>
         )}
         {!Icon && !isRoot && !isEntity && (
           <div className="h-16 w-16 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto">
-            <span className="text-2xl font-bold text-zinc-400">404</span>
+            <span className="text-2xl font-bold text-zinc-500">404</span>
           </div>
         )}
         <h1
@@ -80,7 +80,7 @@ export function NotFoundStatePortal({
     <div className="flex items-center justify-center min-h-[60vh] text-center px-4">
       <div className="space-y-4 max-w-md">
         <div className="h-16 w-16 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto">
-          <FileQuestion className="h-8 w-8 text-zinc-400" />
+          <FileQuestion className="h-8 w-8 text-zinc-500" />
         </div>
         <h1 className="text-2xl font-bold text-zinc-900">{title}</h1>
         <p className="text-zinc-500 text-sm">{message}</p>

@@ -210,11 +210,11 @@ export default async function AttendanceReportPage({ searchParams }: { searchPar
                       <TableCell className="text-right text-sm tabular-nums text-zinc-700">{s.present}</TableCell>
                       <TableCell className="text-right text-sm tabular-nums text-zinc-700">{s.work_from_home}</TableCell>
                       <TableCell className="text-right text-sm tabular-nums text-zinc-700">{s.leave}</TableCell>
-                      <TableCell className={cn('text-right text-sm tabular-nums', s.absent > 0 ? 'font-semibold text-red-600' : 'text-zinc-400')}>{s.absent}</TableCell>
-                      <TableCell className={cn('text-right text-sm tabular-nums', s.not_marked > 0 ? 'font-semibold text-amber-600' : 'text-zinc-400')}>{s.not_marked}</TableCell>
+                      <TableCell className={cn('text-right text-sm tabular-nums', s.absent > 0 ? 'font-semibold text-red-600' : 'text-zinc-500')}>{s.absent}</TableCell>
+                      <TableCell className={cn('text-right text-sm tabular-nums', s.not_marked > 0 ? 'font-semibold text-amber-600' : 'text-zinc-500')}>{s.not_marked}</TableCell>
                       <TableCell>
                         {s.rate === null ? (
-                          <span className="text-sm text-zinc-400">—</span>
+                          <span className="text-sm text-zinc-500">—</span>
                         ) : (
                           <div className="flex items-center gap-2">
                             <div className="h-1.5 flex-1 rounded-full bg-zinc-100 overflow-hidden" role="img" aria-label={`${s.rate} percent`}>

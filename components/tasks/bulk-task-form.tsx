@@ -248,14 +248,14 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
                   <Checkbox checked={selectedClients.has(c.id)} onCheckedChange={() => toggleClient(c.id)} />
                   <span className="text-sm text-zinc-900">{c.business_name}</span>
                   {c.group_id && (
-                    <span className="text-xs text-zinc-400 ml-auto">
+                    <span className="text-xs text-zinc-500 ml-auto">
                       {groups.find((g) => g.id === c.group_id)?.name}
                     </span>
                   )}
                 </label>
               ))}
               {filteredClients.length === 0 && (
-                <p className="text-sm text-zinc-400 px-4 py-6 text-center">No clients in this group</p>
+                <p className="text-sm text-zinc-500 px-4 py-6 text-center">No clients in this group</p>
               )}
             </div>
           </div>
@@ -385,7 +385,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
                               <SelectValue placeholder="Unassigned" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned" className="text-zinc-400">Unassigned</SelectItem>
+                              <SelectItem value="unassigned" className="text-zinc-500">Unassigned</SelectItem>
                               {team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}
                             </SelectContent>
                           </Select>
@@ -396,7 +396,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
                               <SelectValue placeholder="None" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned" className="text-zinc-400">None</SelectItem>
+                              <SelectItem value="unassigned" className="text-zinc-500">None</SelectItem>
                               {team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}
                             </SelectContent>
                           </Select>

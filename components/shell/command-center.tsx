@@ -37,7 +37,7 @@ export default function CommandCenter({ userRole }: CommandCenterProps) {
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -94,7 +94,7 @@ export default function CommandCenter({ userRole }: CommandCenterProps) {
 
       <div className="text-center">
         <Button variant="outline" onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}>
-          Open quick command palette <span className="ml-2 text-xs text-zinc-400">Ctrl K</span>
+          Open quick command palette <span className="ml-2 text-xs text-zinc-500">Ctrl K</span>
         </Button>
       </div>
     </div>

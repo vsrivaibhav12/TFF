@@ -121,13 +121,13 @@ export default function TaskTemplateStepsDialog({
           <DialogTitle className="text-base">Steps — {template.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          {steps.length === 0 && <div className="text-xs text-zinc-400 italic">No steps yet. Add the first one below.</div>}
+          {steps.length === 0 && <div className="text-xs text-zinc-500 italic">No steps yet. Add the first one below.</div>}
           {steps.map((step, idx) => {
             const isEditing = editingId === step.id;
             return (
               <div key={step.id} className="flex items-start gap-2 rounded border border-zinc-200 bg-zinc-50 px-3 py-2">
                 <GripVertical className="h-3 w-3 text-zinc-300 mt-0.5 shrink-0" />
-                <span className="text-xs font-mono text-zinc-400 w-5 mt-0.5 shrink-0">{idx + 1}.</span>
+                <span className="text-xs font-mono text-zinc-500 w-5 mt-0.5 shrink-0">{idx + 1}.</span>
                 <div className="flex-1 min-w-0">
                   {isEditing ? (
                     <div className="space-y-2">
@@ -147,10 +147,10 @@ export default function TaskTemplateStepsDialog({
                 </div>
                 {!isEditing && (
                   <>
-                    <button onClick={() => startEdit(step)} className="text-zinc-400 hover:text-zinc-700 mt-0.5" title="Edit step"><Pencil className="h-3 w-3" /></button>
-                    <button onClick={() => move(idx, -1)} disabled={idx === 0} className="text-zinc-400 hover:text-zinc-700 disabled:opacity-30 text-xs mt-0.5">↑</button>
-                    <button onClick={() => move(idx, 1)} disabled={idx === steps.length - 1} className="text-zinc-400 hover:text-zinc-700 disabled:opacity-30 text-xs mt-0.5">↓</button>
-                    <button onClick={() => removeStep(step.id)} className="text-zinc-400 hover:text-red-600 mt-0.5"><Trash2 className="h-3 w-3" /></button>
+                    <button onClick={() => startEdit(step)} className="text-zinc-500 hover:text-zinc-700 mt-0.5" title="Edit step"><Pencil className="h-3 w-3" /></button>
+                    <button onClick={() => move(idx, -1)} disabled={idx === 0} className="text-zinc-500 hover:text-zinc-700 disabled:opacity-30 text-xs mt-0.5">↑</button>
+                    <button onClick={() => move(idx, 1)} disabled={idx === steps.length - 1} className="text-zinc-500 hover:text-zinc-700 disabled:opacity-30 text-xs mt-0.5">↓</button>
+                    <button onClick={() => removeStep(step.id)} className="text-zinc-500 hover:text-red-600 mt-0.5"><Trash2 className="h-3 w-3" /></button>
                   </>
                 )}
               </div>

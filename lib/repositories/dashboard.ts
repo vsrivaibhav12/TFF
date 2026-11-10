@@ -13,10 +13,40 @@ export async function countOpenTasks() {
   return count ?? 0;
 }
 
-export async function countOverdueFilings() {
+/** Open tasks whose due date has passed. Same definition the priority list and Tasks page use. */
+export async function countOverdueFilings(todayIso: string) {
   const sb = createClient();
-  const { count } = await sb.from('compliance_status').select('id', { head: true, count: 'exact' }).eq('is_overdue', true);
+  const { count } = await sb
+    .from('tasks')
+    .select('id', { head: true, count: 'exact' })
+    .eq('is_deleted', false)
+    .in('status', ['pending', 'in_progress'])
+    .lt('due_date', todayIso);
   return count ?? 0;
+}
+
+/** Short display names for the entities named in audit rows, keyed by `${type}:${id}`. */
+export async function resolveAuditEntityLabels(
+  entities: { entity_type?: string | null; entity_id?: string | null }[],
+): Promise<Record<string, string>> {
+  const taskIds = [...new Set(entities.filter((e) => e.entity_type === 'task' && e.entity_id).map((e) => e.entity_id as string))].slice(0, 100);
+  const clientIds = [...new Set(entities.filter((e) => e.entity_type === 'client' && e.entity_id).map((e) => e.entity_id as string))].slice(0, 100);
+  const sb = createClient();
+  const out: Record<string, string> = {};
+  const [tasks, clients] = await Promise.all([
+    taskIds.length
+      ? sb.from('tasks').select('id, title, clients!tasks_client_id_fkey(business_name)').in('id', taskIds)
+      : Promise.resolve({ data: [] as any[] }),
+    clientIds.length
+      ? sb.from('clients').select('id, business_name').in('id', clientIds)
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+  for (const t of (tasks.data ?? []) as any[]) {
+    const client = Array.isArray(t.clients) ? t.clients[0] : t.clients;
+    out[`task:${t.id}`] = client?.business_name ? `${t.title} · ${client.business_name}` : t.title;
+  }
+  for (const c of (clients.data ?? []) as any[]) out[`client:${c.id}`] = c.business_name;
+  return out;
 }
 
 export async function countActiveEngagements() {
@@ -51,13 +81,15 @@ export async function listUpcomingDeadlines(from: string, to: string, limit = 6)
 }
 
 
-export async function listAttentionTasks(limit = 3) {
+export async function listAttentionTasks(todayIso: string, limit = 3) {
   const sb = createClient();
   const { data } = await sb
     .from('tasks')
-    .select('id, title, status, priority, is_stuck, clients!tasks_client_id_fkey(business_name)')
+    .select('id, title, status, priority, is_stuck, due_date, clients!tasks_client_id_fkey(business_name)')
     .eq('is_deleted', false)
-    .or('status.eq.pending,is_stuck.eq.true')
+    .in('status', ['pending', 'in_progress'])
+    // todayIso is a server-built date string, never user input.
+    .or(`is_stuck.eq.true,due_date.lt.${todayIso}`)
     // Stuck tasks first, then the earliest due date, so the "needs attention" list is meaningful.
     .order('is_stuck', { ascending: false })
     .order('due_date', { ascending: true, nullsFirst: false })

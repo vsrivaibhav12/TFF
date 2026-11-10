@@ -83,12 +83,12 @@ export default async function WorkloadPage() {
                         <span className="w-8 text-right text-sm font-semibold tabular-nums text-zinc-900">{r.total}</span>
                       </div>
                     </TableCell>
-                    <TableCell className={`text-right text-sm tabular-nums ${r.overdue > 0 ? 'font-semibold text-red-600' : 'text-zinc-400'}`}>{r.overdue}</TableCell>
+                    <TableCell className={`text-right text-sm tabular-nums ${r.overdue > 0 ? 'font-semibold text-red-600' : 'text-zinc-500'}`}>{r.overdue}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums text-zinc-700">{r.thisWeek}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums text-zinc-700">{r.nextWeek}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums text-zinc-500">{r.later}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums text-zinc-500">{r.noDate}</TableCell>
-                    <TableCell className={`text-right text-sm tabular-nums ${r.stuck > 0 ? 'font-semibold text-amber-600' : 'text-zinc-400'}`}>{r.stuck}</TableCell>
+                    <TableCell className={`text-right text-sm tabular-nums ${r.stuck > 0 ? 'font-semibold text-amber-600' : 'text-zinc-500'}`}>{r.stuck}</TableCell>
                   </TableRow>
                 );
               })}

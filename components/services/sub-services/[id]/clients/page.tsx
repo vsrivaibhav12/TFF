@@ -81,13 +81,13 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
                     <div key={link.id} className="flex items-center justify-between px-5 py-3 hover:bg-zinc-50 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-zinc-100 flex items-center justify-center">
-                          <Building2 className="h-4 w-4 text-zinc-400" />
+                          <Building2 className="h-4 w-4 text-zinc-500" />
                         </div>
                         <div>
                           <DockLink item={{ type: 'client', id: client.id }} href={`/admin/clients/${client.id}`} className="text-sm font-medium text-zinc-900 hover:text-teal-700">
                             {client.business_name}
                           </DockLink>
-                          <div className="text-xs text-zinc-400 mt-0.5">
+                          <div className="text-xs text-zinc-500 mt-0.5">
                             {client.pan && <span className="font-mono mr-2">PAN {client.pan}</span>}
                             {client.gstin && <span className="font-mono mr-2">GSTIN {client.gstin}</span>}
                             {client.city && <span>{client.city}</span>}

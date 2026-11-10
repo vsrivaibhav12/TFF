@@ -98,7 +98,7 @@ export default function CapabilitiesForm({
 
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
           <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter capabilities…" className="pl-9" data-testid="caps-filter" />
         </div>
         <div className="text-sm text-zinc-500 whitespace-nowrap">{selected.size} / {all.length} selected</div>
@@ -137,7 +137,7 @@ export default function CapabilitiesForm({
                           {meta.label}
                         </Label>
                         <p className="text-xs text-zinc-500 mt-0.5">{meta.description}</p>
-                        <code className="text-xs text-zinc-400 font-mono mt-1 block">{cap}</code>
+                        <code className="text-xs text-zinc-500 font-mono mt-1 block">{cap}</code>
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         {fromTemplate && isSelected && (

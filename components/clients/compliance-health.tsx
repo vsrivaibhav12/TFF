@@ -24,6 +24,11 @@ export function computeComplianceHealth(gst: string, tds: string, it: string): n
 }
 
 export function ComplianceHealthBar({ gst, tds, it, showLabel = true, className }: ComplianceHealthProps) {
+  // No tracked filings is not the same as at risk: show a neutral dash, never red.
+  const allUnknown = [gst, tds, it].every((v) => !v || v.toLowerCase() === 'unknown');
+  if (allUnknown) {
+    return <span className={cn('text-xs text-zinc-500', className)} title="No filings tracked yet">Not tracked</span>;
+  }
   const score = computeComplianceHealth(gst, tds, it);
   const tone = score >= 80 ? 'good' : score >= 60 ? 'fair' : 'poor';
 

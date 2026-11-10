@@ -42,7 +42,7 @@ export function TaskLabelPills({ labels, maxVisible = 3, size = 'xs', className 
         </span>
       ))}
       {overflow > 0 && (
-        <span className="text-xs text-zinc-400">+{overflow}</span>
+        <span className="text-xs text-zinc-500">+{overflow}</span>
       )}
     </span>
   );

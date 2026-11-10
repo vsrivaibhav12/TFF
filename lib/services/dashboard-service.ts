@@ -6,6 +6,7 @@ import {
   listRecentTasks,
   listAttentionTasks,
   getPendingApprovals,
+  resolveAuditEntityLabels,
 } from '@/lib/repositories/dashboard';
 import { listRecentAuditLogs } from '@/lib/repositories/audit';
 import { enrichTasksWithProgress } from '@/lib/repositories/tasks';
@@ -30,17 +31,25 @@ export async function getAdminDashboardData() {
   ] = await Promise.all([
     countActiveClients(),
     countOpenTasks(),
-    countOverdueFilings(),
+    countOverdueFilings(todayIso),
     listRecentTasks(5),
     countActiveEngagements(),
-    listAttentionTasks(3),
+    listAttentionTasks(todayIso, 4),
     getPendingApprovals(),
     listAttendanceForDate(todayIso),
     listTeamUsers(),
     listRecentAuditLogs(8),
   ]);
 
-  const recentTasks = await enrichTasksWithProgress(rawRecentTasks);
+  const [recentTasks, entityLabels] = await Promise.all([
+    enrichTasksWithProgress(rawRecentTasks),
+    resolveAuditEntityLabels(recentAuditLogs),
+  ]);
+  // Name the thing each audit row changed, so the feed reads "Updated task: GSTR-1 · Acme".
+  const auditWithLabels = recentAuditLogs.map((log: any) => ({
+    ...log,
+    entity_label: entityLabels[`${log.entity_type}:${log.entity_id}`] ?? null,
+  }));
 
   const presentCount = attendanceToday.filter((a) => a.status === 'present').length;
   const onLeaveCount = attendanceToday.filter((a) => a.status === 'leave').length;
@@ -55,6 +64,6 @@ export async function getAdminDashboardData() {
     attentionTasks,
     pendingApprovals,
     attendanceToday: { presentCount, onLeaveCount, teamTotal },
-    recentAuditLogs,
+    recentAuditLogs: auditWithLabels,
   };
 }

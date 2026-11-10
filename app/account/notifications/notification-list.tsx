@@ -102,11 +102,11 @@ export default function NotificationList({ items: initial }: { items: Notificati
                     {!n.is_read && <Badge variant="teal" className="text-xs h-5">New</Badge>}
                   </div>
                   <div className="text-sm text-zinc-500 mt-0.5">{n.message}</div>
-                  <div className="text-xs text-zinc-400 mt-1">{formatDateIST(n.created_at)}</div>
+                  <div className="text-xs text-zinc-500 mt-1">{formatDateIST(n.created_at)}</div>
                 </div>
                 {!n.is_read && (
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => markOne(n.id)} disabled={pending}>
-                    <Check className="h-4 w-4 text-zinc-400" />
+                    <Check className="h-4 w-4 text-zinc-500" />
                   </Button>
                 )}
               </div>

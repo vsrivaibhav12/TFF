@@ -53,7 +53,7 @@ export default function TeamClientDetailShell({
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
-                  <Building2 className="h-7 w-7 text-zinc-400" />
+                  <Building2 className="h-7 w-7 text-zinc-500" />
                 </div>
                 <div>
                   <h1 className="text-[22px] font-semibold tracking-tight text-zinc-900">{client.business_name}</h1>
@@ -61,7 +61,7 @@ export default function TeamClientDetailShell({
                     {client.pan && <span className="text-[12px] text-zinc-500 font-mono">PAN {client.pan}</span>}
                     {client.gstin && <span className="text-[12px] text-zinc-500 font-mono">GSTIN {client.gstin}</span>}
                   </div>
-                  <div className="flex items-center gap-3 mt-2 text-[12px] text-zinc-400">
+                  <div className="flex items-center gap-3 mt-2 text-[12px] text-zinc-500">
                     {client.city && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{client.city}{client.state ? `, ${client.state}` : ''}</span>}
                     {client.primary_contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{client.primary_contact_phone}</span>}
                     {client.primary_contact_email && <span className="flex items-center gap-0.5"><Mail className="h-3 w-3" />{client.primary_contact_email}</span>}
@@ -86,17 +86,17 @@ export default function TeamClientDetailShell({
             </div>
 
             {openTasks.length === 0 ? (
-              <div className="text-sm text-zinc-400 py-6 text-center">No active work items for this client.</div>
+              <div className="text-sm text-zinc-500 py-6 text-center">No active work items for this client.</div>
             ) : (
               <div className="space-y-2">
                 {openTasks.slice(0, 5).map((t: any) => (
                   <DockLink key={t.id} item={{ type: 'task', id: t.id }} href={`/team/tasks/${t.id}`} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors group">
                     <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0 border border-zinc-200">
-                      <FileText className="h-4 w-4 text-zinc-400" />
+                      <FileText className="h-4 w-4 text-zinc-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-medium text-zinc-900 truncate">{displayTaskName(t)}</div>
-                      <div className="text-xs text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
+                      <div className="text-xs text-zinc-500">{t.status} · Due {t.due_date ?? '—'}</div>
                     </div>
                     <ProgressRing size={24} strokeWidth={3} hideLabel progress={t.progress_pct ?? 0} />
                     <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-[#0D9488] transition-colors" />
@@ -115,15 +115,15 @@ export default function TeamClientDetailShell({
             <h3 className="text-[13px] font-semibold text-zinc-700 mb-4">Contact</h3>
             <dl className="space-y-3 text-sm">
               <div>
-                <dt className="text-zinc-400 text-xs">Person</dt>
+                <dt className="text-zinc-500 text-xs">Person</dt>
                 <dd className="text-zinc-900">{client.primary_contact_person || '—'}</dd>
               </div>
               <div>
-                <dt className="text-zinc-400 text-xs">Email</dt>
+                <dt className="text-zinc-500 text-xs">Email</dt>
                 <dd className="text-zinc-900">{client.primary_contact_email || '—'}</dd>
               </div>
               <div>
-                <dt className="text-zinc-400 text-xs">Phone</dt>
+                <dt className="text-zinc-500 text-xs">Phone</dt>
                 <dd className="text-zinc-900">{client.primary_contact_phone || '—'}</dd>
               </div>
             </dl>

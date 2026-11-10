@@ -10,7 +10,6 @@ import { ClientHoverCard } from '@/components/clients/client-hover-card';
 import { EditableCell } from '@/components/tasks/editable-cell';
 import {
   ArrowUpRight,
-  Building2,
   MapPin,
   Phone,
   Mail,
@@ -63,11 +62,11 @@ function ComplianceDot({ status }: { status: string }) {
 function ComplianceDots({ gst, tds, it }: { gst: string; tds: string; it: string }) {
   return (
     <div className="flex items-center gap-1.5" title={`GST: ${gst} | TDS: ${tds} | IT: ${it}`}>
-      <span className="text-xs text-zinc-400 uppercase font-medium">G</span>
+      <span className="text-xs text-zinc-500 uppercase font-medium">G</span>
       <ComplianceDot status={gst} />
-      <span className="text-xs text-zinc-400 uppercase font-medium ml-1">T</span>
+      <span className="text-xs text-zinc-500 uppercase font-medium ml-1">T</span>
       <ComplianceDot status={tds} />
-      <span className="text-xs text-zinc-400 uppercase font-medium ml-1">I</span>
+      <span className="text-xs text-zinc-500 uppercase font-medium ml-1">I</span>
       <ComplianceDot status={it} />
     </div>
   );
@@ -149,7 +148,7 @@ export default function ClientsTableClient({
   const rowVirtualizer = useVirtualizer({
     count: filtered.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => density === 'compact' ? 52 : 68,
+    estimateSize: () => density === 'compact' ? 44 : 56,
     overscan: 8,
 
   });
@@ -248,13 +247,13 @@ export default function ClientsTableClient({
       {/* Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <input
             type="text"
-            placeholder="Search clients…"
+            placeholder="Search name or PAN"
             defaultValue={search}
             onChange={onSearch}
-            className="pl-9 pr-3 h-9 rounded-md border border-zinc-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 w-60"
+            className="pl-9 pr-3 h-9 rounded-lg border border-zinc-200 bg-white text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 w-72"
           />
         </div>
         <div className="flex items-center gap-3 ml-auto">
@@ -271,9 +270,9 @@ export default function ClientsTableClient({
       </div>
 
       {/* Virtual scroll container */}
-      <div ref={parentRef} className="overflow-auto rounded-xl border border-zinc-200" style={{ height: '60vh' }}>
+      <div ref={parentRef} className="overflow-auto rounded-xl border border-zinc-200 bg-white" style={{ height: 'calc(100vh - 280px)', minHeight: '420px' }}>
         {/* Sticky header */}
-        <div className="sticky top-0 z-10 grid grid-cols-[auto_1fr_auto_auto_auto_auto] md:grid-cols-12 gap-4 px-4 py-2 text-xs font-semibold text-zinc-400 bg-white/80 backdrop-blur-sm border-b border-zinc-200">
+        <div className="sticky top-0 z-10 grid grid-cols-[auto_1fr_auto_auto_auto_auto] md:grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-zinc-600 bg-zinc-50 border-b border-zinc-200">
           <div className="col-span-1 md:col-span-1 flex items-center">
             <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
           </div>
@@ -303,21 +302,12 @@ export default function ClientsTableClient({
         <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative', width: '100%' }}>
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const c = filtered[virtualRow.index];
-            const hasOverdue = c.compliance.gst === 'overdue' || c.compliance.tds === 'overdue' || c.compliance.it === 'overdue';
-            const hasInProgress = c.compliance.gst === 'in_progress' || c.compliance.gst === 'processing' || c.compliance.tds === 'in_progress' || c.compliance.tds === 'processing' || c.compliance.it === 'in_progress' || c.compliance.it === 'processing';
-            const leftBorder = hasOverdue
-              ? 'border-l-2 border-l-red-500'
-              : hasInProgress
-                ? 'border-l-2 border-l-amber-500'
-                : c.engagements > 0
-                  ? 'border-l-2 border-l-teal-500'
-                  : '';
             return (
               <div
                 key={virtualRow.key}
                 data-index={virtualRow.index}
                 ref={rowVirtualizer.measureElement}
-                className="absolute left-0 w-full px-4 py-1"
+                className="absolute left-0 w-full"
                 style={{
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
@@ -329,10 +319,9 @@ export default function ClientsTableClient({
                 >
                   <div
                     className={cn(
-                      'group grid grid-cols-[auto_1fr_auto_auto_auto_auto] md:grid-cols-12 gap-4 items-center px-4 rounded-xl bg-white border border-zinc-200 transition-colors cursor-pointer',
-                      density === 'compact' ? 'py-2' : 'py-3',
-                      selectedIds.has(c.id) ? 'ring-2 ring-teal-500' : 'hover:bg-zinc-50/60',
-                      leftBorder
+                      'group grid grid-cols-[auto_1fr_auto_auto_auto_auto] md:grid-cols-12 gap-4 items-center px-4 border-b border-zinc-100 transition-colors cursor-pointer',
+                      density === 'compact' ? 'py-1.5' : 'py-2.5',
+                      selectedIds.has(c.id) ? 'bg-teal-50' : 'hover:bg-zinc-50',
                     )}
                   >
                     {/* Checkbox */}
@@ -349,16 +338,13 @@ export default function ClientsTableClient({
 
                     {/* Client info */}
                     <div className="col-span-4 flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
-                        <Building2 className="h-5 w-5 text-zinc-400" />
-                      </div>
                       <div className="min-w-0">
                         <ClientHoverCard clientId={c.id}>
                           <div className="text-sm font-medium text-zinc-900 truncate">
                             {c.business_name}
                           </div>
                         </ClientHoverCard>
-                        <div className="flex items-center gap-2 text-xs text-zinc-400 mt-0.5">
+                        <div className="flex items-center gap-2 text-xs text-zinc-500 mt-0.5">
                           {c.city && (
                             <span className="flex items-center gap-0.5">
                               <MapPin className="h-3 w-3" />
@@ -407,7 +393,7 @@ export default function ClientsTableClient({
                     <div className="col-span-2 hidden md:block">
                       <span
                         className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold tabular-nums ${
-                          c.engagements > 0 ? 'bg-teal-50 text-teal-600' : 'bg-zinc-100 text-zinc-400'
+                          c.engagements > 0 ? 'bg-teal-50 text-teal-600' : 'bg-zinc-100 text-zinc-500'
                         }`}
                       >
                         {c.engagements}
@@ -417,7 +403,7 @@ export default function ClientsTableClient({
                     {/* View arrow */}
                     <div className="col-span-1 flex justify-end">
                       <div className="opacity-0 group-hover:opacity-100 w-8 h-8 rounded-lg bg-zinc-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
-                        <ArrowUpRight className="h-4 w-4 text-zinc-400 group-hover:text-teal-600 transition-colors" />
+                        <ArrowUpRight className="h-4 w-4 text-zinc-500 group-hover:text-teal-600 transition-colors" />
                       </div>
                     </div>
                   </div>

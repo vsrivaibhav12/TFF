@@ -74,7 +74,7 @@ export default function NotificationsBell() {
             <button
               onClick={markAll}
               disabled={pending || count === 0}
-              className="text-xs text-teal-700 hover:underline disabled:text-zinc-400 disabled:no-underline"
+              className="text-xs text-teal-700 hover:underline disabled:text-zinc-500 disabled:no-underline"
             >
               Mark all read
             </button>

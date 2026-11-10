@@ -37,7 +37,7 @@ export default function BlockedOnClientToggle({
       data-testid="blocked-on-client-row"
     >
       <div className="flex items-center gap-3">
-        <Inbox className="h-4 w-4 text-zinc-400" />
+        <Inbox className="h-4 w-4 text-zinc-500" />
         <div>
           <div className="text-sm font-medium">Awaiting the client</div>
           <p className="text-xs text-zinc-500">

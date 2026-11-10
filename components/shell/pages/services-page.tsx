@@ -128,7 +128,7 @@ export default async function ServicesPage() {
               if (catServices.length === 0) return null;
               return (
                 <section key={cat.id} className="space-y-3">
-                  <h2 className="text-xs text-zinc-400 font-semibold">{cat.name}</h2>
+                  <h2 className="text-xs text-zinc-500 font-semibold">{cat.name}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {catServices.map((s) => (
                       <ServiceCard
@@ -146,7 +146,7 @@ export default async function ServicesPage() {
             })}
             {servicesWithoutCategory.length > 0 && (
               <section className="space-y-3">
-                <h2 className="text-xs text-zinc-400 font-semibold">Uncategorized</h2>
+                <h2 className="text-xs text-zinc-500 font-semibold">Uncategorized</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {servicesWithoutCategory.map((s) => (
                     <ServiceCard

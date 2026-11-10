@@ -195,7 +195,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-bold text-zinc-900">{s.services?.name}</div>
-                    <div className="text-xs font-medium text-zinc-400 mt-1">
+                    <div className="text-xs font-medium text-zinc-500 mt-1">
                       {s.services?.code} · Subscribed {formatDateIST(s.start_date ?? '')}
                     </div>
                   </div>
@@ -272,13 +272,13 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
               <div key={s.id} className="flex items-center justify-between p-5 hover:bg-zinc-50 transition-colors">
                 <div>
                   <div className="font-bold text-zinc-900">{s.sub_services?.name}</div>
-                  <div className="text-xs font-medium text-zinc-400 mt-1">
+                  <div className="text-xs font-medium text-zinc-500 mt-1">
                     {s.sub_services?.services?.name} · {s.sub_services?.frequency} · {s.sub_services?.code}
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   {s.is_active ? <Badge variant="success" className="bg-teal-50 text-teal-600 border-teal-100">Active</Badge> : <Badge variant="outline">Paused</Badge>}
-                  <Button variant="ghost" size="sm" onClick={() => unlinkSub(s.id)} disabled={pending} className="text-zinc-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => unlinkSub(s.id)} disabled={pending} className="text-zinc-500 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
             ))}

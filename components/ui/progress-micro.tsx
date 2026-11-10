@@ -7,7 +7,7 @@ interface ProgressMicroProps {
 }
 
 export function ProgressMicro({ progress, completed, total }: ProgressMicroProps) {
-  if (total === 0) return <span className="text-xs text-zinc-400">—</span>;
+  if (total === 0) return <span className="text-xs text-zinc-500">—</span>;
 
   const color = progress >= 80 ? 'bg-teal-500' : progress >= 40 ? 'bg-amber-500' : 'bg-red-500';
 

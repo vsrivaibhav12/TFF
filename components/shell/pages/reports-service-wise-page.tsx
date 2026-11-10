@@ -134,7 +134,7 @@ export default async function ServiceWiseReportPage({ searchParams }: { searchPa
                 <TableBody>
                   {Object.values(svc.subServices).map((ss) => (
                     <TableRow key={ss.code}>
-                      <TableCell className="font-medium text-zinc-900">{ss.name} <span className="text-xs text-zinc-400 font-mono">({ss.code})</span></TableCell>
+                      <TableCell className="font-medium text-zinc-900">{ss.name} <span className="text-xs text-zinc-500 font-mono">({ss.code})</span></TableCell>
                       <TableCell className="text-right tabular-nums">{ss.clientCount}</TableCell>
                       <TableCell className="text-right tabular-nums">{ss.completedTasks}</TableCell>
                       <TableCell className="text-right tabular-nums">{ss.totalFee > 0 ? `₹${ss.totalFee.toLocaleString('en-IN')}` : '—'}</TableCell>

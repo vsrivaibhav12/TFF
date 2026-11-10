@@ -109,7 +109,7 @@ export function TaskCard({ task, hrefPrefix }: TaskCardProps) {
 
       {/* Bottom row: due date + progress ring */}
       <div className="flex items-center justify-between mt-3">
-        <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+        <div className="flex items-center gap-1.5 text-xs text-zinc-500">
           <Calendar className="h-3 w-3" />
           <span className={cn(overdue && 'text-red-500 font-medium')}>{task.due_date ? formatDateIST(task.due_date) : 'No due date'}</span>
         </div>
@@ -122,7 +122,7 @@ export function TaskCard({ task, hrefPrefix }: TaskCardProps) {
 
       {/* Progress ring */}
       <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between">
-        <span className="text-xs text-zinc-400 font-medium">{progress}% complete</span>
+        <span className="text-xs text-zinc-500 font-medium">{progress}% complete</span>
         <ProgressRing progress={progress} size={28} strokeWidth={3} hideLabel gradient />
       </div>
 

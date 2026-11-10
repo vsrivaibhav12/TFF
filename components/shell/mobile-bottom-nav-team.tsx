@@ -43,7 +43,7 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
               href={t.href}
               className={cn(
                 'relative flex flex-col items-center justify-center gap-1 py-2 text-xs font-semibold min-h-[56px] transition-colors',
-                active ? 'text-teal-700' : 'text-zinc-400'
+                active ? 'text-teal-700' : 'text-zinc-500'
               )}
               data-testid={`bottom-tab-${t.label.toLowerCase().replace(/ /g, '-')}`}
             >
@@ -63,7 +63,7 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
           onClick={() => setMoreOpen(true)}
           className={cn(
             'relative flex flex-col items-center justify-center gap-1 py-2 text-xs font-semibold min-h-[56px] transition-colors',
-            isMoreActive ? 'text-teal-700' : 'text-zinc-400'
+            isMoreActive ? 'text-teal-700' : 'text-zinc-500'
           )}
           data-testid="bottom-tab-more"
         >
@@ -113,7 +113,7 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
                       onClick={() => setMoreOpen(false)}
                       className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50 border border-zinc-100"
                     >
-                      {Icon && <Icon className="h-5 w-5 text-zinc-400" />}
+                      {Icon && <Icon className="h-5 w-5 text-zinc-500" />}
                       {t.label}
                     </Link>
                   );

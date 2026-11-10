@@ -10,7 +10,7 @@ import { searchClients } from '@/lib/actions/clients';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Filter, X, Calendar as CalendarIcon, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
+import { X, Calendar as CalendarIcon, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TaskStatusFilter } from '@/components/tasks/status-filter';
 import { effectiveStatuses, statusParamFor, TASK_STATUS_OPTIONS } from '@/lib/tasks/filter-params';
@@ -89,20 +89,16 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
   const activeCount = Object.values(f).filter(v => v !== '' && v !== 'all' && v !== 'false').length;
 
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl p-2 shadow-sm mb-4 space-y-3">
+    <div className="space-y-2">
       {/* Primary quick filters */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-1.5 text-sm font-medium text-zinc-500 pl-2 pr-1">
-          <Filter className="h-4 w-4" /> Filters
-        </div>
-        
         <TaskStatusFilter
           value={effectiveStatuses(f.status)}
           onChange={(next) => update('status', statusParamFor(next))}
         />
 
         <Select value={f.priority || 'all'} onValueChange={(v) => update('priority', v)}>
-          <SelectTrigger className="w-32 h-8 text-xs bg-zinc-50 border-dashed">
+          <SelectTrigger className="w-32 h-8 text-xs bg-white">
             <SelectValue placeholder="Priority" />
           </SelectTrigger>
           <SelectContent>
@@ -115,7 +111,7 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
         </Select>
 
         <Select value={f.assigned || 'all'} onValueChange={(v) => update('assigned', v)}>
-          <SelectTrigger className="w-40 h-8 text-xs bg-zinc-50 border-dashed">
+          <SelectTrigger className="w-40 h-8 text-xs bg-white">
             <SelectValue placeholder="Assignee" />
           </SelectTrigger>
           <SelectContent>
@@ -132,7 +128,7 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
             onChange={(v) => update('client', v)}
             placeholder="Client"
             searchPlaceholder="Search by name or PAN..."
-            className="w-48 h-8 text-xs bg-zinc-50 border-dashed"
+            className="w-48 h-8 text-xs bg-white"
           />
         ) : (
           <SearchableSelect
@@ -148,15 +144,15 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
             onChange={(v) => update('client', v)}
             placeholder="Client"
             searchPlaceholder="Search by name or PAN..."
-            className="w-48 h-8 text-xs bg-zinc-50 border-dashed"
+            className="w-48 h-8 text-xs bg-white"
           />
         )}
 
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 text-xs border-dashed bg-zinc-50 ml-auto">
+            <Button variant="outline" size="sm" className="h-8 text-xs bg-white ml-auto">
               <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
-              More Filters
+              More filters
               {activeCount > 4 && (
                 <Badge variant="outline" className="ml-1.5 h-4 px-1 text-xs rounded-sm">{activeCount - 4}</Badge>
               )}
@@ -164,7 +160,7 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
           </PopoverTrigger>
           <PopoverContent align="end" className="w-[420px] p-0" sideOffset={8}>
             <div className="px-4 py-3 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 rounded-t-xl">
-              <h4 className="font-semibold text-sm">Advanced Filters</h4>
+              <h4 className="font-semibold text-sm">Advanced filters</h4>
               {activeCount > 0 && (
                 <Button variant="ghost" size="sm" className="h-6 text-xs text-zinc-500 hover:text-red-600 px-2" onClick={clearAll}>
                   Clear all
@@ -183,11 +179,11 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Period Year</Label>
+                <Label className="text-xs text-zinc-500">Period year</Label>
                 <Input type="number" placeholder="e.g. 2026" className="h-8 text-xs" value={f.period_year || ''} onChange={(e) => update('period_year', e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Period Month</Label>
+                <Label className="text-xs text-zinc-500">Period month</Label>
                 <Select value={f.period_month || 'all'} onValueChange={(v) => update('period_month', v)}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Any" /></SelectTrigger>
                   <SelectContent>
@@ -199,11 +195,11 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Due From</Label>
+                <Label className="text-xs text-zinc-500">Due from</Label>
                 <Input type="date" className="h-8 text-xs" value={f.due_from || ''} onChange={(e) => update('due_from', e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Due To</Label>
+                <Label className="text-xs text-zinc-500">Due to</Label>
                 <Input type="date" className="h-8 text-xs" value={f.due_to || ''} onChange={(e) => update('due_to', e.target.value)} />
               </div>
               <div className="space-y-1.5 col-span-2 border-t border-zinc-100 pt-3">
@@ -215,11 +211,11 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
                   </label>
                   <label htmlFor="filter-stuck" className="flex items-center gap-2 cursor-pointer">
                     <Checkbox id="filter-stuck" checked={f.is_stuck === 'true'} onCheckedChange={(c) => update('is_stuck', c ? 'true' : 'false')} />
-                    <span className="text-xs">Marked as Stuck</span>
+                    <span className="text-xs">Marked as stuck</span>
                   </label>
                   <label htmlFor="filter-verified" className="flex items-center gap-2 cursor-pointer">
                     <Checkbox id="filter-verified" checked={f.is_verified === 'true'} onCheckedChange={(c) => update('is_verified', c ? 'true' : 'false')} />
-                    <span className="text-xs">Verified by Manager</span>
+                    <span className="text-xs">Verified by manager</span>
                   </label>
                 </div>
               </div>
@@ -233,8 +229,8 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
 
       {/* Active filters display bar */}
       {activeCount > 0 && (
-        <div className="flex items-center gap-1.5 flex-wrap px-2 pb-1">
-          <span className="text-xs text-zinc-400 mr-1">Active:</span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs text-zinc-500 mr-1">Active:</span>
           {Object.entries(f).map(([k, v]) => {
             if (!v || v === 'all' || v === 'false') return null;
             let label = `${k}: ${v}`;
@@ -246,9 +242,9 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
             if (k === 'priority') label = `Priority: ${v}`;
             if (k === 'assigned') label = `Assignee: ${v === 'unassigned' ? 'Unassigned' : team.find(t => t.id === v)?.full_name || v}`;
             if (k === 'client') label = `Client: ${activeClientName || initialClients.find(c => c.id === v)?.business_name || v}`;
-            if (k === 'is_billable') label = `Billable Only`;
-            if (k === 'is_stuck') label = `Stuck Only`;
-            if (k === 'is_verified') label = `Verified Only`;
+            if (k === 'is_billable') label = `Billable only`;
+            if (k === 'is_stuck') label = `Stuck only`;
+            if (k === 'is_verified') label = `Verified only`;
             if (k === 'period_year') label = `Year: ${v}`;
             if (k === 'period_month') label = `Month: ${new Date(2000, parseInt(v) - 1, 1).toLocaleString('en-IN', { month: 'short' })}`;
 

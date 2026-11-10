@@ -6,14 +6,14 @@ export type StatTone = 'default' | 'zinc' | 'red' | 'amber' | 'warning';
 const ICON_TONE: Record<StatTone, string> = {
   default: 'bg-zinc-100 text-zinc-500',
   zinc: 'bg-zinc-100 text-zinc-600',
-  red: 'bg-red-100 text-red-600',
-  amber: 'bg-amber-100 text-amber-600',
-  warning: 'bg-amber-100 text-amber-600',
+  red: 'bg-red-50 text-red-600',
+  amber: 'bg-amber-50 text-amber-600',
+  warning: 'bg-amber-50 text-amber-600',
 };
 
 /**
- * One stat card for dashboards and list headers. Replaces the three slightly
- * different copies that lived in the admin dashboard and the task pages.
+ * One stat card for dashboards and list headers. A warning tone only shows
+ * when there is something to warn about: a zero is never drawn in amber or red.
  */
 export function StatCard({
   label,
@@ -21,20 +21,27 @@ export function StatCard({
   icon,
   href,
   tone = 'default',
+  hint,
 }: {
   label: string;
   value: number | string;
   icon: React.ReactNode;
   href?: string;
   tone?: StatTone;
+  /** Short context line under the label, e.g. "of 1,184 clients". */
+  hint?: string;
 }) {
-  const warn = tone === 'warning' || tone === 'amber';
+  const isZero = value === 0 || value === '0';
+  const effective: StatTone = isZero ? 'default' : tone;
+  const valueColor =
+    effective === 'red' ? 'text-red-600' : effective === 'amber' || effective === 'warning' ? 'text-amber-600' : 'text-zinc-900';
   const body = (
     <div className="flex items-center gap-3">
-      <div className={cn('h-9 w-9 rounded-lg flex items-center justify-center shrink-0', ICON_TONE[tone])}>{icon}</div>
+      <div className={cn('h-9 w-9 rounded-lg flex items-center justify-center shrink-0', ICON_TONE[effective])}>{icon}</div>
       <div className="min-w-0">
-        <div className={cn('text-2xl font-semibold tabular-nums tracking-tight', warn ? 'text-amber-600' : 'text-zinc-900')}>{value}</div>
-        <div className="text-xs font-medium text-zinc-500">{label}</div>
+        <div className={cn('text-2xl font-semibold tabular-nums tracking-tight leading-tight', valueColor)}>{value}</div>
+        <div className="text-xs font-medium text-zinc-600">{label}</div>
+        {hint && <div className="text-xs text-zinc-500 tabular-nums">{hint}</div>}
       </div>
     </div>
   );

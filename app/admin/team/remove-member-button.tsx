@@ -30,7 +30,7 @@ export default function RemoveMemberButton({ userId, isPrimeAdmin }: { userId: s
   return (
     <>
       <ConfirmDialog />
-      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-zinc-400 hover:text-red-600" onClick={onClick} disabled={pending}>
+      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-zinc-500 hover:text-red-600" onClick={onClick} disabled={pending}>
         <Trash2 className="h-3.5 w-3.5" />
       </Button>
     </>

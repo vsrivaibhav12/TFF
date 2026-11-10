@@ -65,10 +65,10 @@ export function WorkDoneRowActions({
       <ConfirmDialog />
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditing(true)} disabled={pending}>
-          <Pencil className="h-3.5 w-3.5 text-zinc-400" />
+          <Pencil className="h-3.5 w-3.5 text-zinc-500" />
         </Button>
         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onDelete} disabled={pending}>
-          <Trash2 className="h-3.5 w-3.5 text-zinc-400" />
+          <Trash2 className="h-3.5 w-3.5 text-zinc-500" />
         </Button>
       </div>
       {editing && (

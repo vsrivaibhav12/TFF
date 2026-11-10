@@ -137,7 +137,7 @@ export default function ClientImportPage() {
             <div className="text-sm space-y-2">
               <p className="font-medium">Expected columns (any order, case-insensitive):</p>
               <code className="block rounded bg-zinc-50 border border-zinc-200 p-3 text-xs leading-relaxed">
-                business_name <span className="text-zinc-400">(required)</span>, pan, gstin, category,
+                business_name <span className="text-zinc-500">(required)</span>, pan, gstin, category,
                 industry, primary_contact_person, primary_contact_email,
                 primary_contact_phone, city, state, pincode, group
               </code>
@@ -248,7 +248,7 @@ export default function ClientImportPage() {
                     const hasErr = r.errors.length > 0;
                     return (
                       <TableRow key={r.row_index} className={hasErr ? 'bg-amber-50/40' : ''} data-testid={`import-row-${r.row_index}`}>
-                        <TableCell className="px-3 py-2 text-zinc-400 align-top">{r.row_index}</TableCell>
+                        <TableCell className="px-3 py-2 text-zinc-500 align-top">{r.row_index}</TableCell>
                         <TableCell className="px-3 py-2 align-top">
                           {isPasteMode ? (
                             <Input

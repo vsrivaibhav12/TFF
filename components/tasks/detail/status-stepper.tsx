@@ -97,12 +97,12 @@ export function TaskStatusStepper({
                       'relative z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-semibold transition-all duration-300',
                       done && 'border-teal-600 bg-teal-600 text-white',
                       current && 'border-teal-600 bg-white text-teal-700 ring-4 ring-teal-100',
-                      !reached && 'border-zinc-200 bg-white text-zinc-400',
+                      !reached && 'border-zinc-200 bg-white text-zinc-500',
                     )}
                   >
                     {done ? <Check className="h-4 w-4" /> : i + 1}
                   </span>
-                  <span className={cn('text-xs font-medium', reached ? 'text-zinc-900' : 'text-zinc-400')}>{s.label}</span>
+                  <span className={cn('text-xs font-medium', reached ? 'text-zinc-900' : 'text-zinc-500')}>{s.label}</span>
                   <span className="text-xs text-zinc-500 tabular-nums h-4">{reached && dates[s.key] ? formatDateIST(dates[s.key]) : ''}</span>
                 </div>
               </li>

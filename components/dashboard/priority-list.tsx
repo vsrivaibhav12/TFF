@@ -80,24 +80,21 @@ export function PriorityList({ tasks, href, emptyMessage = 'No urgent tasks' }: 
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="tff-card p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="text-base font-semibold text-zinc-900 tracking-tight">Today&apos;s priorities</h3>
-          <p className="text-xs text-zinc-500 mt-0.5">Tasks needing attention</p>
-        </div>
-        <Link href={href} className="text-xs text-teal-700 hover:underline font-medium inline-flex items-center gap-1">
-          View all <ArrowRight className="h-3 w-3" />
+        <h3 className="tff-section-title">Today&apos;s priorities</h3>
+        <Link href={href} className="text-sm text-teal-700 hover:underline font-medium inline-flex items-center gap-1">
+          View all <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
 
       {tasks.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center py-10">
           <div className="h-10 w-10 rounded-full bg-zinc-50 flex items-center justify-center mb-3 border border-zinc-100">
-            <Inbox className="h-5 w-5 text-zinc-300" />
+            <Inbox className="h-5 w-5 text-zinc-500" />
           </div>
-          <p className="text-sm text-zinc-400 font-medium">{emptyMessage}</p>
-          <p className="text-xs text-zinc-400 mt-1">Check back later for updates.</p>
+          <p className="text-sm text-zinc-600 font-medium">{emptyMessage}</p>
+          <p className="text-xs text-zinc-500 mt-1">Open tasks due soonest will appear here.</p>
         </div>
       ) : (
         <div className="space-y-1">

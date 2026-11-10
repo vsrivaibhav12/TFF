@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { createClient, updateClient, softDeleteClient } from '@/lib/actions/clients';
 import { Loader2, ChevronDown } from 'lucide-react';
 import { deriveStateFromGstin } from '@/lib/utils';
+import { useConfirm } from '@/components/ui/use-confirm';
 
 interface ClientFormProps {
   groups: { id: string; name: string }[];
@@ -24,6 +25,7 @@ interface ClientFormProps {
 
 export default function ClientForm({ groups, owners, initial, readOnly = false, canDelete = false, redirectTo, onSuccess, onDeleteSuccess }: ClientFormProps) {
   const router = useRouter();
+  const [ConfirmDialog, confirm] = useConfirm();
   const isEdit = !!initial?.id;
   const [loading, setLoading] = useState(false);
   const [showMore, setShowMore] = useState(false);
@@ -76,7 +78,13 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
 
   async function onDelete() {
     if (readOnly) return;
-    if (!confirm('Are you sure you want to delete this client? This action cannot be undone.')) return;
+    const ok = await confirm({
+      title: 'Delete client',
+      confirmText: 'Delete client',
+      isDestructive: true,
+      description: `Delete ${initial?.business_name ?? 'this client'}? Their tasks and records are hidden from every list. This cannot be undone from the portal.`,
+    });
+    if (!ok) return;
     setLoading(true);
     const result = await softDeleteClient(initial.id);
     if (!result.success) {
@@ -94,6 +102,7 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
 
   return (
     <form onSubmit={onSubmit} className="space-y-6" data-testid="client-form">
+      <ConfirmDialog />
       {readOnly && (
         <p className="text-sm text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
           You do not have permission to edit this client.
@@ -185,12 +194,12 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
       )}
 
       {!readOnly && (
-        <div className="flex gap-3">
+        <div className="flex items-center justify-between gap-3">
           <Button type="submit" disabled={loading} data-testid="client-submit">
             {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving</> : isEdit ? 'Save changes' : 'Create client'}
           </Button>
           {isEdit && canDelete && (
-            <Button type="button" variant="destructive" disabled={loading} onClick={onDelete} data-testid="client-delete">
+            <Button type="button" variant="ghost" className="text-red-600 hover:bg-red-50 hover:text-red-700" disabled={loading} onClick={onDelete} data-testid="client-delete">
               Delete client
             </Button>
           )}

@@ -39,15 +39,15 @@ export function UniversalDetailDock() {
         role="button"
         tabIndex={-1}
         aria-label="Close detail panel"
-        className="fixed inset-0 z-[100] bg-zinc-900/30 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 z-[100] bg-zinc-900/20 transition-opacity"
         onClick={clear}
         onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); clear(); } }}
       />
       <div
-        className="fixed right-0 top-0 bottom-0 w-full md:w-[50vw] md:min-w-[640px] max-w-full md:max-w-[90vw] bg-white shadow-2xl z-[101] flex flex-col border-l border-zinc-200 transition-transform duration-200 ease-out"
+        className="fixed right-0 top-0 bottom-0 w-full md:w-[50vw] md:min-w-[640px] max-w-full md:max-w-[90vw] bg-white shadow-floating z-[101] flex flex-col border-l border-zinc-200 transition-transform duration-200 ease-out"
         style={{ transform: 'translateX(0)' }}
       >
-        <div className="h-14 flex items-center justify-between px-4 border-b border-zinc-200/60 bg-zinc-50 shrink-0">
+        <div className="h-14 flex items-center justify-between px-4 border-b border-zinc-200 bg-white shrink-0">
           <div className="flex items-center gap-2">
             {isStacked && (
               <button 
@@ -58,14 +58,15 @@ export function UniversalDetailDock() {
                 <ArrowLeft className="h-4 w-4" />
               </button>
             )}
-            <span className="text-sm font-medium text-zinc-500 text-xs">
+            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
               {{ task: 'Task', client: 'Client', team: 'Team member' }[topItem.type] ?? topItem.type}
             </span>
           </div>
           <button 
             onClick={clear}
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-500 transition-colors"
+            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-600 transition-colors"
             title="Close"
+            aria-label="Close panel"
           >
             <X className="h-4 w-4" />
           </button>
@@ -87,7 +88,7 @@ export function UniversalDetailDock() {
 function PanelSkeleton() {
   return (
     <div className="absolute inset-0 flex items-center justify-center">
-      <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+      <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
     </div>
   );
 }

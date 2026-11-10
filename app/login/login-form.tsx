@@ -71,7 +71,7 @@ export default function LoginForm() {
           <div className="relative">
             <Mail
               className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${
-                focusedField === 'email' ? 'text-teal-500' : 'text-zinc-400'
+                focusedField === 'email' ? 'text-teal-500' : 'text-zinc-500'
               }`}
             />
             <Input
@@ -99,7 +99,7 @@ export default function LoginForm() {
           <div className="relative">
             <Lock
               className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${
-                focusedField === 'password' ? 'text-teal-500' : 'text-zinc-400'
+                focusedField === 'password' ? 'text-teal-500' : 'text-zinc-500'
               }`}
             />
             <Input
@@ -118,7 +118,7 @@ export default function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-600 transition-colors"
               tabIndex={-1}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

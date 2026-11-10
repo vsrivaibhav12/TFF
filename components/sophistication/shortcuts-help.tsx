@@ -109,7 +109,7 @@ export default function ShortcutsHelp({
             </div>
           ))}
         </div>
-        <div className="mt-4 text-xs text-zinc-400">
+        <div className="mt-4 text-xs text-zinc-500">
           Press <kbd className="font-mono bg-zinc-100 px-1 py-0.5 rounded text-xs">?</kbd> anytime to toggle this overlay.
         </div>
       </div>

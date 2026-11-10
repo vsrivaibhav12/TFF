@@ -71,7 +71,7 @@ export default function TaskImportForm() {
             <div className="text-sm space-y-2">
               <p className="font-medium">Expected columns (any order, case-insensitive):</p>
               <code className="block rounded bg-zinc-50 border border-zinc-200 p-3 text-xs leading-relaxed">
-                Client Name <span className="text-zinc-400">(required)</span>, Client PAN, Sub Service Code/Name <span className="text-zinc-400">(required)</span>,
+                Client Name <span className="text-zinc-500">(required)</span>, Client PAN, Sub Service Code/Name <span className="text-zinc-500">(required)</span>,
                 Assignee Name, Priority, Year, Period
               </code>
               <p className="text-zinc-500 text-xs">
@@ -137,7 +137,7 @@ export default function TaskImportForm() {
                     const hasErr = r.errors.length > 0;
                     return (
                       <TableRow key={r.row_index} className={hasErr ? 'bg-amber-50/40' : ''}>
-                        <TableCell className="px-3 py-2 text-zinc-400 align-top">{r.row_index}</TableCell>
+                        <TableCell className="px-3 py-2 text-zinc-500 align-top">{r.row_index}</TableCell>
                         <TableCell className="px-3 py-2 font-medium align-top">{r.client_name || '—'}</TableCell>
                         <TableCell className="px-3 py-2 text-zinc-600 align-top font-mono text-xs">{r.client_pan || '—'}</TableCell>
                         <TableCell className="px-3 py-2 text-zinc-600 align-top">{r.sub_service || '—'}</TableCell>

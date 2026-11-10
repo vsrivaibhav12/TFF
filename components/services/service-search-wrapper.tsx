@@ -42,7 +42,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -51,7 +51,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
           />
           {query && (
             <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-              <X className="h-3.5 w-3.5 text-zinc-400 hover:text-zinc-600" />
+              <X className="h-3.5 w-3.5 text-zinc-500 hover:text-zinc-600" />
             </button>
           )}
         </div>
@@ -92,7 +92,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
             return (
               <section key={cat.id} className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xs text-zinc-400 font-semibold">{cat.name}</h2>
+                  <h2 className="text-xs text-zinc-500 font-semibold">{cat.name}</h2>
                   <Badge variant="outline" className="text-xs font-normal">{catServices.length}</Badge>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -113,7 +113,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
           {servicesWithoutCategory.length > 0 && (
             <section className="space-y-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-xs text-zinc-400 font-semibold">Uncategorized</h2>
+                <h2 className="text-xs text-zinc-500 font-semibold">Uncategorized</h2>
                 <Badge variant="outline" className="text-xs font-normal">{servicesWithoutCategory.length}</Badge>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

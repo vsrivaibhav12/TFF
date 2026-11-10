@@ -146,7 +146,7 @@ export default function BulkCreateTasksForm({ subServiceId, subServiceName, clie
         {pending ? 'Creating...' : `Create ${selectedClientIds.size} task${selectedClientIds.size !== 1 ? 's' : ''}`}
       </Button>
 
-      <p className="text-xs text-zinc-400">
+      <p className="text-xs text-zinc-500">
         Task names will be: <span className="font-mono">Client Name — {subServiceName} — {periodMonth || '?'}/{periodYear}</span>
       </p>
     </div>

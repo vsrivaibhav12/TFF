@@ -7,9 +7,10 @@ export function QuickActionsDropdown({ role }: { role: string }) {
   const [open, setOpen] = useState(false);
 
   const adminLinks = [
+    { label: 'New task', href: '/admin/tasks' },
+    { label: 'New client', href: '/admin/clients' },
+    { label: 'Log work done', href: '/admin/work-done' },
     { label: 'Bulk create tasks', href: '/admin/tasks/bulk-create' },
-    { label: 'Go to clients', href: '/admin/clients' },
-    { label: 'Go to team', href: '/admin/team' },
   ];
 
   const teamLinks = [
@@ -27,7 +28,7 @@ export function QuickActionsDropdown({ role }: { role: string }) {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center justify-center h-8 w-8 rounded-full bg-teal-600 text-white hover:bg-teal-700 transition-colors shadow-sm"
+        className="flex items-center justify-center h-8 w-8 rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition-colors"
         title="Quick actions"
         aria-label="Quick actions"
         aria-expanded={open}
@@ -45,8 +46,8 @@ export function QuickActionsDropdown({ role }: { role: string }) {
             onClick={() => setOpen(false)}
             onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setOpen(false); } }}
           />
-          <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-zinc-200 bg-white shadow-lg z-50 py-1 overflow-hidden">
-            <div className="px-3 py-2 text-xs font-medium text-zinc-500 bg-zinc-50/50 border-b border-zinc-100">
+          <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-zinc-200 bg-white shadow-floating z-50 py-1 overflow-hidden">
+            <div className="px-3 py-2 text-xs font-medium text-zinc-500 border-b border-zinc-100">
               Quick actions
             </div>
             {links.map((link) => (

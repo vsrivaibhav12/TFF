@@ -90,12 +90,12 @@ export default function LabelsAdmin({ initial }: { initial: TaskLabel[] }) {
                 <div className="flex items-center gap-3">
                   <span className="h-3 w-3 rounded-full" style={{ backgroundColor: l.color_hex ?? '#64748b' }} />
                   <span className="font-medium">{l.display_name}</span>
-                  <code className="text-xs text-zinc-400">{l.code}</code>
+                  <code className="text-xs text-zinc-500">{l.code}</code>
                 </div>
                 <button
                   onClick={() => deactivate(l.code)}
                   disabled={pending}
-                  className="text-zinc-400 hover:text-red-600 p-1"
+                  className="text-zinc-500 hover:text-red-600 p-1"
                   aria-label={`Archive ${l.display_name}`}
                 >
                   <Trash2 className="h-4 w-4" />

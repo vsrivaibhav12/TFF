@@ -46,7 +46,7 @@ export default function LoginPage() {
             <LoginForm />
           </Suspense>
 
-          <p className="mt-6 text-center text-xs text-zinc-400">
+          <p className="mt-6 text-center text-xs text-zinc-500">
             Authorised users only. All sessions are logged and monitored.
           </p>
         </div>

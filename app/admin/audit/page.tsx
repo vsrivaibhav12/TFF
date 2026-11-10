@@ -53,8 +53,8 @@ export default async function AuditPage({ searchParams }: { searchParams: { acto
           ) : ((data ?? []).map((r: any) => (
             <TableRow key={r.id}>
               <TableCell><Badge variant="outline" className="font-mono text-xs">{r.action}</Badge></TableCell>
-              <TableCell><span className="text-xs">{r.entity_type}</span><div className="font-mono text-xs text-zinc-400">{r.entity_id?.slice(0, 8)}</div></TableCell>
-              <TableCell className="text-xs">{r.users_profile?.full_name ?? '—'}<div className="text-zinc-400">{r.users_profile?.email}</div></TableCell>
+              <TableCell><span className="text-xs">{r.entity_type}</span><div className="font-mono text-xs text-zinc-500">{r.entity_id?.slice(0, 8)}</div></TableCell>
+              <TableCell className="text-xs">{r.users_profile?.full_name ?? '—'}<div className="text-zinc-500">{r.users_profile?.email}</div></TableCell>
               <TableCell className="text-xs">{formatDateIST(r.performed_at)}</TableCell>
               <TableCell>
                 <ExpandableCell className="font-mono text-xs text-zinc-500 max-w-[300px]" maxLines={1}>

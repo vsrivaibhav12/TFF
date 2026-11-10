@@ -87,7 +87,7 @@ export default function WorkDoneTable({ logs, clients, tasks, canViewAll, canMan
                           {l.tasks ? displayTaskName(l.tasks) : 'Archived task'}
                         </Badge>
                       )}
-                      {!l.client_id && !l.task_id && <span className="text-zinc-400">—</span>}
+                      {!l.client_id && !l.task_id && <span className="text-zinc-500">—</span>}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -120,16 +120,16 @@ export default function WorkDoneTable({ logs, clients, tasks, canViewAll, canMan
             </DialogHeader>
             <div className="space-y-4 text-sm">
               <div>
-                <div className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Activity note</div>
+                <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Activity note</div>
                 <p className="mt-1 text-zinc-800 whitespace-pre-wrap">{selected.note ?? '—'}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Date</div>
+                  <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Date</div>
                   <div className="mt-1">{formatDateIST(selected.work_date)}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Time</div>
+                  <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Time</div>
                   <div className="mt-1">
                     {selected.started_at ? formatTimeIST(selected.started_at) : '—'}
                     {' – '}
@@ -137,21 +137,21 @@ export default function WorkDoneTable({ logs, clients, tasks, canViewAll, canMan
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Duration</div>
+                  <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Duration</div>
                   <div className="mt-1">{selected.duration_minutes}m</div>
                 </div>
                 {canViewAll && (
                   <div>
-                    <div className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Staff</div>
+                    <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Staff</div>
                     <div className="mt-1">{selected.users_profile?.full_name ?? '—'}</div>
                   </div>
                 )}
                 <div>
-                  <div className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Client</div>
+                  <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Client</div>
                   <div className="mt-1">{selected.clients?.business_name ?? (selected.client_id ? 'Archived client' : '—')}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Task</div>
+                  <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Task</div>
                   <div className="mt-1">
                     {selected.tasks ? displayTaskName(selected.tasks) : (selected.task_id ? 'Archived task' : '—')}
                   </div>

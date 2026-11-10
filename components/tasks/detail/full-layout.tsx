@@ -99,7 +99,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
             
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-mono text-zinc-400">{task.task_number ?? '—'}</span>
+                <span className="text-xs font-mono text-zinc-500">{task.task_number ?? '—'}</span>
                 {task.is_billable && (
                   <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
                     Billable{task.bill_reference ? ` · ${task.bill_reference}` : ''}
@@ -139,7 +139,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
               <dl className="space-y-2 text-sm">
                 
                 <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
-                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Period {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingPeriod(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Period {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingPeriod(true)}><Pencil className="h-3 w-3 text-zinc-500" /></Button>}</dt>
                   <dd className="font-semibold text-zinc-900">
                     {editingPeriod ? (
                       <div className="flex items-center gap-1">
@@ -147,7 +147,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                         <Input type="number" value={periodMonth} onChange={(e) => setPeriodMonth(e.target.value)} className="w-10 h-6 text-xs px-1" placeholder="MM" />
                         <Input type="number" value={periodQuarter} onChange={(e) => setPeriodQuarter(e.target.value)} className="w-10 h-6 text-xs px-1" placeholder="Q" />
                         <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ period_year: periodYear ? parseInt(periodYear) : null, period_month: periodMonth ? parseInt(periodMonth) : null, period_quarter: periodQuarter ? parseInt(periodQuarter) : null })) setEditingPeriod(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(String(task.period_year ?? '')); setPeriodMonth(String(task.period_month ?? '')); setPeriodQuarter(String(task.period_quarter ?? '')); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(String(task.period_year ?? '')); setPeriodMonth(String(task.period_month ?? '')); setPeriodQuarter(String(task.period_quarter ?? '')); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
                       </div>
                     ) : (
                       task.period_month && task.period_year ? `${task.period_month}/${task.period_year}${task.period_quarter ? ` · Q${task.period_quarter}` : ''}` : '—'
@@ -156,7 +156,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                 </div>
 
                 <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
-                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Priority {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingPriority(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Priority {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingPriority(true)}><Pencil className="h-3 w-3 text-zinc-500" /></Button>}</dt>
                   <dd className="font-semibold text-zinc-900">
                     {editingPriority ? (
                       <div className="flex items-center gap-1">
@@ -165,7 +165,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                           <SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="urgent">Urgent</SelectItem></SelectContent>
                         </Select>
                         <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ priority })) setEditingPriority(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPriority(task.priority); setEditingPriority(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPriority(task.priority); setEditingPriority(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
                       </div>
                     ) : (
                       <span className="capitalize">{task.priority}</span>
@@ -174,13 +174,13 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                 </div>
 
                 <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
-                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Due Date {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingDueDate(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Due Date {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingDueDate(true)}><Pencil className="h-3 w-3 text-zinc-500" /></Button>}</dt>
                   <dd className="font-semibold text-zinc-900">
                     {editingDueDate ? (
                       <div className="flex items-center gap-1">
                         <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-6 text-xs w-28 px-1" />
                         <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ due_date: dueDate || null })) setEditingDueDate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setDueDate(task.due_date ? task.due_date.slice(0, 10) : ''); setEditingDueDate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setDueDate(task.due_date ? task.due_date.slice(0, 10) : ''); setEditingDueDate(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
                       </div>
                     ) : (
                       task.due_date ? formatDateIST(task.due_date) : '—'
@@ -191,7 +191,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                 <DetailItem label="Assignees" value={(task.assignees?.length ? task.assignees : task.assignee ? [task.assignee] : []).map((a) => a.full_name).join(', ') || '—'} />
                 <DetailItem label="Reviewers" value={(task.reviewers?.length ? task.reviewers : task.reviewer ? [task.reviewer] : []).map((r) => r.full_name).join(', ') || '—'} />
                 <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
-                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Service {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingService(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Service {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingService(true)}><Pencil className="h-3 w-3 text-zinc-500" /></Button>}</dt>
                   <dd className="font-semibold text-zinc-900 text-right">
                     {editingService ? (
                       <div className="flex items-center gap-1 justify-end">
@@ -206,7 +206,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                           </SelectContent>
                         </Select>
                         <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
                       </div>
                     ) : (
                       task.sub_services ? `${task.sub_services.services?.name ?? ''} › ${task.sub_services.name}` : '—'
@@ -215,7 +215,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                 </div>
 
                 <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
-                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Template {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingTemplate(true)}><Pencil className="h-3 w-3 text-zinc-400" /></Button>}</dt>
+                  <dt className="text-zinc-500 text-xs flex items-center gap-1">Template {canEdit && !isClosed && <Button type="button" size="sm" variant="ghost" className="h-4 w-4 p-0 ml-1" onClick={() => setEditingTemplate(true)}><Pencil className="h-3 w-3 text-zinc-500" /></Button>}</dt>
                   <dd className="font-semibold text-zinc-900 text-right">
                     {editingTemplate ? (
                       <div className="flex items-center gap-1 justify-end">
@@ -226,7 +226,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                             {(() => {
                               const availableTemplates = taskTemplates.filter((t) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id));
                               if (availableTemplates.length === 0) {
-                                return <SelectItem value="__empty__" disabled className="text-xs text-zinc-400">No templates for this sub-service</SelectItem>;
+                                return <SelectItem value="__empty__" disabled className="text-xs text-zinc-500">No templates for this sub-service</SelectItem>;
                               }
                               return availableTemplates.map((t) => (
                                 <SelectItem key={t.id} value={t.id} className="text-xs">{t.title}</SelectItem>
@@ -235,10 +235,10 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                           </SelectContent>
                         </Select>
                         <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const taskTemplateId = selectedTemplateId && selectedTemplateId !== '__empty__' ? selectedTemplateId : null; if (await saveField({ task_template_id: taskTemplateId })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
                       </div>
                     ) : (
-                      taskTemplates.find((t) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-400 font-normal">No template — click to set</span> : '—')
+                      taskTemplates.find((t) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-500 font-normal">No template — click to set</span> : '—')
                     )}
                   </dd>
                 </div>
@@ -255,7 +255,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
               <h3 className="font-semibold mb-3 text-zinc-900 tracking-tight text-sm">Finance & Ref</h3>
               {canEdit && !isClosed && !editingFinance && (
                 <Button type="button" size="sm" variant="ghost" className="absolute top-4 right-4 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingFinance(true)}>
-                  <Pencil className="h-3.5 w-3.5 text-zinc-400" />
+                  <Pencil className="h-3.5 w-3.5 text-zinc-500" />
                 </Button>
               )}
               {editingFinance ? (
@@ -339,7 +339,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                 <h3 className="font-semibold text-zinc-900 tracking-tight text-sm">Description</h3>
                 {canEdit && !isClosed && !editingDesc && (
                   <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setEditingDesc(true)}>
-                    <Pencil className="h-3.5 w-3.5 text-zinc-400" />
+                    <Pencil className="h-3.5 w-3.5 text-zinc-500" />
                   </Button>
                 )}
               </div>
@@ -355,7 +355,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                 </div>
               ) : (
                 <p className="text-xs text-zinc-600 whitespace-pre-wrap leading-relaxed">
-                  {task.description || <span className="text-zinc-400 italic">No description provided.</span>}
+                  {task.description || <span className="text-zinc-500 italic">No description provided.</span>}
                 </p>
               )}
             </div>
@@ -422,7 +422,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                   <div className="space-y-3">
                     {notes.map((n) => (
                       <div key={n.id} className="bg-white p-3 rounded-xl border border-zinc-100 shadow-sm">
-                        <div className="text-xs font-medium text-zinc-400 mb-1.5 flex justify-between">
+                        <div className="text-xs font-medium text-zinc-500 mb-1.5 flex justify-between">
                           <span>{n.users_profile?.full_name}</span>
                           <span>{timeAgo(n.created_at)}</span>
                         </div>
@@ -438,7 +438,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                     {activity.map((a) => (
                       <div key={a.id} className="relative">
                         <div className="absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-white border border-teal-500" />
-                        <div className="text-xs font-medium text-zinc-400 mb-0.5">{timeAgo(a.created_at)}</div>
+                        <div className="text-xs font-medium text-zinc-500 mb-0.5">{timeAgo(a.created_at)}</div>
                         <div className="text-xs text-zinc-700 leading-snug">
                           <span className="font-semibold text-zinc-900">{a.users_profile?.full_name || 'System'}</span>{' '}
                           {a.action}
@@ -452,7 +452,7 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                         </div>
                       </div>
                     ))}
-                    {activity.length === 0 && <p className="text-zinc-400 text-xs italic">No activity recorded.</p>}
+                    {activity.length === 0 && <p className="text-zinc-500 text-xs italic">No activity recorded.</p>}
                   </div>
                 </TabsContent>
               </Tabs>

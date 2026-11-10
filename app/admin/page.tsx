@@ -7,19 +7,15 @@ import { getTaskClosureVelocity } from '@/lib/repositories/tasks';
 import { MicroBarChart } from '@/components/charts/micro-bar-chart';
 import { Sparkline } from '@/components/charts/sparkline';
 import Link from 'next/link';
-import { DockLink } from '@/components/shell/dock-link';
 import {
   Users,
   AlertTriangle,
   Briefcase,
   TrendingUp,
-  ArrowRight,
   ShieldCheck,
   LogIn,
-  MessageSquare,
 } from 'lucide-react';
-import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-container';
-import { dueLabel, todayIST } from '@/lib/utils';
+import { todayIST } from '@/lib/utils';
 import { StatCard } from '@/components/ui/stat-card';
 import { PriorityList } from '@/components/dashboard/priority-list';
 import { AdminQuickActions } from '@/components/dashboard/admin-quick-actions';
@@ -31,14 +27,13 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="tff-page-header">
         <div>
-          <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Firm overview</h1>
-          <p className="text-sm text-zinc-500 mt-1">Everything you need to run the firm — at a glance.</p>
+          <h1 className="tff-page-title">Firm overview</h1>
+          <p className="tff-page-subtitle">Everything you need to run the firm, at a glance.</p>
         </div>
+        <AdminQuickActions />
       </div>
-
-      <AdminQuickActions />
 
       <Suspense fallback={<DashboardSkeleton />}>
         <DashboardBody />
@@ -99,8 +94,12 @@ async function DashboardBody() {
       type: 'blocked' as const,
       title: t.title,
       client: t.clients?.business_name ?? '—',
-      reason: t.is_stuck ? 'Stuck' : 'Pending',
-      color: (t.is_stuck ? 'red' : 'amber') as AttentionItem['color'],
+      reason: t.is_stuck
+        ? 'Stuck'
+        : t.due_date
+          ? `${Math.max(1, -daysLeft(t.due_date))}d overdue`
+          : 'Overdue',
+      color: 'red' as AttentionItem['color'],
       href: `/admin/tasks/${t.id}`,
     })),
     ...(pendingApprovals.total > 0 ? [{
@@ -115,122 +114,114 @@ async function DashboardBody() {
   ].slice(0, 5);
 
   return (
-    <StaggerContainer className="space-y-6">
-      {attentionItems.length > 0 && (
-        <StaggerItem>
-          <NeedsAttentionHub items={attentionItems} />
-        </StaggerItem>
-      )}
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Active clients" value={(activeClients ?? 0).toLocaleString('en-IN')} icon={<Users className="h-5 w-5" />} href="/admin/clients" />
+        <StatCard label="Open tasks" value={(openTasks ?? 0).toLocaleString('en-IN')} icon={<Briefcase className="h-5 w-5" />} href="/admin/tasks" />
+        <StatCard label="Active engagements" value={(activeEngagements ?? 0).toLocaleString('en-IN')} icon={<TrendingUp className="h-5 w-5" />} href="/admin/clients" />
+        <StatCard
+          label="Overdue tasks"
+          value={overdueTasks ?? 0}
+          hint={(openTasks ?? 0) > 0 ? `of ${(openTasks ?? 0).toLocaleString('en-IN')} open` : undefined}
+          icon={<AlertTriangle className="h-5 w-5" />}
+          href="/admin/tasks"
+          tone="red"
+        />
+      </div>
 
-      <StaggerItem>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Active clients" value={activeClients ?? 0} icon={<Users className="h-5 w-5" />} href="/admin/clients" />
-          <StatCard label="Open work items" value={openTasks ?? 0} icon={<Briefcase className="h-5 w-5" />} href="/admin/tasks" />
-          <StatCard label="Active engagements" value={activeEngagements ?? 0} icon={<TrendingUp className="h-5 w-5" />} href="/admin/clients" />
-          <StatCard label="Overdue filings" value={overdueTasks ?? 0} icon={<AlertTriangle className="h-5 w-5" />} href="/admin/tasks" tone="warning" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-7">
+          <NeedsAttentionHub items={attentionItems} />
         </div>
-      </StaggerItem>
+        <div className="lg:col-span-5">
+          <PriorityList tasks={recentTasks} href="/admin/tasks" />
+        </div>
+      </div>
 
       {topCompliance.length > 0 && (
-        <StaggerItem>
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-zinc-700 tracking-tight">Compliance this quarter</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {topCompliance.map((c) => {
-                const pct = c.total_clients > 0 ? Math.round((c.filed / c.total_clients) * 100) : 0;
-                const tone = pct >= 90 ? 'success' : pct >= 60 ? 'warning' : 'danger';
-                return (
-                  <Link
-                    key={c.rule_code}
-                    href={`/admin/compliance?rule=${c.rule_code}`}
-                    className="tff-card p-3 hover:border-teal-200 transition-colors group"
-                  >
-                    <div className="text-xs font-medium text-zinc-400 truncate">{c.rule_name}</div>
-                    <div className="text-xs text-zinc-400 mt-0.5">{c.period_label}</div>
-                    <div className={`text-xl font-bold tabular-nums tracking-tight mt-2 ${tone === 'success' ? 'text-teal-700' : tone === 'warning' ? 'text-amber-600' : 'text-red-600'}`}>
-                      {c.filed}<span className="text-zinc-300 text-sm font-medium">/{c.total_clients}</span>
-                    </div>
-                    <div className="mt-2 h-1.5 w-full rounded-full bg-zinc-100 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${tone === 'success' ? 'bg-teal-500' : tone === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between mt-1.5">
-                      <span className="text-xs text-zinc-400">{pct}% filed</span>
-                      {c.overdue > 0 && <span className="text-xs text-red-600 font-medium">{c.overdue} overdue</span>}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+        <section className="space-y-3">
+          <h2 className="tff-section-title">Compliance this quarter</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {topCompliance.map((c) => {
+              const pct = c.total_clients > 0 ? Math.round((c.filed / c.total_clients) * 100) : 0;
+              const tone = pct >= 90 ? 'success' : pct >= 60 ? 'warning' : 'danger';
+              return (
+                <Link
+                  key={c.rule_code}
+                  href={`/admin/compliance?rule=${c.rule_code}`}
+                  className="tff-card p-3 hover:border-teal-200 transition-colors group"
+                >
+                  <div className="text-xs font-medium text-zinc-600 truncate">{c.rule_name}</div>
+                  <div className="text-xs text-zinc-500 mt-0.5">{c.period_label}</div>
+                  <div className={`text-xl font-semibold tabular-nums tracking-tight mt-2 ${tone === 'success' ? 'text-teal-700' : tone === 'warning' ? 'text-amber-600' : 'text-red-600'}`}>
+                    {c.filed}<span className="text-zinc-500 text-sm font-medium">/{c.total_clients}</span>
+                  </div>
+                  <div className="mt-2 h-1.5 w-full rounded-full bg-zinc-100 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${tone === 'success' ? 'bg-teal-500' : tone === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <span className="text-xs text-zinc-500 tabular-nums">{pct}% filed</span>
+                    {c.overdue > 0 && <span className="text-xs text-red-600 font-medium tabular-nums">{c.overdue} overdue</span>}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
-        </StaggerItem>
+        </section>
       )}
 
-      {(dscSegments.length > 0 || closureVelocity.length > 0) && (
-        <StaggerItem>
-          <div className={`grid grid-cols-1 gap-4 ${dscSegments.length > 0 && closureVelocity.length > 0 ? 'md:grid-cols-2' : ''}`}>
-            {dscSegments.length > 0 && (
-              <Link href="/admin/dsc" className="tff-card p-4 hover:border-teal-200 transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-zinc-700">DSC expiry radar</h3>
-                  <span className="text-xs text-zinc-400">Next 90 days</span>
-                </div>
-                <MicroBarChart segments={dscSegments} />
-              </Link>
-            )}
-            {closureVelocity.length > 0 && (
-              <div className="tff-card p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-zinc-700">Task closure velocity</h3>
-                  <span className="text-xs text-zinc-400">Last 30 days</span>
-                </div>
-                <Sparkline
-                  data={closureVelocity.map((d) => ({ label: d.date.slice(5), value: d.count }))}
-                  color="#0D9488"
-                  height={50}
-                />
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-zinc-400">
-                    Total closed: <span className="font-medium text-zinc-700 tabular-nums">{closureVelocity.reduce((sum, d) => sum + d.count, 0)}</span>
-                  </span>
-                  <span className="text-xs text-zinc-400">
-                    Avg/day: <span className="font-medium text-zinc-700 tabular-nums">{(closureVelocity.reduce((sum, d) => sum + d.count, 0) / 30).toFixed(1)}</span>
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </StaggerItem>
-      )}
-
-      <StaggerItem>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-5">
-            <PriorityList tasks={recentTasks} href="/admin/tasks" />
-          </div>
-          <div className="lg:col-span-7 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <StatCard
-                label="Team attendance today"
-                value={`${attendanceToday.presentCount ?? 0} / ${attendanceToday.teamTotal ?? 0}`}
-                icon={<LogIn className="h-5 w-5" />}
-                href="/admin/attendance"
-              />
-              <StatCard
-                label="Pending approvals"
-                value={pendingApprovals.total}
-                icon={<ShieldCheck className="h-5 w-5" />}
-                href="/admin/approvals"
-              />
-            </div>
-            <ActivityFeed items={recentAuditLogs as any} href="/admin/audit" />
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-7">
+          <ActivityFeed items={recentAuditLogs as any} href="/admin/audit" />
         </div>
-      </StaggerItem>
-
-    </StaggerContainer>
+        <div className="lg:col-span-5 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <StatCard
+              label="Team present today"
+              value={`${attendanceToday.presentCount ?? 0} / ${attendanceToday.teamTotal ?? 0}`}
+              icon={<LogIn className="h-5 w-5" />}
+              href="/admin/attendance"
+            />
+            <StatCard
+              label="Pending approvals"
+              value={pendingApprovals.total}
+              icon={<ShieldCheck className="h-5 w-5" />}
+              href="/admin/approvals"
+              tone="amber"
+            />
+          </div>
+          {dscSegments.length > 0 && (
+            <Link href="/admin/dsc" className="tff-card p-4 block hover:border-zinc-300 transition-colors">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="tff-section-title">DSC expiry</h3>
+                <span className="text-xs text-zinc-500">Next 90 days</span>
+              </div>
+              <MicroBarChart segments={dscSegments} />
+            </Link>
+          )}
+          {closureVelocity.length > 0 && (
+            <div className="tff-card p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="tff-section-title">Tasks closed</h3>
+                <span className="text-xs text-zinc-500">Last 30 days</span>
+              </div>
+              <Sparkline
+                data={closureVelocity.map((d) => ({ label: d.date.slice(5), value: d.count }))}
+                color="#0D9488"
+                height={36}
+              />
+              <div className="flex items-center justify-between mt-2 text-xs text-zinc-500">
+                <span>Total <span className="font-medium text-zinc-900 tabular-nums">{closureVelocity.reduce((sum, d) => sum + d.count, 0)}</span></span>
+                <span>Average per day <span className="font-medium text-zinc-900 tabular-nums">{(closureVelocity.reduce((sum, d) => sum + d.count, 0) / 30).toFixed(1)}</span></span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -239,21 +230,17 @@ function DashboardSkeleton() {
     <div className="space-y-6 animate-pulse">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="tff-card p-3 h-24 bg-zinc-50" />
+          <div key={i} className="tff-card h-[74px] bg-zinc-50" />
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-5 tff-card h-64 bg-zinc-50" />
-        <div className="lg:col-span-7 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="tff-card h-20 bg-zinc-50" />
-            ))}
-          </div>
-          <div className="tff-card h-48 bg-zinc-50" />
-        </div>
+        <div className="lg:col-span-7 tff-card h-56 bg-zinc-50" />
+        <div className="lg:col-span-5 tff-card h-56 bg-zinc-50" />
       </div>
-      <div className="tff-card h-40 bg-zinc-50" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-7 tff-card h-64 bg-zinc-50" />
+        <div className="lg:col-span-5 tff-card h-64 bg-zinc-50" />
+      </div>
     </div>
   );
 }

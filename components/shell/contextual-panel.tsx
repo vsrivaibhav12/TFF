@@ -122,7 +122,7 @@ export function ContextualPanel({ nav, role, open }: ContextualPanelProps) {
         {/* Full Navigation Toggle */}
         <button
           onClick={() => setShowNav((v) => !v)}
-          className="w-full flex items-center gap-2 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-zinc-600 transition-colors border-t border-zinc-100"
+          className="w-full flex items-center gap-2 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-600 transition-colors border-t border-zinc-100"
         >
           <Menu className="h-3.5 w-3.5" />
           Full navigation
@@ -152,8 +152,8 @@ function ModuleContextPanel({
       {/* Quick Filters */}
       <div className="px-4">
         <div className="flex items-center gap-1.5 mb-2">
-          <Filter className="h-3 w-3 text-zinc-400" />
-          <span className="text-xs font-medium text-zinc-400">Quick filters</span>
+          <Filter className="h-3 w-3 text-zinc-500" />
+          <span className="text-xs font-medium text-zinc-500">Quick filters</span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {ctx.quickFilters.map((f) => {
@@ -180,8 +180,8 @@ function ModuleContextPanel({
       {recent.length > 0 && (
         <div className="px-4">
           <div className="flex items-center gap-1.5 mb-2">
-            <Clock className="h-3 w-3 text-zinc-400" />
-            <span className="text-xs font-medium text-zinc-400">Recent</span>
+            <Clock className="h-3 w-3 text-zinc-500" />
+            <span className="text-xs font-medium text-zinc-500">Recent</span>
           </div>
           <div className="space-y-1">
             {recent.map((item) => (
@@ -191,7 +191,7 @@ function ModuleContextPanel({
                 href={`${ctx.prefix}/${ctx.recentType}s/${item.id}`}
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors truncate"
               >
-                <LayoutGrid className="h-3 w-3 text-zinc-400 shrink-0" />
+                <LayoutGrid className="h-3 w-3 text-zinc-500 shrink-0" />
                 <span className="truncate">{item.label}</span>
               </DockLink>
             ))}
@@ -225,7 +225,7 @@ function FullNavigation({ nav, pathname }: { nav: NavItem[]; pathname: string })
         <Icon
           className={cn(
             'h-4 w-4 shrink-0 transition-colors',
-            active ? 'text-teal-600' : 'text-zinc-400 group-hover:text-zinc-600'
+            active ? 'text-teal-600' : 'text-zinc-500 group-hover:text-zinc-600'
           )}
         />
         <span className="truncate">{n.label}</span>
@@ -238,7 +238,7 @@ function FullNavigation({ nav, pathname }: { nav: NavItem[]; pathname: string })
     if (currentSection && sectionItems.length > 0) {
       elements.push(
         <div key={currentSection} className="px-4 pt-3 pb-1">
-          <div className="text-xs font-medium text-zinc-400">
+          <div className="text-xs font-medium text-zinc-500">
             {currentSection}
           </div>
         </div>

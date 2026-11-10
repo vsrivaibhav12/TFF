@@ -237,9 +237,9 @@ export default function WorkDonePanel({
               <li key={e.id} className="flex items-center justify-between gap-2 text-sm">
                 <div className="flex-1 min-w-0">
                   <span className="font-medium tabular-nums">{fmtHM(e.duration_minutes)}</span>
-                  <span className="text-zinc-400 mx-2">·</span>
+                  <span className="text-zinc-500 mx-2">·</span>
                   <span className="text-zinc-600">{e.users_profile?.full_name ?? 'You'}</span>
-                  <span className="text-zinc-400 mx-2">·</span>
+                  <span className="text-zinc-500 mx-2">·</span>
                   {e.started_at && e.ended_at ? (
                     <span className="text-zinc-500 text-xs">{formatTimeIST(e.started_at)} – {formatTimeIST(e.ended_at)}</span>
                   ) : (
@@ -253,14 +253,14 @@ export default function WorkDonePanel({
                   {e.note && <div className="text-xs text-zinc-500 truncate">{e.note}</div>}
                 </div>
                 {(e.user_id === currentUserId) && (
-                  <button onClick={() => remove(e.id)} disabled={pending} className="text-zinc-400 hover:text-red-600 p-1" aria-label="Delete entry">
+                  <button onClick={() => remove(e.id)} disabled={pending} className="text-zinc-500 hover:text-red-600 p-1" aria-label="Delete entry">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 )}
               </li>
             ))}
           </ul>
-          {initial.length > 10 && <p className="text-xs text-zinc-400 mt-2">… and {initial.length - 10} more</p>}
+          {initial.length > 10 && <p className="text-xs text-zinc-500 mt-2">… and {initial.length - 10} more</p>}
         </div>
       )}
     </div>

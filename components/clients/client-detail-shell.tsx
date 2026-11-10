@@ -4,8 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, Briefcase, ArrowRight, Pencil } from 'lucide-react';
 import AuditTimeline from '@/components/sophistication/audit-timeline';
 import { Button } from '@/components/ui/button';
-import { displayTaskName } from '@/lib/utils';
+import { displayTaskName, formatDateIST } from '@/lib/utils';
 import ClientFormWrapper from './client-form-wrapper';
+import ClientProfileSection from './client-profile-section';
 import ClientServiceManager from '@/app/admin/clients/[id]/service-manager';
 import ClientTeamManager from '@/app/admin/clients/[id]/team-manager';
 
@@ -78,6 +79,11 @@ interface Props {
   isModal?: boolean;
 }
 
+function statusText(status: string) {
+  const t = status.replace(/_/g, ' ');
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
 function statusBadgeClass(status: string) {
   if (['completed','filed','resolved','closed'].includes(status)) return 'bg-teal-50 text-teal-700 border-teal-200';
   if (['in_progress','processing','open','pending'].includes(status)) return 'bg-amber-50 text-amber-700 border-amber-200';
@@ -116,29 +122,17 @@ export default function ClientDetailShell({
           <div className="tff-card p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
-                  <Building2 className="h-5 w-5 text-zinc-400" />
-                </div>
                 <div className="min-w-0">
                   <h1 className="text-base font-semibold tracking-tight text-zinc-900 truncate">{client.business_name}</h1>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
                     {client.pan && <span className="text-xs text-zinc-500 font-mono">PAN {client.pan}</span>}
                     {client.gstin && <span className="text-xs text-zinc-500 font-mono">GSTIN {client.gstin}</span>}
                   </div>
-                  <div className="flex items-center gap-2 mt-1.5 text-xs text-zinc-400">
+                  <div className="flex items-center gap-2 mt-1.5 text-xs text-zinc-500">
                     {client.city && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{client.city}{client.state ? `, ${client.state}` : ''}</span>}
                     {client.primary_contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{client.primary_contact_phone}</span>}
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {canEdit && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`${basePath}/${client.id}/edit`}>
-                      <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
-                    </Link>
-                  </Button>
-                )}
               </div>
             </div>
           </div>
@@ -146,55 +140,45 @@ export default function ClientDetailShell({
           {/* Active Work */}
           <div className="tff-card p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[13px] font-semibold text-zinc-700">Active work</h3>
+              <h3 className="tff-section-title">Active work</h3>
               <div className="flex gap-1.5">
                 <Badge variant="outline" className="text-xs"><Briefcase className="h-3 w-3 mr-1" />{openTasks.length}</Badge>
               </div>
             </div>
 
             {openTasks.length === 0 ? (
-              <div className="text-sm text-zinc-400 py-4 text-center">No active work items.</div>
+              <div className="text-sm text-zinc-500 py-4 text-center">No active work items.</div>
             ) : (
               <div className="space-y-2">
                 {openTasks.slice(0, 5).map((t) => (
                   <DockLink key={t.id} item={{ type: 'task', id: t.id }} href={`${taskPrefix}/${t.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-zinc-50 hover:bg-zinc-100 transition-colors group">
                     <div className="w-7 h-7 rounded-md bg-white flex items-center justify-center flex-shrink-0 border border-zinc-200">
-                      <FileText className="h-3.5 w-3.5 text-zinc-400" />
+                      <FileText className="h-3.5 w-3.5 text-zinc-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[12px] font-medium text-zinc-900 truncate">{displayTaskName(t as { sub_services?: { name?: string } | null; title?: string | null })}</div>
-                      <div className="text-xs text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
+                      <div className="text-xs text-zinc-500">{statusText(t.status)} · Due {formatDateIST(t.due_date)}</div>
                     </div>
-                    <span className={`text-xs px-1.5 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{t.status}</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{statusText(t.status)}</span>
                   </DockLink>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Profile — editable in the dock for admins/capable users */}
-          {canEdit ? (
-            <div className="tff-card p-4">
-              <h3 className="text-[13px] font-semibold text-zinc-700 mb-3">Profile</h3>
-              <ClientFormWrapper
-                groups={groups}
-                owners={owners as Owner[]}
-                initial={client}
-                basePath={basePath}
-                readOnly={false}
-                canDelete={canDelete}
-              />
-            </div>
-          ) : (
-            <div className="tff-card p-4">
-              <h3 className="text-[13px] font-semibold text-zinc-700 mb-3">Profile</h3>
-              <p className="text-xs text-zinc-500">You do not have permission to edit this client.</p>
-            </div>
-          )}
+          {/* Profile: read-only summary, with an Edit button for people who may edit */}
+          <ClientProfileSection
+            client={client}
+            groups={groups}
+            owners={owners}
+            basePath={basePath}
+            canEdit={canEdit}
+            canDelete={canDelete}
+          />
 
           {/* Services (read-only pills) */}
           <div className="tff-card p-4">
-            <h3 className="text-[13px] font-semibold text-zinc-700 mb-3">Services & engagements</h3>
+            <h3 className="tff-section-title mb-3">Services & engagements</h3>
             {clientSubServices?.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
                 {clientSubServices.map((cs) => (
@@ -204,13 +188,13 @@ export default function ClientDetailShell({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-zinc-400">No services assigned.</p>
+              <p className="text-xs text-zinc-500">No services assigned.</p>
             )}
           </div>
 
           {/* Team (read-only avatars) */}
           <div className="tff-card p-4">
-            <h3 className="text-[13px] font-semibold text-zinc-700 mb-3">Team</h3>
+            <h3 className="tff-section-title mb-3">Team</h3>
             {teamAssignments?.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {teamAssignments.map((ta) => (
@@ -223,13 +207,13 @@ export default function ClientDetailShell({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-zinc-400">No team assigned.</p>
+              <p className="text-xs text-zinc-500">No team assigned.</p>
             )}
           </div>
 
           {/* Activity log (compact) */}
           <div className="tff-card p-4">
-            <h3 className="text-[13px] font-semibold text-zinc-700 mb-3">Activity log</h3>
+            <h3 className="tff-section-title mb-3">Activity log</h3>
             <AuditTimeline entries={auditLogs as unknown as import('@/components/sophistication/audit-timeline').AuditEntry[]} />
           </div>
 
@@ -244,7 +228,7 @@ export default function ClientDetailShell({
             <div className="tff-card p-6">
               <div className="flex items-start gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
-                  <Building2 className="h-7 w-7 text-zinc-400" />
+                  <Building2 className="h-7 w-7 text-zinc-500" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-3">
@@ -254,7 +238,7 @@ export default function ClientDetailShell({
                     {client.pan && <span className="text-[12px] text-zinc-500 font-mono">PAN {client.pan}</span>}
                     {client.gstin && <span className="text-[12px] text-zinc-500 font-mono">GSTIN {client.gstin}</span>}
                   </div>
-                  <div className="flex items-center gap-3 mt-2 text-[12px] text-zinc-400">
+                  <div className="flex items-center gap-3 mt-2 text-[12px] text-zinc-500">
                     {client.city && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{client.city}{client.state ? `, ${client.state}` : ''}</span>}
                     {client.primary_contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{client.primary_contact_phone}</span>}
                     {client.primary_contact_email && <span className="flex items-center gap-0.5"><Mail className="h-3 w-3" />{client.primary_contact_email}</span>}
@@ -266,26 +250,26 @@ export default function ClientDetailShell({
             {/* Active Work */}
             <div className="tff-card p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[13px] font-semibold text-zinc-700">Active work</h3>
+                <h3 className="tff-section-title">Active work</h3>
                 <div className="flex gap-2">
                   <Badge variant="outline" className="text-xs"><Briefcase className="h-3 w-3 mr-1" />{openTasks.length} tasks</Badge>
                 </div>
               </div>
 
               {openTasks.length === 0 ? (
-                <div className="text-sm text-zinc-400 py-6 text-center">No active work items for this client.</div>
+                <div className="text-sm text-zinc-500 py-6 text-center">No active work items for this client.</div>
               ) : (
                 <div className="space-y-2">
                   {openTasks.slice(0, 5).map((t) => (
                     <DockLink key={t.id} item={{ type: 'task', id: t.id }} href={`${taskPrefix}/${t.id}`} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors group">
                       <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0 border border-zinc-200">
-                        <FileText className="h-4 w-4 text-zinc-400" />
+                        <FileText className="h-4 w-4 text-zinc-500" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-medium text-zinc-900 truncate">{displayTaskName(t as { sub_services?: { name?: string } | null; title?: string | null })}</div>
-                        <div className="text-xs text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
+                        <div className="text-xs text-zinc-500">{statusText(t.status)} · Due {formatDateIST(t.due_date)}</div>
                       </div>
-                      <span className={`text-xs px-2 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{t.status}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{statusText(t.status)}</span>
                       <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-[#0D9488] transition-colors" />
                     </DockLink>
                   ))}
@@ -295,7 +279,7 @@ export default function ClientDetailShell({
 
             {/* Profile */}
             <div className="tff-card p-6">
-              <h3 className="text-[13px] font-semibold text-zinc-700 mb-4">Profile</h3>
+              <h3 className="tff-section-title mb-4">Profile</h3>
               <ClientFormWrapper groups={groups} owners={owners} initial={client} basePath={basePath} readOnly={!canEdit} canDelete={canDelete} />
             </div>
 
@@ -306,7 +290,7 @@ export default function ClientDetailShell({
             
             {/* Services */}
             <div className="tff-card p-6">
-              <h3 className="text-[13px] font-semibold text-zinc-700 mb-4">Services & engagements</h3>
+              <h3 className="tff-section-title mb-4">Services & engagements</h3>
               <ClientServiceManager
                 clientId={client.id}
                 existingSubServices={clientSubServices as ClientSubService[]}
@@ -317,7 +301,7 @@ export default function ClientDetailShell({
 
             {/* Team */}
             <div className="tff-card p-6">
-              <h3 className="text-[13px] font-semibold text-zinc-700 mb-4">Team</h3>
+              <h3 className="tff-section-title mb-4">Team</h3>
               <ClientTeamManager
                 clientId={client.id}
                 assignments={teamAssignments as TeamAssignment[]}
@@ -327,7 +311,7 @@ export default function ClientDetailShell({
 
             {/* Activity */}
             <div className="tff-card p-6">
-              <h3 className="text-[13px] font-semibold text-zinc-700 mb-4">Activity log</h3>
+              <h3 className="tff-section-title mb-4">Activity log</h3>
               <AuditTimeline entries={auditLogs as unknown as import('@/components/sophistication/audit-timeline').AuditEntry[]} />
             </div>
 

@@ -93,14 +93,14 @@ export function TableToolbar({
         >
           <Columns className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Columns</span>
-          <span className="text-xs text-zinc-400 tabular-nums">
+          <span className="text-xs text-zinc-500 tabular-nums">
             {visibleCount}/{columns.length}
           </span>
         </Button>
 
         {colMenuOpen && (
           <div className="absolute right-0 top-full mt-1 w-56 rounded-xl border border-zinc-200 bg-white shadow-lg z-50 py-1">
-            <div className="px-3 py-1.5 text-xs font-semibold text-zinc-400">
+            <div className="px-3 py-1.5 text-xs font-semibold text-zinc-500">
               Visible columns
             </div>
             {columns.map((col) => (

@@ -112,7 +112,7 @@ export function ClientSearchCombobox({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin text-zinc-400" />}
+          {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin text-zinc-500" />}
         </div>
         <div className="max-h-60 overflow-y-auto p-1">
           {options.length === 0 ? (

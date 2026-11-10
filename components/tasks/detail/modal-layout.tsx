@@ -125,7 +125,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
           {/* Title + Status + Client */}
           <div className="tff-card p-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-mono text-zinc-400">{task.task_number ?? '—'}</span>
+              <span className="text-xs font-mono text-zinc-500">{task.task_number ?? '—'}</span>
               {task.is_billable && (
                 <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
                   Billable
@@ -137,7 +137,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
             </h1>
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant={task.status === 'completed' ? 'success' : task.status === 'in_progress' ? 'teal' : 'warning'}>
-                {task.status.replace('_', ' ')}
+                {task.status === 'in_progress' ? 'In progress' : task.status.charAt(0).toUpperCase() + task.status.slice(1)}
               </Badge>
               {task.is_verified && (
                 <Badge variant="outline" className="border-teal-200 bg-teal-50 text-teal-700">Verified</Badge>
@@ -163,13 +163,13 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
           />
 
           {/* Editable Metadata Grid */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="tff-card p-4 grid grid-cols-2 gap-x-6 gap-y-4">
             {/* Priority */}
-            <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
+            <div className="group min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-xs text-zinc-500">Priority</div>
                 {canEdit && !isClosed && !editingPriority && (
-                  <button type="button" onClick={() => setEditingPriority(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingPriority(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
                 )}
               </div>
               {editingPriority ? (
@@ -179,7 +179,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                     <SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="urgent">Urgent</SelectItem></SelectContent>
                   </Select>
                   <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ priority })) setEditingPriority(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPriority(task.priority); setEditingPriority(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPriority(task.priority); setEditingPriority(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
                 </div>
               ) : (
                 <div className="text-sm font-semibold text-zinc-900 capitalize">{task.priority}</div>
@@ -187,18 +187,18 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
             </div>
 
             {/* Due date */}
-            <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
+            <div className="group min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-xs text-zinc-500">Due date</div>
                 {canEdit && !isClosed && !editingDueDate && (
-                  <button type="button" onClick={() => setEditingDueDate(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingDueDate(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
                 )}
               </div>
               {editingDueDate ? (
                 <div className="flex items-center gap-1">
                   <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-7 text-xs w-28 px-1" />
                   <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ due_date: dueDate || null })) setEditingDueDate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setDueDate(task.due_date ? task.due_date.slice(0, 10) : ''); setEditingDueDate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setDueDate(task.due_date ? task.due_date.slice(0, 10) : ''); setEditingDueDate(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
                 </div>
               ) : (
                 <div className="text-sm font-semibold text-zinc-900">{task.due_date ? formatDateIST(task.due_date) : '—'}</div>
@@ -206,11 +206,11 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
             </div>
 
             {/* Period */}
-            <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
+            <div className="group min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-xs text-zinc-500">Period</div>
                 {canEdit && !isClosed && !editingPeriod && (
-                  <button type="button" onClick={() => setEditingPeriod(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingPeriod(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
                 )}
               </div>
               {editingPeriod ? (
@@ -219,7 +219,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                   <Input type="number" value={periodMonth} onChange={(e) => setPeriodMonth(e.target.value)} className="w-10 h-6 text-xs px-1" placeholder="MM" />
                   <Input type="number" value={periodQuarter} onChange={(e) => setPeriodQuarter(e.target.value)} className="w-10 h-6 text-xs px-1" placeholder="Q" />
                   <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ period_year: periodYear ? parseInt(periodYear) : null, period_month: periodMonth ? parseInt(periodMonth) : null, period_quarter: periodQuarter ? parseInt(periodQuarter) : null })) setEditingPeriod(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(String(task.period_year ?? '')); setPeriodMonth(String(task.period_month ?? '')); setPeriodQuarter(String(task.period_quarter ?? '')); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(String(task.period_year ?? '')); setPeriodMonth(String(task.period_month ?? '')); setPeriodQuarter(String(task.period_quarter ?? '')); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
                 </div>
               ) : (
                 <div className="text-sm font-semibold text-zinc-900">{task.period_month && task.period_year ? `${task.period_month}/${task.period_year}${task.period_quarter ? ` · Q${task.period_quarter}` : ''}` : '—'}</div>
@@ -227,11 +227,11 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
             </div>
 
             {/* Assignees */}
-            <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
+            <div className="group min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-xs text-zinc-500">Assignees</div>
                 {!isClosed && !editingAssignee && (
-                  <button type="button" onClick={() => setEditingAssignee(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingAssignee(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
                 )}
               </div>
               {editingAssignee ? (
@@ -265,7 +265,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                       setAssigneeIds(task.assignees?.map((a) => a.id) ?? (task.assigned_to ? [task.assigned_to] : []));
                       setReviewerIds(task.reviewers?.map((r) => r.id) ?? (task.reviewer_id ? [task.reviewer_id] : []));
                       setEditingAssignee(false);
-                    }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                    }}><X className="h-3 w-3 text-zinc-500" /></Button>
                   </div>
                 </div>
               ) : (
@@ -276,11 +276,11 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
             </div>
 
             {/* Billing */}
-            <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
+            <div className="group min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-xs text-zinc-500">Billing</div>
                 {canEdit && !isClosed && !editingBilling && (
-                  <button type="button" onClick={() => setEditingBilling(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingBilling(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
                 )}
               </div>
               {editingBilling ? (
@@ -305,7 +305,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                       setBillRef(task.bill_reference ?? '');
                       setBillAmount(String(task.bill_amount ?? ''));
                       setEditingBilling(false);
-                    }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                    }}><X className="h-3 w-3 text-zinc-500" /></Button>
                   </div>
                 </div>
               ) : (
@@ -314,11 +314,11 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
             </div>
 
             {/* ARN */}
-            <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
+            <div className="group min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-xs text-zinc-500">ARN</div>
                 {canEdit && !isClosed && !editingArn && (
-                  <button type="button" onClick={() => setEditingArn(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingArn(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
                 )}
               </div>
               {editingArn ? (
@@ -336,7 +336,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                       setArnRef(task.arn_reference ?? '');
                       setArnVisible(task.is_arn_client_visible ?? false);
                       setEditingArn(false);
-                    }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                    }}><X className="h-3 w-3 text-zinc-500" /></Button>
                   </div>
                 </div>
               ) : (
@@ -345,11 +345,11 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
             </div>
 
             {/* Service */}
-            <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
+            <div className="group min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-xs text-zinc-500">Service</div>
                 {canEdit && !isClosed && !editingService && (
-                  <button type="button" onClick={() => setEditingService(true)} className="text-zinc-400 hover:text-zinc-600 opacity-70 hover:opacity-100 transition-opacity" title="Edit service"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingService(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit" title="Edit service"><Pencil className="h-3.5 w-3.5" /></button>
                 )}
               </div>
               {editingService ? (
@@ -366,7 +366,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                   </Select>
                   <div className="flex gap-1">
                     <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
                   </div>
                 </div>
               ) : (
@@ -375,11 +375,11 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
             </div>
 
             {/* Template */}
-            <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
+            <div className="group min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-xs text-zinc-500">Template</div>
                 {canEdit && !isClosed && !editingTemplate && (
-                  <button type="button" onClick={() => setEditingTemplate(true)} className="text-zinc-400 hover:text-zinc-600 opacity-70 hover:opacity-100 transition-opacity" title="Edit template"><Pencil className="h-3 w-3" /></button>
+                  <button type="button" onClick={() => setEditingTemplate(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit" title="Edit template"><Pencil className="h-3.5 w-3.5" /></button>
                 )}
               </div>
               {editingTemplate ? (
@@ -391,7 +391,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                       {(() => {
                         const availableTemplates = taskTemplates.filter((t) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id));
                         if (availableTemplates.length === 0) {
-                          return <SelectItem value="__empty__" disabled className="text-xs text-zinc-400">No templates for this sub-service</SelectItem>;
+                          return <SelectItem value="__empty__" disabled className="text-xs text-zinc-500">No templates for this sub-service</SelectItem>;
                         }
                         return availableTemplates.map((t) => (
                           <SelectItem key={t.id} value={t.id} className="text-xs">{t.title}</SelectItem>
@@ -401,52 +401,26 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                   </Select>
                   <div className="flex gap-1">
                     <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const taskTemplateId = selectedTemplateId && selectedTemplateId !== '__empty__' ? selectedTemplateId : null; if (await saveField({ task_template_id: taskTemplateId })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-400" /></Button>
+                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
                   </div>
                 </div>
               ) : (
-                <div className="text-sm font-semibold text-zinc-900">{taskTemplates.find((t) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-400 font-normal">No template — click to set</span> : '—')}</div>
+                <div className="text-sm font-semibold text-zinc-900">{taskTemplates.find((t) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-500 font-normal">No template — click to set</span> : '—')}</div>
               )}
             </div>
           </div>
 
-          {/* Progress bar */}
-          {steps.length > 0 && (
-            <div className="tff-card p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-[13px] font-semibold text-zinc-700">Progress</h3>
-                <span className="text-xs text-zinc-500">
-                  {steps.filter((s) => s.completed_at).length} of {steps.length} completed
-                </span>
-              </div>
-              <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
-                <div 
-                  className="h-full bg-teal-600 transition-all rounded-full" 
-                  style={{ width: `${steps.length === 0 ? 0 : Math.round((steps.filter((s) => s.completed_at).length / steps.length) * 100)}%` }} 
-                />
-              </div>
-            </div>
-          )}
-
           {/* Steps — always visible */}
           {steps.length > 0 && (
-            <div className="tff-card p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <h3 className="text-[13px] font-semibold text-zinc-700">Checklist — tick off as you complete</h3>
-                <span className="text-xs text-zinc-500">
-                  {steps.filter((s) => s.completed_at).length} of {steps.length}
-                </span>
-              </div>
-              <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status as import('@/lib/validation/schemas').TaskStatus} currentUserName={team.find(u => u.id === currentUserId)?.full_name ?? 'You'} />
-            </div>
+            <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status as import('@/lib/validation/schemas').TaskStatus} currentUserName={team.find(u => u.id === currentUserId)?.full_name ?? 'You'} />
           )}
 
           {/* Description */}
           <div className="tff-card p-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-[13px] font-semibold text-zinc-700">Description</h3>
+              <h3 className="tff-section-title">Description</h3>
               {canEdit && !isClosed && !editingDesc && (
-                <button type="button" onClick={() => setEditingDesc(true)} className="text-zinc-400 hover:text-zinc-600"><Pencil className="h-3 w-3" /></button>
+                <button type="button" onClick={() => setEditingDesc(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
               )}
             </div>
             {editingDesc ? (
@@ -460,7 +434,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
             ) : (
               <>
                 <p className={cn('text-xs text-zinc-600 whitespace-pre-wrap leading-relaxed', !descExpanded && 'line-clamp-3')}>
-                  {task.description || <span className="text-zinc-400 italic">No description provided.</span>}
+                  {task.description || <span className="text-zinc-500 italic">No description provided.</span>}
                 </p>
                 {task.description && task.description.length > 120 && (
                   <button type="button" onClick={() => setDescExpanded(!descExpanded)} className="mt-2 text-xs text-teal-600 hover:text-teal-700 font-medium">
@@ -477,7 +451,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
           {/* Work logging */}
           <div className="tff-card p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-[13px] font-semibold text-zinc-700 flex items-center gap-1.5">
+              <h3 className="tff-section-title flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 text-teal-600" /> Work log
               </h3>
               {!showWorkLog && !isClosed && (
@@ -506,9 +480,9 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                   <li key={e.id} className="flex items-center justify-between gap-2 text-sm">
                     <div className="flex-1 min-w-0">
                       <span className="font-medium tabular-nums text-xs">{fmtHM(e.duration_minutes)}</span>
-                      <span className="text-zinc-400 mx-1">·</span>
+                      <span className="text-zinc-500 mx-1">·</span>
                       <span className="text-zinc-600 text-xs">{e.users_profile?.full_name ?? 'You'}</span>
-                      <span className="text-zinc-400 mx-1">·</span>
+                      <span className="text-zinc-500 mx-1">·</span>
                       {e.started_at && e.ended_at ? (
                         <span className="text-zinc-500 text-xs">{formatTimeIST(e.started_at)} – {formatTimeIST(e.ended_at)}</span>
                       ) : (
@@ -517,7 +491,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                       {e.note && <div className="text-xs text-zinc-500 truncate">{e.note}</div>}
                     </div>
                     {e.user_id === currentUserId && (
-                      <button type="button" onClick={() => removeWorkEntry(e.id)} disabled={workPending} className="text-zinc-400 hover:text-red-600 p-1" aria-label="Delete entry">
+                      <button type="button" onClick={() => removeWorkEntry(e.id)} disabled={workPending} className="text-zinc-500 hover:text-red-600 p-1" aria-label="Delete entry">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     )}
@@ -530,7 +504,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
           {/* Notes - last 2 only */}
           <div className="tff-card p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[13px] font-semibold text-zinc-700">Notes</h3>
+              <h3 className="tff-section-title">Notes</h3>
               {notes.length > 2 && (
                 <span className="text-xs text-zinc-500">{notes.length} total</span>
               )}
@@ -544,12 +518,12 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
               </div>
             </div>
             {notes.length === 0 ? (
-              <p className="text-xs text-zinc-400 italic">No notes yet.</p>
+              <p className="text-xs text-zinc-500 italic">No notes yet.</p>
             ) : (
               <div className="space-y-2">
                 {notes.slice(-2).map((n) => (
                   <div key={n.id} className="bg-zinc-50 p-3 rounded-lg border border-zinc-100">
-                    <div className="text-xs font-medium text-zinc-400 mb-1 flex justify-between">
+                    <div className="text-xs font-medium text-zinc-500 mb-1 flex justify-between">
                       <span>{n.users_profile?.full_name}</span>
                       <span>{timeAgo(n.created_at)}</span>
                     </div>

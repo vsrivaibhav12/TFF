@@ -39,7 +39,7 @@ export default function SimpleBarChart({ categories, series, height = 280 }: Pro
                 ))}
               </div>
               <span className="text-xs font-medium text-zinc-600 truncate w-full text-center">{cat}</span>
-              <span className="text-xs tabular-nums text-zinc-400">{total}</span>
+              <span className="text-xs tabular-nums text-zinc-500">{total}</span>
             </div>
           );
         })}

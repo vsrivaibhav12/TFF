@@ -87,7 +87,7 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <CalendarDays className="h-4 w-4 text-zinc-400" />
+        <CalendarDays className="h-4 w-4 text-zinc-500" />
         <Input
           type="date"
           value={selectedDate}
@@ -122,7 +122,7 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
                 <tr key={u.id} className="hover:bg-zinc-50/50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-zinc-400" />
+                      <User className="h-4 w-4 text-zinc-500" />
                       <span className="font-medium text-zinc-900">{u.full_name ?? u.email}</span>
                       {isSelf && <Badge variant="outline" className="text-xs py-0">You</Badge>}
                     </div>
@@ -139,7 +139,7 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
                         ))}
                       </select>
                     ) : (
-                      <Badge variant="outline" className={log ? statusBadge[log.status] : "bg-zinc-50 text-zinc-400 border-zinc-200"}>
+                      <Badge variant="outline" className={log ? statusBadge[log.status] : "bg-zinc-50 text-zinc-500 border-zinc-200"}>
                         {log ? (isSelf ? selfStatusLabels[log.status] : overrideStatusLabels[log.status]) ?? log.status : "Not marked"}
                       </Badge>
                     )}
@@ -152,7 +152,7 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
                   </td>
                   <td className="px-4 py-3 text-right">
                     {readOnly ? (
-                      <span className="text-xs text-zinc-400">—</span>
+                      <span className="text-xs text-zinc-500">—</span>
                     ) : editing ? (
                       <div className="space-y-2 inline-block text-left">
                         {!isSelf && (

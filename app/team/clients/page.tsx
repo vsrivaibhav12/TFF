@@ -100,7 +100,6 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
         ]}
         inputs={[
           { key: 'city', placeholder: 'City', type: 'text' },
-          { key: 'q', placeholder: 'Search name / PAN', type: 'text' },
         ]}
       />
 

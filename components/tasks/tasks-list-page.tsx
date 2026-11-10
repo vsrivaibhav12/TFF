@@ -10,7 +10,6 @@ import { todayIST } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
 import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 import { Button } from '@/components/ui/button';
-import { StatCard } from '@/components/ui/stat-card';
 import { FullExport } from '@/components/reports/full-export';
 import EmptyState from '@/components/sophistication/empty-state';
 import NewTaskDialog from '@/components/tasks/new-task-dialog';
@@ -22,7 +21,7 @@ import { ReassignAllMatching } from '@/components/tasks/reassign-all-matching';
 import { parseTaskFilterParams, type TaskFilterParams } from '@/lib/tasks/filter-params';
 import AdminTasksTable from '@/app/admin/tasks/tasks-table';
 import TeamTasksTable from '@/app/team/tasks/tasks-table-client';
-import { Briefcase, AlertTriangle, Clock, Layers, Inbox, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Layers, Inbox, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const PAGE_SIZE = 50;
 
@@ -137,13 +136,13 @@ export default async function TasksListPage({
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Matching tasks" value={totalCount} icon={<Briefcase className="h-4 w-4" />} tone="zinc" />
-        <StatCard label="Stuck or high-priority" value={stuck} icon={<AlertTriangle className="h-4 w-4" />} tone="red" />
-        <StatCard label="Due today" value={dueToday} icon={<Clock className="h-4 w-4" />} tone="amber" />
-      </div>
+      <p className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-zinc-600 tabular-nums -mt-2">
+        <span><span className="font-semibold text-zinc-900">{totalCount.toLocaleString('en-IN')}</span> matching</span>
+        <span><span className={stuck > 0 ? 'font-semibold text-red-600' : 'font-semibold text-zinc-900'}>{stuck.toLocaleString('en-IN')}</span> stuck or high priority</span>
+        <span><span className={dueToday > 0 ? 'font-semibold text-amber-600' : 'font-semibold text-zinc-900'}>{dueToday.toLocaleString('en-IN')}</span> due today</span>
+      </p>
 
-      <div className="space-y-3">
+      <div className="tff-card p-3 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <TaskQuickFilters meId={me.id} todayIso={todayIso} weekEndIso={addDaysIso(7)} yesterdayIso={addDaysIso(-1)} />
           {canAssign && totalCount > 0 && (

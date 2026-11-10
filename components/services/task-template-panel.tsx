@@ -31,7 +31,7 @@ interface Props {
 export default function TaskTemplatePanel({ subService, templates, stepsByTemplate }: Props) {
   if (templates.length === 0) {
     return (
-      <div className="mt-3 text-xs text-zinc-400 italic">
+      <div className="mt-3 text-xs text-zinc-500 italic">
         No task templates yet.{' '}
         <TaskTemplateDialog subServiceId={subService.id} subServiceName={subService.name}>
           <button className="text-teal-700 hover:underline">Create one</button>
@@ -61,7 +61,7 @@ export default function TaskTemplatePanel({ subService, templates, stepsByTempla
                   <Badge variant="outline" className="text-xs shrink-0">{tmpl.estimated_days}d</Badge>
                 )}
                 {!tmpl.is_active && <Badge variant="warning" className="text-xs shrink-0">inactive</Badge>}
-                <span className="text-xs text-zinc-400 shrink-0">{steps.length} step{steps.length !== 1 ? 's' : ''}</span>
+                <span className="text-xs text-zinc-500 shrink-0">{steps.length} step{steps.length !== 1 ? 's' : ''}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <TaskTemplateStepsDialog template={tmpl} steps={steps}>

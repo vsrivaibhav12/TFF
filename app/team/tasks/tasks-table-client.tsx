@@ -311,7 +311,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
       <div className="hidden md:block space-y-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
             <input
               type="text"
               placeholder="Search tasks…"
@@ -431,7 +431,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                   {colVisible('sub_service') && (
                     <div className="min-w-0 overflow-hidden pr-2">
                       {!colVisible('task_number') && t.task_number && (
-                        <span className="block text-xs font-mono tabular-nums text-zinc-400">{t.task_number}</span>
+                        <span className="block text-xs font-mono tabular-nums text-zinc-500">{t.task_number}</span>
                       )}
                       <TaskHoverCard taskId={t.id}>
                         <DockLink item={{ type: 'task', id: t.id }} href={`/team/tasks/${t.id}`} className="font-semibold text-zinc-900 hover:text-teal-700 truncate block text-sm">
@@ -485,7 +485,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                   )}
                   {colVisible('owner') && (
                     <div className="min-w-0 overflow-hidden text-xs text-zinc-700 truncate pr-2">
-                      {t.users_profile?.full_name ?? <span className="text-zinc-400">Unassigned</span>}
+                      {t.users_profile?.full_name ?? <span className="text-zinc-500">Unassigned</span>}
                     </div>
                   )}
                   {colVisible('labels') && (
@@ -499,7 +499,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                               </span>
                             ))}
                             {t.labels.length > 3 && (
-                              <span className="text-xs text-zinc-400">+{t.labels.length - 3}</span>
+                              <span className="text-xs text-zinc-500">+{t.labels.length - 3}</span>
                             )}
                           </>
                         ) : (

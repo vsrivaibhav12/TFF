@@ -86,10 +86,10 @@ export default function TaskStepsPanel({
   }
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-6 space-y-4" data-testid="task-steps-panel">
+    <div className="tff-card p-4 space-y-4" data-testid="task-steps-panel">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold flex items-center gap-2"><ListChecks className="h-4 w-4 text-teal-600" /> Checklist</h3>
+          <h3 className="tff-section-title flex items-center gap-2"><ListChecks className="h-4 w-4 text-teal-600" /> Checklist</h3>
           {canEdit && (
             <button onClick={() => setShowHelp((v) => !v)} className="text-zinc-300 hover:text-zinc-500" title="How to use checklist">
               <HelpCircle className="h-4 w-4" />
@@ -116,10 +116,10 @@ export default function TaskStepsPanel({
       {sortedSteps.length === 0 ? (
         <div className="space-y-2">
           <p className="text-sm text-zinc-500">No checklist for this task yet.</p>
-          <p className="text-xs text-zinc-400">If this task is linked to a sub-service, steps will appear here.</p>
+          <p className="text-xs text-zinc-500">If this task is linked to a sub-service, steps will appear here.</p>
         </div>
       ) : (
-        <ul className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">{sortedSteps.map((s, idx) => {
+        <ul className="space-y-2">{sortedSteps.map((s, idx) => {
           const done = !!s.completed_at;
           return (
             <li key={s.id} className={cn('flex items-start gap-2 rounded-lg border border-zinc-200 p-3', done && 'bg-teal-50/30 border-teal-200')}>
@@ -134,7 +134,7 @@ export default function TaskStepsPanel({
                   </div>
                 )}
                 {done && (
-                  <div className="text-xs text-zinc-400 mt-1.5 font-medium">
+                  <div className="text-xs text-zinc-500 mt-1.5 font-medium">
                     ✓ {s.users_profile?.full_name ?? 'someone'} · {formatDateIST(s.completed_at!)}
                   </div>
                 )}

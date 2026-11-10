@@ -68,25 +68,25 @@ export function TaskHoverCard({ taskId, children }: { taskId: string; children: 
             <div className="space-y-1.5 text-xs text-zinc-600">
               {data.client_name && (
                 <div className="flex items-center gap-1.5">
-                  <User className="h-3 w-3 text-zinc-400" />
+                  <User className="h-3 w-3 text-zinc-500" />
                   <span>{data.client_name}</span>
                 </div>
               )}
               {data.assignee_name && (
                 <div className="flex items-center gap-1.5">
-                  <User className="h-3 w-3 text-zinc-400" />
+                  <User className="h-3 w-3 text-zinc-500" />
                   <span>Assigned to {data.assignee_name}</span>
                 </div>
               )}
               {data.due_date && (
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="h-3 w-3 text-zinc-400" />
+                  <Calendar className="h-3 w-3 text-zinc-500" />
                   <span>Due {formatDateIST(data.due_date)}</span>
                 </div>
               )}
               {(data.period_year || data.period_month || data.period_quarter) && (
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="h-3 w-3 text-zinc-400" />
+                  <Calendar className="h-3 w-3 text-zinc-500" />
                   <span>
                     {data.period_month && data.period_year
                       ? `${new Date(data.period_year, data.period_month - 1).toLocaleString('default', { month: 'short' })} ${data.period_year}`
@@ -100,7 +100,7 @@ export function TaskHoverCard({ taskId, children }: { taskId: string; children: 
               )}
               {data.latest_note && (
                 <div className="flex items-start gap-1.5 pt-1 border-t border-zinc-100">
-                  <FileText className="h-3 w-3 text-zinc-400 mt-0.5" />
+                  <FileText className="h-3 w-3 text-zinc-500 mt-0.5" />
                   <span className="line-clamp-2 text-zinc-500">{data.latest_note}</span>
                 </div>
               )}

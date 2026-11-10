@@ -86,7 +86,7 @@ export default function WorkDoneFilters({ clients, tasks, showStaffFilter, staff
         <div className="space-y-1 min-w-[180px] flex-1">
           <Label className="text-xs">Search notes</Label>
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}

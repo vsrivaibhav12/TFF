@@ -183,7 +183,7 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
             <h2 className="text-sm font-semibold text-zinc-900 tracking-tight">
               {group.label}
             </h2>
-            <span className="text-xs text-zinc-400 tabular-nums">
+            <span className="text-xs text-zinc-500 tabular-nums">
               {group.items.length}
             </span>
             <div className="flex-1 h-px bg-zinc-100" />
@@ -272,7 +272,7 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
                         {metaSummary(item) && (
                           <>
                             <span className="text-zinc-300">·</span>
-                            <span className="text-zinc-400">{metaSummary(item)}</span>
+                            <span className="text-zinc-500">{metaSummary(item)}</span>
                           </>
                         )}
                       </div>

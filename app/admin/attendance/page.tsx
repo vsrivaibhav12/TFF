@@ -76,7 +76,7 @@ export default async function AdminAttendancePage({ searchParams }: { searchPara
                       {today.status}
                     </Badge>
                     {today.check_in_time && (
-                      <span className="flex items-center gap-1 text-zinc-400">
+                      <span className="flex items-center gap-1 text-zinc-500">
                         <Clock className="h-3 w-3" />
                         {formatTimeIST(today.check_in_time)}
                         {today.check_out_time && ` → ${formatTimeIST(today.check_out_time)}`}

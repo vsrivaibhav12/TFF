@@ -35,11 +35,11 @@ function ComplianceDot({ status }: { status: string }) {
 function ComplianceDots({ gst, tds, it }: { gst: string; tds: string; it: string }) {
   return (
     <div className="flex items-center gap-1.5" title={`GST: ${gst} | TDS: ${tds} | IT: ${it}`}>
-      <span className="text-xs text-zinc-400 uppercase font-medium">G</span>
+      <span className="text-xs text-zinc-500 uppercase font-medium">G</span>
       <ComplianceDot status={gst} />
-      <span className="text-xs text-zinc-400 uppercase font-medium ml-1">T</span>
+      <span className="text-xs text-zinc-500 uppercase font-medium ml-1">T</span>
       <ComplianceDot status={tds} />
-      <span className="text-xs text-zinc-400 uppercase font-medium ml-1">I</span>
+      <span className="text-xs text-zinc-500 uppercase font-medium ml-1">I</span>
       <ComplianceDot status={it} />
     </div>
   );
@@ -82,7 +82,7 @@ export default function ClientsTable({
   return (
     <div className="space-y-3">
       {/* Table Header */}
-      <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-semibold text-zinc-400 items-center">
+      <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-semibold text-zinc-500 items-center">
         {selectable && (
           <div className="col-span-1">
             <Checkbox checked={allSelected} onCheckedChange={onToggleAll} aria-label="Select all" />
@@ -115,13 +115,13 @@ export default function ClientsTable({
             {/* Client info */}
             <div className={`md:${selectable ? 'col-span-4' : 'col-span-5'} flex items-center gap-3 min-w-0`}>
               <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
-                <Building2 className="h-5 w-5 text-zinc-400" />
+                <Building2 className="h-5 w-5 text-zinc-500" />
               </div>
               <div className="min-w-0">
                 <Link href={`${basePath}/${c.id}`} className="text-[13px] font-semibold text-zinc-900 truncate hover:text-teal-700">
                   {c.business_name}
                 </Link>
-                <div className="flex items-center gap-2 text-xs text-zinc-400 mt-0.5">
+                <div className="flex items-center gap-2 text-xs text-zinc-500 mt-0.5">
                   {c.city && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{c.city}</span>}
                   {c.primary_contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{c.primary_contact_phone}</span>}
                   {c.primary_contact_email && <span className="flex items-center gap-0.5"><Mail className="h-3 w-3" />{c.primary_contact_email}</span>}
@@ -144,7 +144,7 @@ export default function ClientsTable({
             {/* Engagements / Work count */}
             <div className="md:col-span-2 hidden md:block">
               <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-semibold ${
-                c.engagements > 0 ? 'bg-teal-50 text-teal-600' : 'bg-zinc-100 text-zinc-400'
+                c.engagements > 0 ? 'bg-teal-50 text-teal-600' : 'bg-zinc-100 text-zinc-500'
               }`}>
                 {c.engagements}
               </span>
@@ -153,7 +153,7 @@ export default function ClientsTable({
             {/* View arrow */}
             <div className="md:col-span-1 flex justify-end hidden md:block">
               <Link href={`${basePath}/${c.id}`} className="w-8 h-8 rounded-lg bg-zinc-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
-                <ArrowUpRight className="h-4 w-4 text-zinc-400 group-hover:text-[#0D9488] transition-colors" />
+                <ArrowUpRight className="h-4 w-4 text-zinc-500 group-hover:text-[#0D9488] transition-colors" />
               </Link>
             </div>
           </div>

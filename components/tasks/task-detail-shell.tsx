@@ -20,7 +20,7 @@ export default function TaskDetailShell(props: Props) {
       {!isModal && (
         <div className="flex-none mb-4 md:hidden">
           <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 font-medium">
-            <ChevronLeft className="h-4 w-4" /> Back to Tasks
+            <ChevronLeft className="h-4 w-4" /> Back to tasks
           </Link>
         </div>
       )}

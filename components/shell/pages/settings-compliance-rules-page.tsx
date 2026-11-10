@@ -64,11 +64,11 @@ export default async function ComplianceRulesPage(_props: unknown, rolePrefix: s
                     {r.due_day && <span>Day {r.due_day}</span>}
                     {r.due_month_offset > 0 && <span>+{r.due_month_offset}m</span>}
                     {r.due_date_formula && <code className="bg-zinc-50 rounded px-1 text-xs">{r.due_date_formula}</code>}
-                    <span className="text-zinc-400">·</span>
+                    <span className="text-zinc-500">·</span>
                     <span>reminders: {r.reminder_days?.join('/') ?? '—'} d</span>
                     {Object.keys(r.applies_when ?? {}).length > 0 && (
                       <>
-                        <span className="text-zinc-400">·</span>
+                        <span className="text-zinc-500">·</span>
                         <span>applies when:</span>
                         {Object.entries(r.applies_when as Record<string, any>).map(([k, v]) => (
                           <code key={k} className="bg-zinc-50 rounded px-1 text-xs">{k}={String(v)}</code>

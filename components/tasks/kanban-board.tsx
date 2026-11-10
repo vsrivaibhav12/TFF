@@ -155,7 +155,7 @@ function KanbanColumn({ column, tasks, hrefPrefix }: { column: ColumnDef; tasks:
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: column.color }} />
           <h3 className="text-sm font-semibold text-zinc-700">{column.title}</h3>
         </div>
-        <span className="text-xs font-medium text-zinc-400 bg-zinc-100 px-2.5 py-0.5 rounded-full">{tasks.length}</span>
+        <span className="text-xs font-medium text-zinc-500 bg-zinc-100 px-2.5 py-0.5 rounded-full">{tasks.length}</span>
       </div>
       
       <SortableContext id={column.id} items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
@@ -164,7 +164,7 @@ function KanbanColumn({ column, tasks, hrefPrefix }: { column: ColumnDef; tasks:
             <SortableTask key={task.id} task={task} hrefPrefix={hrefPrefix} />
           ))}
           {tasks.length === 0 && (
-            <div className="h-full flex-1 rounded-xl border-2 border-dashed border-zinc-200 p-6 flex flex-col items-center justify-center text-zinc-400 text-xs">
+            <div className="h-full flex-1 rounded-xl border-2 border-dashed border-zinc-200 p-6 flex flex-col items-center justify-center text-zinc-500 text-xs">
               Drop tasks here
             </div>
           )}

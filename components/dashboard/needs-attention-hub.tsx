@@ -1,8 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { ArrowRight, MessageSquare, Clock, ShieldCheck, AlertCircle } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
-import { Button } from '@/components/ui/button';
 
 export type AttentionItem = {
   id: string;
@@ -16,61 +15,55 @@ export type AttentionItem = {
   amountLabel?: string;
 };
 
+// Static class names so Tailwind keeps them (interpolated names are purged at build time).
+const DOT: Record<AttentionItem['color'], string> = {
+  red: 'bg-red-500',
+  amber: 'bg-amber-500',
+  orange: 'bg-amber-500',
+  blue: 'bg-teal-500',
+  teal: 'bg-teal-500',
+};
+const REASON: Record<AttentionItem['color'], string> = {
+  red: 'text-red-700',
+  amber: 'text-amber-700',
+  orange: 'text-amber-700',
+  blue: 'text-teal-700',
+  teal: 'text-teal-700',
+};
+
 export function NeedsAttentionHub({ items = [] }: { items?: AttentionItem[] }) {
-  if (!items || items.length === 0) {
-    return (
-      <div className="rounded-2xl border border-zinc-200 bg-white p-5 md:p-6 h-full flex flex-col">
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h3 className="text-base font-semibold text-zinc-900 tracking-tight">Needs attention</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">Blocked tasks and approvals</p>
-          </div>
-        </div>
-        <EmptyState title="All clear" body="No items need your immediate attention right now." variant="all-clear" />
-      </div>
-    );
-  }
-
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-5 md:p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h3 className="text-base font-semibold text-zinc-900 tracking-tight">Needs attention</h3>
-          <p className="text-xs text-zinc-500 mt-0.5">Blocked tasks and approvals</p>
-        </div>
+    <div className="tff-card p-5 h-full flex flex-col">
+      <div className="flex items-baseline justify-between mb-3">
+        <h3 className="tff-section-title">Needs attention</h3>
+        <span className="text-xs text-zinc-500">Overdue, stuck and awaiting approval</span>
       </div>
 
-      <div className="space-y-3">
-        {items.map((item) => {
-          const Icon = item.type === 'blocked' ? Clock : ShieldCheck;
-          return (
-            <div
-              key={item.id}
-              className="group flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-zinc-100 p-4 hover:border-zinc-200 bg-zinc-50/50 transition-all"
-            >
-              <div className={`h-10 w-10 rounded-full bg-${item.color}-100 text-${item.color}-600 flex items-center justify-center shrink-0`}>
-                <Icon className="h-5 w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-zinc-900">{item.title}</div>
-                <div className="text-xs text-zinc-500 mt-0.5">
-                  {item.client} · <span className={`text-${item.color}-600 font-medium`}>{item.reason}</span>
-                  {item.amountLabel && (
-                    <span className="ml-1.5 text-amber-600 font-medium">{item.amountLabel}</span>
-                  )}
+      {items.length === 0 ? (
+        <EmptyState title="All clear" body="No items need your immediate attention right now." variant="all-clear" />
+      ) : (
+        <ul className="-mx-2 divide-y divide-zinc-100">
+          {items.map((item) => (
+            <li key={item.id}>
+              <Link
+                href={item.href}
+                className="group flex items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-zinc-50 transition-colors"
+              >
+                <span className={`h-2 w-2 rounded-full shrink-0 ${DOT[item.color]}`} aria-hidden />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-zinc-900 truncate">{item.title}</div>
+                  <div className="text-xs text-zinc-500 truncate">{item.client}</div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                <Link href={item.href}>
-                  <Button variant="outline" size="sm" className={`h-8 text-xs border-${item.color}-200 text-${item.color}-700 hover:bg-${item.color}-50`}>
-                    {item.type === 'blocked' ? 'View Task' : 'Review'}
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                <span className={`text-xs font-medium shrink-0 ${REASON[item.color]}`}>
+                  {item.reason}
+                  {item.amountLabel ? ` · ${item.amountLabel}` : ''}
+                </span>
+                <ChevronRight className="h-4 w-4 text-zinc-300 group-hover:text-zinc-500 shrink-0" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

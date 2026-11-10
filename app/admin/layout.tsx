@@ -17,29 +17,26 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: '/admin/clients', label: 'Clients', icon: 'users' as const },
     { href: '/admin/tasks', label: 'Tasks', icon: 'clipboard' as const },
 
-    /* ── Operations ── */
-    { href: '/admin/dsc', label: 'DSC', icon: 'key' as const, section: 'Operations' },
+    /* ── Work ── */
+    { href: '/admin/compliance', label: 'Compliance', icon: 'file-check' as const, section: 'Work' },
+    { href: '/admin/dsc', label: 'DSC', icon: 'key' as const, section: 'Work' },
+    { href: '/admin/billing', label: 'Billing', icon: 'receipt' as const, section: 'Work' },
+    { href: '/admin/services', label: 'Services', icon: 'layers' as const, section: 'Work' },
 
-    /* ── Finance ── */
-    { href: '/admin/billing', label: 'Billing', icon: 'receipt' as const, section: 'Finance' },
+    /* ── People ── */
+    { href: '/admin/team', label: 'Team', icon: 'users-round' as const, section: 'People' },
+    { href: '/admin/workload', label: 'Workload', icon: 'chart' as const, section: 'People' },
+    { href: '/admin/attendance', label: 'Attendance', icon: 'calendar-check' as const, section: 'People' },
+    { href: '/admin/leave', label: 'Leave', icon: 'calendar-off' as const, section: 'People' },
+    { href: '/admin/approvals', label: 'Approvals', icon: 'file-check' as const, section: 'People' },
+    { href: '/admin/work-done', label: 'Work done', icon: 'timer' as const, section: 'People' },
 
-    /* ── Team ── */
-    { href: '/admin/team', label: 'Team', icon: 'users-round' as const, section: 'Team' },
-    { href: '/admin/workload', label: 'Workload', icon: 'chart' as const, section: 'Team' },
-    { href: '/admin/attendance', label: 'Attendance', icon: 'calendar-check' as const, section: 'Team' },
-    { href: '/admin/leave', label: 'Leave', icon: 'calendar-off' as const, section: 'Team' },
-    { href: '/admin/approvals', label: 'Approvals', icon: 'file-check' as const, section: 'Team' },
-    { href: '/admin/work-done', label: 'Work done', icon: 'timer' as const, section: 'Team' },
-
-    /* ── Vault ── */
-    { href: '/admin/credentials', label: 'Credentials', icon: 'lock' as const, section: 'Vault' },
-
-    /* ── System ── */
-    { href: '/admin/services', label: 'Services', icon: 'layers' as const, section: 'System' },
-    { href: '/admin/reports', label: 'Reports', icon: 'chart' as const, section: 'System' },
-    { href: '/admin/audit', label: 'Audit', icon: 'scroll' as const, section: 'System' },
-    { href: '/admin/super-admins', label: 'Super admins', icon: 'crown' as const, section: 'System' },
-    { href: '/admin/settings', label: 'Settings', icon: 'settings' as const, section: 'System' },
+    /* ── Admin ── */
+    { href: '/admin/reports', label: 'Reports', icon: 'chart' as const, section: 'Admin' },
+    { href: '/admin/credentials', label: 'Credentials', icon: 'lock' as const, section: 'Admin' },
+    { href: '/admin/audit', label: 'Audit', icon: 'scroll' as const, section: 'Admin' },
+    { href: '/admin/super-admins', label: 'Super admins', icon: 'crown' as const, section: 'Admin' },
+    { href: '/admin/settings', label: 'Settings', icon: 'settings' as const, section: 'Admin' },
   ];
 
   const nav = filterNavByCapabilities(fullNav, user.role, capabilities);

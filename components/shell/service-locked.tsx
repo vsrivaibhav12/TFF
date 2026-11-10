@@ -38,7 +38,7 @@ export default function ServiceLocked({
       data-testid="service-locked"
     >
       <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white border border-zinc-200">
-        <Lock className="h-5 w-5 text-zinc-400" />
+        <Lock className="h-5 w-5 text-zinc-500" />
       </div>
       <h2 className="text-lg font-semibold text-zinc-900">
         {moduleLabel} isn&apos;t enabled for {clientName}

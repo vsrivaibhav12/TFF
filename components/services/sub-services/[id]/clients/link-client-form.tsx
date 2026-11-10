@@ -108,14 +108,14 @@ export default function LinkClientForm({ subServiceId, allClients, linkedClientI
         <div className="space-y-3 py-2">
           {/* Search input */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search clients by name or PAN..."
               className="pl-9"
             />
-            {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-zinc-400" />}
+            {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-zinc-500" />}
           </div>
 
           {/* Selected count indicator */}
@@ -159,13 +159,13 @@ export default function LinkClientForm({ subServiceId, allClients, linkedClientI
                       {isSelected && <Check className="h-3 w-3" />}
                     </div>
                     <span className="truncate">{c.business_name}</span>
-                    {c.pan && <span className="ml-auto text-xs text-zinc-400 font-mono">{c.pan}</span>}
+                    {c.pan && <span className="ml-auto text-xs text-zinc-500 font-mono">{c.pan}</span>}
                   </button>
                 );
               })
             )}
           </div>
-          <p className="text-xs text-zinc-400">{filtered.length} of {available.length} available client{available.length !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-zinc-500">{filtered.length} of {available.length} available client{available.length !== 1 ? 's' : ''}</p>
         </div>
         <DialogFooter>
           <Button onClick={link} disabled={selectedIds.size === 0 || pending}>{pending ? 'Linking...' : 'Link Selected'}</Button>

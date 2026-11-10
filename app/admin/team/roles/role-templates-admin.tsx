@@ -274,7 +274,7 @@ function RoleEditorDialog({
                       data-state={allSelected ? 'checked' : someSelected ? 'indeterminate' : 'unchecked'}
                     />
                     {cluster.label}
-                    <span className="text-xs text-zinc-400 font-normal">
+                    <span className="text-xs text-zinc-500 font-normal">
                       ({cluster.caps.filter((c) => caps.has(c)).length} / {cluster.caps.length})
                     </span>
                   </button>
@@ -296,7 +296,7 @@ function RoleEditorDialog({
                           <div className="flex-1 min-w-0">
                             <span className="font-medium text-zinc-800">{meta.label}</span>
                             <p className="text-xs text-zinc-500 mt-0.5 leading-snug">{meta.description}</p>
-                            <code className="font-mono text-xs text-zinc-400">{c}</code>
+                            <code className="font-mono text-xs text-zinc-500">{c}</code>
                           </div>
                         </label>
                       );

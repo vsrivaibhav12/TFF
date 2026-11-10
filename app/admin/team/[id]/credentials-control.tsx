@@ -37,7 +37,7 @@ export default function CredentialsControl({ userId, currentEmail }: { userId: s
     <div className="space-y-4">
       <div className="space-y-2">
         <Label className="flex items-center gap-1.5">
-          <Mail className="h-3.5 w-3.5 text-zinc-400" /> Login email
+          <Mail className="h-3.5 w-3.5 text-zinc-500" /> Login email
         </Label>
         <Input
           type="email"
@@ -50,7 +50,7 @@ export default function CredentialsControl({ userId, currentEmail }: { userId: s
 
       <div className="space-y-2">
         <Label className="flex items-center gap-1.5">
-          <Lock className="h-3.5 w-3.5 text-zinc-400" /> New password
+          <Lock className="h-3.5 w-3.5 text-zinc-500" /> New password
         </Label>
         <div className="flex gap-2">
           <Input

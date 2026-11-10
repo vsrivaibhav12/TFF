@@ -53,18 +53,18 @@ export function ClientHoverCard({ clientId, children }: { clientId: string; chil
             </div>
             <div className="space-y-1.5 text-xs text-zinc-600">
               <div className="flex items-center gap-1.5">
-                <Briefcase className="h-3 w-3 text-zinc-400" />
+                <Briefcase className="h-3 w-3 text-zinc-500" />
                 <span>{data.open_work_count} open work items</span>
               </div>
               {data.compliance_score !== null && (
                 <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-3 w-3 text-zinc-400" />
+                  <ShieldCheck className="h-3 w-3 text-zinc-500" />
                   <span>Compliance score: {data.compliance_score}%</span>
                 </div>
               )}
               {data.primary_contact_name && (
                 <div className="flex items-center gap-1.5">
-                  <Users className="h-3 w-3 text-zinc-400" />
+                  <Users className="h-3 w-3 text-zinc-500" />
                   <span>Contact: {data.primary_contact_name}</span>
                 </div>
               )}
