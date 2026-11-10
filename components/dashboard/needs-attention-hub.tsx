@@ -26,7 +26,7 @@ export function NeedsAttentionHub({ items = [] }: { items?: AttentionItem[] }) {
             <p className="text-xs text-zinc-500 mt-0.5">Blocked tasks and approvals</p>
           </div>
         </div>
-        <EmptyState title="All clear" body="No items need your immediate attention right now." />
+        <EmptyState title="All clear" body="No items need your immediate attention right now." variant="all-clear" />
       </div>
     );
   }

@@ -76,7 +76,7 @@ export function ActivityFeed({ items, href, emptyMessage = 'No recent activity' 
             const { text, icon: Icon, color } = formatAction(item.action, item.entity_type);
             return (
               <div key={item.id} className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0" title={actor}>
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-xs font-medium shrink-0" title={actor}>
                   {getInitials(actor)}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -84,7 +84,7 @@ export function ActivityFeed({ items, href, emptyMessage = 'No recent activity' 
                     <span className="font-medium">{actor}</span>{' '}
                     <span className="text-zinc-500">{text}</span>
                   </div>
-                  <div className="text-[11px] text-zinc-400 mt-0.5">
+                  <div className="text-xs text-zinc-400 mt-0.5">
                     {timeAgo(item.performed_at)}
                   </div>
                 </div>

@@ -2,7 +2,30 @@
 import Link from 'next/link';
 import { Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { GenericEmptyIllustration } from '@/components/ui/empty-illustrations';
+import {
+  GenericEmptyIllustration,
+  ClientsEmptyIllustration,
+  TasksEmptyIllustration,
+  InboxEmptyIllustration,
+  KeyEmptyIllustration,
+  ChartEmptyIllustration,
+  DocumentEmptyIllustration,
+  AllClearEmptyIllustration,
+} from '@/components/ui/empty-illustrations';
+
+/** Themed artwork picked by name, so pages do not import individual illustrations. */
+export type EmptyStateVariant = 'tasks' | 'clients' | 'inbox' | 'key' | 'chart' | 'document' | 'all-clear' | 'generic';
+
+const VARIANTS: Record<EmptyStateVariant, () => React.ReactElement> = {
+  tasks: () => <TasksEmptyIllustration />,
+  clients: () => <ClientsEmptyIllustration />,
+  inbox: () => <InboxEmptyIllustration />,
+  key: () => <KeyEmptyIllustration />,
+  chart: () => <ChartEmptyIllustration />,
+  document: () => <DocumentEmptyIllustration />,
+  'all-clear': () => <AllClearEmptyIllustration />,
+  generic: () => <GenericEmptyIllustration />,
+};
 
 /**
  * Smart empty state with premium bespoke illustration support.
@@ -16,6 +39,7 @@ export default function EmptyState({
   actionOnClick,
   icon,
   illustration,
+  variant,
 }: {
   title: string;
   body: string;
@@ -24,6 +48,8 @@ export default function EmptyState({
   actionOnClick?: () => void;
   icon?: React.ReactNode;
   illustration?: React.ReactNode;
+  /** Named themed artwork. Takes precedence over `icon`; an explicit `illustration` wins over both. */
+  variant?: EmptyStateVariant;
 }) {
   const renderAction = () => {
     if (!actionLabel) return null;
@@ -46,8 +72,10 @@ export default function EmptyState({
     return null;
   };
 
-  const visual = illustration || icon || <GenericEmptyIllustration />;
-  const isIllustration = !!illustration || (!icon && !illustration);
+  const themed = variant ? VARIANTS[variant]() : null;
+  const art = illustration || themed;
+  const visual = art || icon || <GenericEmptyIllustration />;
+  const isIllustration = !!art || !icon;
 
   return (
     <div

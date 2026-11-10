@@ -46,7 +46,7 @@ export default async function ClientImportPage() {
           <EmptyState
             title="No imports yet"
             body="Upload a CSV or Excel file to import clients in bulk."
-            icon={<Upload className="h-6 w-6 text-zinc-400" />}
+            variant="document"
           />
         ) : (
           <div className="tff-card overflow-hidden">

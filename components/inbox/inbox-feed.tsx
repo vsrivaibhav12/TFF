@@ -170,7 +170,7 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
       <EmptyState
         title="Your inbox is clear"
         body="There are no pending tasks or upcoming compliance events right now."
-        icon={<Inbox className="h-6 w-6 text-zinc-400" />}
+        variant="inbox"
       />
     );
   }
@@ -238,7 +238,7 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
                         </span>
                         <span
                           className={cn(
-                            'inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide',
+                            'inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium uppercase tracking-wide',
                             itemTypeBadgeClass(item.item_type)
                           )}
                         >

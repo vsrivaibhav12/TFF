@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { requireRole } from '@/lib/auth/require-role';
 import { listClientGroups } from '@/lib/repositories/clients';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import ClientGroupsClient from './client-groups-client';
 
@@ -30,7 +30,7 @@ export default async function ClientGroupsPage() {
         <EmptyState
           title="No groups yet"
           body="Create groups like 'Premium', 'Startups', or 'Manufacturing' to segment your client base."
-          icon={<Users className="h-6 w-6 text-zinc-400" />}
+          variant="clients"
         />
       ) : (
         <ClientGroupsClient groups={groups as any} />

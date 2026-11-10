@@ -47,7 +47,7 @@ export function EditableCell({
           toast.error('Failed to save change');
         }
       });
-    }, 500);
+    }, 150);
   };
 
   if (!isEditing) {

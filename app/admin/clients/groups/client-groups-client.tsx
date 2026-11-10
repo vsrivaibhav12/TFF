@@ -106,9 +106,9 @@ export default function ClientGroupsClient({ groups }: { groups: Group[] }) {
         <table className="w-full text-sm">
           <thead className="bg-zinc-50 border-b border-zinc-200">
             <tr>
-              <th className="text-left px-4 py-3 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">Name</th>
-              <th className="text-left px-4 py-3 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">Description</th>
-              <th className="text-right px-4 py-3 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">Actions</th>
+              <th className="text-left px-4 py-3 font-semibold text-zinc-500 text-xs">Name</th>
+              <th className="text-left px-4 py-3 font-semibold text-zinc-500 text-xs">Description</th>
+              <th className="text-right px-4 py-3 font-semibold text-zinc-500 text-xs">Actions</th>
             </tr>
           </thead>
           <tbody>

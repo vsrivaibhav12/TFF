@@ -63,11 +63,11 @@ function ComplianceDot({ status }: { status: string }) {
 function ComplianceDots({ gst, tds, it }: { gst: string; tds: string; it: string }) {
   return (
     <div className="flex items-center gap-1.5" title={`GST: ${gst} | TDS: ${tds} | IT: ${it}`}>
-      <span className="text-[10px] text-zinc-400 uppercase font-medium">G</span>
+      <span className="text-xs text-zinc-400 uppercase font-medium">G</span>
       <ComplianceDot status={gst} />
-      <span className="text-[10px] text-zinc-400 uppercase font-medium ml-1">T</span>
+      <span className="text-xs text-zinc-400 uppercase font-medium ml-1">T</span>
       <ComplianceDot status={tds} />
-      <span className="text-[10px] text-zinc-400 uppercase font-medium ml-1">I</span>
+      <span className="text-xs text-zinc-400 uppercase font-medium ml-1">I</span>
       <ComplianceDot status={it} />
     </div>
   );
@@ -273,7 +273,7 @@ export default function ClientsTableClient({
       {/* Virtual scroll container */}
       <div ref={parentRef} className="overflow-auto rounded-xl border border-zinc-200" style={{ height: '60vh' }}>
         {/* Sticky header */}
-        <div className="sticky top-0 z-10 grid grid-cols-[auto_1fr_auto_auto_auto_auto] md:grid-cols-12 gap-4 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 bg-white/80 backdrop-blur-sm border-b border-zinc-200">
+        <div className="sticky top-0 z-10 grid grid-cols-[auto_1fr_auto_auto_auto_auto] md:grid-cols-12 gap-4 px-4 py-2 text-xs font-semibold text-zinc-400 bg-white/80 backdrop-blur-sm border-b border-zinc-200">
           <div className="col-span-1 md:col-span-1 flex items-center">
             <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
           </div>
@@ -358,7 +358,7 @@ export default function ClientsTableClient({
                             {c.business_name}
                           </div>
                         </ClientHoverCard>
-                        <div className="flex items-center gap-2 text-[11px] text-zinc-400 mt-0.5">
+                        <div className="flex items-center gap-2 text-xs text-zinc-400 mt-0.5">
                           {c.city && (
                             <span className="flex items-center gap-0.5">
                               <MapPin className="h-3 w-3" />

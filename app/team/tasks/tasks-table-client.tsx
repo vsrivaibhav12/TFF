@@ -79,14 +79,14 @@ const PRIORITY_OPTIONS = [
 
 const DEFAULT_COLUMNS = [
   { key: 'select', label: 'Select', visible: true, optional: false },
-  { key: 'task_number', label: 'Number', visible: true, optional: true },
+  { key: 'task_number', label: 'Number', visible: false, optional: true },
   { key: 'client', label: 'Client', visible: true, optional: false },
-  { key: 'sub_service', label: 'Sub Service', visible: true, optional: false },
+  { key: 'sub_service', label: 'Task', visible: true, optional: false },
   { key: 'period', label: 'Period', visible: true, optional: false },
   { key: 'status', label: 'Status', visible: true, optional: false },
   { key: 'due_date', label: 'Due', visible: true, optional: false },
   { key: 'owner', label: 'Owner', visible: true, optional: true },
-  { key: 'labels', label: 'Labels', visible: true, optional: true },
+  { key: 'labels', label: 'Labels', visible: false, optional: true },
   { key: 'progress', label: 'Progress', visible: true, optional: true },
   { key: 'priority', label: 'Priority', visible: true, optional: true },
   { key: 'verified', label: 'Verified', visible: true, optional: true },
@@ -101,7 +101,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sortKey, setSortKey] = useState<string>('due_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  const { columns, setColumns, density, setDensity } = useTablePrefs('team-tasks', DEFAULT_COLUMNS, 'comfortable');
+  const { columns, setColumns, density, setDensity } = useTablePrefs('team-tasks-v2', DEFAULT_COLUMNS, 'comfortable');
 
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -274,7 +274,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
               <div className={cn('bg-white border border-zinc-200 rounded-xl p-4 space-y-2', urgencyBorder)}>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono text-zinc-500">{t.task_number ?? '—'}</span>
-                  <Badge className={cn('text-[10px]', getStatusColour(t.status).bg, getStatusColour(t.status).text, getStatusColour(t.status).border)}>
+                  <Badge className={cn('text-xs', getStatusColour(t.status).bg, getStatusColour(t.status).text, getStatusColour(t.status).border)}>
                     <span className={cn('h-1.5 w-1.5 rounded-full', getStatusColour(t.status).dot)} />
                     {t.status.replace(/_/g, ' ')}
                   </Badge>
@@ -284,7 +284,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                   <p className="text-xs text-zinc-500">{t.clients?.business_name ?? '—'}</p>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 tabular-nums">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 tabular-nums">
                     {t.period_month && t.period_year
                       ? `${new Date(t.period_year, t.period_month - 1).toLocaleString('default', { month: 'short' })} ${t.period_year}`
                       : t.period_quarter && t.period_year
@@ -298,7 +298,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                   </span>
                 </div>
                 {t.users_profile?.full_name && (
-                  <div className="flex items-center gap-1 text-[11px] text-zinc-500">
+                  <div className="flex items-center gap-1 text-xs text-zinc-500">
                     <User className="h-3 w-3" /> {t.users_profile.full_name}
                   </div>
                 )}
@@ -354,7 +354,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
             )}
             {colVisible('sub_service') && (
               <button className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1" onClick={() => toggleSort('sub_service')}>
-                Sub Service <SortIcon col="sub_service" />
+                Task <SortIcon col="sub_service" />
               </button>
             )}
             {colVisible('period') && (
@@ -431,6 +431,9 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                   )}
                   {colVisible('sub_service') && (
                     <div className="min-w-0 overflow-hidden pr-2">
+                      {!colVisible('task_number') && t.task_number && (
+                        <span className="block text-xs font-mono tabular-nums text-zinc-400">{t.task_number}</span>
+                      )}
                       <TaskHoverCard taskId={t.id}>
                         <DockLink item={{ type: 'task', id: t.id }} href={`/team/tasks/${t.id}`} className="font-semibold text-zinc-900 hover:text-teal-700 truncate block text-sm">
                           {displayTaskName(t)}
@@ -470,7 +473,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                         </Badge>
                       )}
                       {t.is_stuck && (
-                        <span className="text-[10px] font-medium text-red-600 flex items-center gap-1 mt-1">
+                        <span className="text-xs font-medium text-red-600 flex items-center gap-1 mt-1">
                           <AlertTriangle className="h-3 w-3" /> Stuck
                         </span>
                       )}
@@ -492,16 +495,16 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                         {t.labels && t.labels.length > 0 ? (
                           <>
                             {t.labels.slice(0, 3).map((l) => (
-                              <span key={l.code} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border" style={{ backgroundColor: l.color_hex ? l.color_hex + '20' : '#f4f4f5', borderColor: l.color_hex || '#e4e4e7', color: l.color_hex || '#52525b' }}>
+                              <span key={l.code} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border" style={{ backgroundColor: l.color_hex ? l.color_hex + '20' : '#f4f4f5', borderColor: l.color_hex || '#e4e4e7', color: l.color_hex || '#52525b' }}>
                                 {l.display_name}
                               </span>
                             ))}
                             {t.labels.length > 3 && (
-                              <span className="text-[10px] text-zinc-400">+{t.labels.length - 3}</span>
+                              <span className="text-xs text-zinc-400">+{t.labels.length - 3}</span>
                             )}
                           </>
                         ) : (
-                          <span className="text-[10px] text-zinc-300">—</span>
+                          <span className="text-xs text-zinc-300">—</span>
                         )}
                       </div>
                     </div>
@@ -529,7 +532,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                   {colVisible('verified') && (
                     <div className="min-w-0 overflow-hidden">
                       {t.is_verified && (
-                        <span className="text-[10px] font-medium text-teal-700 flex items-center gap-1 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5 w-fit">
+                        <span className="text-xs font-medium text-teal-700 flex items-center gap-1 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5 w-fit">
                           <ShieldCheck className="h-3 w-3" /> Verified
                         </span>
                       )}

@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import CredentialDialog from '@/components/credentials/credential-dialog';
 import CredentialReveal from '@/components/credentials/credential-reveal';
 import { formatDateIST } from '@/lib/utils';
-import { ExternalLink, KeyRound } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import FilterBar from '@/components/sophistication/filter-bar';
 
@@ -61,7 +61,7 @@ export default async function CredentialsPage({ searchParams }: Props) {
         <EmptyState
           title="No credentials yet"
           body="Add a portal login to start tracking firm-wide access. Every reveal is audited."
-          icon={<KeyRound className="h-6 w-6 text-zinc-400" />}
+          variant="key"
         />
       ) : (
         <div className="tff-card overflow-hidden">

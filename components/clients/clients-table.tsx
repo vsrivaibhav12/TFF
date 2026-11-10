@@ -35,11 +35,11 @@ function ComplianceDot({ status }: { status: string }) {
 function ComplianceDots({ gst, tds, it }: { gst: string; tds: string; it: string }) {
   return (
     <div className="flex items-center gap-1.5" title={`GST: ${gst} | TDS: ${tds} | IT: ${it}`}>
-      <span className="text-[10px] text-zinc-400 uppercase font-medium">G</span>
+      <span className="text-xs text-zinc-400 uppercase font-medium">G</span>
       <ComplianceDot status={gst} />
-      <span className="text-[10px] text-zinc-400 uppercase font-medium ml-1">T</span>
+      <span className="text-xs text-zinc-400 uppercase font-medium ml-1">T</span>
       <ComplianceDot status={tds} />
-      <span className="text-[10px] text-zinc-400 uppercase font-medium ml-1">I</span>
+      <span className="text-xs text-zinc-400 uppercase font-medium ml-1">I</span>
       <ComplianceDot status={it} />
     </div>
   );
@@ -82,7 +82,7 @@ export default function ClientsTable({
   return (
     <div className="space-y-3">
       {/* Table Header */}
-      <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 items-center">
+      <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-semibold text-zinc-400 items-center">
         {selectable && (
           <div className="col-span-1">
             <Checkbox checked={allSelected} onCheckedChange={onToggleAll} aria-label="Select all" />
@@ -121,7 +121,7 @@ export default function ClientsTable({
                 <Link href={`${basePath}/${c.id}`} className="text-[13px] font-semibold text-zinc-900 truncate hover:text-teal-700">
                   {c.business_name}
                 </Link>
-                <div className="flex items-center gap-2 text-[11px] text-zinc-400 mt-0.5">
+                <div className="flex items-center gap-2 text-xs text-zinc-400 mt-0.5">
                   {c.city && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{c.city}</span>}
                   {c.primary_contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{c.primary_contact_phone}</span>}
                   {c.primary_contact_email && <span className="flex items-center gap-0.5"><Mail className="h-3 w-3" />{c.primary_contact_email}</span>}
@@ -131,7 +131,7 @@ export default function ClientsTable({
 
             {/* Group */}
             <div className="md:col-span-2 hidden md:block">
-              <span className="inline-flex items-center px-2 py-1 rounded-md bg-zinc-100 text-[11px] font-medium text-zinc-600">
+              <span className="inline-flex items-center px-2 py-1 rounded-md bg-zinc-100 text-xs font-medium text-zinc-600">
                 {c.group_name ?? '—'}
               </span>
             </div>

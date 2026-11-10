@@ -166,7 +166,7 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
               <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
               More Filters
               {activeCount > 4 && (
-                <Badge variant="outline" className="ml-1.5 h-4 px-1 text-[10px] rounded-sm">{activeCount - 4}</Badge>
+                <Badge variant="outline" className="ml-1.5 h-4 px-1 text-xs rounded-sm">{activeCount - 4}</Badge>
               )}
             </Button>
           </PopoverTrigger>
@@ -174,7 +174,7 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
             <div className="px-4 py-3 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 rounded-t-xl">
               <h4 className="font-semibold text-sm">Advanced Filters</h4>
               {activeCount > 0 && (
-                <Button variant="ghost" size="sm" className="h-6 text-[10px] text-zinc-500 hover:text-red-600 px-2" onClick={clearAll}>
+                <Button variant="ghost" size="sm" className="h-6 text-xs text-zinc-500 hover:text-red-600 px-2" onClick={clearAll}>
                   Clear all
                 </Button>
               )}
@@ -257,7 +257,7 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
             if (k === 'period_month') label = `Month: ${new Date(2000, parseInt(v) - 1, 1).toLocaleString('en-IN', { month: 'short' })}`;
 
             return (
-              <Badge key={k} variant="outline" className="bg-teal-50 text-teal-800 hover:bg-teal-100 text-[10px] pr-1 border border-teal-100">
+              <Badge key={k} variant="outline" className="bg-teal-50 text-teal-800 hover:bg-teal-100 text-xs pr-1 border border-teal-100">
                 {label}
                 <button onClick={() => update(k, '')} className="ml-1 text-teal-600 hover:text-teal-900 focus:outline-none">
                   <X className="h-3 w-3" />
@@ -265,7 +265,7 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
               </Badge>
             );
           })}
-          <Button variant="ghost" size="sm" onClick={clearAll} className="h-5 px-2 ml-1 text-[10px] text-zinc-500 hover:text-zinc-900">
+          <Button variant="ghost" size="sm" onClick={clearAll} className="h-5 px-2 ml-1 text-xs text-zinc-500 hover:text-zinc-900">
             Clear
           </Button>
         </div>

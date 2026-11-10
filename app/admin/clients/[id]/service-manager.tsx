@@ -195,7 +195,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-bold text-zinc-900">{s.services?.name}</div>
-                    <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
+                    <div className="text-xs font-medium text-zinc-400 mt-1">
                       {s.services?.code} · Subscribed {formatDateIST(s.start_date ?? '')}
                     </div>
                   </div>
@@ -272,7 +272,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
               <div key={s.id} className="flex items-center justify-between p-5 hover:bg-zinc-50 transition-colors">
                 <div>
                   <div className="font-bold text-zinc-900">{s.sub_services?.name}</div>
-                  <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
+                  <div className="text-xs font-medium text-zinc-400 mt-1">
                     {s.sub_services?.services?.name} · {s.sub_services?.frequency} · {s.sub_services?.code}
                   </div>
                 </div>

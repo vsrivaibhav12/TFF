@@ -61,7 +61,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
               <button
                 key={k}
                 onClick={() => setKindFilter(kindFilter === k ? null : k)}
-                className={`text-[11px] font-medium px-2.5 py-1 rounded-full border transition-colors ${
+                className={`text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${
                   kindFilter === k
                     ? 'bg-teal-600 text-white border-teal-600'
                     : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
@@ -92,8 +92,8 @@ export default function ServiceSearchWrapper({ categories, services, subServices
             return (
               <section key={cat.id} className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">{cat.name}</h2>
-                  <Badge variant="outline" className="text-[10px] font-normal">{catServices.length}</Badge>
+                  <h2 className="text-xs text-zinc-400 font-semibold">{cat.name}</h2>
+                  <Badge variant="outline" className="text-xs font-normal">{catServices.length}</Badge>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {catServices.map((s: any) => (
@@ -113,8 +113,8 @@ export default function ServiceSearchWrapper({ categories, services, subServices
           {servicesWithoutCategory.length > 0 && (
             <section className="space-y-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">Uncategorized</h2>
-                <Badge variant="outline" className="text-[10px] font-normal">{servicesWithoutCategory.length}</Badge>
+                <h2 className="text-xs text-zinc-400 font-semibold">Uncategorized</h2>
+                <Badge variant="outline" className="text-xs font-normal">{servicesWithoutCategory.length}</Badge>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {servicesWithoutCategory.map((s: any) => (

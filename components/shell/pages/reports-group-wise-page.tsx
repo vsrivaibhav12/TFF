@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/table';
 import EmptyState from '@/components/sophistication/empty-state';
 import ExportButton from '@/components/sophistication/export-button';
-import { FileSpreadsheet } from 'lucide-react';
+
 import BackButton from '@/components/sophistication/back-button';
 
 
@@ -111,7 +111,7 @@ export default async function GroupWiseReportPage({ searchParams }: { searchPara
         }))} filename={`group-wise-${fy}`} />
       </div>
       {Object.keys(byGroup).length === 0 ? (
-        <EmptyState title="No data" body="No client groups found." icon={<FileSpreadsheet className="h-6 w-6 text-zinc-400" />} />
+        <EmptyState title="No data" body="No client groups found." variant="chart" />
       ) : (
         <div className="tff-card overflow-hidden">
           <Table>

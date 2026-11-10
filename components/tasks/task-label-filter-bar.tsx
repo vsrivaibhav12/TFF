@@ -55,7 +55,7 @@ export function TaskLabelFilterBar({ labels }: TaskLabelFilterBarProps) {
             key={l.code}
             onClick={() => toggleLabel(l.code)}
             className={cn(
-              'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all',
+              'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border transition-all',
               isActive
                 ? 'ring-1 ring-offset-1'
                 : 'opacity-70 hover:opacity-100'
@@ -80,7 +80,7 @@ export function TaskLabelFilterBar({ labels }: TaskLabelFilterBarProps) {
       {activeLabels.length > 0 && (
         <button
           onClick={clearAll}
-          className="text-[11px] text-zinc-400 hover:text-zinc-600 underline"
+          className="text-xs text-zinc-400 hover:text-zinc-600 underline"
         >
           Clear tags
         </button>

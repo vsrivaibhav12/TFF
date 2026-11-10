@@ -67,7 +67,7 @@ export default function CentresAdmin({
               <div>
                 <code className="bg-zinc-100 rounded px-1.5 py-0.5 text-xs font-mono mr-2">{r.code}</code>
                 <span className="font-medium">{r.name}</span>
-                {!r.is_active && <Badge variant="outline" className="ml-2 text-[10px]">inactive</Badge>}
+                {!r.is_active && <Badge variant="outline" className="ml-2 text-xs">inactive</Badge>}
                 {r.description && <p className="text-xs text-zinc-500 mt-0.5 ml-1">{r.description}</p>}
               </div>
               {r.is_active && (

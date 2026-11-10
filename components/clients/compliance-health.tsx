@@ -40,7 +40,7 @@ export function ComplianceHealthBar({ gst, tds, it, showLabel = true, className 
           <div className={cn('h-full rounded-full transition-all', config.bar)} style={{ width: `${score}%` }} />
         </div>
         {showLabel && (
-          <span className={cn('text-[10px] font-medium tabular-nums', config.text)}>
+          <span className={cn('text-xs font-medium tabular-nums', config.text)}>
             {config.label} ({score}%)
           </span>
         )}

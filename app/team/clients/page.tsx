@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/auth/require-role';
 import { hasCapabilities } from '@/lib/auth/capabilities-cache';
 import Link from 'next/link';
 import NewClientDialog from '@/components/clients/new-client-dialog';
-import { Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ExportButton from '@/components/sophistication/export-button';
 import EmptyState from '@/components/sophistication/empty-state';
@@ -13,7 +13,6 @@ import FilterBar from '@/components/sophistication/filter-bar';
 import ClientsTableClient from './clients-table-client';
 import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 
-export const revalidate = 60;
 
 const PAGE_SIZE = 50;
 
@@ -116,7 +115,7 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
         <EmptyState
           title="No clients found"
           body="Try adjusting your filters or ask an admin to assign you to a client."
-          icon={<Users className="h-6 w-6 text-zinc-400" />}
+          variant="clients"
         />
       ) : (
         <>

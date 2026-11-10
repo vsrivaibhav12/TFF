@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 
 export interface DashboardCell {
   rule_code: string;
@@ -30,12 +31,15 @@ export async function loadComplianceDashboard(opts: {
     timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
   }).format(new Date(Date.now() + horizonMonths * 31 * 86400000));
 
-  const { data: events } = await sb
-    .from('compliance_calendar_events')
-    .select('id, rule_id, rule_code, period_label, due_date, status, task_id, compliance_calendar_rules(display_name, service_kind), tasks(status, is_stuck)')
-    .eq('is_deleted', false)
-    .gte('due_date', fromIso)
-    .lte('due_date', toIso);
+  // Paged: a plain query would stop at 1,000 events and under-count the tiles.
+  const events = await fetchAll<any>(() =>
+    sb
+      .from('compliance_calendar_events')
+      .select('id, rule_id, rule_code, period_label, due_date, status, task_id, compliance_calendar_rules(display_name, service_kind), tasks(status, is_stuck)')
+      .eq('is_deleted', false)
+      .gte('due_date', fromIso)
+      .lte('due_date', toIso),
+  );
 
   const todayIso = fromIso;
   const grouped: Record<string, DashboardCell> = {};

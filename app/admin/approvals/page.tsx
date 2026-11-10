@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateIST } from '@/lib/utils';
 import { ExpandableCell } from '@/components/ui/expandable-cell';
-import { ClipboardList, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import ReviewLeave from '@/app/team/leave/review-leave';
 import ReviewPermission from '@/app/team/attendance/review-permission';
@@ -40,7 +40,7 @@ export default async function AdminApprovalsPage() {
           <EmptyState
             title="No pending leave"
             body="All leave requests have been reviewed."
-            icon={<ClipboardList className="h-6 w-6 text-zinc-400" />}
+            variant="document"
           />
         ) : (
           <div className="tff-card overflow-hidden">
@@ -87,7 +87,7 @@ export default async function AdminApprovalsPage() {
           <EmptyState
             title="No pending permissions"
             body="All permission requests have been reviewed."
-            icon={<ClipboardList className="h-6 w-6 text-zinc-400" />}
+            variant="document"
           />
         ) : (
           <div className="tff-card overflow-hidden">

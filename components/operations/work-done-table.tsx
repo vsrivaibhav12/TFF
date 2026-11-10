@@ -78,12 +78,12 @@ export default function WorkDoneTable({ logs, clients, tasks, canViewAll, canMan
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       {l.client_id && (
-                        <span className="text-[10px] text-zinc-500 uppercase">
+                        <span className="text-xs text-zinc-500 uppercase">
                           {l.clients?.business_name ?? 'Archived client'}
                         </span>
                       )}
                       {l.task_id && (
-                        <Badge variant="outline" className="text-[10px] py-0">
+                        <Badge variant="outline" className="text-xs py-0">
                           {l.tasks ? displayTaskName(l.tasks) : 'Archived task'}
                         </Badge>
                       )}

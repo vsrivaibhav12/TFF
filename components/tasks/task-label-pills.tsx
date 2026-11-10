@@ -22,8 +22,8 @@ export function TaskLabelPills({ labels, maxVisible = 3, size = 'xs', className 
   const overflow = labels.length - maxVisible;
 
   const sizeClasses = size === 'sm'
-    ? 'px-1.5 py-0.5 text-[11px]'
-    : 'px-1 py-[1px] text-[10px]';
+    ? 'px-1.5 py-0.5 text-xs'
+    : 'px-1 py-[1px] text-xs';
 
   return (
     <span className={cn('inline-flex items-center gap-1 flex-nowrap overflow-hidden', className)}>
@@ -42,7 +42,7 @@ export function TaskLabelPills({ labels, maxVisible = 3, size = 'xs', className 
         </span>
       ))}
       {overflow > 0 && (
-        <span className="text-[10px] text-zinc-400">+{overflow}</span>
+        <span className="text-xs text-zinc-400">+{overflow}</span>
       )}
     </span>
   );

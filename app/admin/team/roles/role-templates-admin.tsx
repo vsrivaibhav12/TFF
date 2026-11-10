@@ -86,7 +86,7 @@ export default function RoleTemplatesAdmin({ templates }: { templates: RoleTempl
           body="Create your first role &mdash; e.g. Senior Tax Associate &mdash; with the access an articled clerk should have."
           actionLabel="Create role"
           actionOnClick={openNew}
-          icon={<ShieldCheck className="h-6 w-6 text-zinc-400" />}
+          variant="generic"
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -133,12 +133,12 @@ export default function RoleTemplatesAdmin({ templates }: { templates: RoleTempl
               {t.capabilities.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {t.capabilities.slice(0, 6).map((c) => (
-                    <Badge key={c} variant="outline" className="text-[10px] font-mono">
+                    <Badge key={c} variant="outline" className="text-xs font-mono">
                       {c}
                     </Badge>
                   ))}
                   {t.capabilities.length > 6 && (
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-xs">
                       +{t.capabilities.length - 6}
                     </Badge>
                   )}
@@ -295,8 +295,8 @@ function RoleEditorDialog({
                           />
                           <div className="flex-1 min-w-0">
                             <span className="font-medium text-zinc-800">{meta.label}</span>
-                            <p className="text-[11px] text-zinc-500 mt-0.5 leading-snug">{meta.description}</p>
-                            <code className="font-mono text-[10px] text-zinc-400">{c}</code>
+                            <p className="text-xs text-zinc-500 mt-0.5 leading-snug">{meta.description}</p>
+                            <code className="font-mono text-xs text-zinc-400">{c}</code>
                           </div>
                         </label>
                       );

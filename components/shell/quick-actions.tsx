@@ -7,16 +7,16 @@ export function QuickActionsDropdown({ role }: { role: string }) {
   const [open, setOpen] = useState(false);
 
   const adminLinks = [
-    { label: 'New Task', href: '/admin/tasks/bulk-create' },
-    { label: 'Add Client', href: '/admin/clients' },
-    { label: 'Add Team Member', href: '/admin/team' },
+    { label: 'Bulk create tasks', href: '/admin/tasks/bulk-create' },
+    { label: 'Go to clients', href: '/admin/clients' },
+    { label: 'Go to team', href: '/admin/team' },
   ];
 
   const teamLinks = [
-    { label: 'Create Task', href: '/team/tasks' },
-    { label: 'Log Work Done', href: '/team/work-done' },
-    { label: 'Request Leave', href: '/team/leave' },
-    { label: 'Mark Attendance', href: '/team/attendance' },
+    { label: 'Go to tasks', href: '/team/tasks' },
+    { label: 'Log work done', href: '/team/work-done' },
+    { label: 'Request leave', href: '/team/leave' },
+    { label: 'Mark attendance', href: '/team/attendance' },
   ];
 
   const links = role === 'admin' ? adminLinks : role === 'team' ? teamLinks : [];
@@ -28,7 +28,9 @@ export function QuickActionsDropdown({ role }: { role: string }) {
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center justify-center h-8 w-8 rounded-full bg-teal-600 text-white hover:bg-teal-700 transition-colors shadow-sm"
-        title="Quick Actions"
+        title="Quick actions"
+        aria-label="Quick actions"
+        aria-expanded={open}
       >
         <Plus className="h-4 w-4" />
       </button>
@@ -44,8 +46,8 @@ export function QuickActionsDropdown({ role }: { role: string }) {
             onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setOpen(false); } }}
           />
           <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-zinc-200 bg-white shadow-lg z-50 py-1 overflow-hidden">
-            <div className="px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-zinc-500 bg-zinc-50/50 border-b border-zinc-100">
-              Quick Create
+            <div className="px-3 py-2 text-xs font-medium text-zinc-500 bg-zinc-50/50 border-b border-zinc-100">
+              Quick actions
             </div>
             {links.map((link) => (
               <Link

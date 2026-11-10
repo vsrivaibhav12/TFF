@@ -33,7 +33,7 @@ export function MicroBarChart({ segments, total, className, onSegmentClick }: Mi
               style={{ width: `${pct}%`, backgroundColor: s.color }}
               title={`${s.label}: ${s.value}`}
             >
-              <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-[9px] text-white font-medium transition-opacity">
+              <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 text-xs text-white font-medium transition-opacity">
                 {s.value}
               </span>
             </button>
@@ -44,7 +44,7 @@ export function MicroBarChart({ segments, total, className, onSegmentClick }: Mi
         {segments.map((s) => (
           <div key={s.label} className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: s.color }} />
-            <span className="text-[10px] text-zinc-500">{s.label} <span className="font-medium text-zinc-700 tabular-nums">{s.value}</span></span>
+            <span className="text-xs text-zinc-500">{s.label} <span className="font-medium text-zinc-700 tabular-nums">{s.value}</span></span>
           </div>
         ))}
       </div>

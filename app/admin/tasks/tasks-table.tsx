@@ -50,14 +50,14 @@ type Task = {
 
 const DEFAULT_COLUMNS = [
   { key: 'select', label: 'Select', visible: true, optional: false },
-  { key: 'task_number', label: 'Number', visible: true, optional: true },
+  { key: 'task_number', label: 'Number', visible: false, optional: true },
   { key: 'client', label: 'Client', visible: true, optional: false },
-  { key: 'sub_service', label: 'Sub Service', visible: true, optional: false },
+  { key: 'sub_service', label: 'Task', visible: true, optional: false },
   { key: 'period', label: 'Period', visible: true, optional: false },
   { key: 'status', label: 'Status', visible: true, optional: false },
   { key: 'due', label: 'Due', visible: true, optional: false },
   { key: 'owner', label: 'Owner', visible: true, optional: true },
-  { key: 'labels', label: 'Labels', visible: true, optional: true },
+  { key: 'labels', label: 'Labels', visible: false, optional: true },
   { key: 'progress', label: 'Progress', visible: true, optional: true },
   { key: 'priority', label: 'Priority', visible: true, optional: true },
   { key: 'actions', label: 'Actions', visible: true, optional: false },
@@ -74,7 +74,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [colSearch, setColSearch] = useState<Record<string, string>>({});
   const [ConfirmDialog, confirm] = useConfirm();
-  const { columns, setColumns, density, setDensity } = useTablePrefs('admin-tasks', DEFAULT_COLUMNS, 'comfortable');
+  const { columns, setColumns, density, setDensity } = useTablePrefs('admin-tasks-v2', DEFAULT_COLUMNS, 'comfortable');
   const { widths, setWidth, loaded } = useColumnWidths('admin-tasks', {
     select: 44,
     task_number: 80,
@@ -286,7 +286,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
               )}
               {colVisible('sub_service') && (
                 <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.sub_service : undefined} onResize={(w) => setWidth('sub_service', w)} onClick={() => toggleSort('sub_service')}>
-                  <span className="flex items-center gap-1">Sub Service <SortIcon col="sub_service" /></span>
+                  <span className="flex items-center gap-1">Task <SortIcon col="sub_service" /></span>
                 </ResizableTableHead>
               )}
               {colVisible('period') && (
@@ -347,6 +347,9 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                   )}
                   {colVisible('sub_service') && (
                     <TableCell className={rowPadding}>
+                      {!colVisible('task_number') && t.task_number && (
+                        <span className="block text-xs font-mono tabular-nums text-zinc-400">{t.task_number}</span>
+                      )}
                       <TaskHoverCard taskId={t.id}>
                         <DockLink item={{ type: 'task', id: t.id }} href={`/admin/tasks/${t.id}`} className="font-semibold text-zinc-900 hover:text-teal-700 text-sm block">
                           <ExpandableCell maxLines={1}>
@@ -377,17 +380,17 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                   {colVisible('status') && (
                     <TableCell className={cn('text-center', rowPadding)}>
                       <div className="flex flex-col items-center gap-1">
-                        <Badge className={cn('text-[10px]', getStatusColour(t.status).bg, getStatusColour(t.status).text, getStatusColour(t.status).border)}>
+                        <Badge className={cn('text-xs', getStatusColour(t.status).bg, getStatusColour(t.status).text, getStatusColour(t.status).border)}>
                           <span className={cn('h-1.5 w-1.5 rounded-full', getStatusColour(t.status).dot)} />
                           {t.status.replace('_', ' ')}
                         </Badge>
                         {t.is_verified && (
-                          <span className="text-[10px] font-medium text-teal-700 flex items-center gap-1 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5">
+                          <span className="text-xs font-medium text-teal-700 flex items-center gap-1 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5">
                             <ShieldCheck className="h-3 w-3" /> Verified
                           </span>
                         )}
                         {t.is_stuck && (
-                          <span className="text-[10px] font-medium text-red-600 flex items-center gap-1">
+                          <span className="text-xs font-medium text-red-600 flex items-center gap-1">
                             <AlertTriangle className="h-3 w-3" /> Stuck
                           </span>
                         )}
@@ -405,7 +408,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                     <TableCell className={rowPadding}>
                       {t.users_profile?.full_name ? (
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-semibold border border-teal-200">
+                          <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-semibold border border-teal-200">
                             {t.users_profile.full_name.slice(0, 1)}
                           </div>
                           <span className="text-xs text-zinc-700">{t.users_profile.full_name}</span>
@@ -421,16 +424,16 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                         {t.labels && t.labels.length > 0 ? (
                           <>
                             {t.labels.slice(0, 3).map((l) => (
-                              <span key={l.code} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border" style={{ backgroundColor: l.color_hex ? l.color_hex + '20' : '#f4f4f5', borderColor: l.color_hex || '#e4e4e7', color: l.color_hex || '#52525b' }}>
+                              <span key={l.code} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border" style={{ backgroundColor: l.color_hex ? l.color_hex + '20' : '#f4f4f5', borderColor: l.color_hex || '#e4e4e7', color: l.color_hex || '#52525b' }}>
                                 {l.display_name}
                               </span>
                             ))}
                             {t.labels.length > 3 && (
-                              <span className="text-[10px] text-zinc-400">+{t.labels.length - 3}</span>
+                              <span className="text-xs text-zinc-400">+{t.labels.length - 3}</span>
                             )}
                           </>
                         ) : (
-                          <span className="text-[10px] text-zinc-300">—</span>
+                          <span className="text-xs text-zinc-300">—</span>
                         )}
                       </div>
                     </TableCell>
@@ -442,7 +445,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                   )}
                   {colVisible('priority') && (
                     <TableCell className={cn('text-center', rowPadding)}>
-                      <Badge className={cn('text-[10px]', getPriorityColour(t.priority).bg, getPriorityColour(t.priority).text)}>
+                      <Badge className={cn('text-xs', getPriorityColour(t.priority).bg, getPriorityColour(t.priority).text)}>
                         <span className={cn('h-1.5 w-1.5 rounded-full', getPriorityColour(t.priority).dot)} />
                         {t.priority ?? '—'}
                       </Badge>

@@ -84,7 +84,7 @@ export default function BulkCreateTasksForm({ subServiceId, subServiceName, clie
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label className="text-xs">Clients ({selectedClientIds.size} selected)</Label>
-          <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={toggleAll}>
+          <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={toggleAll}>
             {allSelected ? 'Deselect all' : 'Select all'}
           </Button>
         </div>
@@ -146,7 +146,7 @@ export default function BulkCreateTasksForm({ subServiceId, subServiceName, clie
         {pending ? 'Creating...' : `Create ${selectedClientIds.size} task${selectedClientIds.size !== 1 ? 's' : ''}`}
       </Button>
 
-      <p className="text-[10px] text-zinc-400">
+      <p className="text-xs text-zinc-400">
         Task names will be: <span className="font-mono">Client Name — {subServiceName} — {periodMonth || '?'}/{periodYear}</span>
       </p>
     </div>

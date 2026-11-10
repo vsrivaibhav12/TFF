@@ -7,13 +7,12 @@ import { listAccessibleClients, listClientGroups, countAccessibleClients } from 
 import { getComplianceStatusForClients } from '@/lib/repositories/compliance';
 import { countActiveEngagementsForClients } from '@/lib/repositories/client-sub-services';
 import { Button } from '@/components/ui/button';
-import { Plus, Building2, Upload, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Upload, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import FilterBar from '@/components/sophistication/filter-bar';
 import ClientsTableClient from './clients-table-client';
 import ExportButton from '@/components/sophistication/export-button';
 
-export const revalidate = 60;
 
 const PAGE_SIZE = 50;
 
@@ -120,7 +119,7 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
           title="No clients found"
           body="Try adjusting your filters or onboard your first client."
           actionLabel="Create client"
-          icon={<Building2 className="h-6 w-6 text-zinc-400" />}
+          variant="clients"
         />
       ) : (
         <>

@@ -6,6 +6,7 @@ import { markAllNotificationsReadAction } from '@/lib/actions/notifications';
 import { toast } from 'sonner';
 import useSWR from 'swr';
 import { useState, useTransition } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 type Item = {
   id: string;
@@ -45,29 +46,29 @@ export default function NotificationsBell() {
     });
   }
 
+  // Radix popover: closes on outside click and Escape, traps focus correctly, and no
+  // longer disappears when the pointer drifts off the panel.
   return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        data-testid="notifications-bell"
-        aria-label="Notifications"
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
-      >
-        <Bell className="h-4 w-4" />
-        {count > 0 && (
-          <span
-            data-testid="notifications-unread-count"
-            className="absolute -top-0.5 -right-0.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold text-white"
-          >
-            {count > 9 ? '9+' : count}
-          </span>
-        )}
-      </button>
-      {open && (
-        <div
-          className="absolute right-0 mt-2 w-80 rounded-xl border border-zinc-200 bg-white shadow-lg z-40 overflow-hidden"
-          onMouseLeave={() => setOpen(false)}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          data-testid="notifications-bell"
+          aria-label={count > 0 ? `Notifications, ${count} unread` : 'Notifications'}
+          className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
         >
+          <Bell className="h-4 w-4" />
+          {count > 0 && (
+            <span
+              data-testid="notifications-unread-count"
+              className="absolute -top-0.5 -right-0.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold text-white"
+            >
+              {count > 9 ? '9+' : count}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      {open && (
+        <PopoverContent align="end" className="w-80 p-0 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200">
             <div className="text-sm font-semibold">Notifications</div>
             <button
@@ -105,8 +106,8 @@ export default function NotificationsBell() {
               All notifications &amp; preferences →
             </Link>
           </div>
-        </div>
+        </PopoverContent>
       )}
-    </div>
+    </Popover>
   );
 }

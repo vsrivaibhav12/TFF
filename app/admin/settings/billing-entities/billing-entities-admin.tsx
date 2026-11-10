@@ -340,7 +340,7 @@ function AccessDialog({
                 <div className="text-sm font-medium">{s.full_name}</div>
                 <div className="text-xs text-zinc-500">{s.email}</div>
               </div>
-              <Badge variant={s.role === 'admin' ? 'teal' : 'outline'} className="text-[10px]">
+              <Badge variant={s.role === 'admin' ? 'teal' : 'outline'} className="text-xs">
                 {s.role}
               </Badge>
             </label>

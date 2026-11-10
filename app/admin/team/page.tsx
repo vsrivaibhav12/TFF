@@ -7,7 +7,7 @@ import ExportButton from '@/components/sophistication/export-button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ShieldCheck, Users } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import NewTeamMemberDialog from './new-member-dialog';
 import RemoveMemberButton from './remove-member-button';
 import EmptyState from '@/components/sophistication/empty-state';
@@ -58,7 +58,7 @@ export default async function AdminTeamPage() {
           </TableHeader>
           <TableBody>
             {team.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="p-0"><EmptyState title="No team members" body="Create the first team member to get started." actionHref="/admin/team" actionLabel="Create member" icon={<Users className="h-6 w-6 text-zinc-400" />} /></TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="p-0"><EmptyState title="No team members" body="Create the first team member to get started." actionHref="/admin/team" actionLabel="Create member" variant="clients" /></TableCell></TableRow>
             ) : (team.map((u: any) => (
               <TableRow key={u.id} className="cursor-pointer hover:bg-zinc-50">
                 <TableCell className="font-medium">

@@ -15,6 +15,9 @@ import { createServiceClient } from '@/lib/supabase/service-role';
 import { seedTaskStepsFromSop, seedTaskStepsFromTemplate } from '@/lib/services/task-steps-service';
 import { notify } from '@/lib/services/notification-service';
 import { writeAudit } from '@/lib/services/audit-service';
+import { hasCapabilities } from '@/lib/auth/capabilities-cache';
+import { listTeamUsers } from '@/lib/repositories/clients';
+import { parseTaskFilterParams } from '@/lib/tasks/filter-params';
 import { buildTaskTitle } from '@/lib/utils';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -568,6 +571,10 @@ export async function bulkUpdateTasksAction(input: z.infer<typeof bulkUpdateTask
     await requireCapability(me, 'tasks.edit');
     const parsed = bulkUpdateTasksSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
+    // Changing who owns or reviews a task needs the assign capability, same as the single-task action.
+    if ('assigned_to' in parsed.data.updates || 'reviewer_id' in parsed.data.updates) {
+      await requireCapability(me, 'tasks.assign');
+    }
 
     let successCount = 0;
     let failedCount = 0;
@@ -590,8 +597,16 @@ export async function bulkUpdateTasksAction(input: z.infer<typeof bulkUpdateTask
 
       try {
         await taskRepo.updateTaskRecord(taskId, payload);
+        // Keep the assignee list in step with the column, as the single-task assign does.
+        // Without this the task shows one owner in the list and another in the detail view.
+        if ('assigned_to' in parsed.data.updates) {
+          await taskRepo.setTaskRoleUser(taskId, 'assignee', parsed.data.updates.assigned_to ?? null, me.id);
+        }
+        if ('reviewer_id' in parsed.data.updates) {
+          await taskRepo.setTaskRoleUser(taskId, 'reviewer', parsed.data.updates.reviewer_id ?? null, me.id);
+        }
         successCount++;
-        
+
         await taskRepo.addTaskActivity({
           task_id: taskId,
           action: 'bulk_updated',
@@ -608,6 +623,67 @@ export async function bulkUpdateTasksAction(input: z.infer<typeof bulkUpdateTask
     revalidatePath('/team/tasks');
     revalidatePath('/admin/tasks');
     return ok({ success: successCount, failed: failedCount });
+  } catch (e: unknown) {
+    return fail(errorMessage(e), errorCode(e));
+  }
+}
+
+const REASSIGN_CAP = 500;
+
+const reassignByFilterSchema = z.object({
+  filters: z.object({
+    status: z.string().optional(), priority: z.string().optional(), assigned: z.string().optional(),
+    client: z.string().optional(), sub_service: z.string().optional(), due_from: z.string().optional(),
+    due_to: z.string().optional(), period_year: z.string().optional(), period_month: z.string().optional(),
+    is_billable: z.string().optional(), is_stuck: z.string().optional(), is_verified: z.string().optional(),
+    label: z.union([z.string(), z.array(z.string())]).optional(), q: z.string().optional(),
+  }),
+  assigned_to: z.string().uuid().nullable(),
+  /** The count the user saw on screen. The action refuses if the matching set has changed. */
+  expected_count: z.number().int().min(1).max(REASSIGN_CAP),
+});
+
+/**
+ * Reassign every task matching the current list filter, not just the selected rows.
+ * Safeguards: needs tasks.assign, refuses above 500 tasks, refuses if the number of
+ * matches differs from what the user confirmed, skips completed and cancelled tasks.
+ */
+export async function reassignTasksByFilterAction(
+  input: z.infer<typeof reassignByFilterSchema>,
+): Promise<ActionResult<{ updated: number; skipped: number }>> {
+  try {
+    const me = await requireRole(['admin', 'team']);
+    await requireCapability(me, 'tasks.assign');
+    const parsed = reassignByFilterSchema.safeParse(input);
+    if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
+
+    // Same scoping as the list page: without tasks.view a team member only sees their own tasks.
+    const caps = await hasCapabilities(me, ['tasks.view']);
+    const canViewAll = me.role === 'admin' || caps.has('tasks.view');
+    const opts = parseTaskFilterParams(parsed.data.filters);
+    if (!canViewAll) opts.assignedTo = opts.assignedTo ?? me.id;
+
+    if (parsed.data.assigned_to) {
+      const team = await listTeamUsers();
+      if (!team.some((m: { id: string }) => m.id === parsed.data.assigned_to)) return fail('Choose an active team member', 'VALIDATION');
+    }
+
+    const { ids, truncated } = await taskRepo.listTaskIdsForFilter(opts, REASSIGN_CAP);
+    if (truncated) return fail(`More than ${REASSIGN_CAP} tasks match. Narrow the filter first.`, 'TOO_MANY');
+    if (ids.length !== parsed.data.expected_count) {
+      return fail('The matching tasks changed since you opened this. Refresh and try again.', 'CONFLICT');
+    }
+
+    const updatedIds = await taskRepo.reassignTasks(ids, parsed.data.assigned_to, me.id);
+    await writeAudit({
+      action: 'task.bulk_reassign',
+      entity_type: 'task',
+      performed_by: me.id,
+      details: { assigned_to: parsed.data.assigned_to, matched: ids.length, updated: updatedIds.length, filters: parsed.data.filters },
+    });
+    revalidatePath('/team/tasks');
+    revalidatePath('/admin/tasks');
+    return ok({ updated: updatedIds.length, skipped: ids.length - updatedIds.length });
   } catch (e: unknown) {
     return fail(errorMessage(e), errorCode(e));
   }

@@ -10,6 +10,7 @@ import type { NavItem } from './nav-icons';
 import { useEffect, useState, useMemo } from 'react';
 import { getRecentItems, type RecentItem } from '@/lib/state/recent-items';
 import { DockLink } from './dock-link';
+import useSWR from 'swr';
 
 interface PersistentSidebarProps {
   role: 'admin' | 'team';
@@ -35,6 +36,12 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
   const pathname = usePathname();
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [recent, setRecent] = useState<RecentItem[]>([]);
+  // Pending-approval count for the Approvals badge; refreshed once a minute.
+  const { data: counts } = useSWR<{ approvals: number }>(
+    '/api/nav-counts',
+    (url: string) => fetch(url, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : { approvals: 0 })),
+    { refreshInterval: 60_000, revalidateOnFocus: false },
+  );
 
   const recentType = useMemo(() => getModuleRecentType(pathname, role), [pathname, role]);
 
@@ -75,10 +82,7 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
       {/* Logo */}
       <div className="h-14 flex items-center px-4 border-b border-zinc-100 shrink-0">
         <Link href={`/${role}`} className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-            <Image src="/logo.png" width={24} height={24} className="h-5 w-auto object-contain" alt="TFF" priority />
-          </div>
-          <span className="text-sm font-semibold text-zinc-900">TFF</span>
+          <Image src="/logo.png" width={140} height={28} className="h-7 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
         </Link>
       </div>
 
@@ -89,7 +93,7 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
             {group.section ? (
               <button
                 onClick={() => toggleSection(group.section!)}
-                className="w-full flex items-center gap-1 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-zinc-600 transition-colors"
+                className="w-full flex items-center gap-1 px-4 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-600 transition-colors"
               >
                 {group.section}
                 <ChevronRight className={cn('ml-auto h-3 w-3 transition-transform', collapsedSections[group.section!] && 'rotate-90')} />
@@ -113,6 +117,11 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
                     >
                       <Icon className={cn('h-4 w-4 shrink-0', active ? 'text-teal-600' : 'text-zinc-400')} />
                       <span className="truncate">{n.label}</span>
+                      {n.href.endsWith('/approvals') && (counts?.approvals ?? 0) > 0 && (
+                        <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-teal-600 px-1 text-[11px] font-semibold text-white" aria-label={`${counts!.approvals} pending`}>
+                          {counts!.approvals > 99 ? '99+' : counts!.approvals}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}
@@ -124,7 +133,7 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
         {/* Recent items */}
         {recent.length > 0 && recentType && (
           <div className="px-2 pt-3">
-            <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Recents</div>
+            <div className="px-2 py-1 text-xs font-medium text-zinc-400">Recents</div>
             <div className="space-y-0.5 mt-1">
               {recent.map((item) => (
                 <DockLink
@@ -145,12 +154,12 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
       {/* User */}
       <div className="shrink-0 border-t border-zinc-100 p-3">
         <div className="flex items-center gap-2 mb-2">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-[10px] font-bold">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-xs font-medium">
             {getInitials(user.full_name)}
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-xs font-medium text-zinc-900 truncate">{user.full_name || user.email}</div>
-            <div className="text-[10px] text-zinc-500 truncate">{user.email}</div>
+            <div className="text-xs text-zinc-500 truncate">{user.email}</div>
           </div>
         </div>
         <div className="flex gap-1">

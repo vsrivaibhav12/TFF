@@ -8,7 +8,6 @@ import {
   X,
   ChevronRight,
   User,
-  Calendar,
   Search,
   LayoutDashboard,
 } from 'lucide-react';
@@ -54,15 +53,6 @@ function getRoleBadge(role: string) {
     client: 'Client',
   };
   return { style: styles[role] || styles.client, label: labels[role] || 'User' };
-}
-
-function formatToday(): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date());
 }
 
 export default function AppShell({
@@ -198,7 +188,7 @@ export default function AppShell({
                     <Image src="/logo.png" width={180} height={36} className="h-9 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
                     <div>
                       <div className="text-sm font-bold text-white">The Fiscal Fulcrum</div>
-                      <div className="text-[10px] text-teal-200/60 uppercase tracking-wider font-semibold">
+                      <div className="text-xs text-teal-200/60 font-semibold">
                         {roleBadge.label}
                       </div>
                     </div>
@@ -215,7 +205,7 @@ export default function AppShell({
                       return (
                         <div key={n.href}>
                           {showSection && (
-                            <div className="px-2.5 pt-4 pb-1 text-[10px] uppercase tracking-widest text-teal-200/50 font-bold">
+                            <div className="px-2.5 pt-4 pb-1 text-xs text-teal-200/50 font-medium">
                               {n.section}
                             </div>
                           )}
@@ -265,36 +255,31 @@ export default function AppShell({
         {/* Main content */}
         <main className={`flex-1 min-w-0 transition-colors duration-300 ${desktopMargin}`}>
           {/* Desktop top bar */}
-          <div className="hidden md:flex items-center justify-between gap-4 px-8 pt-8 pb-4 sticky top-0 z-20 bg-zinc-50/80 backdrop-blur-xl">
+          <div className="hidden md:flex items-center justify-between gap-4 px-8 py-3 sticky top-0 z-20 bg-zinc-50/95 border-b border-zinc-200/60">
             {/* Breadcrumbs */}
             <div className="flex items-center gap-1.5 text-sm text-zinc-500">
               <Link href={`/${userRole}`} className="hover:text-zinc-900 transition-colors capitalize">
                 {userRole}
               </Link>
-              {breadcrumbSegments.map((segment, i) => (
-                <span key={`bc-${segment}-${i}`} className="flex items-center gap-1.5">
-                  <ChevronRight className="h-3.5 w-3.5 text-zinc-300" />
-                  <span
-                    className={cn(
-                      'capitalize',
-                      i === breadcrumbSegments.length - 1
-                        ? 'text-zinc-900 font-medium'
-                        : 'hover:text-zinc-900 transition-colors'
+              {breadcrumbSegments.map((segment, i) => {
+                const isLast = i === breadcrumbSegments.length - 1;
+                const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(segment) || /^\d+$/.test(segment);
+                const label = isId ? 'Details' : segment.replace(/-/g, ' ');
+                const href = `/${userRole}/${breadcrumbSegments.slice(0, i + 1).join('/')}`;
+                return (
+                  <span key={`bc-${segment}-${i}`} className="flex items-center gap-1.5">
+                    <ChevronRight className="h-3.5 w-3.5 text-zinc-300" />
+                    {isLast ? (
+                      <span className="capitalize text-zinc-900 font-medium" aria-current="page">{label}</span>
+                    ) : (
+                      <Link href={href} className="capitalize hover:text-zinc-900 transition-colors">{label}</Link>
                     )}
-                  >
-                    {segment.replace(/-/g, ' ')}
                   </span>
-                </span>
-              ))}
+                );
+              })}
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Date pill */}
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-500 bg-white/60 backdrop-blur-lg border border-zinc-200/80 rounded-xl shadow-sm">
-                <Calendar className="h-3.5 w-3.5 text-zinc-400" />
-                <span>{formatToday()}</span>
-              </div>
-
               {/* Search trigger */}
               <button
                 onClick={() =>
@@ -304,8 +289,8 @@ export default function AppShell({
               >
                 <Search className="h-3.5 w-3.5 text-zinc-400 group-hover:text-zinc-600" />
                 <span className="text-zinc-400 hidden xl:inline">Search...</span>
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded-md border bg-white px-1.5 font-mono text-[10px] font-medium text-zinc-400">
-                  <span className="text-[10px]">Ctrl</span>K
+                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded-md border bg-white px-1.5 font-mono text-xs font-medium text-zinc-400">
+                  <span className="text-xs">Ctrl</span>K
                 </kbd>
               </button>
 
@@ -372,7 +357,7 @@ export default function AppShell({
 
           {/* Content area */}
           <div id="main-content" className="px-6 md:px-8 py-6 md:py-8 pt-20 md:pt-2 pb-24 md:pb-8 bg-zinc-50 min-h-screen">
-            <div className="mx-auto w-full">{children}</div>
+            <div className="mx-auto w-full max-w-[1600px]">{children}</div>
           </div>
         </main>
 

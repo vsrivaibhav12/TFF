@@ -10,7 +10,7 @@ import SubServiceDialog from './sub-service-dialog';
 import TaskTemplatePanel from './task-template-panel';
 import { CategoryManager } from './category-dialog';
 import EmptyState from '@/components/sophistication/empty-state';
-import { Layers } from 'lucide-react';
+
 import ServiceSearchWrapper from './service-search-wrapper';
 import ServiceCard from './service-card';
 
@@ -119,7 +119,7 @@ export default async function AdminServicesPage() {
           <EmptyState
             title="No services defined yet"
             body="Start by creating a service (e.g. 'GST Compliance'). Then add sub-services like 'GSTR-3B' inside it."
-            icon={<Layers className="h-6 w-6 text-zinc-400" />}
+            variant="generic"
           />
         ) : (
           <div className="space-y-8">
@@ -128,7 +128,7 @@ export default async function AdminServicesPage() {
               if (catServices.length === 0) return null;
               return (
                 <section key={cat.id} className="space-y-3">
-                  <h2 className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">{cat.name}</h2>
+                  <h2 className="text-xs text-zinc-400 font-semibold">{cat.name}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {catServices.map((s) => (
                       <ServiceCard
@@ -146,7 +146,7 @@ export default async function AdminServicesPage() {
             })}
             {servicesWithoutCategory.length > 0 && (
               <section className="space-y-3">
-                <h2 className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">Uncategorized</h2>
+                <h2 className="text-xs text-zinc-400 font-semibold">Uncategorized</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {servicesWithoutCategory.map((s) => (
                     <ServiceCard

@@ -98,16 +98,16 @@ export default function ServiceCard({
                 {s.name}
               </h3>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="font-mono text-[10px] text-zinc-400">{s.code}</span>
+                <span className="font-mono text-xs text-zinc-400">{s.code}</span>
                 {s.service_kind && (
-                  <span className="text-[9px] uppercase tracking-wider text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded font-medium">
+                  <span className="text-xs text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded font-medium">
                     {s.service_kind.replace(/_/g, ' ')}
                   </span>
                 )}
               </div>
             </div>
             <ServiceDialog categories={categories} initial={s}>
-              <button className="text-[11px] text-zinc-400 hover:text-teal-700 font-medium transition-colors shrink-0">
+              <button className="text-xs text-zinc-400 hover:text-teal-700 font-medium transition-colors shrink-0">
                 Edit
               </button>
             </ServiceDialog>
@@ -125,9 +125,9 @@ export default function ServiceCard({
       {/* Sub-services chips */}
       {subs.length === 0 ? (
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-[11px] text-zinc-400 italic">No sub-services yet.</span>
+          <span className="text-xs text-zinc-400 italic">No sub-services yet.</span>
           <SubServiceDialog serviceId={s.id} serviceName={s.name}>
-            <button className="text-[11px] text-teal-700 hover:underline font-medium">
+            <button className="text-xs text-teal-700 hover:underline font-medium">
               + Add sub-service
             </button>
           </SubServiceDialog>
@@ -138,21 +138,21 @@ export default function ServiceCard({
             {subs.map((ss: any) => (
               <span
                 key={ss.id}
-                className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium border ${
+                className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border ${
                   ss.is_active
                     ? frequencyColor(ss.frequency)
                     : 'bg-zinc-50 border-zinc-100 text-zinc-400'
                 }`}
               >
                 {ss.name}
-                <span className="text-[9px] uppercase opacity-70">{ss.frequency}</span>
+                <span className="text-xs uppercase opacity-70">{ss.frequency}</span>
                 {!ss.is_active && (
-                  <span className="text-[9px] text-amber-600 font-medium">paused</span>
+                  <span className="text-xs text-amber-600 font-medium">paused</span>
                 )}
               </span>
             ))}
             <SubServiceDialog serviceId={s.id} serviceName={s.name}>
-              <button className="inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-[11px] font-medium text-teal-700 bg-teal-50 border border-teal-100 hover:bg-teal-100 transition-colors">
+              <button className="inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-medium text-teal-700 bg-teal-50 border border-teal-100 hover:bg-teal-100 transition-colors">
                 +<span className="sr-only">Add sub-service</span>
               </button>
             </SubServiceDialog>
@@ -172,7 +172,7 @@ export default function ServiceCard({
                       {ss.name}
                     </span>
                     {!ss.is_active && (
-                      <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded shrink-0">
+                      <span className="text-xs text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded shrink-0">
                         inactive
                       </span>
                     )}
@@ -180,7 +180,7 @@ export default function ServiceCard({
                   <div className="flex items-center gap-2">
                     <Link
                       href={`${prefix}/services/sub-services/${ss.id}/clients`}
-                      className="inline-flex items-center gap-1 text-[11px] text-teal-700 hover:text-teal-800 font-medium transition-colors"
+                      className="inline-flex items-center gap-1 text-xs text-teal-700 hover:text-teal-800 font-medium transition-colors"
                     >
                       <Users className="h-3 w-3" /> Clients
                     </Link>
@@ -189,7 +189,7 @@ export default function ServiceCard({
                       serviceName={ss.services?.name ?? ''}
                       initial={ss}
                     >
-                      <button className="text-[11px] text-zinc-400 hover:text-teal-700 font-medium transition-colors shrink-0">
+                      <button className="text-xs text-zinc-400 hover:text-teal-700 font-medium transition-colors shrink-0">
                         Edit
                       </button>
                     </SubServiceDialog>
@@ -205,7 +205,7 @@ export default function ServiceCard({
             {subs.length > 3 && (
               <Dialog>
                 <DialogTrigger asChild>
-                  <button className="text-[11px] text-teal-700 hover:text-teal-800 hover:underline font-medium pl-1 text-left">
+                  <button className="text-xs text-teal-700 hover:text-teal-800 hover:underline font-medium pl-1 text-left">
                     View all {subs.length} sub-services...
                   </button>
                 </DialogTrigger>
@@ -226,7 +226,7 @@ export default function ServiceCard({
                               {ss.name}
                             </span>
                             {!ss.is_active && (
-                              <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded shrink-0">
+                              <span className="text-xs text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded shrink-0">
                                 inactive
                               </span>
                             )}
@@ -268,19 +268,19 @@ export default function ServiceCard({
       {/* Footer stats */}
       <div className="mt-auto pt-4 flex items-center justify-between border-t border-zinc-100">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 text-[11px] text-zinc-500">
+          <div className="flex items-center gap-1 text-xs text-zinc-500">
             <ListChecks className="h-3 w-3" />
             <span className="font-medium">{subs.length}</span> sub-services
           </div>
           {totalTemplates > 0 && (
-            <div className="flex items-center gap-1 text-[11px] text-zinc-500">
+            <div className="flex items-center gap-1 text-xs text-zinc-500">
               <Footprints className="h-3 w-3" />
               <span className="font-medium">{totalSteps}</span> steps
             </div>
           )}
         </div>
         <SubServiceDialog serviceId={s.id} serviceName={s.name}>
-          <button className="inline-flex items-center gap-1 text-[11px] font-medium text-teal-700 hover:text-teal-800 transition-colors">
+          <button className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:text-teal-800 transition-colors">
             Add work <ChevronRight className="h-3 w-3" />
           </button>
         </SubServiceDialog>

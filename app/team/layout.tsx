@@ -29,10 +29,10 @@ export default async function TeamLayout({ children }: { children: React.ReactNo
     { href: '/team/settings', label: 'Settings', icon: 'settings' as const, section: 'System' },
 
     /* ── My workplace ── */
-    { href: '/team/attendance', label: 'Attendance', icon: 'calendar' as const, section: 'My workplace' },
-    { href: '/team/leave', label: 'Leave', icon: 'calendar' as const, section: 'My workplace' },
-    { href: '/team/approvals', label: 'Approvals', icon: 'shield' as const, section: 'My workplace' },
-    { href: '/team/work-done', label: 'Work done', icon: 'clipboard' as const, section: 'My workplace' },
+    { href: '/team/attendance', label: 'Attendance', icon: 'calendar-check' as const, section: 'My workplace' },
+    { href: '/team/leave', label: 'Leave', icon: 'calendar-off' as const, section: 'My workplace' },
+    { href: '/team/approvals', label: 'Approvals', icon: 'file-check' as const, section: 'My workplace' },
+    { href: '/team/work-done', label: 'Work done', icon: 'timer' as const, section: 'My workplace' },
   ];
 
   const nav = filterNavByCapabilities(fullNav, user.role, capabilities);

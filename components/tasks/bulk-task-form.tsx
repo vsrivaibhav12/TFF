@@ -248,7 +248,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
                   <Checkbox checked={selectedClients.has(c.id)} onCheckedChange={() => toggleClient(c.id)} />
                   <span className="text-sm text-zinc-900">{c.business_name}</span>
                   {c.group_id && (
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-400 ml-auto">
+                    <span className="text-xs text-zinc-400 ml-auto">
                       {groups.find((g) => g.id === c.group_id)?.name}
                     </span>
                   )}
@@ -304,7 +304,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
                   {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-zinc-500">Selecting a template will copy its SOP steps to all created tasks.</p>
+              <p className="text-xs text-zinc-500">Selecting a template will copy its SOP steps to all created tasks.</p>
             </div>
           )}
 

@@ -149,7 +149,7 @@ export default function TaskImportForm() {
                           {hasErr ? (
                             <span className="text-xs text-amber-700">{r.errors.join('; ')}</span>
                           ) : (
-                            <Badge variant="success" className="text-[10px]">ready</Badge>
+                            <Badge variant="success" className="text-xs">ready</Badge>
                           )}
                         </TableCell>
                       </TableRow>

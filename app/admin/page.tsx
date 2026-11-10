@@ -19,7 +19,8 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-container';
-import { dueLabel } from '@/lib/utils';
+import { dueLabel, todayIST } from '@/lib/utils';
+import { StatCard } from '@/components/ui/stat-card';
 import { PriorityList } from '@/components/dashboard/priority-list';
 import { AdminQuickActions } from '@/components/dashboard/admin-quick-actions';
 import { NeedsAttentionHub, type AttentionItem } from '@/components/dashboard/needs-attention-hub';
@@ -54,19 +55,18 @@ async function DashboardBody() {
       overdueTasks,
       activeEngagements,
       recentTasks,
-      upcomingDeadlines,
       attentionTasks,
       pendingApprovals,
       attendanceToday,
       recentAuditLogs,
     },
     complianceCells,
-    [dsc30, dsc60, dsc90],
+    dscExpiring,
     closureVelocity,
   ] = await Promise.all([
     getAdminDashboardData(),
     loadComplianceDashboard({ horizonMonths: 3 }),
-    Promise.all([listExpiringDsc(30), listExpiringDsc(60), listExpiringDsc(90)]),
+    listExpiringDsc(90),
     getTaskClosureVelocity(30),
   ]);
 
@@ -81,10 +81,16 @@ async function DashboardBody() {
     .sort((a, b) => a.period_due_date.localeCompare(b.period_due_date))
     .slice(0, 6);
 
+  // One query for the whole 90-day window, bucketed here (was three separate queries).
+  const todayMs = Date.parse(`${todayIST()}T00:00:00Z`);
+  const daysLeft = (iso: string) => Math.round((Date.parse(`${iso.slice(0, 10)}T00:00:00Z`) - todayMs) / 86_400_000);
+  const dsc30 = dscExpiring.filter((d: any) => daysLeft(d.expiry_date) <= 30).length;
+  const dsc60 = dscExpiring.filter((d: any) => { const n = daysLeft(d.expiry_date); return n > 30 && n <= 60; }).length;
+  const dsc90 = dscExpiring.length - dsc30 - dsc60;
   const dscSegments = [
-    { label: '0-30 days', value: dsc30.length, color: '#DC2626' },
-    { label: '31-60 days', value: dsc60.length - dsc30.length, color: '#F59E0B' },
-    { label: '61-90 days', value: dsc90.length - dsc60.length, color: '#0D9488' },
+    { label: '0-30 days', value: dsc30, color: '#DC2626' },
+    { label: '31-60 days', value: dsc60, color: '#F59E0B' },
+    { label: '61-90 days', value: dsc90, color: '#0D9488' },
   ].filter((s) => s.value > 0);
 
   const attentionItems: AttentionItem[] = [
@@ -139,8 +145,8 @@ async function DashboardBody() {
                     href={`/admin/compliance?rule=${c.rule_code}`}
                     className="tff-card p-3 hover:border-teal-200 transition-colors group"
                   >
-                    <div className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider truncate">{c.rule_name}</div>
-                    <div className="text-[10px] text-zinc-400 mt-0.5">{c.period_label}</div>
+                    <div className="text-xs font-medium text-zinc-400 truncate">{c.rule_name}</div>
+                    <div className="text-xs text-zinc-400 mt-0.5">{c.period_label}</div>
                     <div className={`text-xl font-bold tabular-nums tracking-tight mt-2 ${tone === 'success' ? 'text-teal-700' : tone === 'warning' ? 'text-amber-600' : 'text-red-600'}`}>
                       {c.filed}<span className="text-zinc-300 text-sm font-medium">/{c.total_clients}</span>
                     </div>
@@ -151,8 +157,8 @@ async function DashboardBody() {
                       />
                     </div>
                     <div className="flex items-center justify-between mt-1.5">
-                      <span className="text-[10px] text-zinc-400">{pct}% filed</span>
-                      {c.overdue > 0 && <span className="text-[10px] text-red-600 font-medium">{c.overdue} overdue</span>}
+                      <span className="text-xs text-zinc-400">{pct}% filed</span>
+                      {c.overdue > 0 && <span className="text-xs text-red-600 font-medium">{c.overdue} overdue</span>}
                     </div>
                   </Link>
                 );
@@ -186,10 +192,10 @@ async function DashboardBody() {
                   height={50}
                 />
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-[10px] text-zinc-400">
+                  <span className="text-xs text-zinc-400">
                     Total closed: <span className="font-medium text-zinc-700 tabular-nums">{closureVelocity.reduce((sum, d) => sum + d.count, 0)}</span>
                   </span>
-                  <span className="text-[10px] text-zinc-400">
+                  <span className="text-xs text-zinc-400">
                     Avg/day: <span className="font-medium text-zinc-700 tabular-nums">{(closureVelocity.reduce((sum, d) => sum + d.count, 0) / 30).toFixed(1)}</span>
                   </span>
                 </div>
@@ -250,29 +256,4 @@ function DashboardSkeleton() {
       <div className="tff-card h-40 bg-zinc-50" />
     </div>
   );
-}
-
-function StatCard({ label, value, icon, href, tone = 'default' }: { label: string; value: number | string; icon: React.ReactNode; href?: string; tone?: 'default' | 'warning' }) {
-  const content = (
-    <div className="flex items-center gap-3">
-      <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${tone === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-zinc-100 text-zinc-500'}`}>
-        {icon}
-      </div>
-      <div>
-        <div className={`text-2xl font-bold tabular-nums tracking-tight ${tone === 'warning' ? 'text-amber-600' : 'text-zinc-900'}`}>{value}</div>
-        <div className="text-[11px] font-medium text-zinc-500">{label}</div>
-      </div>
-    </div>
-  );
-
-  const cls = 'tff-card p-3 transition-colors duration-200';
-
-  if (href) {
-    return (
-      <Link href={href} className={cls}>
-        {content}
-      </Link>
-    );
-  }
-  return <div className={cls}>{content}</div>;
 }

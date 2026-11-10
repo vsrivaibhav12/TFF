@@ -11,7 +11,7 @@ import DscDialog from '@/components/dsc/dsc-dialog';
 import EmptyState from '@/components/sophistication/empty-state';
 import { formatDateIST } from '@/lib/utils';
 import { differenceInDays, parseISO } from 'date-fns';
-import { KeyRound } from 'lucide-react';
+
 import FilterBar from '@/components/sophistication/filter-bar';
 
 export const dynamic = 'force-dynamic';
@@ -63,7 +63,7 @@ export default async function DscPage({ searchParams }: Props) {
         <EmptyState
           title="No DSCs registered"
           body="Add the first digital signature certificate to start tracking expiries."
-          icon={<KeyRound className="h-6 w-6 text-zinc-400" />}
+          variant="key"
         />
       ) : (
         <div className="tff-card overflow-hidden">

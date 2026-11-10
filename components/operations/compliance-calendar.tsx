@@ -60,7 +60,7 @@ export default function ComplianceCalendar({ events }: Props) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-sm">{e.label}</span>
-                        <Badge variant="outline" className="text-[10px] uppercase">{e.type}</Badge>
+                        <Badge variant="outline" className="text-xs uppercase">{e.type}</Badge>
                       </div>
                       <div className="text-xs mt-0.5 opacity-80">
                         {e.clientName} · due {formatDateIST(e.date)}

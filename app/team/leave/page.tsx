@@ -6,7 +6,7 @@ import ReviewLeave from './review-leave';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateIST } from '@/lib/utils';
-import { ClipboardList } from 'lucide-react';
+
 import EmptyState from '@/components/sophistication/empty-state';
 import ExportButton from '@/components/sophistication/export-button';
 
@@ -44,7 +44,7 @@ export default async function LeavePage() {
             <EmptyState
               title="No pending requests"
               body="All leave requests have been reviewed."
-              icon={<ClipboardList className="h-6 w-6 text-zinc-400" />}
+              variant="document"
             />
           ) : (
             <div className="tff-card overflow-hidden">
@@ -72,7 +72,7 @@ export default async function LeavePage() {
           <EmptyState
             title="No requests yet"
             body="Submit your first leave request using the button above."
-            icon={<ClipboardList className="h-6 w-6 text-zinc-400" />}
+            variant="document"
           />
         ) : (
           <div className="tff-card overflow-hidden">

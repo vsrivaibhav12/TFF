@@ -4,7 +4,7 @@ import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, RefreshCw, ListChecks } from 'lucide-react';
+import { ChevronLeft, RefreshCw } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import RefreshEventsBtn from '@/app/admin/settings/compliance-rules/refresh-button';
 import RuleRowToggle from '@/app/admin/settings/compliance-rules/rule-row-toggle';
@@ -43,7 +43,7 @@ export default async function ComplianceRulesPage(_props: unknown, rolePrefix: s
       </div>
 
       {Object.keys(grouped).length === 0 ? (
-        <EmptyState title="No compliance rules" body="Compliance calendar rules will appear here once configured. Use the refresh button to generate default rules." icon={<ListChecks className="h-6 w-6 text-zinc-400" />} />
+        <EmptyState title="No compliance rules" body="Compliance calendar rules will appear here once configured. Use the refresh button to generate default rules." variant="generic" />
       ) : (Object.entries(grouped).map(([kind, rs]) => (
         <section key={kind} className="space-y-3">
           <h2 className="text-base font-semibold uppercase tracking-wider text-zinc-500">
@@ -54,16 +54,16 @@ export default async function ComplianceRulesPage(_props: unknown, rolePrefix: s
               <div key={r.id} className="p-4 flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <code className="bg-zinc-100 rounded px-1.5 py-0.5 text-[11px] font-mono">{r.rule_code}</code>
+                    <code className="bg-zinc-100 rounded px-1.5 py-0.5 text-xs font-mono">{r.rule_code}</code>
                     <span className="font-medium">{r.display_name}</span>
-                    <Badge variant="outline" className="text-[10px] capitalize">{r.periodicity}</Badge>
-                    {!r.is_active && <Badge variant="warning" className="text-[10px]">disabled</Badge>}
+                    <Badge variant="outline" className="text-xs capitalize">{r.periodicity}</Badge>
+                    {!r.is_active && <Badge variant="warning" className="text-xs">disabled</Badge>}
                   </div>
                   {r.description && <p className="text-sm text-zinc-600 mt-1">{r.description}</p>}
                   <div className="text-xs text-zinc-500 mt-1.5 flex items-center gap-2 flex-wrap">
                     {r.due_day && <span>Day {r.due_day}</span>}
                     {r.due_month_offset > 0 && <span>+{r.due_month_offset}m</span>}
-                    {r.due_date_formula && <code className="bg-zinc-50 rounded px-1 text-[10px]">{r.due_date_formula}</code>}
+                    {r.due_date_formula && <code className="bg-zinc-50 rounded px-1 text-xs">{r.due_date_formula}</code>}
                     <span className="text-zinc-400">·</span>
                     <span>reminders: {r.reminder_days?.join('/') ?? '—'} d</span>
                     {Object.keys(r.applies_when ?? {}).length > 0 && (
@@ -71,7 +71,7 @@ export default async function ComplianceRulesPage(_props: unknown, rolePrefix: s
                         <span className="text-zinc-400">·</span>
                         <span>applies when:</span>
                         {Object.entries(r.applies_when as Record<string, any>).map(([k, v]) => (
-                          <code key={k} className="bg-zinc-50 rounded px-1 text-[10px]">{k}={String(v)}</code>
+                          <code key={k} className="bg-zinc-50 rounded px-1 text-xs">{k}={String(v)}</code>
                         ))}
                       </>
                     )}

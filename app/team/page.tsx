@@ -114,7 +114,7 @@ async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole
                 </div>
                 <div>
                   <div className={`text-2xl font-bold tabular-nums tracking-tight ${m.tone === 'warning' ? 'text-amber-600' : 'text-zinc-900'}`}>{m.value}</div>
-                  <div className="text-[11px] font-medium text-zinc-500">{m.label}</div>
+                  <div className="text-xs font-medium text-zinc-500">{m.label}</div>
                 </div>
               </div>
             </Link>

@@ -82,11 +82,11 @@ export function TaskCard({ task, hrefPrefix }: TaskCardProps) {
     >
       {/* Top row: type + priority */}
       <div className="flex items-center justify-between gap-2">
-        <div className={cn('flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-medium', typeColors[workType] || typeColors.task)}>
+        <div className={cn('flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-xs font-medium', typeColors[workType] || typeColors.task)}>
           {typeIcons[workType] || typeIcons.task}
           {task.work_item_label ?? 'Task'}
         </div>
-        <Badge variant="outline" className={cn('text-[10px] shrink-0', getPriorityColour(p).bg, getPriorityColour(p).text, 'border-current')}>
+        <Badge variant="outline" className={cn('text-xs shrink-0', getPriorityColour(p).bg, getPriorityColour(p).text, 'border-current')}>
           <span className={cn('h-1.5 w-1.5 rounded-full mr-1', getPriorityColour(p).dot)} />
           {p}
         </Badge>
@@ -122,12 +122,12 @@ export function TaskCard({ task, hrefPrefix }: TaskCardProps) {
 
       {/* Progress ring */}
       <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between">
-        <span className="text-[10px] text-zinc-400 font-medium">{progress}% complete</span>
+        <span className="text-xs text-zinc-400 font-medium">{progress}% complete</span>
         <ProgressRing progress={progress} size={28} strokeWidth={3} hideLabel gradient />
       </div>
 
       {(task.is_blocked_on_client || task.is_stuck) && (
-        <div className="mt-2 flex items-center gap-1.5 text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-2 py-1">
+        <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-2 py-1">
           <AlertTriangle className="h-3 w-3" />
           {task.is_blocked_on_client ? 'Awaiting client' : 'Stuck'}
         </div>

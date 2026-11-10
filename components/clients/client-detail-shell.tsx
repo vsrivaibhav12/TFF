@@ -122,10 +122,10 @@ export default function ClientDetailShell({
                 <div className="min-w-0">
                   <h1 className="text-base font-semibold tracking-tight text-zinc-900 truncate">{client.business_name}</h1>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                    {client.pan && <span className="text-[11px] text-zinc-500 font-mono">PAN {client.pan}</span>}
-                    {client.gstin && <span className="text-[11px] text-zinc-500 font-mono">GSTIN {client.gstin}</span>}
+                    {client.pan && <span className="text-xs text-zinc-500 font-mono">PAN {client.pan}</span>}
+                    {client.gstin && <span className="text-xs text-zinc-500 font-mono">GSTIN {client.gstin}</span>}
                   </div>
-                  <div className="flex items-center gap-2 mt-1.5 text-[11px] text-zinc-400">
+                  <div className="flex items-center gap-2 mt-1.5 text-xs text-zinc-400">
                     {client.city && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{client.city}{client.state ? `, ${client.state}` : ''}</span>}
                     {client.primary_contact_phone && <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" />{client.primary_contact_phone}</span>}
                   </div>
@@ -148,7 +148,7 @@ export default function ClientDetailShell({
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-[13px] font-semibold text-zinc-700">Active work</h3>
               <div className="flex gap-1.5">
-                <Badge variant="outline" className="text-[10px]"><Briefcase className="h-3 w-3 mr-1" />{openTasks.length}</Badge>
+                <Badge variant="outline" className="text-xs"><Briefcase className="h-3 w-3 mr-1" />{openTasks.length}</Badge>
               </div>
             </div>
 
@@ -163,9 +163,9 @@ export default function ClientDetailShell({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[12px] font-medium text-zinc-900 truncate">{displayTaskName(t as { sub_services?: { name?: string } | null; title?: string | null })}</div>
-                      <div className="text-[10px] text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
+                      <div className="text-xs text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
                     </div>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{t.status}</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{t.status}</span>
                   </DockLink>
                 ))}
               </div>
@@ -198,7 +198,7 @@ export default function ClientDetailShell({
             {clientSubServices?.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
                 {clientSubServices.map((cs) => (
-                  <span key={cs.id} className="inline-flex items-center px-2 py-1 rounded-lg text-[11px] font-medium bg-zinc-100 text-zinc-700 border border-zinc-200">
+                  <span key={cs.id} className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200">
                     {cs.sub_services?.name ?? cs.services?.name ?? 'Unknown'}
                   </span>
                 ))}
@@ -215,10 +215,10 @@ export default function ClientDetailShell({
               <div className="flex flex-wrap gap-2">
                 {teamAssignments.map((ta) => (
                   <div key={ta.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-zinc-50 border border-zinc-200">
-                    <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-bold">
+                    <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-medium">
                       {ta.users_profile?.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() ?? '?'}
                     </div>
-                    <span className="text-[11px] text-zinc-700">{ta.users_profile?.full_name}</span>
+                    <span className="text-xs text-zinc-700">{ta.users_profile?.full_name}</span>
                   </div>
                 ))}
               </div>
@@ -268,7 +268,7 @@ export default function ClientDetailShell({
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[13px] font-semibold text-zinc-700">Active work</h3>
                 <div className="flex gap-2">
-                  <Badge variant="outline" className="text-[11px]"><Briefcase className="h-3 w-3 mr-1" />{openTasks.length} tasks</Badge>
+                  <Badge variant="outline" className="text-xs"><Briefcase className="h-3 w-3 mr-1" />{openTasks.length} tasks</Badge>
                 </div>
               </div>
 
@@ -283,9 +283,9 @@ export default function ClientDetailShell({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-medium text-zinc-900 truncate">{displayTaskName(t as { sub_services?: { name?: string } | null; title?: string | null })}</div>
-                        <div className="text-[11px] text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
+                        <div className="text-xs text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
                       </div>
-                      <span className={`text-[11px] px-2 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{t.status}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{t.status}</span>
                       <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-[#0D9488] transition-colors" />
                     </DockLink>
                   ))}

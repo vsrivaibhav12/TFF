@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/table';
 import EmptyState from '@/components/sophistication/empty-state';
 import ExportButton from '@/components/sophistication/export-button';
-import { FileSpreadsheet } from 'lucide-react';
+
 import BackButton from '@/components/sophistication/back-button';
 
 
@@ -114,7 +114,7 @@ export default async function ServiceWiseReportPage({ searchParams }: { searchPa
         })))} filename={`service-wise-${fy}`} />
       </div>
       {Object.keys(byService).length === 0 ? (
-        <EmptyState title="No data" body="No active client services found." icon={<FileSpreadsheet className="h-6 w-6 text-zinc-400" />} />
+        <EmptyState title="No data" body="No active client services found." variant="chart" />
       ) : (
         <div className="space-y-6">
           {Object.values(byService).map((svc) => (

@@ -178,7 +178,7 @@ export default function WorkDonePanel({
           />
         </div>
         {timerStart && (
-          <p className="text-[11px] text-zinc-500 mt-2">
+          <p className="text-xs text-zinc-500 mt-2">
             Timer survives page reloads. Will auto-cap at 24h.
           </p>
         )}
@@ -246,7 +246,7 @@ export default function WorkDonePanel({
                     <span className="text-zinc-500 text-xs">{formatDateIST(e.work_date)}</span>
                   )}
                   {e.entry_method === 'timer' && (
-                    <span className="ml-2 inline-flex items-center gap-0.5 text-[10px] uppercase tracking-wide text-teal-600 font-semibold">
+                    <span className="ml-2 inline-flex items-center gap-0.5 text-xs uppercase tracking-wide text-teal-600 font-semibold">
                       <Clock className="h-2.5 w-2.5" /> timer
                     </span>
                   )}

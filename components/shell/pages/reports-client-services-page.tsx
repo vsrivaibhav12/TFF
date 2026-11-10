@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/table';
 import EmptyState from '@/components/sophistication/empty-state';
 import ExportButton from '@/components/sophistication/export-button';
-import { FileSpreadsheet } from 'lucide-react';
+
 import ClientServicesReportClient from '@/app/admin/reports/client-services/client-services-report-client';
 import BackButton from '@/components/sophistication/back-button';
 
@@ -146,7 +146,7 @@ export default async function ClientServicesReportPage({ searchParams }: { searc
         <EmptyState
           title="No data"
           body="No active client services match the selected filters."
-          icon={<FileSpreadsheet className="h-6 w-6 text-zinc-400" />}
+          variant="chart"
         />
       ) : (
         <div className="tff-card overflow-hidden">

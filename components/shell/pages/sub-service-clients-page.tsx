@@ -91,14 +91,14 @@ export default async function SubServiceClientsPage({ params, rolePrefix }: Prop
                           <DockLink item={{ type: 'client', id: client.id }} href={`${rolePrefix}/clients/${client.id}`} className="text-sm font-medium text-zinc-900 hover:text-teal-700">
                             {client.business_name}
                           </DockLink>
-                          <div className="text-[11px] text-zinc-400 mt-0.5">
+                          <div className="text-xs text-zinc-400 mt-0.5">
                             {client.pan && <span className="font-mono mr-2">PAN {client.pan}</span>}
                             {client.gstin && <span className="font-mono mr-2">GSTIN {client.gstin}</span>}
                             {client.city && <span>{client.city}</span>}
                           </div>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-[10px]">Active</Badge>
+                      <Badge variant="outline" className="text-xs">Active</Badge>
                     </div>
                   );
                 })}

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { TaskStatus } from '@/lib/validation/schemas';
 import { todayIST } from '@/lib/utils';
 import { mergeById, wrapLike } from '@/lib/supabase/safe-search';
-import { fetchAll } from '@/lib/supabase/fetch-all';
+import { fetchAll, chunkArray } from '@/lib/supabase/fetch-all';
 
 export interface TaskRow {
   id: string;
@@ -56,7 +56,7 @@ function normalizeFkArray(row: Record<string, unknown>, key: string) {
   }
 }
 
-type TaskFilterOpts = {
+export type TaskFilterOpts = {
   clientId?: string;
   assignedTo?: string;
   status?: Array<TaskStatus | 'blocked' | 'stuck'>;
@@ -71,6 +71,10 @@ type TaskFilterOpts = {
   isVerified?: boolean;
   labels?: string[];
   q?: string;
+  /** Only tasks that are stuck or high priority (used by the list stat cards). */
+  stuckOrHigh?: boolean;
+  /** Only tasks due on this exact date (YYYY-MM-DD). */
+  dueOn?: string;
 };
 
 // Keep `.in('id', [...])` lists short: each uuid adds ~40 characters to the
@@ -86,6 +90,23 @@ async function resolveTaskIdFilter(
   sb: ReturnType<typeof createClient>,
   opts: Pick<TaskFilterOpts, 'labels' | 'q'>,
 ): Promise<string[] | undefined> {
+  const hasQ = !!opts.q?.trim();
+  if (!hasQ && !opts.labels?.length) return undefined;
+
+  // Fast path: one database call (see db/migrations/2026-11-12-search-task-ids.sql).
+  // If the function has not been applied yet, fall through to the multi-query path below.
+  try {
+    const rows = await fetchAll<{ id: string }>(() =>
+      sb.rpc('search_task_ids', {
+        p_pattern: hasQ ? wrapLike(opts.q!.trim()) : null,
+        p_labels: opts.labels?.length ? opts.labels : null,
+      }),
+    );
+    return rows.map((r) => r.id);
+  } catch {
+    // fall back
+  }
+
   let ids: Set<string> | undefined;
 
   if (opts.labels?.length) {
@@ -169,6 +190,8 @@ function applyTaskFilters(query: any, opts: TaskFilterOpts, ids: string[] | unde
   if (opts.isStuck !== undefined) q = q.eq('is_stuck', opts.isStuck);
   if (opts.isVerified !== undefined) q = q.eq('is_verified', opts.isVerified);
   if (opts.priority?.length) q = q.in('priority', opts.priority);
+  if (opts.stuckOrHigh) q = q.or('is_stuck.eq.true,priority.eq.high');
+  if (opts.dueOn) q = q.eq('due_date', opts.dueOn);
   if (opts.assignedTo === 'unassigned') q = q.is('assigned_to', null);
   else if (opts.assignedTo) q = q.eq('assigned_to', opts.assignedTo);
   return applyStatusFilter(q, opts.status);
@@ -374,6 +397,20 @@ export async function setTaskAssignees(taskId: string, assigneeIds: string[], re
   }
 }
 
+/**
+ * Replace the people holding one role (assignee or reviewer) on a task with a single user,
+ * or with nobody. The other role is left untouched.
+ */
+export async function setTaskRoleUser(taskId: string, role: 'assignee' | 'reviewer', userId: string | null, assignedBy: string) {
+  const sb = createClient();
+  const { error: delError } = await sb.from('task_assignees').delete().eq('task_id', taskId).eq('role', role);
+  if (delError) throw delError;
+  if (userId) {
+    const { error } = await sb.from('task_assignees').insert({ task_id: taskId, user_id: userId, role, assigned_by: assignedBy });
+    if (error) throw error;
+  }
+}
+
 export async function updateTaskRecord(id: string, payload: Record<string, unknown>) {
   const sb = createClient();
   const { error } = await sb.from('tasks').update(payload).eq('id', id);
@@ -531,4 +568,88 @@ export async function getTaskClosureVelocity(days = 30): Promise<{ date: string;
     result.push({ date: d, count: counts[d] ?? 0 });
   }
   return result;
+}
+
+/**
+ * Open (pending or in progress) tasks with just the fields needed to measure workload.
+ * Paged so it stays correct beyond 1,000 rows.
+ */
+export async function listOpenTaskLoad(): Promise<Array<{ assigned_to: string | null; due_date: string | null; is_stuck: boolean }>> {
+  const sb = createClient();
+  return fetchAll<{ assigned_to: string | null; due_date: string | null; is_stuck: boolean }>(() =>
+    sb.from('tasks').select('id, assigned_to, due_date, is_stuck').eq('is_deleted', false).in('status', ['pending', 'in_progress']),
+  );
+}
+
+/**
+ * Ids of every task matching a filter, up to `cap`. Returns `truncated: true` when more
+ * than `cap` tasks match so callers can refuse instead of acting on a partial set.
+ */
+export async function listTaskIdsForFilter(
+  opts: TaskFilterOpts,
+  cap = 500,
+): Promise<{ ids: string[]; truncated: boolean }> {
+  const sb = createClient();
+  const searchIds = await resolveTaskIdFilter(sb, opts);
+  if (searchIds && searchIds.length === 0) return { ids: [], truncated: false };
+
+  const subsets: Array<string[] | undefined> = [];
+  if (!searchIds) subsets.push(undefined);
+  else for (let i = 0; i < searchIds.length; i += ID_CHUNK) subsets.push(searchIds.slice(i, i + ID_CHUNK));
+
+  const out: string[] = [];
+  for (const subset of subsets) {
+    const rows = await fetchAll<{ id: string }>(
+      () => applyTaskFilters(sb.from('tasks').select('id').eq('is_deleted', false), opts, subset),
+      cap + 1,
+    );
+    out.push(...rows.map((r) => r.id));
+    if (out.length > cap) break;
+  }
+  return { ids: out.slice(0, cap), truncated: out.length > cap };
+}
+
+/**
+ * Set the assignee on many tasks at once. Closed (completed or cancelled) and deleted tasks
+ * are left alone. Returns the ids that were actually changed. Mirrors the single-task
+ * assign: the `assigned_to` column and the assignee rows in `task_assignees` both change,
+ * reviewers are kept, and one activity entry is written per task.
+ */
+export async function reassignTasks(ids: string[], assigneeId: string | null, changedBy: string): Promise<string[]> {
+  const sb = createClient();
+  const updated: string[] = [];
+
+  for (const chunk of chunkArray(ids, 100)) {
+    const { data, error } = await sb
+      .from('tasks')
+      .update({ assigned_to: assigneeId, updated_at: new Date().toISOString() })
+      .in('id', chunk)
+      .eq('is_deleted', false)
+      .not('status', 'in', '(completed,cancelled)')
+      .select('id');
+    if (error) throw error;
+    updated.push(...((data ?? []) as Array<{ id: string }>).map((r) => r.id));
+  }
+
+  for (const chunk of chunkArray(updated, 100)) {
+    const { error: delErr } = await sb.from('task_assignees').delete().in('task_id', chunk).eq('role', 'assignee');
+    if (delErr) throw delErr;
+    if (assigneeId) {
+      const { error } = await sb.from('task_assignees').insert(
+        chunk.map((taskId) => ({ task_id: taskId, user_id: assigneeId, role: 'assignee' as const, assigned_by: changedBy })),
+      );
+      if (error) throw error;
+    }
+    const { error: actErr } = await sb.from('task_activity').insert(
+      chunk.map((taskId) => ({
+        task_id: taskId,
+        action: 'assignment_changed',
+        field_name: 'assignment',
+        new_value: `assignees=${assigneeId ?? '-'} (bulk reassign)`,
+        changed_by: changedBy,
+      })),
+    );
+    if (actErr) throw actErr;
+  }
+  return updated;
 }

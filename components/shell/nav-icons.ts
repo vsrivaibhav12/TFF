@@ -25,6 +25,10 @@ import {
   FileCheck,
   Lock,
   Inbox,
+  CalendarCheck,
+  CalendarOff,
+  Timer,
+  Crown,
 } from 'lucide-react';
 
 export const ICONS: Record<string, LucideIcon> = {
@@ -54,6 +58,10 @@ export const ICONS: Record<string, LucideIcon> = {
   'file-check': FileCheck,
   lock: Lock,
   inbox: Inbox,
+  'calendar-check': CalendarCheck,
+  'calendar-off': CalendarOff,
+  timer: Timer,
+  crown: Crown,
 };
 
 export type NavIconName = keyof typeof ICONS;
@@ -63,4 +71,6 @@ export interface NavItem {
   label: string;
   icon: NavIconName;
   section?: string;
+  /** Optional count shown as a small badge (e.g. pending approvals). */
+  badge?: number;
 }

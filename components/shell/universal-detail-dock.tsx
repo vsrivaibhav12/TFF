@@ -58,7 +58,7 @@ export function UniversalDetailDock() {
                 <ArrowLeft className="h-4 w-4" />
               </button>
             )}
-            <span className="text-sm font-medium text-zinc-500 uppercase tracking-wider text-[11px]">
+            <span className="text-sm font-medium text-zinc-500 text-xs">
               {topItem.type}
             </span>
           </div>

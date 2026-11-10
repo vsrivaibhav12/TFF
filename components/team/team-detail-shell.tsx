@@ -142,7 +142,7 @@ export default function TeamDetailShell({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 mb-1.5">Job title</div>
+                <div className="text-xs font-semibold text-zinc-500 mb-1.5">Job title</div>
                 {editingEmployment ? (
                   <Input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="e.g. Analyst" />
                 ) : (
@@ -150,7 +150,7 @@ export default function TeamDetailShell({
                 )}
               </div>
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 mb-1.5">Department</div>
+                <div className="text-xs font-semibold text-zinc-500 mb-1.5">Department</div>
                 {editingEmployment ? (
                   <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Tax" />
                 ) : (
@@ -158,7 +158,7 @@ export default function TeamDetailShell({
                 )}
               </div>
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 mb-1.5">Phone</div>
+                <div className="text-xs font-semibold text-zinc-500 mb-1.5">Phone</div>
                 {editingEmployment ? (
                   <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" />
                 ) : (
@@ -166,7 +166,7 @@ export default function TeamDetailShell({
                 )}
               </div>
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 mb-1">Reports to</div>
+                <div className="text-xs font-semibold text-zinc-500 mb-1">Reports to</div>
                 <ManagerControl
                   userId={user.id}
                   currentManagerId={user.reports_to}
@@ -231,7 +231,7 @@ export default function TeamDetailShell({
             {user.role !== "admin" && caps.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {caps.map((c) => (
-                  <Badge key={c} variant="outline" className="text-[11px] font-normal">
+                  <Badge key={c} variant="outline" className="text-xs font-normal">
                     {c}
                   </Badge>
                 ))}

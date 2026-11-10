@@ -159,7 +159,7 @@ export default function LinkClientForm({ subServiceId, allClients, linkedClientI
                       {isSelected && <Check className="h-3 w-3" />}
                     </div>
                     <span className="truncate">{c.business_name}</span>
-                    {c.pan && <span className="ml-auto text-[11px] text-zinc-400 font-mono">{c.pan}</span>}
+                    {c.pan && <span className="ml-auto text-xs text-zinc-400 font-mono">{c.pan}</span>}
                   </button>
                 );
               })

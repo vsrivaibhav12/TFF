@@ -76,15 +76,12 @@ export async function GET(request: NextRequest) {
   let skipped = 0;
   const errors: string[] = [];
 
-  for (const l of links ?? []) {
+  // Process one client/sub-service link. Returns what happened so the pool can tally it.
+  async function processLink(l: any): Promise<'created' | 'skipped'> {
     const ss: any = l.sub_services;
-    if (!ss || !ss.is_recurring) {
-      skipped++;
-      continue;
-    }
+    if (!ss || !ss.is_recurring) return 'skipped';
 
     const frequency = ss.frequency as string;
-    // Determine if we should create a task for this frequency at this time
     let shouldCreate = false;
     let taskPeriodMonth: number | null = null;
     let taskPeriodQuarter: number | null = null;
@@ -92,34 +89,22 @@ export async function GET(request: NextRequest) {
     if (frequency === 'monthly') {
       shouldCreate = true;
       taskPeriodMonth = periodMonth;
-      taskPeriodQuarter = null;
     } else if (frequency === 'quarterly') {
       // Create at the start of each quarter (Jan, Apr, Jul, Oct)
       shouldCreate = periodMonth % 3 === 1;
-      taskPeriodMonth = null;
       taskPeriodQuarter = periodQuarter;
     } else if (frequency === 'annually') {
-      // Create once a year (default: January)
+      // Create 2 months before the due month to give lead time
       const dueMonth = ss.due_month ?? 3;
-      // Create 2 months before due date to give lead time
       const createMonth = dueMonth - 2 <= 0 ? dueMonth + 10 : dueMonth - 2;
       shouldCreate = periodMonth === createMonth;
-      taskPeriodMonth = null;
-      taskPeriodQuarter = null;
     } else {
-      skipped++;
-      continue;
+      return 'skipped';
     }
-
-    if (!shouldCreate) {
-      skipped++;
-      continue;
-    }
+    if (!shouldCreate) return 'skipped';
 
     const dueDateStr = computeDueDate(ss, frequency, periodYear, periodMonth, periodQuarter);
-    const periodLabel = getPeriodLabel(frequency, periodMonth, periodYear, periodQuarter);
 
-    // Build existence check query
     let exQ = sb
       .from('tasks')
       .select('id')
@@ -127,18 +112,11 @@ export async function GET(request: NextRequest) {
       .eq('sub_service_id', l.sub_service_id)
       .eq('period_year', periodYear)
       .eq('is_deleted', false);
-
-    if (taskPeriodMonth !== null) {
-      exQ = exQ.eq('period_month', taskPeriodMonth);
-    } else if (taskPeriodQuarter !== null) {
-      exQ = exQ.eq('period_quarter', taskPeriodQuarter);
-    }
+    if (taskPeriodMonth !== null) exQ = exQ.eq('period_month', taskPeriodMonth);
+    else if (taskPeriodQuarter !== null) exQ = exQ.eq('period_quarter', taskPeriodQuarter);
 
     const { data: ex } = await exQ.maybeSingle();
-    if (ex) {
-      skipped++;
-      continue;
-    }
+    if (ex) return 'skipped';
 
     const insertPayload: any = {
       client_id: l.client_id,
@@ -159,15 +137,54 @@ export async function GET(request: NextRequest) {
     if (taskPeriodQuarter !== null) insertPayload.period_quarter = taskPeriodQuarter;
 
     const { data: created_row, error: insErr } = await sb.from('tasks').insert(insertPayload).select('id').single();
-    if (insErr) { errors.push(insErr.message); continue; }
-    created++;
-    // Copy SOP steps onto the new task
+    if (insErr) {
+      errors.push(insErr.message);
+      return 'skipped';
+    }
     try {
       await seedTaskStepsFromSop(sb, { task_id: (created_row as any).id, sub_service_id: l.sub_service_id });
     } catch (e: any) {
       errors.push(`SOP copy failed for task ${(created_row as any).id}: ${e?.message ?? 'unknown'}`);
     }
+    return 'created';
   }
 
-  return NextResponse.json({ ok: true, periodMonth, periodYear, periodQuarter, created, skipped, errors });
+  // Run links in small concurrent batches instead of one at a time, and stop starting
+  // new batches before the function time limit. The job is idempotent, so a partial run
+  // can simply be triggered again and will pick up where it left off.
+  const startedAt = Date.now();
+  const TIME_BUDGET_MS = 48_000;
+  const CONCURRENCY = 8;
+  const pending = links ?? [];
+  let processed = 0;
+  for (let i = 0; i < pending.length; i += CONCURRENCY) {
+    if (Date.now() - startedAt > TIME_BUDGET_MS) break;
+    const batch = pending.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(
+      batch.map((l) => processLink(l).catch((e: any) => {
+        errors.push(e?.message ?? 'unknown error');
+        return 'skipped' as const;
+      })),
+    );
+    for (const r of results) {
+      if (r === 'created') created++;
+      else skipped++;
+    }
+    processed += batch.length;
+  }
+  const partial = processed < pending.length;
+
+  // Record the run so admins can see it in the audit log (previously only the HTTP response).
+  try {
+    await sb.from('global_audit_log').insert({
+      action: partial || errors.length > 0 ? 'cron.generate_monthly_tasks.warning' : 'cron.generate_monthly_tasks',
+      entity_type: 'cron',
+      performed_by: null,
+      details: { periodMonth, periodYear, created, skipped, errors: errors.slice(0, 10), error_count: errors.length, partial, remaining: pending.length - processed },
+    });
+  } catch {
+    // Logging must never fail the job.
+  }
+
+  return NextResponse.json({ ok: true, periodMonth, periodYear, periodQuarter, created, skipped, errors, partial, remaining: pending.length - processed });
 }

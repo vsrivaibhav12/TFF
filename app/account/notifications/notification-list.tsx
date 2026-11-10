@@ -99,7 +99,7 @@ export default function NotificationList({ items: initial }: { items: Notificati
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <div className="font-medium text-zinc-900">{n.title}</div>
-                    {!n.is_read && <Badge variant="teal" className="text-[10px] h-5">New</Badge>}
+                    {!n.is_read && <Badge variant="teal" className="text-xs h-5">New</Badge>}
                   </div>
                   <div className="text-sm text-zinc-500 mt-0.5">{n.message}</div>
                   <div className="text-xs text-zinc-400 mt-1">{formatDateIST(n.created_at)}</div>

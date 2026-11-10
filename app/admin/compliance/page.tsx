@@ -22,7 +22,6 @@ interface ComplianceEvent {
   tasks: { status: string | null; completed_date: string | null; due_date: string | null; is_stuck: boolean | null } | null;
 }
 
-export const revalidate = 60;
 
 export default async function AdminCompliancePage() {
   await requireRole('admin');

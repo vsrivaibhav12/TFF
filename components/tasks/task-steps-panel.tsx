@@ -123,7 +123,7 @@ export default function TaskStepsPanel({
           const done = !!s.completed_at;
           return (
             <li key={s.id} className={cn('flex items-start gap-2 rounded-lg border border-zinc-200 p-3', done && 'bg-teal-50/30 border-teal-200')}>
-              <Checkbox checked={done} onCheckedChange={() => toggle(s)} disabled={pending || !canEdit} data-testid={`step-${s.id}`} className="mt-1" />
+              <Checkbox checked={done} onCheckedChange={() => toggle(s)} disabled={!canEdit} data-testid={`step-${s.id}`} className="mt-1" />
               <div className="flex-1 min-w-0">
                 <div className={cn('text-sm font-semibold text-zinc-900', done && 'line-through text-zinc-500 font-medium')}>{s.title}</div>
                 {(s.description || s.guidance_notes) && (
@@ -134,7 +134,7 @@ export default function TaskStepsPanel({
                   </div>
                 )}
                 {done && (
-                  <div className="text-[10px] text-zinc-400 mt-1.5 font-medium">
+                  <div className="text-xs text-zinc-400 mt-1.5 font-medium">
                     ✓ {s.users_profile?.full_name ?? 'someone'} · {formatDateIST(s.completed_at!)}
                   </div>
                 )}

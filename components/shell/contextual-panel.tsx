@@ -147,7 +147,7 @@ function ModuleContextPanel({
       <div className="px-4">
         <div className="flex items-center gap-1.5 mb-2">
           <Filter className="h-3 w-3 text-zinc-400" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Quick filters</span>
+          <span className="text-xs font-medium text-zinc-400">Quick filters</span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {ctx.quickFilters.map((f) => {
@@ -157,7 +157,7 @@ function ModuleContextPanel({
                 key={f.label}
                 href={f.href}
                 className={cn(
-                  'px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors',
+                  'px-2.5 py-1 rounded-md text-xs font-medium border transition-colors',
                   active
                     ? 'bg-teal-50 text-teal-700 border-teal-200'
                     : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
@@ -175,7 +175,7 @@ function ModuleContextPanel({
         <div className="px-4">
           <div className="flex items-center gap-1.5 mb-2">
             <Clock className="h-3 w-3 text-zinc-400" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Recent</span>
+            <span className="text-xs font-medium text-zinc-400">Recent</span>
           </div>
           <div className="space-y-1">
             {recent.map((item) => (
@@ -232,7 +232,7 @@ function FullNavigation({ nav, pathname }: { nav: NavItem[]; pathname: string })
     if (currentSection && sectionItems.length > 0) {
       elements.push(
         <div key={currentSection} className="px-4 pt-3 pb-1">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+          <div className="text-xs font-medium text-zinc-400">
             {currentSection}
           </div>
         </div>

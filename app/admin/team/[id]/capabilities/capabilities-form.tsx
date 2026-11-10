@@ -83,7 +83,7 @@ export default function CapabilitiesForm({
           <div className="text-sm text-teal-800">
             <p className="font-medium">Role template active</p>
             <p className="text-teal-700/80 mt-0.5">
-              Capabilities marked with <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 text-[10px] font-semibold mx-1">TEMPLATE</span> are inherited from the assigned role.
+              Capabilities marked with <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 text-xs font-semibold mx-1">TEMPLATE</span> are inherited from the assigned role.
               Any changes you make here create explicit deviations that override the template.
             </p>
             {deviations.length > 0 && (
@@ -137,17 +137,17 @@ export default function CapabilitiesForm({
                           {meta.label}
                         </Label>
                         <p className="text-xs text-zinc-500 mt-0.5">{meta.description}</p>
-                        <code className="text-[10px] text-zinc-400 font-mono mt-1 block">{cap}</code>
+                        <code className="text-xs text-zinc-400 font-mono mt-1 block">{cap}</code>
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         {fromTemplate && isSelected && (
-                          <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 text-[10px] font-semibold">TEMPLATE</span>
+                          <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 text-xs font-semibold">TEMPLATE</span>
                         )}
                         {!fromTemplate && isSelected && (
-                          <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-semibold">OVERRIDE</span>
+                          <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-xs font-semibold">OVERRIDE</span>
                         )}
                         {fromTemplate && !isSelected && (
-                          <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-semibold">REVOKED</span>
+                          <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">REVOKED</span>
                         )}
                       </div>
                     </li>

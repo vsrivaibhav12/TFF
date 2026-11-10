@@ -5,7 +5,7 @@ import { listPermissionRequests } from '@/lib/repositories/permission';
 import { getDirectReports, hasDirectReports } from '@/lib/repositories/staff';
 import EmptyState from '@/components/sophistication/empty-state';
 import ReviewTableClient from './review-table-client';
-import { ClipboardList, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 
 export const dynamic = 'force-dynamic';
@@ -72,7 +72,7 @@ export default async function TeamApprovalsPage() {
           <EmptyState
             title="No pending leave"
             body="All leave requests have been reviewed."
-            icon={<ClipboardList className="h-6 w-6 text-zinc-400" />}
+            variant="document"
           />
         ) : (
           <ReviewTableClient items={pendingLeave} type="leave" />
@@ -88,7 +88,7 @@ export default async function TeamApprovalsPage() {
           <EmptyState
             title="No pending permissions"
             body="All permission requests have been reviewed."
-            icon={<ClipboardList className="h-6 w-6 text-zinc-400" />}
+            variant="document"
           />
         ) : (
           <ReviewTableClient items={pendingPermissions} type="permission" />

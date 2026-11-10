@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateIST, formatTimeIST } from '@/lib/utils';
-import { MapPin, ClipboardList, CalendarDays, Clock, ShieldCheck } from 'lucide-react';
+import { MapPin, CalendarDays, Clock, ShieldCheck } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import Link from 'next/link';
 import ExportButton from '@/components/sophistication/export-button';
@@ -236,7 +236,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
                       <EmptyState
                         title="No attendance logs"
                         body="Check in today to start recording your attendance."
-                        icon={<ClipboardList className="h-6 w-6 text-zinc-400" />}
+                        variant="document"
                       />
                     </TableCell>
                   </TableRow>
@@ -344,7 +344,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
               <EmptyState
                 title="No requests yet"
                 body="Submit your first leave request using the button above."
-                icon={<ClipboardList className="h-6 w-6 text-zinc-400" />}
+                variant="document"
               />
             ) : (
               <div className="tff-card overflow-hidden">
@@ -432,7 +432,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
               <EmptyState
                 title="No requests yet"
                 body="Submit your first permission request using the button above."
-                icon={<ClipboardList className="h-6 w-6 text-zinc-400" />}
+                variant="document"
               />
             ) : (
               <div className="tff-card overflow-hidden">

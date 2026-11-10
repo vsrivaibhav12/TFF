@@ -131,26 +131,26 @@ export function PriorityList({ tasks, href, emptyMessage = 'No urgent tasks' }: 
 
                 <Link href={`${href}/${t.id}`} className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate group-hover:text-teal-700 transition-colors">{displayTaskName(t)}</div>
-                  <div className="text-[11px] text-zinc-500">
+                  <div className="text-xs text-zinc-500">
                     {clientName(t)}
                     {assigneeName(t) ? ` · ${assigneeName(t)}` : ''}
                   </div>
                 </Link>
 
                 <div className="flex items-center gap-2 shrink-0 group-hover:hidden">
-                  <span className="text-[11px] text-zinc-500">{dueLabel(t.due_date)}</span>
-                  <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full border', priorityStyles[p] || priorityStyles.medium)}>
+                  <span className="text-xs text-zinc-500">{dueLabel(t.due_date)}</span>
+                  <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full border', priorityStyles[p] || priorityStyles.medium)}>
                     {p}
                   </span>
                 </div>
 
                 <div className="hidden group-hover:flex items-center shrink-0 animate-in fade-in zoom-in duration-200">
                   {t.status === 'pending' ? (
-                    <Button variant="ghost" size="sm" className="h-7 text-[11px] text-teal-700 hover:bg-teal-50" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const r = await transitionTaskAction({ task_id: t.id, to_status: 'in_progress' }); if (r.success) { toast.success('Task started'); router.refresh(); } else toast.error(r.error); }}>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs text-teal-700 hover:bg-teal-50" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const r = await transitionTaskAction({ task_id: t.id, to_status: 'in_progress' }); if (r.success) { toast.success('Task started'); router.refresh(); } else toast.error(r.error); }}>
                       <Play className="h-3 w-3 mr-1" /> Start
                     </Button>
                   ) : t.status === 'in_progress' ? (
-                    <Button variant="ghost" size="sm" className="h-7 text-[11px] text-zinc-700 hover:bg-zinc-50" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const r = await transitionTaskAction({ task_id: t.id, to_status: 'completed' }); if (r.success) { toast.success('Task completed'); router.refresh(); } else toast.error(r.error); }}>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs text-zinc-700 hover:bg-zinc-50" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const r = await transitionTaskAction({ task_id: t.id, to_status: 'completed' }); if (r.success) { toast.success('Task completed'); router.refresh(); } else toast.error(r.error); }}>
                       <CheckCircle2 className="h-3 w-3 mr-1" /> Complete
                     </Button>
                   ) : null}

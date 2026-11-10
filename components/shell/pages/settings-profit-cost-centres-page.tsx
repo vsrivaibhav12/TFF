@@ -19,9 +19,9 @@ export default async function ProfitCostCentresPage(_props: unknown, rolePrefix:
         <h1 className="tff-page-title">Profit &amp; cost centres</h1>
         <p className="tff-page-subtitle">
           Two-character (or short) codes used to slice tasks, work-done, and reports.
-          Suggested split: <code className="bg-zinc-100 px-1 rounded text-[11px]">CAS</code> for CaaS,
-          {' '}<code className="bg-zinc-100 px-1 rounded text-[11px]">BIZ</code> for BizLens,
-          {' '}<code className="bg-zinc-100 px-1 rounded text-[11px]">VCFO</code> for vCFO advisory.
+          Suggested split: <code className="bg-zinc-100 px-1 rounded text-xs">CAS</code> for CaaS,
+          {' '}<code className="bg-zinc-100 px-1 rounded text-xs">BIZ</code> for BizLens,
+          {' '}<code className="bg-zinc-100 px-1 rounded text-xs">VCFO</code> for vCFO advisory.
         </p>
       </div>
       <CentresAdmin

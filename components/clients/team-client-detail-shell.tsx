@@ -81,7 +81,7 @@ export default function TeamClientDetailShell({
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[13px] font-semibold text-zinc-700">Active work</h3>
               <div className="flex gap-2">
-                <Badge variant="outline" className="text-[11px]"><Briefcase className="h-3 w-3 mr-1" />{openTasks.length} tasks</Badge>
+                <Badge variant="outline" className="text-xs"><Briefcase className="h-3 w-3 mr-1" />{openTasks.length} tasks</Badge>
               </div>
             </div>
 
@@ -96,7 +96,7 @@ export default function TeamClientDetailShell({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-medium text-zinc-900 truncate">{displayTaskName(t)}</div>
-                      <div className="text-[11px] text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
+                      <div className="text-xs text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
                     </div>
                     <ProgressRing size={24} strokeWidth={3} hideLabel progress={t.progress_pct ?? 0} />
                     <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-[#0D9488] transition-colors" />
@@ -115,15 +115,15 @@ export default function TeamClientDetailShell({
             <h3 className="text-[13px] font-semibold text-zinc-700 mb-4">Contact</h3>
             <dl className="space-y-3 text-sm">
               <div>
-                <dt className="text-zinc-400 text-[11px] uppercase tracking-wider">Person</dt>
+                <dt className="text-zinc-400 text-xs">Person</dt>
                 <dd className="text-zinc-900">{client.primary_contact_person || '—'}</dd>
               </div>
               <div>
-                <dt className="text-zinc-400 text-[11px] uppercase tracking-wider">Email</dt>
+                <dt className="text-zinc-400 text-xs">Email</dt>
                 <dd className="text-zinc-900">{client.primary_contact_email || '—'}</dd>
               </div>
               <div>
-                <dt className="text-zinc-400 text-[11px] uppercase tracking-wider">Phone</dt>
+                <dt className="text-zinc-400 text-xs">Phone</dt>
                 <dd className="text-zinc-900">{client.primary_contact_phone || '—'}</dd>
               </div>
             </dl>
@@ -138,7 +138,7 @@ export default function TeamClientDetailShell({
                 {subs.map((s: any) => (
                   <li key={s.id} className="flex items-center justify-between text-sm">
                     <span className="text-zinc-900">{s.sub_services?.name}</span>
-                    <span className="text-[11px] px-2 py-0.5 rounded bg-zinc-100 text-zinc-600">{s.sub_services?.frequency}</span>
+                    <span className="text-xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-600">{s.sub_services?.frequency}</span>
                   </li>
                 ))}
               </ul>

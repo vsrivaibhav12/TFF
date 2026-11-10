@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/table';
 import EmptyState from '@/components/sophistication/empty-state';
 import BillingActions from '@/components/billing/billing-actions';
-import { Receipt } from 'lucide-react';
+
 import ExportButton from '@/components/sophistication/export-button';
 import { Pagination } from '@/components/ui/pagination';
 
@@ -85,7 +85,7 @@ export default async function BillingPage({ searchParams }: Props) {
         <EmptyState
           title="No billable tasks yet"
           body="Tasks marked as billable will appear here. Use the task detail page or bulk create to set the billable flag."
-          icon={<Receipt className="h-6 w-6 text-zinc-400" />}
+          variant="document"
         />
       ) : (
         <div className="tff-card overflow-hidden">

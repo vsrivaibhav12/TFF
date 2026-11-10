@@ -60,10 +60,10 @@ export function TaskHoverCard({ taskId, children }: { taskId: string; children: 
               <p className="text-xs text-zinc-500">{data.client_name}</p>
             )}
             <div className="flex items-center gap-2">
-              <Badge variant={data.status === 'completed' ? 'success' : data.status === 'in_progress' ? 'teal' : 'warning'} className="text-[10px]">
+              <Badge variant={data.status === 'completed' ? 'success' : data.status === 'in_progress' ? 'teal' : 'warning'} className="text-xs">
                 {data.status.replace(/_/g, ' ')}
               </Badge>
-              <Badge variant="outline" className="text-[10px]">{data.priority}</Badge>
+              <Badge variant="outline" className="text-xs">{data.priority}</Badge>
             </div>
             <div className="space-y-1.5 text-xs text-zinc-600">
               {data.client_name && (

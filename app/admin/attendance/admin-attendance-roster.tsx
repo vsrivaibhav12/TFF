@@ -124,7 +124,7 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-zinc-400" />
                       <span className="font-medium text-zinc-900">{u.full_name ?? u.email}</span>
-                      {isSelf && <Badge variant="outline" className="text-[10px] py-0">You</Badge>}
+                      {isSelf && <Badge variant="outline" className="text-xs py-0">You</Badge>}
                     </div>
                   </td>
                   <td className="px-4 py-3">

@@ -103,14 +103,14 @@ export default function ShortcutsHelp({
           {SHORTCUTS.map(([k, label]) => (
             <div key={k} className="flex items-center justify-between py-2.5 text-sm">
               <span className="text-zinc-700">{label}</span>
-              <kbd className="font-mono text-[11px] bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded border border-zinc-200">
+              <kbd className="font-mono text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded border border-zinc-200">
                 {k}
               </kbd>
             </div>
           ))}
         </div>
         <div className="mt-4 text-xs text-zinc-400">
-          Press <kbd className="font-mono bg-zinc-100 px-1 py-0.5 rounded text-[10px]">?</kbd> anytime to toggle this overlay.
+          Press <kbd className="font-mono bg-zinc-100 px-1 py-0.5 rounded text-xs">?</kbd> anytime to toggle this overlay.
         </div>
       </div>
     </div>

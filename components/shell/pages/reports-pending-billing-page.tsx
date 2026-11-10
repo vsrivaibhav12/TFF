@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/table';
 import EmptyState from '@/components/sophistication/empty-state';
 import ExportButton from '@/components/sophistication/export-button';
-import { AlertTriangle } from 'lucide-react';
+
 import BackButton from '@/components/sophistication/back-button';
 
 interface BillingTask {
@@ -92,7 +92,7 @@ export default async function PendingBillingReportPage(_props: unknown, rolePref
         <EmptyState
           title="Nothing pending"
           body="All billable tasks have been marked as billed. Great work."
-          icon={<AlertTriangle className="h-6 w-6 text-zinc-400" />}
+          variant="all-clear"
         />
       ) : (
         <div className="tff-card overflow-hidden">

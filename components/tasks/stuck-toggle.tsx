@@ -65,7 +65,7 @@ export default function StuckToggle({ taskId, isStuck, reasonCode, reasonNote }:
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <div>
-                <Badge variant="destructive" className="text-[10px]">stuck</Badge>
+                <Badge variant="destructive" className="text-xs">stuck</Badge>
                 <span className="ml-2 font-semibold text-red-900">{friendlyReason}</span>
               </div>
               <Button size="sm" variant="ghost" onClick={unstick} disabled={pending} data-testid="stuck-unstick">

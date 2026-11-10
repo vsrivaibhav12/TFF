@@ -24,11 +24,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: '/admin/billing', label: 'Billing', icon: 'receipt' as const, section: 'Finance' },
 
     /* ── Team ── */
-    { href: '/admin/team', label: 'Team', icon: 'shield' as const, section: 'Team' },
-    { href: '/admin/attendance', label: 'Attendance', icon: 'calendar' as const, section: 'Team' },
-    { href: '/admin/leave', label: 'Leave', icon: 'calendar' as const, section: 'Team' },
+    { href: '/admin/team', label: 'Team', icon: 'users-round' as const, section: 'Team' },
+    { href: '/admin/workload', label: 'Workload', icon: 'chart' as const, section: 'Team' },
+    { href: '/admin/attendance', label: 'Attendance', icon: 'calendar-check' as const, section: 'Team' },
+    { href: '/admin/leave', label: 'Leave', icon: 'calendar-off' as const, section: 'Team' },
     { href: '/admin/approvals', label: 'Approvals', icon: 'file-check' as const, section: 'Team' },
-    { href: '/admin/work-done', label: 'Work done', icon: 'clipboard' as const, section: 'Team' },
+    { href: '/admin/work-done', label: 'Work done', icon: 'timer' as const, section: 'Team' },
 
     /* ── Vault ── */
     { href: '/admin/credentials', label: 'Credentials', icon: 'lock' as const, section: 'Vault' },
@@ -37,7 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: '/admin/services', label: 'Services', icon: 'layers' as const, section: 'System' },
     { href: '/admin/reports', label: 'Reports', icon: 'chart' as const, section: 'System' },
     { href: '/admin/audit', label: 'Audit', icon: 'scroll' as const, section: 'System' },
-    { href: '/admin/super-admins', label: 'Super admins', icon: 'shield' as const, section: 'System' },
+    { href: '/admin/super-admins', label: 'Super admins', icon: 'crown' as const, section: 'System' },
     { href: '/admin/settings', label: 'Settings', icon: 'settings' as const, section: 'System' },
   ];
 

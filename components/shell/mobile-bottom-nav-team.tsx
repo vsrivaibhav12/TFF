@@ -42,7 +42,7 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
               key={t.href}
               href={t.href}
               className={cn(
-                'relative flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold min-h-[56px] transition-colors',
+                'relative flex flex-col items-center justify-center gap-1 py-2 text-xs font-semibold min-h-[56px] transition-colors',
                 active ? 'text-teal-700' : 'text-zinc-400'
               )}
               data-testid={`bottom-tab-${t.label.toLowerCase().replace(/ /g, '-')}`}
@@ -62,7 +62,7 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
         <button
           onClick={() => setMoreOpen(true)}
           className={cn(
-            'relative flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold min-h-[56px] transition-colors',
+            'relative flex flex-col items-center justify-center gap-1 py-2 text-xs font-semibold min-h-[56px] transition-colors',
             isMoreActive ? 'text-teal-700' : 'text-zinc-400'
           )}
           data-testid="bottom-tab-more"

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatDateIST } from '@/lib/utils';
 import AuditFilters from './filters';
 import EmptyState from '@/components/sophistication/empty-state';
-import { Scroll } from 'lucide-react';
+
 import { Pagination } from '@/components/ui/pagination';
 
 export const dynamic = 'force-dynamic';
@@ -57,14 +57,14 @@ export default async function AuditPage({ searchParams }: { searchParams: { acto
           <Table>
           <TableHeader><TableRow><TableHead>Action</TableHead><TableHead>Entity</TableHead><TableHead>Actor</TableHead><TableHead>When</TableHead><TableHead>Detail</TableHead></TableRow></TableHeader>
           <TableBody>{(data ?? []).length === 0 ? (
-            <TableRow><TableCell colSpan={5} className="p-0"><EmptyState title="No audit entries" body="Privileged actions will appear here once recorded." icon={<Scroll className="h-6 w-6 text-zinc-400" />} /></TableCell></TableRow>
+            <TableRow><TableCell colSpan={5} className="p-0"><EmptyState title="No audit entries" body="Privileged actions will appear here once recorded." variant="document" /></TableCell></TableRow>
           ) : ((data ?? []).map((r: any) => (
             <TableRow key={r.id}>
-              <TableCell><Badge variant="outline" className="font-mono text-[10px]">{r.action}</Badge></TableCell>
-              <TableCell><span className="text-xs">{r.entity_type}</span><div className="font-mono text-[10px] text-zinc-400">{r.entity_id?.slice(0, 8)}</div></TableCell>
+              <TableCell><Badge variant="outline" className="font-mono text-xs">{r.action}</Badge></TableCell>
+              <TableCell><span className="text-xs">{r.entity_type}</span><div className="font-mono text-xs text-zinc-400">{r.entity_id?.slice(0, 8)}</div></TableCell>
               <TableCell className="text-xs">{r.users_profile?.full_name ?? '—'}<div className="text-zinc-400">{r.users_profile?.email}</div></TableCell>
               <TableCell className="text-xs">{formatDateIST(r.performed_at)}</TableCell>
-              <TableCell className="font-mono text-[10px] text-zinc-500 max-w-xs truncate">{r.details ? JSON.stringify(r.details) : '—'}</TableCell>
+              <TableCell className="font-mono text-xs text-zinc-500 max-w-xs truncate">{r.details ? JSON.stringify(r.details) : '—'}</TableCell>
             </TableRow>
           )))}</TableBody>
         </Table>

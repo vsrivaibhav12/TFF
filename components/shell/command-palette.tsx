@@ -211,7 +211,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' }) {
             className="flex-1 outline-none text-sm placeholder:text-zinc-400 bg-transparent"
             data-testid="cmdk-input"
           />
-          <kbd className="text-[10px] text-zinc-400 font-mono bg-zinc-100 px-1.5 py-0.5 rounded">esc</kbd>
+          <kbd className="text-xs text-zinc-400 font-mono bg-zinc-100 px-1.5 py-0.5 rounded">esc</kbd>
         </div>
 
         {/* Smart suggestion banner */}
@@ -243,7 +243,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' }) {
         <div className="max-h-[360px] overflow-y-auto">
           {orderedGroups.map(([gname, groupItems]) => (
             <div key={gname}>
-              <div className="px-5 pt-3 pb-1 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold flex items-center gap-1.5">
+              <div className="px-5 pt-3 pb-1 text-xs text-zinc-400 font-semibold flex items-center gap-1.5">
                 {gname === 'Actions' && <Zap className="h-3 w-3" />}
                 {gname}
               </div>
@@ -267,7 +267,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' }) {
                     </span>
                     <span className="flex-1 truncate">{i.label}</span>
                     {idx === active && (
-                      <kbd className="text-[10px] text-teal-500 font-mono">↵</kbd>
+                      <kbd className="text-xs text-teal-500 font-mono">↵</kbd>
                     )}
                   </button>
                 );
@@ -278,7 +278,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' }) {
             <div className="p-8 text-sm text-center text-zinc-500">No matches found.</div>
           )}
         </div>
-        <div className="px-5 py-2.5 border-t border-zinc-100 text-[10px] text-zinc-400 flex items-center justify-between">
+        <div className="px-5 py-2.5 border-t border-zinc-100 text-xs text-zinc-400 flex items-center justify-between">
           <span>↑↓ navigate · ↵ open · esc close</span>
           {isValidating && <span className="text-teal-500">Searching...</span>}
         </div>

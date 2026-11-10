@@ -58,6 +58,10 @@ export async function listAttentionTasks(limit = 3) {
     .select('id, title, status, priority, is_stuck, clients!tasks_client_id_fkey(business_name)')
     .eq('is_deleted', false)
     .or('status.eq.pending,is_stuck.eq.true')
+    // Stuck tasks first, then the earliest due date, so the "needs attention" list is meaningful.
+    .order('is_stuck', { ascending: false })
+    .order('due_date', { ascending: true, nullsFirst: false })
+    .order('id', { ascending: true })
     .limit(limit);
   return data ?? [];
 }

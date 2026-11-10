@@ -92,7 +92,7 @@ export function CategoryManager({ categories, onChange }: { categories: Category
           </div>
 
           <div className="border-t border-zinc-100 pt-3">
-            <div className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold mb-2">Existing categories</div>
+            <div className="text-xs text-zinc-400 font-semibold mb-2">Existing categories</div>
             {categories.length === 0 ? (
               <div className="text-xs text-zinc-400 py-4 text-center">No categories yet.</div>
             ) : (

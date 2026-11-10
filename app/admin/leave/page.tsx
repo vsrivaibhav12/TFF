@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import ExportButton from '@/components/sophistication/export-button';
 import { Badge } from '@/components/ui/badge';
 import { formatDateIST } from '@/lib/utils';
-import { ClipboardList, User, Calendar } from 'lucide-react';
+import { User, Calendar } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import ReviewLeave from '@/app/team/leave/review-leave';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -122,7 +122,7 @@ export default async function AdminLeavePage({ searchParams }: { searchParams: {
           <EmptyState
             title="No request history"
             body="Approved and rejected leave requests will appear here."
-            icon={<ClipboardList className="h-6 w-6 text-zinc-400" />}
+            variant="document"
           />
         ) : (
           <div className="tff-card overflow-hidden">
