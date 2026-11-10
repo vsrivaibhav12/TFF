@@ -4,7 +4,7 @@ import { listWorkDone } from '@/lib/repositories/work-done';
 import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients';
 import { listTasks } from '@/lib/repositories/tasks';
 import { PageHeader } from '@/components/ui/page-header';
-import ExportButton from '@/components/sophistication/export-button';
+import { FullExport } from '@/components/reports/full-export';
 import WorkDoneForm from '@/app/team/work-done/work-done-form';
 import WorkDoneFilters from '@/components/operations/work-done-filters';
 import WorkDoneTable from '@/components/operations/work-done-table';
@@ -34,21 +34,13 @@ export default async function AdminWorkDonePage({ searchParams }: { searchParams
   const totalMinutes = logs.reduce((acc, l) => acc + l.duration_minutes, 0);
   const totalHours = (totalMinutes / 60).toFixed(1);
 
-  const exportData = (logs ?? []).map((l: any) => ({
-    date: l.work_date,
-    staff: l.users_profile?.full_name ?? '—',
-    activity: l.note ?? '',
-    duration_minutes: l.duration_minutes,
-    client: l.clients?.business_name ?? (l.client_id ? 'Archived client' : ''),
-    task: l.tasks ? displayTaskName(l.tasks) : (l.task_id ? 'Archived task' : ''),
-  }));
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Work done"
         subtitle="Track daily output and time spent on client tasks across the firm."
-        actions={<ExportButton data={exportData} filename="work-done-export" format="csv" />}
+        actions={<FullExport source={{ kind: 'work-done', filters: { from: searchParams?.from, to: searchParams?.to, q: searchParams?.q, client: searchParams?.client, task: searchParams?.task, user: searchParams?.user } }} label="work done entries" filename="work-done" />}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,11 +1,11 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseTaskFilterParams } from '../lib/tasks/filter-params';
+import { parseTaskFilterParams, effectiveStatuses, statusParamFor, sameSet } from '../lib/tasks/filter-params';
 
 describe('parseTaskFilterParams', () => {
-  it('returns empty lists and undefined scalars for no params', () => {
+  it('returns empty lists and undefined scalars for no params, with open tasks as the default status', () => {
     const o = parseTaskFilterParams({});
-    assert.deepEqual(o.status, []);
+    assert.deepEqual(o.status, ['pending', 'in_progress']);
     assert.deepEqual(o.priority, []);
     assert.equal(o.assignedTo, undefined);
     assert.equal(o.isStuck, undefined);
@@ -36,5 +36,30 @@ describe('parseTaskFilterParams', () => {
     assert.equal(o.clientId, 'c1');
     assert.equal(o.assignedTo, 'u1');
     assert.deepEqual(o.subServiceIds, ['s1']);
+  });
+});
+
+describe('task status selection', () => {
+  it('defaults to pending and in progress when the parameter is missing, empty or unusable', () => {
+    assert.deepEqual(effectiveStatuses(undefined), ['pending', 'in_progress']);
+    assert.deepEqual(effectiveStatuses(''), ['pending', 'in_progress']);
+    assert.deepEqual(effectiveStatuses('overdue'), ['pending', 'in_progress']);
+  });
+
+  it('accepts any combination and drops unknown values and duplicates', () => {
+    assert.deepEqual(effectiveStatuses('completed,cancelled'), ['completed', 'cancelled']);
+    assert.deepEqual(effectiveStatuses('pending,bogus,pending,stuck'), ['pending', 'stuck']);
+  });
+
+  it('keeps the default out of the URL', () => {
+    assert.equal(statusParamFor(['pending', 'in_progress']), '');
+    assert.equal(statusParamFor(['in_progress', 'pending']), '');
+    assert.equal(statusParamFor(['pending']), 'pending');
+    assert.equal(statusParamFor(['pending', 'in_progress', 'completed']), 'pending,in_progress,completed');
+  });
+
+  it('feeds the repository filter', () => {
+    assert.deepEqual(parseTaskFilterParams({ status: 'completed,cancelled' }).status, ['completed', 'cancelled']);
+    assert.ok(sameSet(['a', 'b'], ['b', 'a']));
   });
 });

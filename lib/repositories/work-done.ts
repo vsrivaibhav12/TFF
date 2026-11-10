@@ -1,6 +1,7 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { fetchAll } from '@/lib/supabase/fetch-all';
+import { wrapLike } from '@/lib/supabase/safe-search';
 
 export interface WorkDoneRow {
   id: string;
@@ -166,4 +167,30 @@ export async function deleteWorkDoneRecord(id: string) {
   const sb = createClient();
   const { error } = await sb.from('task_workdone').delete().eq('id', id);
   if (error) throw error;
+}
+
+/** Every work-done entry matching the filters (no 200-row cut-off), newest first. Paged and capped at 20,000. */
+export async function listWorkDoneAll(opts: {
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+  clientId?: string;
+  taskId?: string;
+  search?: string;
+} = {}) {
+  const sb = createClient();
+  const rows = await fetchAll<unknown>(() => {
+    let q = sb
+      .from('task_workdone')
+      .select('id, task_id, user_id, client_id, work_date, duration_minutes, note, entry_method, started_at, ended_at, created_at, tasks(title), clients(business_name), users_profile!task_workdone_user_id_fkey(full_name)')
+      .order('work_date', { ascending: false });
+    if (opts.userId) q = q.eq('user_id', opts.userId);
+    if (opts.startDate) q = q.gte('work_date', opts.startDate);
+    if (opts.endDate) q = q.lte('work_date', opts.endDate);
+    if (opts.clientId) q = q.eq('client_id', opts.clientId);
+    if (opts.taskId) q = q.eq('task_id', opts.taskId);
+    if (opts.search) q = q.ilike('note', wrapLike(opts.search));
+    return q;
+  }, 20000);
+  return rows as unknown as WorkDoneRow[];
 }

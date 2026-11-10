@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Filter, X, Calendar as CalendarIcon, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { TaskStatusFilter } from '@/components/tasks/status-filter';
+import { effectiveStatuses, statusParamFor, TASK_STATUS_OPTIONS } from '@/lib/tasks/filter-params';
 
 interface AdvancedTaskFiltersProps {
   /** Optional pre-loaded clients. When omitted, the client picker uses server-side async search. */
@@ -94,20 +96,10 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
           <Filter className="h-4 w-4" /> Filters
         </div>
         
-        <Select value={f.status || 'all'} onValueChange={(v) => update('status', v)}>
-          <SelectTrigger className="w-36 h-8 text-xs bg-zinc-50 border-dashed">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="in_progress">In progress</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-            <SelectItem value="blocked">Awaiting client (Blocked)</SelectItem>
-            <SelectItem value="stuck">Stuck</SelectItem>
-          </SelectContent>
-        </Select>
+        <TaskStatusFilter
+          value={effectiveStatuses(f.status)}
+          onChange={(next) => update('status', statusParamFor(next))}
+        />
 
         <Select value={f.priority || 'all'} onValueChange={(v) => update('priority', v)}>
           <SelectTrigger className="w-32 h-8 text-xs bg-zinc-50 border-dashed">
@@ -246,7 +238,11 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
           {Object.entries(f).map(([k, v]) => {
             if (!v || v === 'all' || v === 'false') return null;
             let label = `${k}: ${v}`;
-            if (k === 'status') label = `Status: ${v.replace('_', ' ')}`;
+            if (k === 'status') {
+              // The default (pending and in progress) is the built-in view, not a chip.
+              if (statusParamFor(effectiveStatuses(v)) === '') return null;
+              label = `Status: ${effectiveStatuses(v).map((s) => TASK_STATUS_OPTIONS.find((o) => o.value === s)?.label ?? s).join(', ')}`;
+            }
             if (k === 'priority') label = `Priority: ${v}`;
             if (k === 'assigned') label = `Assignee: ${v === 'unassigned' ? 'Unassigned' : team.find(t => t.id === v)?.full_name || v}`;
             if (k === 'client') label = `Client: ${activeClientName || initialClients.find(c => c.id === v)?.business_name || v}`;

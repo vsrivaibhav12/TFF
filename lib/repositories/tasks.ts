@@ -653,3 +653,40 @@ export async function reassignTasks(ids: string[], assigneeId: string | null, ch
   }
   return updated;
 }
+
+/**
+ * Every task matching a filter, with names resolved, for exports. Reads in pages of 500 so
+ * the 1,000-row API cap never cuts it short, and stops at `cap` rows (reporting `truncated`).
+ */
+export async function listTasksForExport(
+  opts: TaskFilterOpts,
+  cap = 10000,
+): Promise<{ rows: TaskRow[]; truncated: boolean }> {
+  const sb = createClient();
+  const searchIds = await resolveTaskIdFilter(sb, opts);
+  if (searchIds && searchIds.length === 0) return { rows: [], truncated: false };
+
+  const subsets: Array<string[] | undefined> = [];
+  if (!searchIds) subsets.push(undefined);
+  else for (let i = 0; i < searchIds.length; i += ID_CHUNK) subsets.push(searchIds.slice(i, i + ID_CHUNK));
+
+  const PAGE = 500;
+  const all: TaskRow[] = [];
+  for (const subset of subsets) {
+    for (let offset = 0; all.length <= cap; offset += PAGE) {
+      const rows = await fetchTaskRows(sb, opts, subset, offset, PAGE);
+      all.push(...rows);
+      if (rows.length < PAGE) break;
+    }
+    if (all.length > cap) break;
+  }
+  if (subsets.length > 1) {
+    all.sort((x, y) => {
+      if (x.due_date === y.due_date) return x.id.localeCompare(y.id);
+      if (x.due_date === null) return 1;
+      if (y.due_date === null) return -1;
+      return x.due_date < y.due_date ? -1 : 1;
+    });
+  }
+  return { rows: all.slice(0, cap), truncated: all.length > cap };
+}

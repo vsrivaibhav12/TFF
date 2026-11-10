@@ -26,7 +26,7 @@ export function TaskQuickFilters({
 
   const presets: Preset[] = [
     { key: 'mine', label: 'My tasks', params: { assigned: meId } },
-    { key: 'overdue', label: 'Overdue', params: { due_to: yesterdayIso, status: 'pending,in_progress' } },
+    { key: 'overdue', label: 'Overdue', params: { due_to: yesterdayIso } },
     { key: 'week', label: 'Due this week', params: { due_from: todayIso, due_to: weekEndIso } },
     { key: 'stuck', label: 'Stuck', params: { is_stuck: 'true' } },
   ];

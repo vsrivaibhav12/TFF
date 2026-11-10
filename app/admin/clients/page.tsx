@@ -11,7 +11,7 @@ import { Plus, Upload, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import FilterBar from '@/components/sophistication/filter-bar';
 import ClientsTableClient from './clients-table-client';
-import ExportButton from '@/components/sophistication/export-button';
+import { FullExport } from '@/components/reports/full-export';
 
 
 const PAGE_SIZE = 50;
@@ -52,13 +52,6 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
     clientIds.length > 0 ? countActiveEngagementsForClients(clientIds) : Promise.resolve<Record<string, number>>({}),
   ]);
 
-  const exportData = clients.map((c: any) => ({
-    business_name: c.business_name,
-    gstin: c.gstin ?? '',
-    category: c.category ?? '',
-    city: c.city ?? '',
-    state: c.state ?? '',
-  }));
 
   const enrichedClients = clients.map((c: any) => {
     const compliance = complianceMap[c.id] ?? { gst: 'unknown', tds: 'unknown', it: 'unknown' };
@@ -93,7 +86,7 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
           <p className="text-sm text-zinc-500 mt-1">{totalCount} client{totalCount !== 1 ? 's' : ''} in your firm&apos;s roster.</p>
         </div>
         <div className="flex gap-2">
-          <ExportButton data={exportData} filename="clients" format="excel" />
+          <FullExport source={{ kind: 'clients', filters: { group: searchParams.group, city: searchParams.city, q: searchParams.q } }} label="clients" filename="clients" total={totalCount} />
           <Button variant="outline" asChild>
             <Link href="/admin/clients/groups"><Users className="h-4 w-4 mr-1" /> Groups</Link>
           </Button>

@@ -10,6 +10,12 @@ import { useEffect, useState, useMemo } from 'react';
 import { getRecentItems, type RecentItem } from '@/lib/state/recent-items';
 import { DockLink } from './dock-link';
 
+/** Today (offset 0) or another day in India, as YYYY-MM-DD. */
+function istDate(offsetDays: number): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' })
+    .format(new Date(Date.now() + offsetDays * 86_400_000));
+}
+
 interface ContextualPanelProps {
   nav: NavItem[];
   role: 'admin' | 'team';
@@ -46,9 +52,9 @@ function getModuleContext(pathname: string, role: string): ModuleContext | null 
       scope: `${role}.tasks`,
       recentType: 'task',
       quickFilters: [
-        { label: 'All tasks', href: `${prefix}/tasks` },
-        { label: 'Due today', href: `${prefix}/tasks?due_from=${new Date().toISOString().split('T')[0]}` },
-        { label: 'Overdue', href: `${prefix}/tasks?status=overdue` },
+        { label: 'Open tasks', href: `${prefix}/tasks` },
+        { label: 'Due today', href: `${prefix}/tasks?due_from=${istDate(0)}&due_to=${istDate(0)}` },
+        { label: 'Overdue', href: `${prefix}/tasks?due_to=${istDate(-1)}` },
         { label: 'Completed', href: `${prefix}/tasks?status=completed` },
       ],
       prefix,

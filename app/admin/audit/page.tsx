@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ExpandableCell } from '@/components/ui/expandable-cell';
 import { PageHeader } from '@/components/ui/page-header';
-import ExportButton from '@/components/sophistication/export-button';
+import { FullExport } from '@/components/reports/full-export';
 import { Badge } from '@/components/ui/badge';
 import { formatDateIST } from '@/lib/utils';
 import AuditFilters from './filters';
@@ -35,22 +35,13 @@ export default async function AuditPage({ searchParams }: { searchParams: { acto
   if (searchParams.to) q = q.lte('performed_at', searchParams.to);
   const { data, count } = await q;
 
-  const exportData = (data ?? []).map((r: any) => ({
-    action: r.action,
-    entity: r.entity_type,
-    entity_id: r.entity_id,
-    actor: r.users_profile?.full_name ?? '—',
-    email: r.users_profile?.email ?? '',
-    when: r.performed_at,
-    details: r.details ? JSON.stringify(r.details) : '',
-  }));
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Audit trail"
         subtitle="Every privileged action across the firm. Filterable and exportable."
-        actions={<ExportButton data={exportData} filename="audit-export" format="csv" />}
+        actions={<FullExport source={{ kind: 'audit', filters: { actor: searchParams.actor, action: searchParams.action, entity: searchParams.entity, from: searchParams.from, to: searchParams.to } }} label="audit entries" filename="audit" total={count ?? undefined} />}
       />
       <AuditFilters initial={searchParams} />
       <div className="tff-card overflow-hidden">

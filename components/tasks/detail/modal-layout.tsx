@@ -384,10 +384,10 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
               </div>
               {editingTemplate ? (
                 <div className="space-y-2">
-                  <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                  <Select value={selectedTemplateId || '__none__'} onValueChange={(v) => setSelectedTemplateId(v === '__none__' ? '' : v)}>
                     <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Select template" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="" className="text-xs">None</SelectItem>
+                      <SelectItem value="__none__" className="text-xs">No template</SelectItem>
                       {(() => {
                         const availableTemplates = taskTemplates.filter((t) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id));
                         if (availableTemplates.length === 0) {

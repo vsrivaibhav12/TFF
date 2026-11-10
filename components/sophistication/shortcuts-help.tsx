@@ -10,7 +10,7 @@ const SHORTCUTS = [
   ['G then D', 'Go to dashboard'],
   ['G then C', 'Go to clients'],
   ['G then T', 'Go to tasks'],
-  ['G then Q', 'Go to queries'],
+  ['G then I', 'Go to inbox'],
   ['N', 'New (context-sensitive)'],
   ['J / ↓', 'Move down in lists'],
   ['K / ↑', 'Move up in lists'],
@@ -69,7 +69,7 @@ export default function ShortcutsHelp({
       else if (g) {
         if (e.key === 'c') router.push(`${basePath}/clients`);
         else if (e.key === 't') router.push(`${basePath}/tasks`);
-        else if (e.key === 'q') router.push(`${basePath}/queries`);
+        else if (e.key === 'i') router.push(`${basePath}/inbox`);
         else if (e.key === 'd') router.push(basePath);
         setG(false);
       }

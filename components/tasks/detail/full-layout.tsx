@@ -219,10 +219,10 @@ export default function TaskDetailFullLayout({ ctx }: { ctx: TaskDetailCtx }) {
                   <dd className="font-semibold text-zinc-900 text-right">
                     {editingTemplate ? (
                       <div className="flex items-center gap-1 justify-end">
-                        <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                        <Select value={selectedTemplateId || '__none__'} onValueChange={(v) => setSelectedTemplateId(v === '__none__' ? '' : v)}>
                           <SelectTrigger className="h-6 text-xs w-44 px-1"><SelectValue placeholder="Select template" /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="" className="text-xs">None</SelectItem>
+                            <SelectItem value="__none__" className="text-xs">No template</SelectItem>
                             {(() => {
                               const availableTemplates = taskTemplates.filter((t) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id));
                               if (availableTemplates.length === 0) {

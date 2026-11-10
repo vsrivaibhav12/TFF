@@ -16,6 +16,7 @@
     "test:watch": "node --import ./__tests__/setup.js --import tsx --test --watch __tests__/*.test.ts",
     "test:one": "node --import ./__tests__/setup.js --import tsx --test",
     "security:verify-route-gating": "tsx scripts/verify-route-gating.ts",
+    "verify:links": "tsx scripts/verify-links.ts",
     "db:apply-migration": "tsx scripts/apply-migration.ts",
     "db:seed-super-admins": "tsx scripts/seed-super-admins.ts",
     "db:apply-baseline": "tsx scripts/apply-migration.ts db/baseline/2026-11-11-baseline.sql",

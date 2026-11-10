@@ -11,7 +11,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/ui/stat-card';
-import ExportButton from '@/components/sophistication/export-button';
+import { FullExport } from '@/components/reports/full-export';
 import EmptyState from '@/components/sophistication/empty-state';
 import NewTaskDialog from '@/components/tasks/new-task-dialog';
 import AdvancedTaskFilters from '@/components/tasks/advanced-task-filters';
@@ -103,15 +103,6 @@ export default async function TasksListPage({
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const base = `/${variant}/tasks`;
 
-  const exportData = tasks.map((t: any) => ({
-    task_number: t.task_number ?? '',
-    title: t.title,
-    client: t.clients?.business_name ?? '',
-    status: t.status,
-    priority: t.priority,
-    due_date: t.due_date ?? '',
-    assigned_to: t.users_profile?.full_name ?? '',
-  }));
 
   const showCreateTools = isAdminView || canCreate;
 
@@ -122,7 +113,7 @@ export default async function TasksListPage({
         subtitle={isAdminView ? 'Operational oversight of active engagements and team workflows.' : `${tasks.length} task${tasks.length === 1 ? '' : 's'} in this view.`}
         actions={
           <>
-            <ExportButton data={exportData} filename="tasks-export" format="csv" />
+            <FullExport source={{ kind: 'tasks', filters: { ...searchParams, assigned: assignedTo, page: undefined } as TaskFilterParams }} label="tasks" filename="tasks" total={totalCount} />
             {showCreateTools && (
               <NewTaskDialog
                 team={team ?? []}
