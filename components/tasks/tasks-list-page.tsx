@@ -147,7 +147,7 @@ export default async function TasksListPage({
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Active" value={totalCount} icon={<Briefcase className="h-4 w-4" />} tone="zinc" />
+        <StatCard label="Matching tasks" value={totalCount} icon={<Briefcase className="h-4 w-4" />} tone="zinc" />
         <StatCard label="Stuck or high-priority" value={stuck} icon={<AlertTriangle className="h-4 w-4" />} tone="red" />
         <StatCard label="Due today" value={dueToday} icon={<Clock className="h-4 w-4" />} tone="amber" />
       </div>

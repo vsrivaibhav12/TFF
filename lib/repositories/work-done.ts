@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 
 export interface WorkDoneRow {
   id: string;
@@ -51,6 +52,51 @@ export async function listWorkDone(opts: {
   const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as unknown as WorkDoneRow[];
+}
+
+/**
+ * Every work-done entry in a date range, newest first, with names resolved. Paged so the
+ * report stays complete beyond 1,000 rows. Capped at 20,000 entries as a safety limit.
+ */
+export async function listWorkDoneDetailed(opts: {
+  from: string;
+  to: string;
+  userId?: string;
+  clientId?: string;
+}): Promise<import('@/lib/services/workdone-report').WorkDoneEntry[]> {
+  const sb = createClient();
+  const rows = await fetchAll<{
+    id: string; task_id: string | null; user_id: string; client_id: string | null; work_date: string;
+    duration_minutes: number; note: string | null; entry_method: string | null;
+    tasks: { title: string } | { title: string }[] | null;
+    clients: { business_name: string } | { business_name: string }[] | null;
+    users_profile: { full_name: string | null } | { full_name: string | null }[] | null;
+  }>(() => {
+    let q = sb
+      .from('task_workdone')
+      .select('id, task_id, user_id, client_id, work_date, duration_minutes, note, entry_method, tasks(title), clients(business_name), users_profile!task_workdone_user_id_fkey(full_name)')
+      .gte('work_date', opts.from)
+      .lte('work_date', opts.to)
+      .order('work_date', { ascending: false });
+    if (opts.userId) q = q.eq('user_id', opts.userId);
+    if (opts.clientId) q = q.eq('client_id', opts.clientId);
+    return q;
+  }, 20000);
+
+  const one = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? (v[0] ?? null) : v);
+  return rows.map((r) => ({
+    id: r.id,
+    work_date: r.work_date,
+    duration_minutes: r.duration_minutes,
+    note: r.note,
+    entry_method: r.entry_method,
+    user_id: r.user_id,
+    user_name: one(r.users_profile)?.full_name ?? 'Unknown',
+    client_id: r.client_id,
+    client_name: one(r.clients)?.business_name ?? 'No client',
+    task_id: r.task_id,
+    task_title: one(r.tasks)?.title ?? 'No task',
+  }));
 }
 
 export async function listWorkDoneForTask(taskId: string): Promise<WorkDoneRow[]> {

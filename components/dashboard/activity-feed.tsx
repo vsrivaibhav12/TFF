@@ -41,7 +41,15 @@ function formatAction(action: string, entityType?: string): { text: string; icon
   if (a.includes('notice') || a.includes('alert')) return { text: `Sent notice`, icon: Bell, color: 'bg-amber-50 text-amber-600 border-amber-100' };
   if (a.includes('sign') || a.includes('login') || a.includes('auth')) return { text: `Authentication`, icon: User, color: 'bg-zinc-50 text-zinc-600 border-zinc-200' };
 
-  return { text: `${action.replace(/_/g, ' ')} ${et}`, icon: FileText, color: 'bg-zinc-50 text-zinc-600 border-zinc-200' };
+  if (action.includes('.')) {
+    const [subject, ...rest] = action.split('.');
+    const verbs: Record<string, string> = { apply: 'Applied', approved: 'Approved', rejected: 'Rejected', assign: 'Assigned', add_note: 'Added note to', bulk_update: 'Bulk updated', bulk_reassign: 'Bulk reassigned', bulk_create: 'Bulk created' };
+    const verbKey = rest.join('.');
+    const verb = verbs[verbKey] ?? verbKey.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+    return { text: `${verb} ${subject.replace(/_/g, ' ')}`, icon: FileText, color: 'bg-zinc-50 text-zinc-600 border-zinc-200' };
+  }
+  const plain = `${action.replace(/_/g, ' ')} ${et}`.trim();
+  return { text: plain.charAt(0).toUpperCase() + plain.slice(1), icon: FileText, color: 'bg-zinc-50 text-zinc-600 border-zinc-200' };
 }
 
 export function ActivityFeed({ items, href, emptyMessage = 'No recent activity' }: ActivityFeedProps) {

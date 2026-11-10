@@ -170,7 +170,7 @@ async function DashboardBody() {
 
       {(dscSegments.length > 0 || closureVelocity.length > 0) && (
         <StaggerItem>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 gap-4 ${dscSegments.length > 0 && closureVelocity.length > 0 ? 'md:grid-cols-2' : ''}`}>
             {dscSegments.length > 0 && (
               <Link href="/admin/dsc" className="tff-card p-4 hover:border-teal-200 transition-colors">
                 <div className="flex items-center justify-between mb-2">

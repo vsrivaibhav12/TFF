@@ -6,7 +6,7 @@ const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableE
     <div className="relative w-full overflow-auto">
       <table
         ref={ref}
-        className={cn('w-full caption-bottom text-[15px]', className)}
+        className={cn('w-full caption-bottom text-sm', className)}
         {...props}
       />
     </div>
@@ -63,7 +63,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-12 px-4 text-left align-middle font-semibold text-zinc-500 text-xs uppercase tracking-wider',
+      'h-10 px-4 text-left align-middle font-medium text-zinc-500 text-xs',
       className
     )}
     {...props}
@@ -75,8 +75,16 @@ const TableCell = React.forwardRef<
   HTMLTableCellElement,
   React.TdHTMLAttributes<HTMLTableCellElement>
 >(({ className, ...props }, ref) => (
-  <td ref={ref} className={cn('p-4 align-middle', className)} {...props} />
+  <td ref={ref} className={cn('px-4 py-3 align-middle', className)} {...props} />
 ));
 TableCell.displayName = 'TableCell';
 
-export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell };
+const TableFooter = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(({ className, ...props }, ref) => (
+  <tfoot ref={ref} className={cn('border-t border-zinc-200 bg-zinc-50/70 font-medium', className)} {...props} />
+));
+TableFooter.displayName = 'TableFooter';
+
+export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableFooter };

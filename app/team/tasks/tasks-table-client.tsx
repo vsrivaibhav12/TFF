@@ -256,8 +256,8 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
       {/* Mobile cards with swipe */}
       <div className="space-y-3 md:hidden">
         {tasks.map((t) => {
-          const overdue = t.due_date && todayIso && t.due_date < todayIso && t.status !== 'completed';
-          const dueSoon = t.due_date && todayIso && t.due_date === todayIso && t.status !== 'completed';
+          const overdue = t.due_date && todayIso && t.due_date < todayIso && t.status !== 'completed' && t.status !== 'cancelled';
+          const dueSoon = t.due_date && todayIso && t.due_date === todayIso && t.status !== 'completed' && t.status !== 'cancelled';
           const urgencyBorder = overdue ? 'border-l-2 border-l-red-500' : dueSoon ? 'border-l-2 border-l-amber-500' : t.status === 'in_progress' ? 'border-l-2 border-l-teal-500' : '';
           return (
             <SwipeableRow
@@ -274,8 +274,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
               <div className={cn('bg-white border border-zinc-200 rounded-xl p-4 space-y-2', urgencyBorder)}>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono text-zinc-500">{t.task_number ?? '—'}</span>
-                  <Badge className={cn('text-xs', getStatusColour(t.status).bg, getStatusColour(t.status).text, getStatusColour(t.status).border)}>
-                    <span className={cn('h-1.5 w-1.5 rounded-full', getStatusColour(t.status).dot)} />
+                  <Badge className={cn('text-xs whitespace-nowrap', getStatusColour(t.status).bg, getStatusColour(t.status).text, getStatusColour(t.status).border)}>
                     {t.status.replace(/_/g, ' ')}
                   </Badge>
                 </div>
@@ -393,8 +392,8 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
           <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const t = filtered[virtualRow.index];
-              const overdue = t.due_date && todayIso && t.due_date < todayIso && t.status !== 'completed';
-              const dueSoon = t.due_date && todayIso && t.due_date === todayIso && t.status !== 'completed';
+              const overdue = t.due_date && todayIso && t.due_date < todayIso && t.status !== 'completed' && t.status !== 'cancelled';
+              const dueSoon = t.due_date && todayIso && t.due_date === todayIso && t.status !== 'completed' && t.status !== 'cancelled';
               const urgencyBorder = overdue ? 'border-l-2 border-l-red-500' : dueSoon ? 'border-l-2 border-l-amber-500' : t.status === 'in_progress' ? 'border-l-2 border-l-teal-500' : '';
               return (
                 <div

@@ -31,6 +31,8 @@ const CommandPalette = dynamic(() => import('./command-palette'), { ssr: false }
 const ShortcutsHelp = dynamic(() => import('@/components/sophistication/shortcuts-help'), { ssr: false });
 const UniversalDetailDock = dynamic(() => import('./universal-detail-dock').then((m) => ({ default: m.UniversalDetailDock })), { ssr: false });
 
+const SEGMENT_LABELS: Record<string, string> = { workdone: 'work done', 'group-wise': 'group wise', 'service-wise': 'service wise' };
+
 function getInitials(name: string | null): string {
   if (!name) return 'U';
   return name
@@ -147,13 +149,15 @@ export default function AppShell({
         <div className="md:hidden fixed top-0 inset-x-0 z-30 flex items-center justify-between border-b border-white/10 bg-teal-900/95 backdrop-blur-lg px-4 py-3">
           <Link href={`/${userRole}`} className="flex items-center gap-2">
             <Image src="/logo.png" width={140} height={28} className="h-7 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
-            <span className="text-sm font-bold text-white">TFF</span>
+            <span className="hidden min-[430px]:inline text-sm font-bold text-white">TFF</span>
           </Link>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 min-w-0">
             <GlobalTimer role={userRole} />
-            <ErrorBoundary>
-              <NotificationsBell />
-            </ErrorBoundary>
+            <div className="[&_button]:!text-teal-100 [&_button:hover]:!bg-white/10">
+              <ErrorBoundary>
+                <NotificationsBell />
+              </ErrorBoundary>
+            </div>
             <QuickActionsDropdown role={userRole} />
             <button onClick={() => setMobileOpen((v) => !v)} className="p-2 text-teal-100" aria-label="menu">
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -255,7 +259,7 @@ export default function AppShell({
         {/* Main content */}
         <main className={`flex-1 min-w-0 transition-colors duration-300 ${desktopMargin}`}>
           {/* Desktop top bar */}
-          <div className="hidden md:flex items-center justify-between gap-4 px-8 py-3 sticky top-0 z-20 bg-zinc-50/95 border-b border-zinc-200/60">
+          <div className="hidden md:flex items-center justify-between gap-4 px-8 py-3 sticky top-0 z-20 bg-zinc-50 border-b border-zinc-200/60">
             {/* Breadcrumbs */}
             <div className="flex items-center gap-1.5 text-sm text-zinc-500">
               <Link href={`/${userRole}`} className="hover:text-zinc-900 transition-colors capitalize">
@@ -264,7 +268,7 @@ export default function AppShell({
               {breadcrumbSegments.map((segment, i) => {
                 const isLast = i === breadcrumbSegments.length - 1;
                 const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(segment) || /^\d+$/.test(segment);
-                const label = isId ? 'Details' : segment.replace(/-/g, ' ');
+                const label = isId ? 'Details' : (SEGMENT_LABELS[segment] ?? segment.replace(/-/g, ' '));
                 const href = `/${userRole}/${breadcrumbSegments.slice(0, i + 1).join('/')}`;
                 return (
                   <span key={`bc-${segment}-${i}`} className="flex items-center gap-1.5">
@@ -356,7 +360,7 @@ export default function AppShell({
           </div>
 
           {/* Content area */}
-          <div id="main-content" className="px-6 md:px-8 py-6 md:py-8 pt-20 md:pt-2 pb-24 md:pb-8 bg-zinc-50 min-h-screen">
+          <div id="main-content" className="px-6 md:px-8 py-6 md:py-8 pt-20 md:pt-6 pb-24 md:pb-8 bg-zinc-50 min-h-screen">
             <div className="mx-auto w-full max-w-[1600px]">{children}</div>
           </div>
         </main>

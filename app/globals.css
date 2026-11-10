@@ -33,7 +33,7 @@
 
 html, body {
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #78716C; /* zinc-500 */
+  color: #71717A; /* zinc-500 */
   background: #FAFAFA; /* zinc-50 */
   font-size: 14px;
   line-height: 1.6;
@@ -43,9 +43,14 @@ html, body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-inter), system-ui, sans-serif;
-  color: #1C1917; /* zinc-900 */
+  color: #18181B; /* zinc-900 */
   letter-spacing: -0.03em;
   line-height: 1.1;
+}
+/* Tight tracking and leading suit large display headings only; small headings need room. */
+h4, h5, h6 {
+  letter-spacing: -0.01em;
+  line-height: 1.35;
 }
 
 .font-display { font-family: var(--font-inter), system-ui, sans-serif; }

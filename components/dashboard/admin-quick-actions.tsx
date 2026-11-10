@@ -15,7 +15,7 @@ export function AdminQuickActions() {
 
   const actions = [
     { label: 'New task', icon: Plus, variant: 'default' as const, onClick: () => router.push('/admin/tasks') },
-    { label: 'New client', icon: Users, variant: 'default' as const, onClick: () => router.push('/admin/clients') },
+    { label: 'New client', icon: Users, variant: 'secondary' as const, onClick: () => router.push('/admin/clients') },
     { label: 'Log work', icon: Timer, variant: 'secondary' as const, onClick: () => router.push('/admin/work-done') },
     { label: 'Bulk tasks', icon: Layers, variant: 'secondary' as const, onClick: () => router.push('/admin/tasks/bulk-create') },
   ];

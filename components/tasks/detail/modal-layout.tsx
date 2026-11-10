@@ -13,9 +13,9 @@ import { formatDateIST, formatTimeIST, timeAgo, cn } from '@/lib/utils';
 import TaskStepsPanel from '@/components/tasks/task-steps-panel';
 import CustomFieldsPanel from '@/components/tasks/custom-fields-panel';
 import { assignTaskAction } from '@/lib/actions/tasks';
-import { nextStatuses } from '@/lib/services/task-transitions';
 import { toast } from 'sonner';
 import { fmtHM } from './helpers';
+import { TaskStatusStepper } from './status-stepper';
 import type { Task } from './types';
 import type { TaskDetailCtx } from './use-task-detail';
 
@@ -113,6 +113,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
     addNote,
     saveField,
     handleTransition,
+    transitioning,
     handleBlockedToggle,
     handleMarkStuck,
     handleUnstuck,
@@ -146,6 +147,20 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
               </DockLink>
             </div>
           </div>
+
+          {/* Status: stage, dates and next actions. Updates the instant the user acts. */}
+          <TaskStatusStepper
+            status={task.status}
+            createdDate={task.created_date}
+            startedDate={task.started_date}
+            completedDate={task.completed_date}
+            isBillable={task.is_billable}
+            billReference={task.bill_reference}
+            billAmount={task.bill_amount}
+            canAct={canEditSteps}
+            transitioning={transitioning}
+            onTransition={handleTransition}
+          />
 
           {/* Editable Metadata Grid */}
           <div className="grid grid-cols-2 gap-2">
@@ -549,21 +564,6 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
           {!isClosed && (
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap gap-2">
-                {nextStatuses(task.status as import('@/lib/validation/schemas').TaskStatus).includes('in_progress') && (
-                  <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => handleTransition('in_progress')} disabled={isPending}>
-                    Start
-                  </Button>
-                )}
-                {nextStatuses(task.status as import('@/lib/validation/schemas').TaskStatus).includes('completed') && (
-                  <Button type="button" size="sm" variant="outline" className="flex-1 border-teal-200 text-teal-700 hover:bg-teal-50" onClick={() => handleTransition('completed')} disabled={isPending}>
-                    Complete
-                  </Button>
-                )}
-                {task.status !== 'pending' && (
-                  <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => handleTransition('pending')} disabled={isPending}>
-                    Move to pending
-                  </Button>
-                )}
                 <Button type="button" size="sm" variant={task.is_blocked_on_client ? 'default' : 'outline'} className="flex-1" onClick={handleBlockedToggle} disabled={isPending}>
                   {task.is_blocked_on_client ? 'Unblock' : 'Blocked'}
                 </Button>

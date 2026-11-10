@@ -9,7 +9,9 @@ import ExportButton from '@/components/sophistication/export-button';
 import CheckInOut from '@/app/team/attendance/check-in-out';
 import ManualAttendanceForm from '@/app/team/attendance/manual-entry-form';
 import { Badge } from '@/components/ui/badge';
-import { Clock, ShieldCheck } from 'lucide-react';
+import { Clock, ShieldCheck, BarChart3 } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +50,14 @@ export default async function AdminAttendancePage({ searchParams }: { searchPara
       <PageHeader
         title="Attendance"
         subtitle="Mark and review attendance for all staff members. Admin override is always possible."
-        actions={<ExportButton data={exportData} filename="attendance" format="excel" />}
+        actions={
+          <>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/admin/reports/attendance"><BarChart3 className="h-4 w-4 mr-1" /> Attendance report</Link>
+            </Button>
+            <ExportButton data={exportData} filename="attendance" format="excel" />
+          </>
+        }
       />
 
       {/* Admin self-logging */}

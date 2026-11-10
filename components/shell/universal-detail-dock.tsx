@@ -44,7 +44,7 @@ export function UniversalDetailDock() {
         onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); clear(); } }}
       />
       <div
-        className="fixed right-0 top-0 bottom-0 w-[50vw] min-w-[640px] max-w-[90vw] bg-white shadow-2xl z-[101] flex flex-col border-l border-zinc-200 transition-transform duration-200 ease-out"
+        className="fixed right-0 top-0 bottom-0 w-full md:w-[50vw] md:min-w-[640px] max-w-full md:max-w-[90vw] bg-white shadow-2xl z-[101] flex flex-col border-l border-zinc-200 transition-transform duration-200 ease-out"
         style={{ transform: 'translateX(0)' }}
       >
         <div className="h-14 flex items-center justify-between px-4 border-b border-zinc-200/60 bg-zinc-50 shrink-0">
@@ -59,7 +59,7 @@ export function UniversalDetailDock() {
               </button>
             )}
             <span className="text-sm font-medium text-zinc-500 text-xs">
-              {topItem.type}
+              {{ task: 'Task', client: 'Client', team: 'Team member' }[topItem.type] ?? topItem.type}
             </span>
           </div>
           <button 
@@ -96,7 +96,7 @@ function DockPanelAsync({ item }: { item: DockItem }) {
   const prefix = usePathnamePrefix();
   const fetcher = fetchers[item.type] as (id: string) => Promise<any>;
 
-  const { data, error } = useSWR(
+  const { data, error, mutate } = useSWR(
     ['dock', item.type, item.id],
     () => fetcher(item.id),
     { suspense: true, revalidateOnFocus: false }
@@ -105,7 +105,9 @@ function DockPanelAsync({ item }: { item: DockItem }) {
   if (error) return <div className="p-6 text-center text-sm text-red-500">{error.message || 'Failed to load'}</div>;
   if (!data?.success) return <div className="p-6 text-center text-sm text-red-500">{data?.error || 'Failed to load'}</div>;
 
-  return renderPanel(item.type, data.data, prefix);
+  // After any change inside the panel (status, notes, flags, work logs) refetch the panel's data.
+  // Without this the cached copy stayed stale and the panel looked as if nothing had happened.
+  return renderPanel(item.type, data.data, prefix, () => { void mutate(); });
 }
 
 function DockPanelLegacy({ item }: { item: DockItem }) {

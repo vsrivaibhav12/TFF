@@ -20,7 +20,7 @@ export const NAV_CAPABILITY_MAP: Record<string, string | string[]> = {
   '/admin/billing': ['manage_billing_entities'],
   '/admin/services': ['services.view', 'services.manage'],
   '/admin/team': 'staff.manage',
-  '/admin/reports': ['view_workdone_reports', 'audit.view'],
+  '/admin/reports': ['view_workdone_reports', 'audit.view', 'attendance.view_all'],
   '/admin/audit': 'audit.view',
   '/admin/settings': ['staff.manage', 'manage_custom_fields', 'manage_compliance_rules', 'manage_billing_entities'],
   '/admin/work-done': ['workdone.manage', 'view_workdone_reports'],
@@ -30,7 +30,7 @@ export const NAV_CAPABILITY_MAP: Record<string, string | string[]> = {
   '/team/credentials': ['credentials.view', 'credentials.manage'],
   '/team/billing': ['manage_billing_entities'],
   '/team/services': ['services.view', 'services.manage'],
-  '/team/reports': ['view_workdone_reports', 'audit.view'],
+  '/team/reports': ['view_workdone_reports', 'audit.view', 'attendance.view_all'],
   '/team/audit': 'audit.view',
   '/team/settings': ['staff.manage', 'manage_custom_fields', 'manage_compliance_rules', 'manage_billing_entities'],
 };

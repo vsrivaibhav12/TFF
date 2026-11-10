@@ -323,8 +323,8 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
           </TableHeader>
           <TableBody>
             {filtered.map((t) => {
-              const overdue = t.due_date && t.due_date < todayIso && t.status !== 'completed';
-              const dueSoon = t.due_date && t.due_date === todayIso && t.status !== 'completed';
+              const overdue = t.due_date && t.due_date < todayIso && t.status !== 'completed' && t.status !== 'cancelled';
+              const dueSoon = t.due_date && t.due_date === todayIso && t.status !== 'completed' && t.status !== 'cancelled';
               const urgencyBorder = overdue ? 'border-l-2 border-l-red-500' : dueSoon ? 'border-l-2 border-l-amber-500' : t.status === 'in_progress' ? 'border-l-2 border-l-teal-500' : '';
               return (
                 <TableRow key={t.id} className={cn('transition-colors hover:bg-zinc-50/60', selected.has(t.id) ? 'bg-teal-50/40' : '', urgencyBorder)} data-row>
@@ -366,7 +366,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                   )}
                   {colVisible('period') && (
                     <TableCell className={rowPadding}>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 tabular-nums">
+                      <span className="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 tabular-nums">
                         {t.period_month && t.period_year
                           ? `${new Date(t.period_year, t.period_month - 1).toLocaleString('default', { month: 'short' })} ${t.period_year}`
                           : t.period_quarter && t.period_year
@@ -380,8 +380,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                   {colVisible('status') && (
                     <TableCell className={cn('text-center', rowPadding)}>
                       <div className="flex flex-col items-center gap-1">
-                        <Badge className={cn('text-xs', getStatusColour(t.status).bg, getStatusColour(t.status).text, getStatusColour(t.status).border)}>
-                          <span className={cn('h-1.5 w-1.5 rounded-full', getStatusColour(t.status).dot)} />
+                        <Badge className={cn('text-xs whitespace-nowrap', getStatusColour(t.status).bg, getStatusColour(t.status).text, getStatusColour(t.status).border)}>
                           {t.status.replace('_', ' ')}
                         </Badge>
                         {t.is_verified && (
@@ -399,7 +398,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                   )}
                   {colVisible('due') && (
                     <TableCell className={rowPadding}>
-                      <span className={cn('text-xs tabular-nums', overdue ? 'text-red-600 font-medium' : dueSoon ? 'text-amber-600 font-medium' : 'text-zinc-700')}>
+                      <span className={cn('text-xs tabular-nums whitespace-nowrap', overdue ? 'text-red-600 font-medium' : dueSoon ? 'text-amber-600 font-medium' : 'text-zinc-700')}>
                         {t.due_date ? formatDateIST(t.due_date) : '—'}
                       </span>
                     </TableCell>
@@ -446,7 +445,6 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                   {colVisible('priority') && (
                     <TableCell className={cn('text-center', rowPadding)}>
                       <Badge className={cn('text-xs', getPriorityColour(t.priority).bg, getPriorityColour(t.priority).text)}>
-                        <span className={cn('h-1.5 w-1.5 rounded-full', getPriorityColour(t.priority).dot)} />
                         {t.priority ?? '—'}
                       </Badge>
                     </TableCell>

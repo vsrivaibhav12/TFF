@@ -12,7 +12,7 @@ import type { Props } from './types';
 /** All state and handlers for the task detail view; both layouts read from this one object. */
 export function useTaskDetail(props: Props) {
   const {
-    task,
+    task: serverTask,
     activity,
     notes,
     team,
@@ -34,6 +34,17 @@ export function useTaskDetail(props: Props) {
     onRefresh,
   } = props;
   const router = useRouter();
+
+  // Optimistic status: the screen shows the new status the moment the user acts, without waiting
+  // for the server round trip and the refetch. It is cleared when fresh server data arrives
+  // and rolled back if the server refuses the change.
+  const [optimistic, setOptimistic] = useState<{ status: string; started_date?: string | null; completed_date?: string | null } | null>(null);
+  const [transitioning, setTransitioning] = useState<string | null>(null);
+  useEffect(() => {
+    setOptimistic(null);
+  }, [serverTask.id, serverTask.status]);
+  const task = optimistic ? { ...serverTask, ...optimistic } : serverTask;
+
   const isClosed = task.status === 'completed' || task.status === 'cancelled';
   const [editingDesc, setEditingDesc] = useState(false);
   const [editingPeriod, setEditingPeriod] = useState(false);
@@ -110,16 +121,39 @@ export function useTaskDetail(props: Props) {
     return true;
   }
 
-  function handleTransition(toStatus: import('@/lib/validation/schemas').TaskStatus) {
-    startTransition(async () => {
-      const r = await transitionTaskAction({ task_id: task.id, to_status: toStatus as import('@/lib/validation/schemas').TaskStatus });
-      if (!r.success) toast.error(r.error);
-      else {
-        toast.success(`Moved to ${toStatus.replace('_', ' ')}`);
-        router.refresh();
-        onRefresh?.();
-      }
+  /**
+   * Move the task to a new status. The screen updates immediately (optimistic), then the
+   * list behind the panel and the panel's own data are refreshed. Resolves true on success.
+   */
+  async function handleTransition(
+    toStatus: import('@/lib/validation/schemas').TaskStatus,
+    extra?: { note?: string; bill_reference?: string | null; bill_amount?: number | null; arn_reference?: string | null },
+  ): Promise<boolean> {
+    const today = new Date().toISOString().slice(0, 10);
+    const before = optimistic;
+    setTransitioning(toStatus);
+    setOptimistic({
+      status: toStatus,
+      started_date: toStatus === 'in_progress' ? (task.started_date ?? today) : task.started_date,
+      completed_date: toStatus === 'completed' ? today : toStatus === 'in_progress' || toStatus === 'pending' ? null : task.completed_date,
     });
+    const r = await transitionTaskAction({ task_id: task.id, to_status: toStatus, ...extra });
+    setTransitioning(null);
+    if (!r.success) {
+      setOptimistic(before);
+      toast.error(r.error);
+      return false;
+    }
+    const messages: Record<string, string> = {
+      in_progress: 'Task started',
+      completed: 'Task completed',
+      pending: 'Task moved back to pending',
+      cancelled: 'Task cancelled',
+    };
+    toast.success(messages[toStatus] ?? `Moved to ${toStatus.replace('_', ' ')}`);
+    router.refresh();
+    onRefresh?.();
+    return true;
   }
 
   function handleBlockedToggle() {
@@ -297,6 +331,7 @@ export function useTaskDetail(props: Props) {
     addNote,
     saveField,
     handleTransition,
+    transitioning,
     handleBlockedToggle,
     handleMarkStuck,
     handleUnstuck,

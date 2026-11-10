@@ -21,12 +21,21 @@ interface Props {
 export default async function ReportsPage({ rolePrefix }: Props) {
   const me = await requireRole(['admin', 'team']);
   if (me.role !== 'admin') {
-    await requireCapabilityOrRedirect(me, ['view_workdone_reports', 'audit.view']);
+    await requireCapabilityOrRedirect(me, ['view_workdone_reports', 'audit.view', 'attendance.view_all']);
   }
 
   const canViewWorkDone = me.role === 'admin' || await hasCapability(me, 'view_workdone_reports');
+  const canViewAttendance = me.role === 'admin' || await hasCapability(me, 'attendance.view_all');
 
   const REPORTS = [
+    {
+      href: `${rolePrefix}/reports/attendance`,
+      title: 'Attendance',
+      description: 'Present, leave, absent and unmarked days by team member, with hours.',
+      icon: Users,
+      color: 'bg-emerald-50 text-emerald-600',
+      cap: canViewAttendance,
+    },
     {
       href: `${rolePrefix}/reports/workdone`,
       title: 'Work done',

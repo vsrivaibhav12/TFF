@@ -26,6 +26,7 @@ export interface Task {
   is_verified?: boolean;
   verification_note?: string | null;
   created_date?: string | null;
+  started_date?: string | null;
   completed_date?: string | null;
   assignees?: { id: string; full_name: string }[];
   reviewers?: { id: string; full_name: string }[];
