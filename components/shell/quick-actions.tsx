@@ -9,7 +9,6 @@ export function QuickActionsDropdown({ role }: { role: string }) {
   const adminLinks = [
     { label: 'New Task', href: '/admin/tasks/bulk-create' },
     { label: 'Add Client', href: '/admin/clients' },
-    { label: 'Run Payroll', href: '/admin/payroll' },
     { label: 'Add Team Member', href: '/admin/team' },
   ];
 

@@ -61,10 +61,6 @@ function itemTypeIcon(type: string) {
   switch (type) {
     case 'task':
       return <FileText className="h-4 w-4" />;
-    case 'notice':
-      return <AlertCircle className="h-4 w-4" />;
-    case 'query':
-      return <HelpCircle className="h-4 w-4" />;
     case 'compliance':
       return <Calendar className="h-4 w-4" />;
     default:
@@ -76,10 +72,6 @@ function itemTypeBadgeClass(type: string): string {
   switch (type) {
     case 'task':
       return 'bg-blue-50 text-blue-700 border-blue-200';
-    case 'notice':
-      return 'bg-red-50 text-red-700 border-red-200';
-    case 'query':
-      return 'bg-purple-50 text-purple-700 border-purple-200';
     case 'compliance':
       return 'bg-amber-50 text-amber-700 border-amber-200';
     default:
@@ -108,13 +100,6 @@ function metaSummary(item: UnifiedInboxItem): string | null {
     if (item.meta.is_stuck) parts.push('Stuck');
     if (item.meta.is_blocked_on_client) parts.push('Blocked on client');
   }
-  if (item.item_type === 'notice') {
-    if (item.meta.notice_type) parts.push(String(item.meta.notice_type));
-    if (item.meta.authority) parts.push(String(item.meta.authority));
-  }
-  if (item.item_type === 'query') {
-    if (item.meta.query_number) parts.push(String(item.meta.query_number));
-  }
   if (item.item_type === 'compliance') {
     if (item.meta.rule_code) parts.push(String(item.meta.rule_code));
     if (item.meta.period_label) parts.push(String(item.meta.period_label));
@@ -126,15 +111,13 @@ function getDetailPath(item: UnifiedInboxItem, basePath: string): string {
   switch (item.item_type) {
     case 'task':
       return `${basePath}/tasks/${item.id}`;
-    case 'notice':
-      return `${basePath}/notices/${item.id}`;
-    case 'query':
-      return `${basePath}/queries/${item.id}`;
     case 'compliance':
       if (item.related_entity_id) {
         return `${basePath}/tasks/${item.related_entity_id}`;
       }
-      return `${basePath}/compliance`;
+      // The compliance dashboard exists only for admins; send others somewhere real.
+      if (basePath.startsWith('/admin')) return `${basePath}/compliance`;
+      return `${basePath}/tasks`;
     default:
       return basePath;
   }
@@ -144,10 +127,6 @@ function primaryActionLabel(type: string): string {
   switch (type) {
     case 'task':
       return 'Complete';
-    case 'notice':
-      return 'Close';
-    case 'query':
-      return 'Mark resolved';
     case 'compliance':
       return 'Create task';
     default:
@@ -190,7 +169,7 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
     return (
       <EmptyState
         title="Your inbox is clear"
-        body="There are no pending tasks, open notices, active queries, or upcoming compliance events right now."
+        body="There are no pending tasks or upcoming compliance events right now."
         icon={<Inbox className="h-6 w-6 text-zinc-400" />}
       />
     );

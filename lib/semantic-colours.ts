@@ -8,8 +8,6 @@ export const SERVICE_COLOURS: Record<string, { bg: string; text: string; border:
   tds: { bg: 'bg-indigo-600', text: 'text-indigo-600', border: 'border-indigo-200', lightBg: 'bg-indigo-50' },
   income_tax: { bg: 'bg-purple-600', text: 'text-purple-600', border: 'border-purple-200', lightBg: 'bg-purple-50' },
   compliance: { bg: 'bg-indigo-600', text: 'text-indigo-600', border: 'border-indigo-200', lightBg: 'bg-indigo-50' },
-  bizlens: { bg: 'bg-emerald-600', text: 'text-emerald-600', border: 'border-emerald-200', lightBg: 'bg-emerald-50' },
-  vcfo: { bg: 'bg-amber-600', text: 'text-amber-600', border: 'border-amber-200', lightBg: 'bg-amber-50' },
   advisory: { bg: 'bg-amber-600', text: 'text-amber-600', border: 'border-amber-200', lightBg: 'bg-amber-50' },
   default: { bg: 'bg-teal-600', text: 'text-teal-600', border: 'border-teal-200', lightBg: 'bg-teal-50' },
 };

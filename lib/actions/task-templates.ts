@@ -5,7 +5,19 @@ import { revalidatePath } from 'next/cache';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
+import { fetchAll, chunkArray } from '@/lib/supabase/fetch-all';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
+
+/**
+ * Ids of all open (not completed / cancelled) tasks for a sub-service or template.
+ * Paged so it stays complete beyond 1,000 rows.
+ */
+async function listOpenTaskIds(sb: ReturnType<typeof createClient>, column: 'sub_service_id' | 'task_template_id', value: string): Promise<string[]> {
+  const rows = await fetchAll<{ id: string }>(() =>
+    sb.from('tasks').select('id').eq(column, value).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")'),
+  );
+  return rows.map((r) => r.id);
+}
 
 const taskTemplateSchema = z.object({
   id: z.string().uuid().optional(),
@@ -95,12 +107,12 @@ export async function upsertTaskTemplateStepAction(input: z.infer<typeof stepSch
     // Smart Sync
     const stepId = data.id;
     const isUpdate = !!parsed.data.id;
-    const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', parsed.data.task_template_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
+    const openTaskIds = await listOpenTaskIds(sb, 'task_template_id', parsed.data.task_template_id);
     
-    if (openTasks && openTasks.length > 0) {
-      const taskIds = openTasks.map((t: any) => t.id);
+    if (openTaskIds.length > 0) {
+      const taskIds = openTaskIds;
       if (isUpdate) {
-        await sb.from('task_steps')
+        for (const ids of chunkArray(taskIds, 150)) await sb.from('task_steps')
           .update({
             title: payload.title,
             description: payload.description || null,
@@ -108,7 +120,7 @@ export async function upsertTaskTemplateStepAction(input: z.infer<typeof stepSch
             is_required: payload.is_required
           })
           .eq('source_template_step_id', stepId)
-          .in('task_id', taskIds);
+          .in('task_id', ids);
       } else {
         const rows = taskIds.map((tid: string) => ({
           task_id: tid,
@@ -119,7 +131,7 @@ export async function upsertTaskTemplateStepAction(input: z.infer<typeof stepSch
           is_required: payload.is_required ?? true,
           source_template_step_id: stepId,
         }));
-        await sb.from('task_steps').insert(rows);
+        for (const part of chunkArray(rows, 500)) await sb.from('task_steps').insert(part);
       }
     }
 
@@ -142,10 +154,10 @@ export async function deleteTaskTemplateStepAction(id: string): Promise<ActionRe
 
     // Smart Sync
     if (step) {
-      const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', step.task_template_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
-      if (openTasks && openTasks.length > 0) {
-        const taskIds = openTasks.map((t: any) => t.id);
-        await sb.from('task_steps').delete().eq('source_template_step_id', id).in('task_id', taskIds);
+      const openTaskIds = await listOpenTaskIds(sb, 'task_template_id', step.task_template_id);
+      if (openTaskIds.length > 0) {
+        const taskIds = openTaskIds;
+        for (const ids of chunkArray(taskIds, 150)) await sb.from('task_steps').delete().eq('source_template_step_id', id).in('task_id', ids);
       }
     }
 
@@ -184,14 +196,14 @@ export async function reorderTaskTemplateStepsAction({
     }
 
     // Smart Sync
-    const { data: openTasks } = await sb.from('tasks').select('id').eq('task_template_id', task_template_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
-    if (openTasks && openTasks.length > 0) {
-      const taskIds = openTasks.map((t: any) => t.id);
+    const openTaskIds = await listOpenTaskIds(sb, 'task_template_id', task_template_id);
+    if (openTaskIds.length > 0) {
+      const taskIds = openTaskIds;
       for (let i = 0; i < ids_in_order.length; i++) {
-        await sb.from('task_steps')
+        for (const ids of chunkArray(taskIds, 150)) await sb.from('task_steps')
           .update({ step_order: i + 1 })
           .eq('source_template_step_id', ids_in_order[i])
-          .in('task_id', taskIds);
+          .in('task_id', ids);
       }
     }
 

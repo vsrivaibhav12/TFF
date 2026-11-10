@@ -5,13 +5,9 @@ import {
   countActiveEngagements,
   listRecentTasks,
   listUpcomingDeadlines,
-  listUpcomingNotices,
-  listUrgentNotices,
   listAttentionTasks,
   getComplianceStatusSummary,
   getPendingApprovals,
-  countOpenQueries,
-  listOpenQueries,
 } from '@/lib/repositories/dashboard';
 import { listRecentAuditLogs } from '@/lib/repositories/audit';
 import { enrichTasksWithProgress } from '@/lib/repositories/tasks';
@@ -35,14 +31,11 @@ export async function getAdminDashboardData() {
     rawRecentTasks,
     upcomingDeadlines,
     activeEngagements,
-    upcomingNotices,
     attentionTasks,
     complianceSummary,
     pendingApprovals,
     attendanceToday,
     teamMembers,
-    openQueriesCount,
-    openQueries,
     recentAuditLogs,
   ] = await Promise.all([
     countActiveClients(),
@@ -51,21 +44,15 @@ export async function getAdminDashboardData() {
     listRecentTasks(5),
     listUpcomingDeadlines(todayIso, weekAhead, 6),
     countActiveEngagements(),
-    listUpcomingNotices(todayIso, 6),
     listAttentionTasks(3),
     getComplianceStatusSummary(),
     getPendingApprovals(),
     listAttendanceForDate(todayIso),
     listTeamUsers(),
-    countOpenQueries(),
-    listOpenQueries(3),
     listRecentAuditLogs(8),
   ]);
 
-  const [recentTasks, openNoticesCount] = await Promise.all([
-    enrichTasksWithProgress(rawRecentTasks),
-    listUrgentNotices(3).then((n) => n.length),
-  ]);
+  const recentTasks = await enrichTasksWithProgress(rawRecentTasks);
 
   const presentCount = attendanceToday.filter((a) => a.status === 'present').length;
   const onLeaveCount = attendanceToday.filter((a) => a.status === 'leave').length;
@@ -78,14 +65,10 @@ export async function getAdminDashboardData() {
     activeEngagements,
     recentTasks,
     upcomingDeadlines,
-    upcomingNotices,
     attentionTasks,
     complianceSummary,
     pendingApprovals,
     attendanceToday: { presentCount, onLeaveCount, teamTotal },
-    openNoticesCount,
-    openQueriesCount,
-    openQueries,
     recentAuditLogs,
   };
 }

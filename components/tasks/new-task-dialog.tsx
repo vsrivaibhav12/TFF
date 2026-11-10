@@ -10,7 +10,6 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { ClientSearchCombobox } from '@/components/clients/client-search-combobox';
 import { createTaskAction } from '@/lib/actions/tasks';
-import { linkSubServiceAction } from '@/lib/actions/services';
 import { toast } from 'sonner';
 import { Plus, ChevronDown } from 'lucide-react';
 import { todayIST, buildTaskTitle } from '@/lib/utils';
@@ -133,30 +132,10 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
     return (bLinked ? 1 : 0) - (aLinked ? 1 : 0);
   });
 
-  async function handleSubServiceChange(subServiceId: string) {
-    if (!subServiceId) {
-      set('sub_service_id', '');
-      return;
-    }
-    const isLinked = linkedSubServiceIds.has(subServiceId);
-    if (isLinked) {
-      set('sub_service_id', subServiceId);
-      return;
-    }
-    // Auto-link unlinked sub-service
-    setLinkingSubService(true);
-    const r = await linkSubServiceAction({ client_id: f.client_id, sub_service_id: subServiceId });
-    setLinkingSubService(false);
-    if (r.success) {
-      toast.success('Sub-service linked to client');
-      // Refresh linked sub-services
-      fetch(`/api/clients/${f.client_id}/sub-services`).then((res) => res.json()).then((j) => setClientSubServices(j.items ?? [])).catch(() => {});
-      set('sub_service_id', subServiceId);
-    } else if (r.code === 'DUPLICATE') {
-      set('sub_service_id', subServiceId);
-    } else {
-      toast.error(r.error ?? 'Failed to link sub-service');
-    }
+  // Unlinked sub-services are linked to the client by the server when the task is
+  // saved, so selecting one needs no separate permission or extra request here.
+  function handleSubServiceChange(subServiceId: string) {
+    set('sub_service_id', subServiceId || '');
   }
 
   // Load task templates when sub-service changes
@@ -239,7 +218,7 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
                 disabled={linkingSubService}
               />
               {clientSubServices.length === 0 && !linkingSubService && (
-                <p className="text-xs text-zinc-500">This client has no linked sub-services yet. Pick one above to auto-link.</p>
+                <p className="text-xs text-zinc-500">This client has no linked sub-services yet. Pick one above and it will be linked when you create the task.</p>
               )}
             </div>
           )}

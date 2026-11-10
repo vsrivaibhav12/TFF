@@ -4,12 +4,10 @@ import { useDockState, useDockActions, type DockItem } from '@/lib/state/dock-st
 import { Suspense, useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { X, ArrowLeft, Loader2 } from 'lucide-react';
-import { getTaskDockData, getClientDockData, getQueryDockData, getNoticeDockData, getTeamMemberDockData } from '@/lib/actions/dock-data';
+import { getTaskDockData, getClientDockData, getTeamMemberDockData } from '@/lib/actions/dock-data';
 import TaskDetailShell from '@/components/tasks/task-detail-shell';
 import ClientDetailShell from '@/components/clients/client-detail-shell';
 import TeamClientDetailShell from '@/components/clients/team-client-detail-shell';
-import QueryDetailShell from '@/components/queries/query-detail-shell';
-import NoticeDetailShell from '@/components/notices/notice-detail-shell';
 import TeamDetailShell from '@/components/team/team-detail-shell';
 import useSWR from 'swr';
 import { ENABLE_STREAMED_DOCK } from '@/lib/flags';
@@ -17,8 +15,6 @@ import { ENABLE_STREAMED_DOCK } from '@/lib/flags';
 const fetchers = {
   task: getTaskDockData,
   client: getClientDockData,
-  query: getQueryDockData,
-  notice: getNoticeDockData,
   team: getTeamMemberDockData,
 };
 
@@ -26,8 +22,6 @@ type DockItemType = keyof typeof fetchers;
 
 type TaskDockData = NonNullable<Extract<Awaited<ReturnType<typeof getTaskDockData>>, { success: true }>['data']>;
 type ClientDockData = NonNullable<Extract<Awaited<ReturnType<typeof getClientDockData>>, { success: true }>['data']>;
-type QueryDockData = NonNullable<Extract<Awaited<ReturnType<typeof getQueryDockData>>, { success: true }>['data']>;
-type NoticeDockData = NonNullable<Extract<Awaited<ReturnType<typeof getNoticeDockData>>, { success: true }>['data']>;
 type TeamDockData = NonNullable<Extract<Awaited<ReturnType<typeof getTeamMemberDockData>>, { success: true }>['data']>;
 
 export function UniversalDetailDock() {
@@ -118,8 +112,6 @@ function DockPanelLegacy({ item }: { item: DockItem }) {
   const prefix = usePathnamePrefix();
   const [taskData, setTaskData] = useState<TaskDockData | null>(null);
   const [clientData, setClientData] = useState<ClientDockData | null>(null);
-  const [queryData, setQueryData] = useState<QueryDockData | null>(null);
-  const [noticeData, setNoticeData] = useState<NoticeDockData | null>(null);
   const [teamData, setTeamData] = useState<TeamDockData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -133,8 +125,6 @@ function DockPanelLegacy({ item }: { item: DockItem }) {
     setError('');
     setTaskData(null);
     setClientData(null);
-    setQueryData(null);
-    setNoticeData(null);
     setTeamData(null);
 
     async function load() {
@@ -149,16 +139,6 @@ function DockPanelLegacy({ item }: { item: DockItem }) {
           if (!active) return;
           if (res.success) setClientData(res.data);
           else setError(res.error || 'Failed to load client');
-        } else if (item.type === 'query') {
-          const res = await getQueryDockData(item.id);
-          if (!active) return;
-          if (res.success) setQueryData(res.data);
-          else setError(res.error || 'Failed to load query');
-        } else if (item.type === 'notice') {
-          const res = await getNoticeDockData(item.id);
-          if (!active) return;
-          if (res.success) setNoticeData(res.data);
-          else setError(res.error || 'Failed to load notice');
         } else if (item.type === 'team') {
           const res = await getTeamMemberDockData(item.id);
           if (!active) return;
@@ -180,12 +160,12 @@ function DockPanelLegacy({ item }: { item: DockItem }) {
   if (loading) return <PanelSkeleton />;
   if (error) return <div className="p-6 text-center text-sm text-red-500">{error}</div>;
 
-  return renderPanel(item.type, taskData ?? clientData ?? queryData ?? noticeData ?? teamData, prefix, refresh);
+  return renderPanel(item.type, taskData ?? clientData ?? teamData, prefix, refresh);
 }
 
 function usePathnamePrefix() {
   const pathname = usePathname();
-  return pathname.startsWith('/team') ? '/team' : pathname.startsWith('/portal') ? '/portal' : '/admin';
+  return pathname.startsWith('/team') ? '/team' : '/admin';
 }
 
 function renderPanel(type: string, data: any, prefix: string, onRefresh?: () => void) {
@@ -229,12 +209,9 @@ function renderPanel(type: string, data: any, prefix: string, onRefresh?: () => 
             owners={data.owners}
             clientServices={data.clientServices}
             clientSubServices={data.clientSubServices}
-            clientUsers={data.clientUsers}
             teamAssignments={data.teamAssignments}
             auditLogs={data.auditLogs}
             openTasks={data.openTasks}
-            openNotices={data.openNotices}
-            openQueries={data.openQueries}
             basePath={data.basePath}
             canEdit={data.canEdit ?? false}
             canDelete={data.canDelete ?? false}
@@ -250,37 +227,8 @@ function renderPanel(type: string, data: any, prefix: string, onRefresh?: () => 
           subs={data.clientSubServices}
           auditLogs={data.auditLogs}
           openTasks={data.openTasks}
-          openNotices={data.openNotices}
-          openQueries={data.openQueries}
           canEdit={data.canEdit ?? false}
           basePath={data.basePath}
-          isModal={true}
-        />
-      </div>
-    );
-  }
-
-  if (type === 'query' && data?.data) {
-    return (
-      <div className="px-2 md:px-4 py-4 min-h-full">
-        <QueryDetailShell
-          data={data.data}
-          basePath={data.basePath}
-          canActAsTeam={data.canActAsTeam}
-          isModal={true}
-        />
-      </div>
-    );
-  }
-
-  if (type === 'notice' && data?.notice) {
-    return (
-      <div className="px-2 md:px-4 py-4 min-h-full">
-        <NoticeDetailShell
-          notice={data.notice}
-          hearings={data.hearings}
-          auditLogs={data.auditLogs}
-          clientBasePath={`${prefix}/clients`}
           isModal={true}
         />
       </div>
@@ -295,7 +243,6 @@ function renderPanel(type: string, data: any, prefix: string, onRefresh?: () => 
           caps={data.caps}
           templates={data.templates}
           teamList={data.teamList}
-          payroll={data.payroll}
           activeTemplate={data.activeTemplate}
           isDiverged={data.isDiverged}
           canPromote={data.canPromote}

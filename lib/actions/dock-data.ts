@@ -4,19 +4,32 @@ import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { hasCapabilities } from '@/lib/auth/capabilities-cache';
 import { getTask, listTaskActivity, listTaskNotes, listTasks, enrichTasksWithProgress } from '@/lib/repositories/tasks';
-import { getClientById, listTeamUsers, listClientGroups, listClientUsers, listTeamAssignments } from '@/lib/repositories/clients';
-import { listClientServices, listClientSubServices } from '@/lib/repositories/services';
+import { getClientById, listTeamUsers, listClientGroups, listTeamAssignments } from '@/lib/repositories/clients';
+import { listClientServices, listClientSubServices, listSubServices } from '@/lib/repositories/services';
 import { listTaskTemplates } from '@/lib/repositories/task-templates';
 import { listTaskSteps } from '@/lib/repositories/task-steps';
 import { listDefinitionsForSubService, listValuesForTask, listLabels, listLabelsForTask } from '@/lib/repositories/task-custom-fields';
 import { listWorkDoneForTask } from '@/lib/repositories/workdone';
-import { getQueryWithMessages, listQueries } from '@/lib/repositories/queries';
-import { getNoticeById, listAllNotices, listHearings } from '@/lib/repositories/notices';
 import { listEntityAuditLogs } from '@/lib/repositories/audit';
 import { listEffectiveCapabilities, listGrantedCapabilities } from '@/lib/repositories/staff-capabilities';
 import { listRoleTemplates } from '@/lib/repositories/role-templates';
 import { createClient } from '@/lib/supabase/server';
 import { ok, fail } from '@/lib/actions/result';
+
+/**
+ * Sub-services a task can be moved to. Every active sub-service is offered, not
+ * just the ones already linked to the client; the link is created on save.
+ * Shape matches client_sub_services rows so the existing picker keeps working.
+ */
+async function listSubServicesForTaskPicker(clientId: string) {
+  const [all, linked] = await Promise.all([listSubServices(), listClientSubServices(clientId)]);
+  const linkedIds = new Set((linked as any[]).map((l) => l.sub_service_id));
+  return (all as any[]).map((s) => ({
+    sub_service_id: s.id,
+    linked: linkedIds.has(s.id),
+    sub_services: { name: s.name, services: s.services ? { name: s.services.name } : null },
+  }));
+}
 
 export async function getTaskDockData(id: string) {
   try {
@@ -45,7 +58,7 @@ export async function getTaskDockData(id: string) {
       listLabels(),
       listLabelsForTask(id),
       listWorkDoneForTask(id),
-      listClientSubServices(task.client_id!),
+      listSubServicesForTaskPicker(task.client_id!),
       listTaskTemplates(),
     ]);
 
@@ -90,22 +103,18 @@ export async function getClientDockData(id: string) {
     const client = await getClientById(id);
     if (!client) return fail('Client not found');
 
-    const [groups, owners, clientServices, clientSubServices, clientUsers, teamAssignments, auditLogs, rawTasks, notices, queries] = await Promise.all([
+    const [groups, owners, clientServices, clientSubServices, teamAssignments, auditLogs, rawTasks] = await Promise.all([
       listClientGroups(),
       listTeamUsers(),
       listClientServices(id),
       listClientSubServices(id),
-      listClientUsers(id),
       listTeamAssignments(id),
       listEntityAuditLogs('client', id),
       listTasks({ clientId: id, limit: 20 }),
-      listAllNotices({ clientId: id }),
-      listQueries({ clientId: id }),
     ]);
 
     const tasks = await enrichTasksWithProgress(rawTasks);
     const openTasks = tasks.filter((t) => t.status !== 'completed' && t.status !== 'cancelled');
-    const openNotices = notices.filter((n: { status: string }) => n.status !== 'closed');
 
     const canDelete = (await hasCapabilities(me, 'clients.delete')).has('clients.delete');
 
@@ -115,49 +124,13 @@ export async function getClientDockData(id: string) {
       owners,
       clientServices,
       clientSubServices,
-      clientUsers,
       teamAssignments,
       auditLogs,
       openTasks,
-      openNotices,
-      openQueries: queries,
       basePath: me.role === 'admin' ? '/admin/clients' : '/team/clients',
       canEdit,
       canDelete,
     });
-  } catch (e: any) {
-    return fail(e.message);
-  }
-}
-
-export async function getQueryDockData(id: string) {
-  try {
-    const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'queries.assign');
-
-    const data = await getQueryWithMessages(id);
-    if (!data) return fail('Query not found');
-
-    return ok({ data, basePath: me.role === 'admin' ? '/admin/queries' : '/team/queries', canActAsTeam: true });
-  } catch (e: any) {
-    return fail(e.message);
-  }
-}
-
-export async function getNoticeDockData(id: string) {
-  try {
-    const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'notices.manage');
-
-    const notice = await getNoticeById(id);
-    if (!notice) return fail('Notice not found');
-
-    const [hearings, auditLogs] = await Promise.all([
-      listHearings({ noticeId: id }),
-      listEntityAuditLogs('notice', id),
-    ]);
-
-    return ok({ notice, hearings, auditLogs });
   } catch (e: any) {
     return fail(e.message);
   }
@@ -176,11 +149,10 @@ export async function getTeamMemberDockData(id: string) {
       .maybeSingle();
     if (!user) return fail('Team member not found');
 
-    const [caps, templates, teamList, payroll] = await Promise.all([
+    const [caps, templates, teamList] = await Promise.all([
       listEffectiveCapabilities(id),
       listRoleTemplates(),
       sb.from('users_profile').select('id, full_name, email').in('role', ['team', 'admin']).eq('is_active', true).order('full_name'),
-      sb.from('staff_payroll_settings').select('monthly_salary, paid_leaves_per_month, deduction_applicable, salary_adjustment_for_leaves').eq('user_id', id).maybeSingle(),
     ]);
 
     const activeTemplate = templates.find((t) => t.id === user.active_role_template_id);
@@ -193,7 +165,6 @@ export async function getTeamMemberDockData(id: string) {
       caps,
       templates,
       teamList: teamList.data ?? [],
-      payroll: payroll.data,
       activeTemplate,
       isDiverged,
       canPromote: me.is_prime_admin ?? false,

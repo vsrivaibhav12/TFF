@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/auth/require-role';
 import MarketingLayout from './(marketing)/layout';
 import MarketingHome from './(marketing)/home-content';
 
@@ -18,15 +18,10 @@ export const metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const sb = createClient();
-  const { data: { user } } = await sb.auth.getUser();
-
-  if (user) {
-    const role = user.user_metadata?.role ?? 'client';
-    if (role === 'admin') redirect('/admin');
-    if (role === 'team') redirect('/team');
-    redirect('/portal');
-  }
+  // Role comes from the database profile (user_metadata can be edited by the user).
+  const me = await getCurrentUser();
+  if (me?.role === 'admin') redirect('/admin');
+  if (me?.role === 'team') redirect('/team');
 
   return (
     <MarketingLayout>

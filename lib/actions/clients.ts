@@ -34,21 +34,10 @@ const ClientBaseSchema = z.object({
   group_id: optionalStr(z.string().uuid('Invalid group ID')),
   primary_owner_id: optionalStr(z.string().uuid('Invalid owner ID')),
   business_registration_number: optionalStr(z.string().max(80)),
-  portal_enabled: z.boolean().default(false),
-  portal_email: optionalStr(z.string().email('Invalid portal email')),
-  portal_password: optionalStr(z.string().min(6, 'Password must be at least 6 characters')),
   notes: optionalStr(z.string()),
 });
 
-const CreateClientSchema = ClientBaseSchema.refine((data) => {
-  if (data.portal_enabled) {
-    return !!data.portal_email && !!data.portal_password;
-  }
-  return true;
-}, {
-  message: "Portal email and password are required when portal access is enabled",
-  path: ["portal_email"],
-});
+const CreateClientSchema = ClientBaseSchema;
 
 const UpdateClientSchema = ClientBaseSchema.partial().extend({
   id: z.string().uuid()

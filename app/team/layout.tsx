@@ -18,19 +18,9 @@ export default async function TeamLayout({ children }: { children: React.ReactNo
     { href: '/team/tasks', label: 'Tasks', icon: 'clipboard' as const },
 
     /* ── Operations ── */
-    { href: '/team/notices', label: 'Notices', icon: 'file-check' as const, section: 'Operations' },
-    { href: '/team/hearings', label: 'Hearings', icon: 'gavel' as const, section: 'Operations' },
-    { href: '/team/queries', label: 'Queries', icon: 'message' as const, section: 'Operations' },
 
     /* ── Delegated admin functions (capability-gated) ── */
     { href: '/team/dsc', label: 'DSC', icon: 'key' as const, section: 'Operations' },
-    { href: '/team/gst', label: 'GST', icon: 'calculator' as const, section: 'Operations' },
-    { href: '/team/tds', label: 'TDS', icon: 'calculator' as const, section: 'Operations' },
-    { href: '/team/it', label: 'Income tax', icon: 'calculator' as const, section: 'Operations' },
-    { href: '/team/tax-projections', label: 'Tax projections', icon: 'receipt' as const, section: 'Operations' },
-    { href: '/team/bizlens', label: 'BizLens', icon: 'trending' as const, section: 'Finance' },
-    { href: '/team/vcfo', label: 'vCFO', icon: 'chart' as const, section: 'Finance' },
-    { href: '/team/payroll', label: 'Payroll', icon: 'wallet' as const, section: 'Finance' },
     { href: '/team/billing', label: 'Billing', icon: 'receipt' as const, section: 'Finance' },
     { href: '/team/services', label: 'Services', icon: 'layers' as const, section: 'System' },
     { href: '/team/reports', label: 'Reports', icon: 'chart' as const, section: 'System' },

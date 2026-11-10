@@ -12,7 +12,7 @@ import { getRecentItems, type RecentItem } from '@/lib/state/recent-items';
 import { DockLink } from './dock-link';
 
 interface PersistentSidebarProps {
-  role: 'admin' | 'team' | 'client';
+  role: 'admin' | 'team';
   nav: NavItem[];
   user: { full_name: string | null; email: string };
   onLogout: () => void;
@@ -27,8 +27,6 @@ function getModuleRecentType(pathname: string, role: string): string | null {
   const prefix = `/${role}`;
   if (pathname.startsWith(`${prefix}/clients`)) return 'client';
   if (pathname.startsWith(`${prefix}/tasks`)) return 'task';
-  if (pathname.startsWith(`${prefix}/queries`)) return 'query';
-  if (pathname.startsWith(`${prefix}/notices`)) return 'notice';
   if (pathname.startsWith(`${prefix}/team`)) return 'team';
   return null;
 }

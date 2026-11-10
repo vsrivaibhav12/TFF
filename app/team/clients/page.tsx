@@ -1,7 +1,6 @@
 import { listAccessibleClients, listClientGroups, countAccessibleClients } from '@/lib/repositories/clients';
 import { getComplianceStatusForClients } from '@/lib/repositories/compliance';
 import { countActiveEngagementsForClients } from '@/lib/repositories/client-sub-services';
-import { listSavedViews } from '@/lib/actions/saved-views';
 import { requireRole } from '@/lib/auth/require-role';
 import { hasCapabilities } from '@/lib/auth/capabilities-cache';
 import Link from 'next/link';
@@ -10,7 +9,6 @@ import { Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ExportButton from '@/components/sophistication/export-button';
 import EmptyState from '@/components/sophistication/empty-state';
-import SavedViewsBar from '@/components/sophistication/saved-views-bar';
 import FilterBar from '@/components/sophistication/filter-bar';
 import ClientsTableClient from './clients-table-client';
 import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
@@ -35,14 +33,13 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
   const canCreate = me.role === 'admin' || caps.has('clients.create');
   const canDelete = me.role === 'admin' || caps.has('clients.delete');
 
-  const [clients, groups, views, totalCount] = await Promise.all([
+  const [clients, groups, totalCount] = await Promise.all([
     listAccessibleClients({
       ...filterOpts,
       limit: PAGE_SIZE,
       offset,
     }),
     listClientGroups(),
-    listSavedViews('team.clients'),
     countAccessibleClients(filterOpts),
   ]);
 
@@ -61,7 +58,6 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
     category: c.category ?? '',
     city: c.city ?? '',
     state: c.state ?? '',
-    portal_enabled: c.portal_enabled,
   }));
 
   const enrichedClients = clients.map((c) => {
@@ -115,8 +111,6 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
           { key: 'q', placeholder: 'Search name / PAN', type: 'text' },
         ]}
       />
-
-      <SavedViewsBar scope="team.clients" views={views ?? []} />
 
       {clients.length === 0 && currentPage === 1 ? (
         <EmptyState

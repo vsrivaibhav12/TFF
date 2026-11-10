@@ -40,8 +40,8 @@ export default function NewTeamMemberDialog({ team }: { team: TeamMember[] }) {
       toast.error('Name, email and password are required');
       return;
     }
-    if (form.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (form.password.length < 10) {
+      toast.error('Password must be at least 10 characters and contain letters and numbers');
       return;
     }
     startTransition(async () => {
@@ -82,7 +82,7 @@ export default function NewTeamMemberDialog({ team }: { team: TeamMember[] }) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password">Password *</Label>
-            <Input id="password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Min 6 characters" />
+            <Input id="password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Min 10 characters, letters and numbers" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

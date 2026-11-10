@@ -1,18 +1,7 @@
+import Impl from '@/components/shell/pages/tasks-import-page';
+
 export const dynamic = 'force-dynamic';
 
-import { requireRole } from '@/lib/auth/require-role';
-import { requireCapability } from '@/lib/auth/require-capability';
-import TaskImportForm from '@/components/tasks/task-import-form';
-
-export const metadata = { title: 'Bulk Import Tasks | The Fiscal Fulcrum' };
-
-export default async function TaskImportPage() {
-  const me = await requireRole('admin');
-  await requireCapability(me, 'tasks.create');
-
-  return (
-    <div className="p-6">
-      <TaskImportForm />
-    </div>
-  );
+export default async function Page(props: Parameters<typeof Impl>[0]) {
+  return Impl(props, '/admin');
 }

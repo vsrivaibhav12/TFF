@@ -1,4 +1,5 @@
 'use client';
+import { safeRedirectPath } from '@/lib/auth/safe-redirect';
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -31,29 +32,26 @@ export default function LoginForm() {
 
     // If a redirect target was provided (e.g. user hit a protected page while logged out), use it.
     // Otherwise route to the role-appropriate dashboard.
-    const redirectTarget = params.get('redirect');
+    const redirectTarget = safeRedirectPath(params.get('redirect'));
     if (redirectTarget) {
       router.replace(redirectTarget);
       router.refresh();
       return;
     }
 
-    let role = data.user?.user_metadata?.role as string | undefined;
-    if (!role) {
-      // Legacy users: role may not be in JWT metadata. Fetch from profile.
-      const { data: profile } = await supabase
-        .from('users_profile')
-        .select('role')
-        .eq('id', data.user!.id)
-        .maybeSingle();
-      role = profile?.role as string | undefined;
-    }
+    // Always read the role from the database profile (user_metadata is user-editable).
+    const { data: profile } = await supabase
+      .from('users_profile')
+      .select('role, is_active')
+      .eq('id', data.user!.id)
+      .maybeSingle();
+    const role = profile?.is_active === false ? undefined : (profile?.role as string | undefined);
 
     if (role === 'admin') router.replace('/admin');
     else if (role === 'team') router.replace('/team');
-    else if (role === 'client') router.replace('/portal');
     else {
-      toast.error('Unable to determine your role. Please contact support.');
+      await supabase.auth.signOut();
+      toast.error('Your account is inactive or has no access. Please contact support.');
       router.replace('/login');
     }
     router.refresh();

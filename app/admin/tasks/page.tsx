@@ -5,7 +5,6 @@ import { listTasks, countTasks, enrichTasksWithLabels, enrichTasksWithProgress }
 import { listTeamUsers } from '@/lib/repositories/clients';
 import { listSubServices } from '@/lib/repositories/services';
 import { listLabels } from '@/lib/repositories/task-custom-fields';
-import { listSavedViews } from '@/lib/actions/saved-views';
 import AdvancedTaskFilters from '@/components/tasks/advanced-task-filters';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -16,7 +15,6 @@ import TasksTable from './tasks-table';
 import { TaskViewWrapper } from '@/components/tasks/task-view-wrapper';
 import EmptyState from '@/components/sophistication/empty-state';
 import NewTaskDialog from '@/components/tasks/new-task-dialog';
-import SavedViewsBar from '@/components/sophistication/saved-views-bar';
 import { Button } from '@/components/ui/button';
 import { TaskLabelFilterBar } from '@/components/tasks/task-label-filter-bar';
 
@@ -73,11 +71,10 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
   const caps = await hasCapabilities(me, ['tasks.delete']);
   const canDelete = me.role === 'admin' || caps.has('tasks.delete');
 
-  const [rawTasks, team, subServices, views, totalCount, allLabels] = await Promise.all([
+  const [rawTasks, team, subServices, totalCount, allLabels] = await Promise.all([
     listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
     listTeamUsers(),
     listSubServices(),
-    listSavedViews('admin.tasks'),
     countTasks(filterOpts),
     listLabels(),
   ]);
@@ -138,7 +135,6 @@ export default async function AdminTasksPage({ searchParams }: { searchParams: {
           subServices={subServices ?? []} 
         />
         <TaskLabelFilterBar labels={allLabels ?? []} />
-        <SavedViewsBar scope="admin.tasks" views={views ?? []} />
       </div>
 
       {(!tasks || tasks.length === 0) ? (

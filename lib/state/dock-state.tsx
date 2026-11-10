@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode,
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 export interface DockItem {
-  type: 'task' | 'client' | 'notice' | 'query' | 'team';
+  type: 'task' | 'client' | 'team';
   id: string;
 }
 
@@ -23,7 +23,7 @@ function parseDockQuery(value: string | null): DockItem | null {
   const [type, ...rest] = value.split(':');
   const id = rest.join(':'); // allow IDs with colons
   if (!type || !id) return null;
-  const validTypes: DockItem['type'][] = ['task', 'client', 'notice', 'query', 'team'];
+  const validTypes: DockItem['type'][] = ['task', 'client', 'team'];
   if (!validTypes.includes(type as DockItem['type'])) return null;
   return { type: type as DockItem['type'], id };
 }

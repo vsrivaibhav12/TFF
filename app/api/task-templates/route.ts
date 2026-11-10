@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const me = await requireRole(['admin', 'team']);
-  const rl = rateLimitByUser(me.id, 'api:task-templates', { maxRequests: 60, windowMs: 60_000 });
+  const rl = await rateLimitByUser(me.id, 'api:task-templates', { maxRequests: 60, windowMs: 60_000 });
   if (!rl.allowed) return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
   const subServiceId = request.nextUrl.searchParams.get('sub_service_id');
   if (!subServiceId) {

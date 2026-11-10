@@ -12,7 +12,6 @@ import PromoteDemoteButtons from '@/app/admin/team/[id]/promote-demote-buttons';
 import ManagerControl from '@/app/admin/team/[id]/manager-control';
 import CredentialsControl from '@/app/admin/team/[id]/credentials-control';
 import { updateTeamMemberProfileAction } from '@/lib/actions/team';
-import { upsertPayrollSettingsAction } from '@/lib/actions/payroll';
 import { ALL_CAPABILITIES } from '@/lib/auth/capabilities';
 import { toast } from 'sonner';
 
@@ -21,7 +20,6 @@ interface Props {
   caps: string[];
   templates: any[];
   teamList: any[];
-  payroll: any;
   activeTemplate: any;
   isDiverged: boolean;
   canPromote: boolean;
@@ -35,7 +33,6 @@ export default function TeamDetailShell({
   caps,
   templates,
   teamList,
-  payroll,
   activeTemplate,
   isDiverged,
   canPromote,
@@ -44,19 +41,12 @@ export default function TeamDetailShell({
   isModal,
 }: Props) {
   const [editingEmployment, setEditingEmployment] = useState(false);
-  const [editingPayroll, setEditingPayroll] = useState(false);
   const [pending, startTransition] = useTransition();
 
   // Employment form state
   const [jobTitle, setJobTitle] = useState(user.job_title ?? '');
   const [department, setDepartment] = useState(user.department ?? '');
   const [phone, setPhone] = useState(user.phone_number ?? '');
-
-  // Payroll form state
-  const [monthlySalary, setMonthlySalary] = useState(payroll?.monthly_salary ?? '');
-  const [paidLeaves, setPaidLeaves] = useState(payroll?.paid_leaves_per_month ?? '');
-  const [deductions, setDeductions] = useState(payroll?.deduction_applicable ?? false);
-  const [leaveAdj, setLeaveAdj] = useState(payroll?.salary_adjustment_for_leaves ?? false);
 
   function saveEmployment() {
     startTransition(async () => {
@@ -75,38 +65,11 @@ export default function TeamDetailShell({
     });
   }
 
-  function savePayroll() {
-    startTransition(async () => {
-      const r = await upsertPayrollSettingsAction({
-        user_id: user.id,
-        monthly_salary: Number(monthlySalary) || 0,
-        paid_leaves_per_month: Number(paidLeaves) || 0,
-        deduction_applicable: deductions,
-        salary_adjustment_for_leaves: leaveAdj,
-        effective_from: new Date().toISOString().slice(0, 10),
-      });
-      if (!r.success) {
-        toast.error(r.error);
-        return;
-      }
-      toast.success('Payroll settings updated');
-      setEditingPayroll(false);
-    });
-  }
-
   function cancelEmployment() {
     setJobTitle(user.job_title ?? '');
     setDepartment(user.department ?? '');
     setPhone(user.phone_number ?? '');
     setEditingEmployment(false);
-  }
-
-  function cancelPayroll() {
-    setMonthlySalary(payroll?.monthly_salary ?? '');
-    setPaidLeaves(payroll?.paid_leaves_per_month ?? '');
-    setDeductions(payroll?.deduction_applicable ?? false);
-    setLeaveAdj(payroll?.salary_adjustment_for_leaves ?? false);
-    setEditingPayroll(false);
   }
 
   return (
@@ -276,88 +239,6 @@ export default function TeamDetailShell({
             )}
           </div>
 
-          {/* Payroll settings — now editable inline */}
-          <div className="tff-card p-6 space-y-5">
-            <div className="flex items-start justify-between">
-              <h3 className="text-[13px] font-semibold text-zinc-700 flex items-center gap-2">
-                <IndianRupee className="h-4 w-4 text-teal-600" /> Payroll settings
-              </h3>
-              {!editingPayroll ? (
-                <Button variant="ghost" size="sm" onClick={() => setEditingPayroll(true)} className="h-8 w-8 p-0">
-                  <Pencil className="h-4 w-4 text-zinc-500" />
-                </Button>
-              ) : (
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="sm" onClick={savePayroll} disabled={pending} className="h-8 w-8 p-0">
-                    <Check className="h-4 w-4 text-teal-600" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={cancelPayroll} disabled={pending} className="h-8 w-8 p-0">
-                    <X className="h-4 w-4 text-zinc-500" />
-                  </Button>
-                </div>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-5">
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 mb-1.5">Monthly salary</div>
-                {editingPayroll ? (
-                  <Input
-                    type="number"
-                    value={monthlySalary}
-                    onChange={(e) => setMonthlySalary(e.target.value)}
-                    placeholder="0"
-                  />
-                ) : (
-                  <div className="text-sm font-semibold text-zinc-900">{payroll?.monthly_salary != null ? `₹${Number(payroll.monthly_salary).toLocaleString('en-IN')}` : '—'}</div>
-                )}
-              </div>
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 mb-1.5">Paid leaves / month</div>
-                {editingPayroll ? (
-                  <Input
-                    type="number"
-                    value={paidLeaves}
-                    onChange={(e) => setPaidLeaves(e.target.value)}
-                    placeholder="0"
-                  />
-                ) : (
-                  <div className="text-sm font-semibold text-zinc-900">{payroll?.paid_leaves_per_month ?? '—'}</div>
-                )}
-              </div>
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 mb-1.5">Deductions</div>
-                {editingPayroll ? (
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={deductions}
-                      onChange={(e) => setDeductions(e.target.checked)}
-                      className="rounded border-zinc-300"
-                    />
-                    Applicable
-                  </label>
-                ) : (
-                  <div className="text-[12px] text-zinc-900">{payroll?.deduction_applicable ? 'Applicable' : 'Not applicable'}</div>
-                )}
-              </div>
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 mb-1.5">Leave adj.</div>
-                {editingPayroll ? (
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={leaveAdj}
-                      onChange={(e) => setLeaveAdj(e.target.checked)}
-                      className="rounded border-zinc-300"
-                    />
-                    Enabled
-                  </label>
-                ) : (
-                  <div className="text-[12px] text-zinc-900">{payroll?.salary_adjustment_for_leaves ? 'Enabled' : 'Disabled'}</div>
-                )}
-              </div>
-            </div>
-          </div>
 
         </div>
       </div>

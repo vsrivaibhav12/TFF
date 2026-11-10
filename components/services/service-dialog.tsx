@@ -74,10 +74,7 @@ export default function ServiceDialog({ categories, initial, children }: { categ
                   <SelectItem value="tds">TDS</SelectItem>
                   <SelectItem value="income_tax">Income Tax</SelectItem>
                   <SelectItem value="compliance">Compliance (general)</SelectItem>
-                  <SelectItem value="bizlens">BizLens (analytics)</SelectItem>
-                  <SelectItem value="vcfo">vCFO (advisory)</SelectItem>
                   <SelectItem value="notice">Notice handling</SelectItem>
-                  <SelectItem value="payroll">Payroll</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>

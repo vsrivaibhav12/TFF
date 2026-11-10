@@ -41,7 +41,6 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
     pincode: initial?.pincode ?? '',
     group_id: initial?.group_id ?? '',
     primary_owner_id: initial?.primary_owner_id ?? '',
-    portal_enabled: !!initial?.portal_enabled,
     notes: initial?.notes ?? '',
   });
 
@@ -179,10 +178,6 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <input id="pe" type="checkbox" className="h-4 w-4 accent-teal-600" checked={form.portal_enabled} onChange={(e) => set('portal_enabled', e.target.checked)} disabled={readOnly} />
-              <Label htmlFor="pe" className="font-normal">Enable client portal access</Label>
             </div>
             <div className="space-y-2"><Label>Internal notes</Label><Textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} rows={3} disabled={readOnly} /></div>
           </div>

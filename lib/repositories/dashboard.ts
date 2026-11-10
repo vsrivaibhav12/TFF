@@ -50,36 +50,6 @@ export async function listUpcomingDeadlines(from: string, to: string, limit = 6)
   return data ?? [];
 }
 
-export async function listUpcomingNotices(from: string, limit = 6) {
-  const sb = createClient();
-  const { data } = await sb
-    .from('notices')
-    .select('id, subject, notice_type, status, due_date, clients!notices_client_id_fkey(business_name)')
-    .eq('is_deleted', false)
-    .gte('due_date', from)
-    .order('due_date', { ascending: true })
-    .limit(limit);
-  for (const row of (data ?? []) as any[]) {
-    if (row && Array.isArray(row.clients) && row.clients.length > 0) {
-      row.clients = row.clients[0];
-    } else if (row && Array.isArray(row.clients)) {
-      row.clients = null;
-    }
-  }
-  return (data ?? []) as unknown as { id: string; subject: string; notice_type: string; status: string; due_date: string; clients: { business_name: string } | null }[];
-}
-
-export async function listUrgentNotices(limit = 3) {
-  const sb = createClient();
-  const { data } = await sb
-    .from('notices')
-    .select('id, subject, notice_type, status, due_date, clients!notices_client_id_fkey(business_name)')
-    .in('status', ['received', 'reply_pending', 'hearing_pending'])
-    .order('due_date')
-    .limit(limit);
-  return data ?? [];
-}
-
 
 export async function listAttentionTasks(limit = 3) {
   const sb = createClient();
@@ -116,27 +86,3 @@ export async function getPendingApprovals() {
   };
 }
 
-export async function countOpenQueries() {
-  const sb = createClient();
-  const { count } = await sb.from('queries').select('id', { head: true, count: 'exact' }).eq('is_deleted', false).in('status', ['open', 'in_progress']);
-  return count ?? 0;
-}
-
-export async function listOpenQueries(limit = 3) {
-  const sb = createClient();
-  const { data } = await sb
-    .from('queries')
-    .select('id, subject, status, created_at, clients!queries_client_id_fkey(business_name)')
-    .eq('is_deleted', false)
-    .in('status', ['open', 'in_progress'])
-    .order('created_at', { ascending: false })
-    .limit(limit);
-  for (const row of (data ?? []) as any[]) {
-    if (row && Array.isArray(row.clients) && row.clients.length > 0) {
-      row.clients = row.clients[0];
-    } else if (row && Array.isArray(row.clients)) {
-      row.clients = null;
-    }
-  }
-  return (data ?? []) as unknown as { id: string; subject: string; status: string; created_at: string; clients: { business_name: string } | null }[];
-}

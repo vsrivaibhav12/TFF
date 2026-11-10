@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 
 export interface TaskStepRow {
   id: string;
@@ -33,71 +34,71 @@ export async function listTaskSteps(taskId: string): Promise<TaskStepRow[]> {
   return (data ?? []) as unknown as TaskStepRow[];
 }
 
+type StepCompletion = { total: number; completed: number; allRequiredDone: boolean };
+
+function summariseSteps(rows: Array<{ is_required: boolean; completed_at: string | null }>): StepCompletion {
+  // Progress counts EVERY step, the same as the checklist panel on the task page.
+  // It used to count required steps only, so a task whose steps were all optional
+  // (for example steps added ad hoc) showed 0% however many boxes were ticked.
+  const completed = rows.filter((r) => !!r.completed_at).length;
+  const required = rows.filter((r) => r.is_required);
+  const requiredDone = required.filter((r) => !!r.completed_at).length;
+  return {
+    total: rows.length,
+    completed,
+    allRequiredDone: required.length === 0 || requiredDone === required.length,
+  };
+}
+
 /**
- * Returns required-step completion state for a task.
- * - total: total required steps
- * - completed: required steps with a completed_at value
- * - allRequiredDone: true when total === completed (also true when total === 0)
+ * Returns step completion state for a task.
+ * - total / completed: all steps, required or not
+ * - allRequiredDone: true when every required step is done (or none are required)
  */
-export async function getTaskStepCompletion(
-  taskId: string,
-): Promise<{ total: number; completed: number; allRequiredDone: boolean }> {
+export async function getTaskStepCompletion(taskId: string): Promise<StepCompletion> {
   const sb = createClient();
   const { data, error } = await sb
     .from('task_steps')
     .select('id, is_required, completed_at')
     .eq('task_id', taskId);
   if (error) throw error;
-  const required = (data ?? []).filter((r: any) => r.is_required);
-  const completed = required.filter((r: any) => !!r.completed_at).length;
-  return {
-    total: required.length,
-    completed,
-    allRequiredDone: required.length === 0 || completed === required.length,
-  };
+  return summariseSteps((data ?? []) as Array<{ is_required: boolean; completed_at: string | null }>);
 }
+
+const TASK_ID_CHUNK = 150;
 
 /**
  * Batch version of getTaskStepCompletion for multiple tasks.
- * Returns a Map<taskId, {total, completed, allRequiredDone}>.
+ * Task ids are queried in chunks and every chunk is paged, so the result is
+ * complete even when the steps for these tasks add up to more than 1,000 rows
+ * (the API silently truncates at 1,000, which made later tasks show 0%).
  */
 export async function getTaskStepCompletionBatch(
   taskIds: string[],
-): Promise<Map<string, { total: number; completed: number; allRequiredDone: boolean }>> {
+): Promise<Map<string, StepCompletion>> {
   const sb = createClient();
-  const { data, error } = await sb
-    .from('task_steps')
-    .select('task_id, is_required, completed_at')
-    .in('task_id', taskIds);
-  if (error) throw error;
+  const byTask = new Map<string, StepCompletion>();
+  for (const id of taskIds) byTask.set(id, { total: 0, completed: 0, allRequiredDone: true });
 
-  const byTask = new Map<string, { total: number; completed: number; allRequiredDone: boolean }>();
-  // Initialize all tasks with zero state
-  for (const id of taskIds) {
-    byTask.set(id, { total: 0, completed: 0, allRequiredDone: true });
+  const grouped = new Map<string, Array<{ is_required: boolean; completed_at: string | null }>>();
+  for (let i = 0; i < taskIds.length; i += TASK_ID_CHUNK) {
+    const chunk = taskIds.slice(i, i + TASK_ID_CHUNK);
+    const rows = await fetchAll<{ id: string; task_id: string; is_required: boolean; completed_at: string | null }>(() =>
+      sb.from('task_steps').select('id, task_id, is_required, completed_at').in('task_id', chunk).order('id'),
+    );
+    for (const row of rows) {
+      const list = grouped.get(row.task_id) ?? [];
+      list.push(row);
+      grouped.set(row.task_id, list);
+    }
   }
 
-  const grouped = new Map<string, any[]>();
-  for (const row of (data ?? [])) {
-    if (!grouped.has(row.task_id)) grouped.set(row.task_id, []);
-    grouped.get(row.task_id)!.push(row);
-  }
-
-  for (const [taskId, rows] of grouped) {
-    const required = rows.filter((r: any) => r.is_required);
-    const completed = required.filter((r: any) => !!r.completed_at).length;
-    byTask.set(taskId, {
-      total: required.length,
-      completed,
-      allRequiredDone: required.length === 0 || completed === required.length,
-    });
-  }
-
+  for (const [taskId, rows] of grouped) byTask.set(taskId, summariseSteps(rows));
   return byTask;
 }
 
 /**
- * Returns percentage completion (0-100) based on required steps.
+ * Returns percentage completion (0-100) across all steps.
  */
 export async function getTaskProgressPct(taskId: string): Promise<number> {
   const { total, completed } = await getTaskStepCompletion(taskId);

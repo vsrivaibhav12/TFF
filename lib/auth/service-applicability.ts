@@ -7,10 +7,7 @@ export type ServiceKind =
   | 'tds'
   | 'income_tax'
   | 'compliance'
-  | 'bizlens'
-  | 'vcfo'
   | 'notice'
-  | 'payroll'
   | 'other';
 
 /**

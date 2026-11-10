@@ -153,12 +153,10 @@ describe('Runtime safety', () => {
   });
 
   describe('Schema consistency checks', () => {
-    it('migrations add guidance_notes to task_steps (verified in db/migrations)', () => {
-      // guidance_notes was added to task_steps via 2026-05-30-add-guidance-notes.sql
-      // This test documents that the column is valid and should not be flagged as drift.
-      const migration = readFile('db', 'migrations', '2026-05-30-add-guidance-notes.sql');
-      assert(migration.includes("task_steps"), 'Migration must mention task_steps');
-      assert(migration.includes('guidance_notes'), 'Migration must add guidance_notes');
+    it('baseline schema defines task_steps.guidance_notes', () => {
+      const baseline = readFile('db', 'baseline', '2026-11-11-baseline.sql');
+      assert(baseline.includes('CREATE TABLE public."task_steps"'), 'Baseline must create task_steps');
+      assert(baseline.includes('"guidance_notes"'), 'Baseline must include guidance_notes');
     });
 
     it('no code references columns on tables without matching migrations', () => {

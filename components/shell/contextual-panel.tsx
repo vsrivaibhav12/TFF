@@ -8,12 +8,11 @@ import { ICONS } from './nav-icons';
 import type { NavItem } from './nav-icons';
 import { useEffect, useState, useMemo } from 'react';
 import { getRecentItems, type RecentItem } from '@/lib/state/recent-items';
-import { listSavedViews } from '@/lib/actions/saved-views';
 import { DockLink } from './dock-link';
 
 interface ContextualPanelProps {
   nav: NavItem[];
-  role: 'admin' | 'team' | 'client';
+  role: 'admin' | 'team';
   user: { full_name: string | null; email: string };
   open: boolean;
 }
@@ -55,33 +54,6 @@ function getModuleContext(pathname: string, role: string): ModuleContext | null 
       prefix,
     };
   }
-  if (pathname.startsWith(`${prefix}/queries`) || pathname === `${prefix}/queries`) {
-    return {
-      label: 'Queries',
-      scope: `${role}.queries`,
-      recentType: 'query',
-      quickFilters: [
-        { label: 'All queries', href: `${prefix}/queries` },
-        { label: 'Open', href: `${prefix}/queries?status=open` },
-        { label: 'Resolved', href: `${prefix}/queries?status=resolved` },
-      ],
-      prefix,
-    };
-  }
-  if (pathname.startsWith(`${prefix}/notices`) || pathname === `${prefix}/notices`) {
-    return {
-      label: 'Notices',
-      scope: `${role}.notices`,
-      recentType: 'notice',
-      quickFilters: [
-        { label: 'All notices', href: `${prefix}/notices` },
-        { label: 'Reply pending', href: `${prefix}/notices?status=reply_pending` },
-        { label: 'Hearing pending', href: `${prefix}/notices?status=hearing_pending` },
-        { label: 'Closed', href: `${prefix}/notices?status=closed` },
-      ],
-      prefix,
-    };
-  }
   if (pathname.startsWith(`${prefix}/team`) || pathname === `${prefix}/team`) {
     return {
       label: 'Team',
@@ -102,7 +74,6 @@ export function ContextualPanel({ nav, role, open }: ContextualPanelProps) {
   const prefix = `/${role}`;
   const pathname = usePathname();
   const [recent, setRecent] = useState<RecentItem[]>([]);
-  const [savedViews, setSavedViews] = useState<any[]>([]);
   const [showNav, setShowNav] = useState(false);
 
   const moduleCtx = useMemo(() => getModuleContext(pathname, role), [pathname, role]);
@@ -114,12 +85,8 @@ export function ContextualPanel({ nav, role, open }: ContextualPanelProps) {
   useEffect(() => {
     if (moduleCtx) {
       setRecent(getRecentItems(moduleCtx.recentType));
-      listSavedViews(moduleCtx.scope).then((res) => {
-        if (res.success) setSavedViews(res.data ?? []);
-      });
     } else {
       setRecent([]);
-      setSavedViews([]);
     }
   }, [moduleCtx, pathname]);
 
@@ -142,7 +109,6 @@ export function ContextualPanel({ nav, role, open }: ContextualPanelProps) {
           <ModuleContextPanel
             ctx={moduleCtx}
             recent={recent}
-            savedViews={savedViews}
             pathname={pathname}
           />
         ) : null}
@@ -169,12 +135,10 @@ export function ContextualPanel({ nav, role, open }: ContextualPanelProps) {
 function ModuleContextPanel({
   ctx,
   recent,
-  savedViews,
   pathname,
 }: {
   ctx: ModuleContext;
   recent: RecentItem[];
-  savedViews: any[];
   pathname: string;
 }) {
   return (
@@ -229,27 +193,6 @@ function ModuleContextPanel({
         </div>
       )}
 
-      {/* Saved Views */}
-      {savedViews.length > 0 && (
-        <div className="px-4">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Bookmark className="h-3 w-3 text-zinc-400" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Saved views</span>
-          </div>
-          <div className="space-y-1">
-            {savedViews.map((view: any) => (
-              <Link
-                key={view.id}
-                href={`${pathname.split('?')[0]}?view=${view.id}`}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[12px] text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
-              >
-                <Bookmark className="h-3 w-3 text-zinc-400 shrink-0" />
-                <span className="truncate">{view.name}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -10,12 +10,12 @@ import { parseNaturalLanguage, examplePrompts, type SmartSuggestion } from '@/li
 import { cn } from '@/lib/utils';
 
 interface CommandCenterProps {
-  userRole: 'admin' | 'team' | 'client';
+  userRole: 'admin' | 'team';
 }
 
 export default function CommandCenter({ userRole }: CommandCenterProps) {
   const router = useRouter();
-  const basePath = userRole === 'admin' ? '/admin' : userRole === 'client' ? '/portal' : '/team';
+  const basePath = userRole === 'admin' ? '/admin' : '/team';
   const [q, setQ] = useState('');
 
   const suggestion = useMemo(

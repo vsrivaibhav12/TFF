@@ -109,7 +109,6 @@ export async function toggleComplianceRuleActiveAction(input: { id: string; is_a
     const r = await refreshComplianceEvents();
     revalidatePath('/admin/settings/compliance-rules');
     revalidatePath('/admin/compliance');
-    revalidatePath('/portal/calendar');
     return ok({ regenerated: r.generated });
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');

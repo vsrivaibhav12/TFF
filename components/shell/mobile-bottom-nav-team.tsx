@@ -9,7 +9,7 @@ import { ICONS, type NavItem } from './nav-icons';
 
 interface MobileBottomNavTeamProps {
   nav: NavItem[];
-  role: 'admin' | 'team' | 'client';
+  role: 'admin' | 'team';
 }
 
 export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamProps) {

@@ -23,7 +23,7 @@ export interface SmartSuggestion {
 export function parseNaturalLanguage(
   query: string,
   basePath: string,
-  role: 'admin' | 'team' | 'client',
+  role: 'admin' | 'team',
 ): SmartSuggestion | null {
   const q = query.toLowerCase().trim();
 
@@ -82,14 +82,8 @@ export function parseNaturalLanguage(
       inbox: `${basePath}/inbox`,
       clients: `${basePath}/clients`,
       tasks: `${basePath}/tasks`,
-      queries: `${basePath}/queries`,
-      notices: `${basePath}/notices`,
-      hearings: `${basePath}/hearings`,
       gst: `${basePath}/gst`,
-      payroll: `${basePath}/payroll`,
       billing: `${basePath}/billing`,
-      bizlens: `${basePath}/bizlens`,
-      vcfo: `${basePath}/vcfo`,
       attendance: `${basePath}/attendance`,
       leave: `${basePath}/leave`,
       approvals: `${basePath}/approvals`,
@@ -102,10 +96,6 @@ export function parseNaturalLanguage(
       pageMap.team = `${basePath}/team`;
       pageMap.compliance = `${basePath}/compliance`;
       pageMap.calendar = `${basePath}/compliance`;
-    }
-    if (role === 'client') {
-      pageMap.compliance = '/portal/calendar';
-      pageMap.calendar = '/portal/calendar';
     }
     for (const [key, href] of Object.entries(pageMap)) {
       if (page.includes(key)) {
@@ -188,22 +178,6 @@ export function parseNaturalLanguage(
     };
   }
 
-  if (q.includes('notice') || q.includes('gstr') || q.includes('show cause')) {
-    if (q.includes('overdue')) {
-      return {
-        label: 'Overdue notices',
-        href: `${basePath}/notices?status=overdue`,
-        icon: BellRing,
-        description: 'Show overdue notices',
-      };
-    }
-    return {
-      label: 'Go to notices',
-      href: `${basePath}/notices`,
-      icon: BellRing,
-      description: 'Open notices page',
-    };
-  }
 
   const assignedMatch = q.match(/(?:tasks?|work)\s+(?:for|assigned to|by)\s+(.+)/);
   if (assignedMatch && !q.includes('for me')) {
@@ -240,16 +214,6 @@ export function parseNaturalLanguage(
     };
   }
 
-  if (q.includes('bizlens') || q.includes('financial report')) {
-    const bizMatch = q.match(/(?:bizlens|financial report)\s+(?:for\s+)?(.+)?/);
-    const clientHint = bizMatch?.[1]?.trim();
-    return {
-      label: clientHint ? `BizLens for ${clientHint}` : 'Open BizLens',
-      href: clientHint ? `${basePath}/bizlens?q=${encodeURIComponent(clientHint)}` : `${basePath}/bizlens`,
-      icon: BarChart3,
-      description: clientHint ? `Run BizLens for ${clientHint}` : 'Open BizLens dashboard',
-    };
-  }
 
   return null;
 }
@@ -259,7 +223,6 @@ export const examplePrompts = [
   'High priority tasks',
   'Go to clients',
   'Create task for Acme',
-  'BizLens for Sri Engineering',
   'Compliance this month',
   'Overdue notices',
 ];

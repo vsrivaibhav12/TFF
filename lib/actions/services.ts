@@ -145,8 +145,6 @@ export async function linkServiceToClientAction(input: { client_id: string; serv
     if (error) return fail(error.message, 'DB');
     revalidatePath(`/admin/clients/${input.client_id}`);
     revalidatePath(`/team/clients/${input.client_id}`);
-    revalidatePath('/portal');
-    revalidatePath('/portal');
     return ok(undefined);
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');

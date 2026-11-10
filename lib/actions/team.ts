@@ -11,7 +11,7 @@ import { writeAudit } from '@/lib/services/audit-service';
 const createSchema = z.object({
   full_name: z.string().trim().min(1, 'Name is required'),
   email: z.string().trim().toLowerCase().email('Invalid email'),
-  password: z.string().trim().min(6, 'Password must be at least 6 characters'),
+  password: z.string().trim().min(10, 'Password must be at least 10 characters').refine((p) => /[a-z]/i.test(p) && /[0-9]/.test(p), 'Password must contain letters and numbers'),
   role: z.enum(['team', 'admin']),
   job_title: z.string().trim().optional().nullable(),
   department: z.string().trim().optional().nullable(),
@@ -215,7 +215,6 @@ export async function removeTeamMemberAction(
     }
 
     // 1. Clean up user-specific config tables (best-effort)
-    await sb.from('staff_payroll_settings').delete().eq('user_id', targetId);
     await sb.from('staff_capabilities').delete().eq('user_id', targetId);
     await sb.from('team_client_assignment').delete().eq('team_user_id', targetId);
     await sb.from('notification_preferences').delete().eq('user_id', targetId);

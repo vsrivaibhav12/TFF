@@ -154,7 +154,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
             <DialogContent>
               <DialogHeader><DialogTitle>Subscribe to service</DialogTitle></DialogHeader>
               <div className="space-y-4 py-4">
-                <p className="text-sm text-zinc-500">Subscribing a client to a service enables the corresponding module in their portal.</p>
+                <p className="text-sm text-zinc-500">Subscribing a client to a service links it to the client so tasks can be created for it.</p>
                 <Select value={pickedServiceId} onValueChange={setPickedServiceId}>
                   <SelectTrigger data-testid="pick-service"><SelectValue placeholder="Select service..." /></SelectTrigger>
                   <SelectContent>

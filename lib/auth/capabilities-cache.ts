@@ -67,7 +67,7 @@ export async function getCurrentUserWithCapabilities(): Promise<{
   user: AppUser;
   hasCapability: (cap: Capability) => Promise<boolean>;
 }> {
-  const user = await requireRole(['admin', 'team', 'client']);
+  const user = await requireRole(['admin', 'team']);
   if (user.role === 'admin') {
     return {
       user,

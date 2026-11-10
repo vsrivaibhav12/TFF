@@ -6,11 +6,9 @@ import NewClientDialog from '@/components/clients/new-client-dialog';
 import { listAccessibleClients, listClientGroups, countAccessibleClients } from '@/lib/repositories/clients';
 import { getComplianceStatusForClients } from '@/lib/repositories/compliance';
 import { countActiveEngagementsForClients } from '@/lib/repositories/client-sub-services';
-import { listSavedViews } from '@/lib/actions/saved-views';
 import { Button } from '@/components/ui/button';
 import { Plus, Building2, Upload, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
-import SavedViewsBar from '@/components/sophistication/saved-views-bar';
 import FilterBar from '@/components/sophistication/filter-bar';
 import ClientsTableClient from './clients-table-client';
 import ExportButton from '@/components/sophistication/export-button';
@@ -36,14 +34,13 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
   const canAssignServices = me.role === 'admin' || caps.has('services.assign');
   const canDelete = me.role === 'admin' || caps.has('clients.delete');
 
-  const [clients, groups, views, totalCount] = await Promise.all([
+  const [clients, groups, totalCount] = await Promise.all([
     listAccessibleClients({
       ...filterOpts,
       limit: PAGE_SIZE,
       offset,
     }),
     listClientGroups(),
-    listSavedViews('admin.clients'),
     countAccessibleClients(filterOpts),
   ]);
 
@@ -62,7 +59,6 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
     category: c.category ?? '',
     city: c.city ?? '',
     state: c.state ?? '',
-    portal_enabled: c.portal_enabled,
   }));
 
   const enrichedClients = clients.map((c: any) => {
@@ -118,8 +114,6 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
           { key: 'q', placeholder: 'Search name / PAN', type: 'text' },
         ]}
       />
-
-      <SavedViewsBar scope="admin.clients" views={views as any} />
 
       {clients.length === 0 && currentPage === 1 ? (
         <EmptyState

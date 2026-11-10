@@ -8,7 +8,7 @@ import { ok, fail, type ActionResult } from '@/lib/actions/result';
 import { notify } from '@/lib/services/notification-service';
 import { writeAudit } from '@/lib/services/audit-service';
 import { todayIST } from '@/lib/utils';
-import { checkRateLimit } from '@/lib/services/rate-limiter';
+import { checkRateLimit } from '@/lib/rate-limit';
 import * as leaveRepo from '@/lib/repositories/leave';
 
 const leaveSchema = z.object({
@@ -22,8 +22,8 @@ export async function requestLeaveAction(input: z.infer<typeof leaveSchema>): Pr
   try {
     const me = await requireRole(['admin', 'team']);
     // R-3: Rate limit leave requests — max 10 per minute per user
-    const rl = checkRateLimit(`leave:${me.id}`, 10);
-    if (rl.limited) return fail('Too many requests. Please wait a moment and try again.', 'RATE_LIMITED');
+    const rl = await checkRateLimit(`leave:${me.id}`, { maxRequests: 10, windowMs: 60_000 });
+    if (!rl.allowed) return fail('Too many requests. Please wait a moment and try again.', 'RATE_LIMITED');
     const parsed = leaveSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     if (parsed.data.to_date < parsed.data.from_date) {

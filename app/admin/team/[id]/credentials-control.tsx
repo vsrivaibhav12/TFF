@@ -16,7 +16,7 @@ export default function CredentialsControl({ userId, currentEmail }: { userId: s
   function save() {
     const payload: { user_id: string; email?: string; password?: string } = { user_id: userId };
     if (email.trim() && email.trim() !== currentEmail) payload.email = email.trim();
-    if (password.trim() && password.length >= 6) payload.password = password.trim();
+    if (password.trim() && password.length >= 10) payload.password = password.trim();
     if (!payload.email && !payload.password) {
       toast.error('Enter a new email or password to update');
       return;
@@ -64,8 +64,8 @@ export default function CredentialsControl({ userId, currentEmail }: { userId: s
             {showPassword ? 'Hide' : 'Show'}
           </Button>
         </div>
-        {password.length > 0 && password.length < 6 && (
-          <p className="text-xs text-red-600">Password must be at least 6 characters.</p>
+        {password.length > 0 && password.length < 10 && (
+          <p className="text-xs text-red-600">Password must be at least 10 characters and contain letters and numbers.</p>
         )}
       </div>
 

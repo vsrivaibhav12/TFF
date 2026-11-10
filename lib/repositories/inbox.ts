@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export interface UnifiedInboxItem {
   id: string;
-  item_type: 'task' | 'notice' | 'query' | 'compliance';
+  item_type: 'task' | 'compliance';
   title: string;
   status: string;
   priority: string;

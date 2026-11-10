@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 
 export type AttentionItem = {
   id: string;
-  type: 'blocked' | 'query' | 'approval';
+  type: 'blocked' | 'approval';
   title: string;
   client: string;
   reason: string;
@@ -23,7 +23,7 @@ export function NeedsAttentionHub({ items = [] }: { items?: AttentionItem[] }) {
         <div className="flex items-center justify-between mb-5">
           <div>
             <h3 className="text-base font-semibold text-zinc-900 tracking-tight">Needs attention</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">Blocked tasks, open queries, and approvals</p>
+            <p className="text-xs text-zinc-500 mt-0.5">Blocked tasks and approvals</p>
           </div>
         </div>
         <EmptyState title="All clear" body="No items need your immediate attention right now." />
@@ -36,13 +36,13 @@ export function NeedsAttentionHub({ items = [] }: { items?: AttentionItem[] }) {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="text-base font-semibold text-zinc-900 tracking-tight">Needs attention</h3>
-          <p className="text-xs text-zinc-500 mt-0.5">Blocked tasks, open queries, and approvals</p>
+          <p className="text-xs text-zinc-500 mt-0.5">Blocked tasks and approvals</p>
         </div>
       </div>
 
       <div className="space-y-3">
         {items.map((item) => {
-          const Icon = item.type === 'blocked' ? Clock : item.type === 'query' ? MessageSquare : ShieldCheck;
+          const Icon = item.type === 'blocked' ? Clock : ShieldCheck;
           return (
             <div
               key={item.id}
@@ -63,7 +63,7 @@ export function NeedsAttentionHub({ items = [] }: { items?: AttentionItem[] }) {
               <div className="flex items-center gap-2 shrink-0 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                 <Link href={item.href}>
                   <Button variant="outline" size="sm" className={`h-8 text-xs border-${item.color}-200 text-${item.color}-700 hover:bg-${item.color}-50`}>
-                    {item.type === 'blocked' ? 'View Task' : item.type === 'query' ? 'Reply' : 'Review'}
+                    {item.type === 'blocked' ? 'View Task' : 'Review'}
                   </Button>
                 </Link>
               </div>

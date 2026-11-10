@@ -8,11 +8,9 @@ import {
   Users,
   Plus,
   LayoutDashboard,
-  MessageSquare,
   ClipboardList,
   BarChart3,
   Zap,
-  BellRing,
   UserCircle,
   Key,
   Inbox,
@@ -41,9 +39,8 @@ function getQuickActions(basePath: string, role: string): CmdItem[] {
     { id: 'act-inbox', label: 'Go to inbox', group: 'Navigation', href: `${basePath}/inbox`, icon: <Inbox className="h-3.5 w-3.5" /> },
     { id: 'act-clients', label: 'Go to clients', group: 'Navigation', href: `${basePath}/clients`, icon: <Users className="h-3.5 w-3.5" /> },
     { id: 'act-tasks', label: 'Go to tasks', group: 'Navigation', href: `${basePath}/tasks`, icon: <Briefcase className="h-3.5 w-3.5" /> },
-    { id: 'act-queries', label: 'Go to queries', group: 'Navigation', href: `${basePath}/queries`, icon: <MessageSquare className="h-3.5 w-3.5" /> },
   ];
-  if (role !== 'client') {
+  {
     actions.unshift(
       { id: 'act-new-task', label: 'Create new task', group: 'Actions', href: `${basePath}/tasks/bulk-create`, icon: <Plus className="h-3.5 w-3.5" />, keywords: 'add create task new' },
       { id: 'act-new-client', label: 'Add new client', group: 'Actions', href: `${basePath}/clients`, icon: <Plus className="h-3.5 w-3.5" />, keywords: 'add client onboard' },
@@ -58,14 +55,14 @@ function getQuickActions(basePath: string, role: string): CmdItem[] {
   return actions;
 }
 
-export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'client' }) {
+export default function CommandPalette({ role }: { role: 'admin' | 'team' }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [active, setActive] = useState(0);
   const [items, setItems] = useState<CmdItem[]>([]);
 
-  const basePath = role === 'admin' ? '/admin' : role === 'client' ? '/portal' : '/team';
+  const basePath = role === 'admin' ? '/admin' : '/team';
   const quickActions = getQuickActions(basePath, role);
 
   const smartSuggestion = useMemo(() => {
@@ -73,7 +70,7 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
     return parseNaturalLanguage(q, basePath, role);
   }, [q, basePath, role]);
 
-  const slashCommands: CmdItem[] = role === 'client' ? [] : [
+  const slashCommands: CmdItem[] = [
     {
       id: 'slash-task',
       label: 'Create new task',
@@ -85,19 +82,6 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
         const btn = document.querySelector<HTMLButtonElement>('[data-testid="new-task-button"]');
         if (btn) { btn.click(); }
         else { router.push(`${basePath}/tasks`); }
-      },
-    },
-    {
-      id: 'slash-query',
-      label: 'Create new query',
-      group: 'Actions',
-      icon: <MessageSquare className="h-3.5 w-3.5" />,
-      keywords: '/query',
-      action: () => {
-        window.dispatchEvent(new CustomEvent('cmdk:new-query'));
-        const btn = document.querySelector<HTMLButtonElement>('[data-testid="new-query-button"], [data-testid="new-query-btn"]');
-        if (btn) { btn.click(); }
-        else { router.push(`${basePath}/queries`); }
       },
     },
   ];
@@ -144,12 +128,6 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
         for (const t of j.tasks ?? []) {
           out.push({ id: `task-${t.id}`, label: t.sub_service_name ?? t.title, group: 'Tasks', href: `${basePath}/tasks/${t.id}`, icon: <Briefcase className="h-3.5 w-3.5" />, keywords: `${t.client_name} ${t.sub_service_name ?? ''}` });
         }
-        for (const qy of j.queries ?? []) {
-          out.push({ id: `query-${qy.id}`, label: qy.subject, group: 'Queries', href: `${basePath}/queries/${qy.id}`, icon: <MessageSquare className="h-3.5 w-3.5" />, keywords: qy.client_name });
-        }
-        for (const n of j.notices ?? []) {
-          out.push({ id: `notice-${n.id}`, label: n.subject, group: 'Notices', href: `${basePath}/notices`, icon: <BellRing className="h-3.5 w-3.5" />, keywords: `${n.client_name} ${n.notice_type}` });
-        }
         if (role === 'admin') {
           for (const u of j.team ?? []) {
             out.push({ id: `team-${u.id}`, label: u.full_name, group: 'Team', href: `${basePath}/team/${u.id}`, icon: <UserCircle className="h-3.5 w-3.5" />, keywords: u.email });
@@ -179,15 +157,12 @@ export default function CommandPalette({ role }: { role: 'admin' | 'team' | 'cli
   const path = typeof window !== 'undefined' ? window.location.pathname : '';
   const isTasks = /^\/(?:admin|team)\/tasks(?:\/|$)/.test(path);
   const isClients = /^\/(?:admin|team)\/clients(?:\/|$)/.test(path);
-  const isQueries = /^\/(?:admin|team)\/queries(?:\/|$)/.test(path);
 
-  let groupOrder = ['Actions', 'Navigation', 'Clients', 'Tasks', 'Queries', 'Notices', 'Credentials', 'Team'];
+  let groupOrder = ['Actions', 'Navigation', 'Clients', 'Tasks', 'Credentials', 'Team'];
   if (isTasks) {
-    groupOrder = ['Actions', 'Navigation', 'Tasks', 'Clients', 'Queries', 'Notices', 'Credentials', 'Team'];
+    groupOrder = ['Actions', 'Navigation', 'Tasks', 'Clients', 'Credentials', 'Team'];
   } else if (isClients) {
-    groupOrder = ['Actions', 'Navigation', 'Clients', 'Tasks', 'Queries', 'Notices', 'Credentials', 'Team'];
-  } else if (isQueries) {
-    groupOrder = ['Actions', 'Navigation', 'Queries', 'Clients', 'Tasks', 'Notices', 'Credentials', 'Team'];
+    groupOrder = ['Actions', 'Navigation', 'Clients', 'Tasks', 'Credentials', 'Team'];
   }
   const orderedGroups = Object.entries(groups).sort(
     ([a], [b]) => (groupOrder.indexOf(a) === -1 ? 99 : groupOrder.indexOf(a)) - (groupOrder.indexOf(b) === -1 ? 99 : groupOrder.indexOf(b))

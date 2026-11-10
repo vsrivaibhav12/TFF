@@ -17,7 +17,6 @@ import { Label } from '@/components/ui/label';
 import { formatDateIST, formatTimeIST, timeAgo, cn } from '@/lib/utils';
 import TaskActions from '@/app/team/tasks/[id]/task-actions';
 import TaskStepsPanel from '@/components/tasks/task-steps-panel';
-import SendReminderButton from '@/components/tasks/send-reminder-button';
 import StuckToggle from '@/components/tasks/stuck-toggle';
 import BlockedOnClientToggle from '@/components/tasks/blocked-on-client-toggle';
 import CustomFieldsPanel from '@/components/tasks/custom-fields-panel';
@@ -1090,7 +1089,6 @@ export default function TaskDetailShell({
                 <StuckToggle taskId={task.id} isStuck={!!task.is_stuck} reasonCode={task.stuck_reason_code} reasonNote={task.stuck_reason_note} />
               )}
               <BlockedOnClientToggle taskId={task.id} isBlocked={!!task.is_blocked_on_client} />
-              {task.is_blocked_on_client && <SendReminderButton taskId={task.id} />}
               
               {task.status === 'completed' && (
                 <div className="pt-2">

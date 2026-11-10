@@ -1,3 +1,4 @@
+import { isAuthorizedCron } from '@/lib/auth/cron-auth';
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { sendEmail } from '@/lib/email/resend';
@@ -14,9 +15,7 @@ export const maxDuration = 60;
  *  - 'off' users: skipped
  */
 export async function GET(request: NextRequest) {
-  const isCron = request.headers.get('x-vercel-cron');
-  const secret = request.nextUrl.searchParams.get('secret');
-  if (!isCron && secret !== process.env.CRON_SECRET) {
+  if (!isAuthorizedCron(request)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
   const sb = createServiceClient();

@@ -1,3 +1,4 @@
+import { isAuthorizedCron } from '@/lib/auth/cron-auth';
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { seedTaskStepsFromSop } from '@/lib/services/task-steps-service';
@@ -51,9 +52,7 @@ function computeDueDate(ss: any, frequency: string, periodYear: number, periodMo
 }
 
 export async function GET(request: NextRequest) {
-  const isCron = request.headers.get('x-vercel-cron');
-  const secret = request.nextUrl.searchParams.get('secret');
-  if (!isCron && secret !== process.env.CRON_SECRET) return unauthorized();
+  if (!isAuthorizedCron(request)) return unauthorized();
 
   const sb = createServiceClient();
   const today = new Date();

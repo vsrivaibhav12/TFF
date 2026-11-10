@@ -39,7 +39,6 @@ interface EnrichedClient {
   gstin: string | null;
   city: string | null;
   state: string | null;
-  portal_enabled: boolean;
   created_at: string;
   group_id: string | null;
   group_name: string | null;

@@ -58,8 +58,22 @@ export async function toggleTaskStepAction(input: z.infer<typeof toggleSchema>):
           completed_by: null,
           completion_note: null,
         };
-    const { error } = await sb.from('task_steps').update(update).eq('id', parsed.data.step_id);
+    // `.select('id')` is required: when RLS hides the row Postgres reports
+    // success with zero rows updated, and the UI would show the step as done
+    // even though nothing was saved.
+    const { data: updated, error } = await sb
+      .from('task_steps')
+      .update(update)
+      .eq('id', parsed.data.step_id)
+      .eq('task_id', parsed.data.task_id)
+      .select('id');
     if (error) return fail(error.message, 'DB');
+    if (!updated || updated.length === 0) {
+      return fail(
+        'This step could not be saved. You may not have access to this client or task, or the step no longer exists.',
+        'NOT_SAVED',
+      );
+    }
 
     // Activity entry so it shows in audit / activity timeline
     await sb.from('task_activity').insert({
@@ -71,7 +85,8 @@ export async function toggleTaskStepAction(input: z.infer<typeof toggleSchema>):
     });
     revalidatePath(`/team/tasks/${parsed.data.task_id}`);
     revalidatePath(`/admin/tasks/${parsed.data.task_id}`);
-    revalidatePath(`/portal/tasks/${parsed.data.task_id}`);
+    revalidatePath('/team/tasks');
+    revalidatePath('/admin/tasks');
     return ok(undefined);
   } catch (e: any) {
     return fail(e?.message ?? 'unknown', e?.code ?? 'UNKNOWN');

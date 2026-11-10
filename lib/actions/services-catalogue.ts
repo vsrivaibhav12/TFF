@@ -2,9 +2,21 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
+import { fetchAll, chunkArray } from '@/lib/supabase/fetch-all';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
+
+/**
+ * Ids of all open (not completed / cancelled) tasks for a sub-service or template.
+ * Paged so it stays complete beyond 1,000 rows.
+ */
+async function listOpenTaskIds(sb: ReturnType<typeof createClient>, column: 'sub_service_id' | 'task_template_id', value: string): Promise<string[]> {
+  const rows = await fetchAll<{ id: string }>(() =>
+    sb.from('tasks').select('id').eq(column, value).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")'),
+  );
+  return rows.map((r) => r.id);
+}
 
 // ---------- Service Category ----------
 const categorySchema = z.object({
@@ -59,7 +71,7 @@ const serviceSchema = z.object({
   name: z.string().min(1),
   code: z.string().min(1).max(40).regex(/^[A-Z0-9_]+$/, 'Code must be uppercase letters, digits, underscore'),
   description: z.string().optional(),
-  service_kind: z.enum(['gst', 'tds', 'income_tax', 'compliance', 'bizlens', 'vcfo', 'notice', 'payroll', 'other']).optional().nullable(),
+  service_kind: z.enum(['gst', 'tds', 'income_tax', 'compliance', 'notice', 'other']).optional().nullable(),
 });
 export async function upsertServiceAction(input: z.infer<typeof serviceSchema>): Promise<ActionResult<{ id: string }>> {
   try {
@@ -172,13 +184,13 @@ export async function upsertSopStepAction(input: z.infer<typeof sopStepSchema>):
       if (error) return fail(error.message, 'DB');
 
       // Sync to open tasks
-      const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', rest.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
-      if (openTasks && openTasks.length > 0) {
-        const taskIds = openTasks.map((t: { id: string }) => t.id);
-        await sb.from('task_steps')
+      const openTaskIds = await listOpenTaskIds(sb, 'sub_service_id', rest.sub_service_id);
+      if (openTaskIds.length > 0) {
+        const taskIds = openTaskIds;
+        for (const ids of chunkArray(taskIds, 150)) await sb.from('task_steps')
           .update({ title: rest.title, description: rest.description || null, is_required: rest.is_required })
           .eq('source_sop_step_id', id)
-          .in('task_id', taskIds);
+          .in('task_id', ids);
       }
 
       revalidatePath('/admin/services');
@@ -190,17 +202,17 @@ export async function upsertSopStepAction(input: z.infer<typeof sopStepSchema>):
     if (error) return fail(error.message, 'DB');
 
     // Sync to open tasks (append)
-    const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', rest.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
-    if (openTasks && openTasks.length > 0) {
-      const rows = openTasks.map((t: { id: string }) => ({
-        task_id: t.id,
+    const openTaskIds = await listOpenTaskIds(sb, 'sub_service_id', rest.sub_service_id);
+    if (openTaskIds.length > 0) {
+      const rows = openTaskIds.map((taskId) => ({
+        task_id: taskId,
         step_order: rest.step_order,
         title: rest.title,
         description: rest.description ?? null,
         is_required: rest.is_required ?? true,
         source_sop_step_id: data.id,
       }));
-      await sb.from('task_steps').insert(rows);
+      for (const part of chunkArray(rows, 500)) await sb.from('task_steps').insert(part);
     }
 
     revalidatePath('/admin/services');
@@ -221,10 +233,10 @@ export async function deleteSopStepAction(id: string): Promise<ActionResult<void
     if (error) return fail(error.message, 'DB');
 
     if (step) {
-      const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', step.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
-      if (openTasks && openTasks.length > 0) {
-        const taskIds = openTasks.map((t: { id: string }) => t.id);
-        await sb.from('task_steps').delete().eq('source_sop_step_id', id).in('task_id', taskIds);
+      const openTaskIds = await listOpenTaskIds(sb, 'sub_service_id', step.sub_service_id);
+      if (openTaskIds.length > 0) {
+        const taskIds = openTaskIds;
+        for (const ids of chunkArray(taskIds, 150)) await sb.from('task_steps').delete().eq('source_sop_step_id', id).in('task_id', ids);
       }
     }
 
@@ -249,11 +261,11 @@ export async function reorderSopStepsAction(input: { sub_service_id: string; ids
     }
 
     // Sync to open tasks
-    const { data: openTasks } = await sb.from('tasks').select('id').eq('sub_service_id', input.sub_service_id).eq('is_deleted', false).not('status', 'in', '("completed","cancelled")');
-    if (openTasks && openTasks.length > 0) {
-      const taskIds = openTasks.map((t: { id: string }) => t.id);
+    const openTaskIds = await listOpenTaskIds(sb, 'sub_service_id', input.sub_service_id);
+    if (openTaskIds.length > 0) {
+      const taskIds = openTaskIds;
       for (let i = 0; i < input.ids_in_order.length; i++) {
-        await sb.from('task_steps').update({ step_order: i + 1 }).eq('source_sop_step_id', input.ids_in_order[i]).in('task_id', taskIds);
+        for (const ids of chunkArray(taskIds, 150)) await sb.from('task_steps').update({ step_order: i + 1 }).eq('source_sop_step_id', input.ids_in_order[i]).in('task_id', ids);
       }
     }
 

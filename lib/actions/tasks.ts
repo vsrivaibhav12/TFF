@@ -9,6 +9,7 @@ import { createTaskSchema, transitionTaskSchema, updateTaskBillingSchema, update
 import * as taskService from '@/lib/services/task-service';
 import { canModifyTask, canCompleteTask } from '@/lib/services/task-modify-guard';
 import * as taskRepo from '@/lib/repositories/tasks';
+import { ensureClientSubServiceLink } from '@/lib/repositories/client-sub-services';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { seedTaskStepsFromSop, seedTaskStepsFromTemplate } from '@/lib/services/task-steps-service';
@@ -46,6 +47,16 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
       }
     }
     
+    // Tasks may be created for any sub-service. Link it to the client here, on the
+    // server, so creating a task never depends on the separate services.assign right.
+    if (parsed.data.sub_service_id && parsed.data.client_id) {
+      try {
+        await ensureClientSubServiceLink(parsed.data.client_id, parsed.data.sub_service_id);
+      } catch (linkErr) {
+        console.error('[createTaskAction] could not link sub-service to client', linkErr);
+      }
+    }
+
     const data = await taskRepo.createTaskWithAutoNumber({
       ...parsed.data,
       status: 'pending',
@@ -67,23 +78,23 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
       try {
         const sb = createClient();
         await seedTaskStepsFromTemplate(sb as unknown as SupabaseClient, { task_id: data.id, task_template_id: parsed.data.task_template_id });
-      } catch {
-        // Non-critical: template step seeding failure does not block task creation
+      } catch (seedErr) {
+        // Non-critical for creation, but never silent: the checklist can be loaded later.
+        console.error('[createTaskAction] template step seeding failed', seedErr);
       }
     } else if (parsed.data.sub_service_id) {
       // Auto-load SOP steps if no specific template is chosen
       try {
         const sb = createClient();
         await seedTaskStepsFromSop(sb as unknown as SupabaseClient, { task_id: data.id, sub_service_id: parsed.data.sub_service_id });
-      } catch {
-        // Non-critical: SOP step seeding failure does not block task creation
+      } catch (seedErr) {
+        console.error('[createTaskAction] SOP step seeding failed', seedErr);
       }
     }
     
     await writeAudit({ action: 'task.create', entity_type: 'task', entity_id: data.id, performed_by: me.id, details: { client_id: parsed.data.client_id, title: parsed.data.title } });
     revalidatePath('/team/tasks');
     revalidatePath('/admin/tasks');
-    revalidatePath('/portal/tasks');
     revalidatePath(`/team/clients/${parsed.data.client_id}`);
     revalidatePath(`/admin/clients/${parsed.data.client_id}`);
     return ok({ id: data.id });
@@ -94,8 +105,8 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
 
 export async function transitionTaskAction(input: { task_id: string; to_status: TaskStatus; note?: string; arn_reference?: string | null; is_arn_client_visible?: boolean; bill_reference?: string | null; bill_amount?: number | null }): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin', 'team', 'client']);
-    if (me.role !== 'client') await requireCapability(me, 'tasks.complete');
+    const me = await requireRole(['admin', 'team']);
+    await requireCapability(me, 'tasks.complete');
     const parsed = transitionTaskSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     
@@ -127,7 +138,6 @@ export async function transitionTaskAction(input: { task_id: string; to_status: 
     revalidatePath('/admin/tasks');
     revalidatePath(`/team/tasks/${parsed.data.task_id}`);
     revalidatePath(`/admin/tasks/${parsed.data.task_id}`);
-    revalidatePath('/portal/tasks');
     return ok(undefined);
   } catch (e: unknown) {
     return fail(errorMessage(e), errorCode(e));
@@ -136,15 +146,14 @@ export async function transitionTaskAction(input: { task_id: string; to_status: 
 
 export async function addTaskNoteAction(input: { task_id: string; body: string }): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin', 'team', 'client']);
-    if (me.role !== 'client') await requireCapability(me, 'tasks.edit');
+    const me = await requireRole(['admin', 'team']);
+    await requireCapability(me, 'tasks.edit');
     if (!input.body || input.body.trim().length < 1) return fail('Note cannot be empty', 'VALIDATION');
     
     await taskService.addTaskNote(input.task_id, input.body.trim(), me.id);
     await writeAudit({ action: 'task.add_note', entity_type: 'task', entity_id: input.task_id, performed_by: me.id });
     revalidatePath(`/team/tasks/${input.task_id}`);
     revalidatePath(`/admin/tasks/${input.task_id}`);
-    revalidatePath(`/portal/tasks/${input.task_id}`);
     return ok(undefined);
   } catch (e: unknown) {
     return fail(errorMessage(e), errorCode(e));
@@ -185,77 +194,6 @@ export async function assignTaskAction(input: { task_id: string; assigned_to?: s
     revalidatePath(`/team/tasks/${input.task_id}`);
     revalidatePath(`/admin/tasks/${input.task_id}`);
     return ok(undefined);
-  } catch (e: unknown) {
-    return fail(errorMessage(e), errorCode(e));
-  }
-}
-
-export async function sendTaskReminderAction(input: { task_id: string; message?: string }): Promise<ActionResult<{ recipients: number }>> {
-  try {
-    const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.assign');
-    if (!input.task_id) return fail('task_id is required', 'VALIDATION');
-    
-    const task = await taskRepo.getTask(input.task_id);
-    if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!task.is_blocked_on_client) {
-      return fail('Reminders can only be sent for tasks waiting on the client', 'INVALID_STATE');
-    }
-
-    // Throttle: refuse if a reminder activity exists within the last 6h
-    const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
-    
-    // Manual query for activity check
-    const sb = createClient();
-    const { data: recent } = await sb
-      .from('task_activity')
-      .select('id, created_at')
-      .eq('task_id', input.task_id)
-      .eq('action', 'reminder_sent')
-      .gte('created_at', sixHoursAgo)
-      .limit(1);
-      
-    if (recent && recent.length > 0) {
-      return fail('A reminder was already sent in the last 6 hours', 'THROTTLED');
-    }
-
-    // Find client portal users for this client
-    const { data: clientUsers } = await sb
-      .from('client_users')
-      .select('user_id')
-      .eq('client_id', task.client_id)
-      .eq('is_active', true);
-
-    const userIds = (clientUsers ?? []).map((u: { user_id: string }) => u.user_id).filter(Boolean);
-    const subject = `Reminder: ${task.title}`;
-    const body = input.message?.trim()
-      || `We're waiting on inputs for "${task.title}". Please respond at your earliest convenience.`;
-
-    for (const uid of userIds) {
-      await notify({
-        user_id: uid,
-        type: 'task_due_soon',
-        title: subject,
-        message: body,
-        related_entity_type: 'task',
-        related_entity_id: input.task_id,
-        immediate: true,
-      });
-    }
-
-    await taskRepo.addTaskActivity({
-      task_id: input.task_id,
-      action: 'reminder_sent',
-      field_name: 'reminder',
-      new_value: `${userIds.length} recipient${userIds.length === 1 ? '' : 's'}`,
-      changed_by: me.id,
-    });
-
-    revalidatePath(`/team/tasks/${input.task_id}`);
-    revalidatePath(`/admin/tasks/${input.task_id}`);
-    revalidatePath('/team/tasks');
-    revalidatePath('/admin/tasks');
-    return ok({ recipients: userIds.length });
   } catch (e: unknown) {
     return fail(errorMessage(e), errorCode(e));
   }
@@ -361,7 +299,6 @@ export async function softDeleteTaskAction(taskId: string): Promise<ActionResult
     await writeAudit({ action: 'task.delete', entity_type: 'task', entity_id: taskId, performed_by: me.id });
     revalidatePath('/admin/tasks');
     revalidatePath('/team/tasks');
-    revalidatePath('/portal/tasks');
     return ok(undefined);
   } catch (e: unknown) {
     return fail(errorMessage(e), errorCode(e));
@@ -381,7 +318,6 @@ export async function bulkDeleteTasksAction(taskIds: string[]): Promise<ActionRe
     await writeAudit({ action: 'task.bulk_delete', entity_type: 'task', performed_by: me.id, details: { count: taskIds.length, ids: taskIds } });
     revalidatePath('/admin/tasks');
     revalidatePath('/team/tasks');
-    revalidatePath('/portal/tasks');
     return ok(undefined);
   } catch (e: unknown) {
     return fail(errorMessage(e), errorCode(e));
@@ -608,7 +544,6 @@ export async function bulkCreateTasksAction(input: z.infer<typeof bulkCreateTask
     await writeAudit({ action: 'task.bulk_create', entity_type: 'task', performed_by: me.id, details: { created, sub_service_id: parsed.data.sub_service_id } });
     revalidatePath('/team/tasks');
     revalidatePath('/admin/tasks');
-    revalidatePath('/portal/tasks');
     return ok({ created });
   } catch (e: unknown) {
     return fail(errorMessage(e), errorCode(e));
@@ -672,7 +607,6 @@ export async function bulkUpdateTasksAction(input: z.infer<typeof bulkUpdateTask
     await writeAudit({ action: 'task.bulk_update', entity_type: 'task', performed_by: me.id, details: { count: successCount, fields: Object.keys(parsed.data.updates) } });
     revalidatePath('/team/tasks');
     revalidatePath('/admin/tasks');
-    revalidatePath('/portal/tasks');
     return ok({ success: successCount, failed: failedCount });
   } catch (e: unknown) {
     return fail(errorMessage(e), errorCode(e));
@@ -699,8 +633,8 @@ const updateTaskSchema = z.object({
 
 export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>): Promise<ActionResult<void>> {
   try {
-    const me = await requireRole(['admin', 'team', 'client']);
-    if (me.role !== 'client') await requireCapability(me, 'tasks.edit');
+    const me = await requireRole(['admin', 'team']);
+    await requireCapability(me, 'tasks.edit');
     const parsed = updateTaskSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
 
@@ -752,16 +686,35 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
       });
     }
 
+    // Choosing a sub-service on an existing task links it to the client if needed.
+    const subServiceChanged = !!updates.sub_service_id && updates.sub_service_id !== task.sub_service_id;
+    if (subServiceChanged && task.client_id) {
+      await ensureClientSubServiceLink(task.client_id, updates.sub_service_id as string);
+    }
+
     await taskRepo.updateTaskRecord(task_id, {
       ...updates,
       updated_at: new Date().toISOString(),
     });
 
+    // A task that has no checklist yet gets the new sub-service's SOP steps.
+    if (subServiceChanged && !updates.task_template_id) {
+      try {
+        const { count } = await sb.from('task_steps').select('id', { count: 'exact', head: true }).eq('task_id', task_id);
+        if (!count) {
+          await seedTaskStepsFromSop(sb as unknown as SupabaseClient, { task_id, sub_service_id: updates.sub_service_id as string });
+        }
+      } catch (seedErr) {
+        console.error('[updateTaskAction] SOP step seeding failed', seedErr);
+      }
+    }
+
     // Revalidate the task list pages (the [id] routes are only redirects and
     // should not be revalidated directly).
     revalidatePath('/admin/tasks');
     revalidatePath('/team/tasks');
-    revalidatePath('/portal/tasks');
+    revalidatePath(`/admin/tasks/${task_id}`);
+    revalidatePath(`/team/tasks/${task_id}`);
     return ok(undefined);
   } catch (e: unknown) {
     return fail(errorMessage(e), errorCode(e));

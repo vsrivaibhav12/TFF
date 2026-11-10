@@ -33,7 +33,6 @@ async function main() {
   const ids = (demoClients ?? []).map((c) => c.id);
   if (ids.length) {
     await sb.from('tasks').delete().in('client_id', ids);
-    await sb.from('client_users').delete().in('client_id', ids);
     await sb.from('team_client_assignment').delete().in('client_id', ids);
     await sb.from('clients').delete().in('id', ids);
   }

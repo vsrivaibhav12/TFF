@@ -7,10 +7,10 @@ import { mergeById, wrapLike } from '@/lib/supabase/safe-search';
 
 export const dynamic = 'force-dynamic';
 
-const EMPTY = { clients: [], tasks: [], notices: [], queries: [], team: [], credentials: [] };
+const EMPTY = { clients: [], tasks: [], team: [], credentials: [] };
 
 /**
- * v3 Cmd-K record search. Returns clients, tasks, notices, queries.
+ * v3 Cmd-K record search. Returns clients, tasks, team and credentials.
  * RLS enforces row visibility per role. Credentials additionally require
  * the `credentials.view` capability.
  */
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const me = await getCurrentUser();
   if (!me) return NextResponse.json(EMPTY, { status: 401 });
 
-  const rl = rateLimitByUser(me.id, 'api:cmdk', { maxRequests: 30, windowMs: 60_000 });
+  const rl = await rateLimitByUser(me.id, 'api:cmdk', { maxRequests: 30, windowMs: 60_000 });
   if (!rl.allowed) return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
 
   const q = (new URL(req.url)).searchParams.get('q') ?? '';
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   const isAdminOrTeam = me.role === 'admin' || me.role === 'team';
   const canViewCredentials = isAdminOrTeam && (await hasCapability(me, 'credentials.view'));
 
-  const [clientsRes, tasksRes, noticesRes, queriesRes] = await Promise.all([
+  const [clientsRes, tasksRes] = await Promise.all([
     // Clients: search across business_name, gstin, pan and merge.
     (async () => {
       const [nameRes, gstinRes, panRes] = await Promise.all([
@@ -47,30 +47,6 @@ export async function GET(req: NextRequest) {
       .select('id, title, status, clients(business_name), sub_services(name)')
       .eq('is_deleted', false)
       .ilike('title', like)
-      .limit(8),
-
-    // Notices: search subject and notice_type separately.
-    (async () => {
-      const [subjectRes, typeRes] = await Promise.all([
-        sb.from('notices')
-          .select('id, subject, notice_type, status, clients(business_name)')
-          .eq('is_deleted', false)
-          .ilike('subject', like)
-          .limit(8),
-        sb.from('notices')
-          .select('id, subject, notice_type, status, clients(business_name)')
-          .eq('is_deleted', false)
-          .ilike('notice_type', like)
-          .limit(8),
-      ]);
-      if (subjectRes.error) throw subjectRes.error;
-      if (typeRes.error) throw typeRes.error;
-      return mergeById([subjectRes.data ?? [], typeRes.data ?? []]).slice(0, 8);
-    })(),
-
-    sb.from('queries')
-      .select('id, subject, status, client_id, clients(business_name)')
-      .ilike('subject', like)
       .limit(8),
   ]);
 
@@ -115,13 +91,10 @@ export async function GET(req: NextRequest) {
   }
 
   if (tasksRes.error) throw tasksRes.error;
-  if (queriesRes.error) throw queriesRes.error;
 
   return NextResponse.json({
     clients: clientsRes.map((c: any) => ({ ...c, client_name: c.clients?.business_name })),
     tasks: (tasksRes.data ?? []).map((t: any) => ({ ...t, client_name: t.clients?.business_name, sub_service_name: t.sub_services?.name })),
-    notices: noticesRes.map((n: any) => ({ ...n, client_name: n.clients?.business_name })),
-    queries: (queriesRes.data ?? []).map((q: any) => ({ ...q, client_name: q.clients?.business_name })),
     team,
     credentials: credentials.map((c: any) => ({ ...c, client_name: c.clients?.business_name })),
   });

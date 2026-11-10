@@ -64,7 +64,6 @@ export function GlobalTimer({ role }: { role: string }) {
     writeState({ isRunning: false, seconds: 0, startedAt: null });
   }, []);
 
-  if (role === 'client') return null;
 
   const formatTime = (totalSeconds: number) => {
     const h = Math.floor(totalSeconds / 3600);

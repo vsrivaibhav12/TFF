@@ -1,3 +1,4 @@
+import { isAuthorizedCron } from '@/lib/auth/cron-auth';
 import { NextResponse, type NextRequest } from 'next/server';
 import { refreshComplianceEvents, refreshServiceDrivenComplianceEvents } from '@/lib/services/compliance-calendar-engine';
 
@@ -6,17 +7,10 @@ export const runtime = 'nodejs';
 
 /**
  * Nightly refresh of compliance_calendar_events.
- * Authenticated via CRON_SECRET query param or x-vercel-cron header.
- * Local dev: ?secret=CRON_SECRET
+ * Authenticated with `Authorization: Bearer <CRON_SECRET>` (what Vercel Cron sends).
  */
 export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const secret = url.searchParams.get('secret') ?? req.headers.get('x-cron-secret');
-  const vercelCron = req.headers.get('x-vercel-cron');
-
-  const isAuthorized =
-    (vercelCron === '1' && secret === process.env.CRON_SECRET) ||
-    secret === process.env.CRON_SECRET;
+  const isAuthorized = isAuthorizedCron(req);
 
   if (!isAuthorized) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });

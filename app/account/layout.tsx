@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
  * Sidebar nav is intentionally minimal - this section is preferences-only.
  */
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireRole(['admin', 'team', 'client']);
+  const user = await requireRole(['admin', 'team']);
   const role = user.role;
   return (
     <AppShell
@@ -17,7 +17,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
       nav={[
         { href: '/account/notifications', label: 'Notifications', icon: 'message' },
         {
-          href: role === 'admin' ? '/admin' : role === 'team' ? '/team' : '/portal',
+          href: role === 'admin' ? '/admin' : '/team',
           label: 'Back to app',
           icon: 'layout',
         },

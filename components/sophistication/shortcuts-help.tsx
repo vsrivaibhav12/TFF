@@ -48,7 +48,7 @@ export default function ShortcutsHelp({
   open,
   onClose,
 }: {
-  role: 'admin' | 'team' | 'client';
+  role: 'admin' | 'team';
   open: boolean;
   onClose: () => void;
 }) {
@@ -56,7 +56,7 @@ export default function ShortcutsHelp({
   const router = useRouter();
   const pathname = usePathname();
 
-  const basePath = role === 'admin' ? '/admin' : role === 'client' ? '/portal' : '/team';
+  const basePath = role === 'admin' ? '/admin' : '/team';
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

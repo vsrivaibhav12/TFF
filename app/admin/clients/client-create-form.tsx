@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Helper: coerces null/undefined/empty-string to '' so Zod unions don't fail with "Invalid input"
@@ -39,9 +38,6 @@ const formSchema = z.object({
   state: z.string().optional(),
   pincode: z.string().optional(),
   group_id: optionalStr(z.string()),
-  portal_enabled: z.boolean().default(false),
-  portal_email: optionalStr(z.string().email("Invalid portal email")),
-  portal_password: optionalStr(z.string().min(6, "Password must be at least 6 characters")),
   notes: z.string().optional(),
 });
 
@@ -55,7 +51,6 @@ export function ClientCreateForm({ groups, onSuccess, onCancel }: { groups: { id
     defaultValues: {
       business_name: '',
       group_id: '',
-      portal_enabled: false,
       notes: '',
     },
   });
@@ -72,8 +67,6 @@ export function ClientCreateForm({ groups, onSuccess, onCancel }: { groups: { id
     setIsSubmitting(true);
     const payload: any = { ...values };
     if (!payload.group_id || payload.group_id === '__unassigned__') payload.group_id = null;
-    if (!payload.portal_email) payload.portal_email = null;
-    if (!payload.portal_password) payload.portal_password = null;
     const result = await createClient(payload);
     setIsSubmitting(false);
 
@@ -174,37 +167,6 @@ export function ClientCreateForm({ groups, onSuccess, onCancel }: { groups: { id
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4">
-                <Switch 
-                  id="portal_enabled" 
-                  checked={form.watch('portal_enabled')}
-                  onCheckedChange={(val) => {
-                    form.setValue('portal_enabled', val);
-                    if (!val) {
-                      form.setValue('portal_email', '');
-                      form.setValue('portal_password', '');
-                    }
-                  }}
-                />
-                <div className="space-y-0.5">
-                  <Label htmlFor="portal_enabled">Enable client portal access</Label>
-                  <p className="text-sm text-zinc-500">When enabled, set login credentials so they can sign in immediately.</p>
-                </div>
-              </div>
-              {form.watch('portal_enabled') && (
-                <div className="grid grid-cols-2 gap-4 tff-card tff-card-pad bg-zinc-50">
-                  <div className="space-y-2">
-                    <Label htmlFor="portal_email">Portal login email *</Label>
-                    <Input id="portal_email" type="email" {...form.register('portal_email')} placeholder="client@company.in" />
-                    {form.formState.errors.portal_email && <span className="text-sm text-red-600">{form.formState.errors.portal_email.message}</span>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="portal_password">Portal password *</Label>
-                    <Input id="portal_password" type="password" {...form.register('portal_password')} placeholder="Min 6 characters" />
-                    {form.formState.errors.portal_password && <span className="text-sm text-red-600">{form.formState.errors.portal_password.message}</span>}
-                  </div>
-                </div>
-              )}
               <div className="space-y-2"><Label>Internal notes</Label><Textarea value={form.watch('notes') ?? ''} onChange={(e) => form.setValue('notes', e.target.value)} rows={3} /></div>
             </div>
           </div>

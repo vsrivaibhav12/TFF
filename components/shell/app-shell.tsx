@@ -72,7 +72,7 @@ export default function AppShell({
   children,
 }: {
   user: { email: string; full_name: string | null; role: string };
-  userRole: 'admin' | 'team' | 'client';
+  userRole: 'admin' | 'team';
   nav: NavItem[];
   children: React.ReactNode;
 }) {
@@ -95,9 +95,7 @@ export default function AppShell({
       const path = pathname;
       const selectors = [
         path.includes('/tasks') && '[data-testid="new-task-button"]',
-        path.includes('/queries') && '[data-testid="new-query-button"]',
         path.includes('/clients') && '[data-testid="client-new"]',
-        path.includes('/notices') && '[data-testid="notice-new"]',
         path.includes('/credentials') && '[data-testid="cred-new"]',
         path.includes('/dsc') && '[data-testid="dsc-new"]',
         'button[data-testid^="new-"]',
@@ -271,7 +269,7 @@ export default function AppShell({
             {/* Breadcrumbs */}
             <div className="flex items-center gap-1.5 text-sm text-zinc-500">
               <Link href={`/${userRole}`} className="hover:text-zinc-900 transition-colors capitalize">
-                {userRole === 'client' ? 'Portal' : userRole}
+                {userRole}
               </Link>
               {breadcrumbSegments.map((segment, i) => (
                 <span key={`bc-${segment}-${i}`} className="flex items-center gap-1.5">

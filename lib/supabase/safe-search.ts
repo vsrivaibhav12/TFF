@@ -16,7 +16,12 @@ export function sanitizeSearchTerm(term: string): string {
  * Build a safe `%term%` pattern for `.ilike()` calls.
  */
 export function wrapLike(term: string): string {
-  return `%${sanitizeSearchTerm(term)}%`;
+  // Terms are always passed as the single value argument of `.ilike(column, value)`,
+  // never inside `.or()`, so punctuation is safe and must be kept. Stripping "." and
+  // "()" made names like "ABC Pvt. Ltd." or "M/s X (India)" impossible to find.
+  // Only the LIKE wildcards are escaped so "50%" or "a_b" match literally.
+  const escaped = term.replace(/[\\%_]/g, (ch) => '\\' + ch);
+  return `%${escaped}%`;
 }
 
 /**

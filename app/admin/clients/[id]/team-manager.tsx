@@ -14,12 +14,10 @@ export default function ClientTeamManager({
   clientId,
   assignments,
   availableTeam,
-  clientUsers,
 }: {
   clientId: string;
   assignments: any[];
   availableTeam: any[];
-  clientUsers: any[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -93,14 +91,6 @@ export default function ClientTeamManager({
         </div>
       )}
 
-      <div>
-        <h4 className="text-sm font-semibold text-zinc-700 mb-3">Client portal users</h4>
-        {clientUsers.length === 0 ? (
-          <div className="text-sm text-zinc-500">No portal users linked.</div>
-        ) : (
-          <ul className="space-y-2">{clientUsers.map((u: any) => <li key={u.id} className="text-sm">{u.users_profile?.full_name} — {u.users_profile?.email} <Badge variant="outline">{u.role_in_client}</Badge></li>)}</ul>
-        )}
-      </div>
     </div>
   );
 }

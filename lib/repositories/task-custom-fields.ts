@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { fetchAll, chunkArray } from '@/lib/supabase/fetch-all';
 
 export type CustomFieldType = 'text' | 'number' | 'date' | 'dropdown' | 'boolean';
 
@@ -98,13 +99,17 @@ export async function listLabelsForTask(taskId: string): Promise<string[]> {
 export async function listLabelsForTasks(taskIds: string[]): Promise<Map<string, TaskLabel[]>> {
   if (taskIds.length === 0) return new Map();
   const sb = createClient();
-  const { data, error } = await sb
-    .from('task_label_assignments')
-    .select('task_id, task_labels(code, display_name, color_hex)')
-    .in('task_id', taskIds);
-  if (error) throw error;
+  const data: any[] = [];
+  for (const chunk of chunkArray(taskIds, 150)) {
+    data.push(
+      ...(await fetchAll<any>(
+        () => sb.from('task_label_assignments').select('task_id, label_code, task_labels(code, display_name, color_hex)').in('task_id', chunk).order('task_id').order('label_code'),
+        50000, 1000, null,
+      )),
+    );
+  }
   const map = new Map<string, TaskLabel[]>();
-  for (const row of (data ?? []) as any[]) {
+  for (const row of data) {
     const list = map.get(row.task_id) ?? [];
     const label = row.task_labels as TaskLabel | TaskLabel[] | null;
     if (label) {

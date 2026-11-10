@@ -20,7 +20,6 @@ export const createClientSchema = z.object({
   pincode: nullableStr(10),
   group_id: z.string().uuid().optional().nullable(),
   primary_owner_id: z.string().uuid().optional().nullable(),
-  portal_enabled: z.boolean().default(false),
   notes: nullableStr(2000),
 });
 export type CreateClientInput = z.infer<typeof createClientSchema>;

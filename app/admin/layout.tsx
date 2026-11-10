@@ -18,20 +18,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: '/admin/tasks', label: 'Tasks', icon: 'clipboard' as const },
 
     /* ── Operations ── */
-    { href: '/admin/notices', label: 'Notices', icon: 'file-check' as const, section: 'Operations' },
-    { href: '/admin/hearings', label: 'Hearings', icon: 'gavel' as const, section: 'Operations' },
-    { href: '/admin/queries', label: 'Queries', icon: 'message' as const, section: 'Operations' },
-    { href: '/admin/gst', label: 'GST', icon: 'calculator' as const, section: 'Operations' },
-    { href: '/admin/tds', label: 'TDS', icon: 'calculator' as const, section: 'Operations' },
-    { href: '/admin/it', label: 'Income tax', icon: 'calculator' as const, section: 'Operations' },
-    { href: '/admin/tax-projections', label: 'Tax projections', icon: 'receipt' as const, section: 'Operations' },
     { href: '/admin/dsc', label: 'DSC', icon: 'key' as const, section: 'Operations' },
 
     /* ── Finance ── */
-    { href: '/admin/payroll', label: 'Payroll', icon: 'wallet' as const, section: 'Finance' },
     { href: '/admin/billing', label: 'Billing', icon: 'receipt' as const, section: 'Finance' },
-    { href: '/admin/bizlens', label: 'BizLens', icon: 'trending' as const, section: 'Finance' },
-    { href: '/admin/vcfo', label: 'vCFO', icon: 'chart' as const, section: 'Finance' },
 
     /* ── Team ── */
     { href: '/admin/team', label: 'Team', icon: 'shield' as const, section: 'Team' },

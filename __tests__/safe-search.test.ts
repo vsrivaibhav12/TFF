@@ -19,9 +19,19 @@ describe('sanitizeSearchTerm()', () => {
 });
 
 describe('wrapLike()', () => {
-  it('wraps sanitized term in %', () => {
+  it('wraps the term in %', () => {
     assert.equal(wrapLike('Acme'), '%Acme%');
-    assert.equal(wrapLike('a,b'), '%ab%');
+  });
+
+  it('keeps punctuation so names like "ABC Pvt. Ltd." stay searchable', () => {
+    assert.equal(wrapLike('ABC Pvt. Ltd.'), '%ABC Pvt. Ltd.%');
+    assert.equal(wrapLike('M/s X (India)'), '%M/s X (India)%');
+    assert.equal(wrapLike('a,b'), '%a,b%');
+  });
+
+  it('escapes LIKE wildcards so they match literally', () => {
+    assert.equal(wrapLike('50%'), '%50\\%%');
+    assert.equal(wrapLike('a_b'), '%a\\_b%');
   });
 });
 

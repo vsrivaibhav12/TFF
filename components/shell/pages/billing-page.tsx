@@ -1,3 +1,4 @@
+import { fetchAll } from '@/lib/supabase/fetch-all';
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
@@ -35,11 +36,9 @@ export default async function BillingPage({ searchParams }: Props) {
     .order('completed_date', { ascending: false })
     .range(from, to);
 
-  const aggPromise = sb
-    .from('tasks')
-    .select('billed, bill_amount')
-    .eq('is_billable', true)
-    .eq('is_deleted', false);
+  const aggPromise = fetchAll<{ billed: boolean; bill_amount: number | null }>(() =>
+    sb.from('tasks').select('billed, bill_amount').eq('is_billable', true).eq('is_deleted', false),
+  ).then((data) => ({ data }));
 
   const [me, { data: tasks, count }, { data: aggData }] = await Promise.all([mePromise, tasksPromise, aggPromise]);
   await requireCapabilityOrRedirect(me, 'manage_billing_entities');

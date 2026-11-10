@@ -79,7 +79,7 @@ export async function revealCredentialAction(id: string): Promise<ActionResult<{
   try {
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'credentials.manage');
-    const rl = rateLimitByUser(me.id, 'credential:reveal', { maxRequests: 10, windowMs: 60_000 });
+    const rl = await rateLimitByUser(me.id, 'credential:reveal', { maxRequests: 10, windowMs: 60_000 });
     if (!rl.allowed) return fail('Too many credential reveals. Please try again later.', 'RATE_LIMITED');
     const sb = createClient();
     const { data, error } = await sb

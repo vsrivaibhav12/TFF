@@ -5,12 +5,10 @@ import { listTasks, countTasks, enrichTasksWithLabels, enrichTasksWithProgress }
 import { listTeamUsers } from '@/lib/repositories/clients';
 import { listSubServices } from '@/lib/repositories/services';
 import { listLabels } from '@/lib/repositories/task-custom-fields';
-import { listSavedViews } from '@/lib/actions/saved-views';
 import { PageHeader } from '@/components/ui/page-header';
 import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 import ExportButton from '@/components/sophistication/export-button';
 import EmptyState from '@/components/sophistication/empty-state';
-import SavedViewsBar from '@/components/sophistication/saved-views-bar';
 import NewTaskDialog from '@/components/tasks/new-task-dialog';
 import TasksTableClient from './tasks-table-client';
 import { TaskViewWrapper } from '@/components/tasks/task-view-wrapper';
@@ -86,11 +84,10 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
   // Default to showing the current user's assigned tasks unless they have view-all cap and don't specify assignee
   const assignedTo = searchParams.assigned ?? (canViewAll ? undefined : me.id);
 
-  const [rawTasks, team, subServices, views, totalCount, allLabels] = await Promise.all([
+  const [rawTasks, team, subServices, totalCount, allLabels] = await Promise.all([
     listTasks({ ...filterOpts, assignedTo, limit: PAGE_SIZE, offset }),
     listTeamUsers(),
     listSubServices(),
-    listSavedViews('team.tasks'),
     countTasks({ ...filterOpts, assignedTo }),
     listLabels(),
   ]);
@@ -158,7 +155,6 @@ export default async function TeamTasksList({ searchParams }: { searchParams: { 
             subServices={subServices ?? []}
           />
           <TaskLabelFilterBar labels={allLabels ?? []} />
-          <SavedViewsBar scope="team.tasks" views={views ?? []} />
         </div>
 
         {tasks.length === 0 ? (

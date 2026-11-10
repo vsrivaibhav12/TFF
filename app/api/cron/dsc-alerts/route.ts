@@ -1,3 +1,4 @@
+import { isAuthorizedCron } from '@/lib/auth/cron-auth';
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { sendEmail } from '@/lib/email/resend';
@@ -27,9 +28,7 @@ interface DscAlertRow {
  * DSC expiring within the next 30 days that hasn't already been alerted.
  */
 export async function GET(request: NextRequest) {
-  const isCron = request.headers.get('x-vercel-cron');
-  const secret = request.nextUrl.searchParams.get('secret');
-  if (!isCron && secret !== process.env.CRON_SECRET) {
+  if (!isAuthorizedCron(request)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 

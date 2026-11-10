@@ -28,10 +28,7 @@ export function serviceKindIcon(kind: string) {
     tds: <Receipt className="h-6 w-6" />,
     income_tax: <FileText className="h-6 w-6" />,
     compliance: <ShieldCheck className="h-6 w-6" />,
-    bizlens: <BarChart3 className="h-6 w-6" />,
-    vcfo: <TrendingUp className="h-6 w-6" />,
     notice: <AlertTriangle className="h-6 w-6" />,
-    payroll: <Wallet className="h-6 w-6" />,
   };
   return map[kind] ?? <Boxes className="h-6 w-6" />;
 }

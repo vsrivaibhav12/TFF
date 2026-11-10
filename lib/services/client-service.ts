@@ -1,13 +1,11 @@
 import 'server-only';
 import * as clientRepo from '@/lib/repositories/clients';
-import { createClient } from '@/lib/supabase/server';
-import { createServiceClient } from '@/lib/supabase/service-role';
 
 export async function createClientRecord(data: any) {
   // Business logic here (e.g. formatting, defaults)
   const {
-    portal_email,
-    portal_password,
+    portal_email: _portalEmail,
+    portal_password: _portalPassword,
     created_by,
     ...clientPayload
   } = data;
@@ -24,9 +22,6 @@ export async function createClientRecord(data: any) {
   if (clientPayload.primary_owner_id === '') clientPayload.primary_owner_id = null;
   if (clientPayload.category === '') clientPayload.category = null;
 
-  // Remove portal fields from client insert
-  delete clientPayload.portal_email;
-  delete clientPayload.portal_password;
 
   // Map internal_notes → notes (live schema uses 'notes')
   if (clientPayload.internal_notes !== undefined) {
@@ -36,59 +31,6 @@ export async function createClientRecord(data: any) {
 
   // 1. Create client record
   const newClient = await clientRepo.createClientRecord(clientPayload);
-
-  // 2. If portal enabled with credentials, create auth user + profile + link
-  if (clientPayload.portal_enabled && portal_email && portal_password) {
-    // Auth admin API requires the service-role key.
-    const authSb = createServiceClient();
-    // Profile/link inserts go through the regular server client so RLS policies apply.
-    const sb = createClient();
-
-    const { data: created, error: createErr } = await authSb.auth.admin.createUser({
-      email: portal_email.toLowerCase().trim(),
-      password: portal_password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: clientPayload.primary_contact_person || clientPayload.business_name,
-        role: 'client',
-      },
-    });
-
-    if (createErr || !created?.user) {
-      const msg = createErr?.message ?? 'Failed to create portal user';
-      if (/already.*registered|already.*exists/i.test(msg)) {
-        throw new Error(`Portal user creation failed: email already registered`);
-      }
-      throw new Error(`Portal user creation failed: ${msg}`);
-    }
-
-    const authUserId = created.user.id;
-
-    // Insert users_profile row
-    const { error: profErr } = await sb.from('users_profile').upsert({
-      id: authUserId,
-      full_name: clientPayload.primary_contact_person || clientPayload.business_name,
-      email: portal_email.toLowerCase().trim(),
-      role: 'client',
-      is_active: true,
-    });
-
-    if (profErr) {
-      throw new Error(`Auth user created but profile upsert failed: ${profErr.message}`);
-    }
-
-    // Insert client_users link
-    const { error: cuErr } = await sb.from('client_users').insert({
-      client_id: newClient.id,
-      user_id: authUserId,
-      role_in_client: 'owner',
-      is_active: true,
-    });
-
-    if (cuErr) {
-      throw new Error(`Profile created but client_users link failed: ${cuErr.message}`);
-    }
-  }
 
   return newClient;
 }

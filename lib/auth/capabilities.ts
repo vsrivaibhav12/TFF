@@ -7,13 +7,13 @@
  * - Added workdone.manage (separated from tasks.complete)
  * - Removed dead capabilities with zero enforcement: documents.upload, documents.delete,
  *   labels.view, custom_fields.view, billing.view, compliance_rules.view, payroll.view
- * - Kept insights.configure and manage_solution_log (RLS-referenced; action checks added)
+ * - Nov 2026: removed capabilities for deleted modules (notices, hearings, queries, BizLens, vCFO, insights, payroll, client portal)
  * - tasks.view remains the read-all tasks capability (enforced in pages + RLS)
  */
 export const ALL_CAPABILITIES = [
   // Clients
   'clients.read.all', 'clients.create', 'clients.edit', 'clients.delete',
-  'clients.assign_team', 'clients.toggle_portal',
+  'clients.assign_team',
 
   // Services catalogue
   'services.view', 'services.manage', 'services.assign',
@@ -28,22 +28,13 @@ export const ALL_CAPABILITIES = [
   // Tasks
   'tasks.view', 'tasks.create', 'tasks.edit', 'tasks.assign', 'tasks.complete', 'tasks.delete',
 
-  // Compliance, notices, hearings
+  // Compliance
   'compliance.view', 'compliance.enter',
-  'notices.view', 'notices.manage',
-  'hearings.view', 'hearings.manage',
-
-  // Advisory / insights
-  'bizlens.view', 'bizlens.enter',
-  'vcfo.view', 'vcfo.enter',
-  'insights.view', 'insights.configure',
 
   // Payroll / HR / approvals
-  'payroll.run',
   'attendance.view_all', 'attendance.approve', 'leave.approve', 'permission.approve',
 
-  // Queries / audit
-  'queries.view', 'queries.assign',
+  // Audit
   'audit.view',
 
   // Documents
@@ -58,8 +49,6 @@ export const ALL_CAPABILITIES = [
   // Work tracking
   'workdone.manage',
   'view_workdone_reports',
-  'manage_solution_log',
-
   // Admin meta
   'verify_tasks',
   'promote_to_admin',
@@ -111,12 +100,6 @@ export const CAPABILITY_DETAILS: Record<Capability, CapabilityMeta> = {
   'clients.assign_team': {
     label: 'Assign team to clients',
     description: 'Link staff members to clients as lead or associate.',
-    persona: 'supervisory',
-    category: 'Clients',
-  },
-  'clients.toggle_portal': {
-    label: 'Toggle client portal',
-    description: 'Enable or disable portal access for a client and choose visible modules.',
     persona: 'supervisory',
     category: 'Clients',
   },
@@ -238,76 +221,10 @@ export const CAPABILITY_DETAILS: Record<Capability, CapabilityMeta> = {
     persona: 'supervisory',
     category: 'Compliance',
   },
-  'notices.view': {
-    label: 'View notices',
-    description: 'View notices received from tax and regulatory authorities.',
-    persona: 'supervisory',
-    category: 'Notices & Hearings',
-  },
-  'notices.manage': {
-    label: 'Manage notices',
-    description: 'Add, update, and link notices to tasks and clients.',
-    persona: 'supervisory',
-    category: 'Notices & Hearings',
-  },
-  'hearings.view': {
-    label: 'View hearings',
-    description: 'View hearing schedules and statuses.',
-    persona: 'supervisory',
-    category: 'Notices & Hearings',
-  },
-  'hearings.manage': {
-    label: 'Manage hearings',
-    description: 'Add and update hearing records and outcomes.',
-    persona: 'supervisory',
-    category: 'Notices & Hearings',
-  },
 
   // Advisory
-  'bizlens.view': {
-    label: 'View BizLens',
-    description: 'View BizLens financial intelligence dashboards and reports.',
-    persona: 'supervisory',
-    category: 'Advisory',
-  },
-  'bizlens.enter': {
-    label: 'Enter BizLens data',
-    description: 'Input or update BizLens financial data for clients.',
-    persona: 'supervisory',
-    category: 'Advisory',
-  },
-  'vcfo.view': {
-    label: 'View vCFO',
-    description: 'View vCFO advisory dashboards and projections.',
-    persona: 'supervisory',
-    category: 'Advisory',
-  },
-  'vcfo.enter': {
-    label: 'Enter vCFO data',
-    description: 'Input or update vCFO advisory data and assumptions.',
-    persona: 'supervisory',
-    category: 'Advisory',
-  },
-  'insights.view': {
-    label: 'View insights',
-    description: 'View generated business insights and red flags.',
-    persona: 'supervisory',
-    category: 'Advisory',
-  },
-  'insights.configure': {
-    label: 'Configure insights',
-    description: 'Configure insight generation rules and schedules.',
-    persona: 'supervisory',
-    category: 'Advisory',
-  },
 
   // Payroll / HR
-  'payroll.run': {
-    label: 'Run payroll',
-    description: 'Process payroll and generate payroll outputs.',
-    persona: 'supervisory',
-    category: 'HR & Payroll',
-  },
   'attendance.view_all': {
     label: 'View all attendance',
     description: 'View attendance records for all staff, not only self.',
@@ -334,18 +251,6 @@ export const CAPABILITY_DETAILS: Record<Capability, CapabilityMeta> = {
   },
 
   // Queries / audit
-  'queries.view': {
-    label: 'View queries',
-    description: 'View client queries and responses.',
-    persona: 'daily',
-    category: 'Queries',
-  },
-  'queries.assign': {
-    label: 'Assign queries',
-    description: 'Assign client queries to team members.',
-    persona: 'supervisory',
-    category: 'Queries',
-  },
   'audit.view': {
     label: 'View audit log',
     description: 'View audit logs, capability history, and data changes.',
@@ -391,12 +296,6 @@ export const CAPABILITY_DETAILS: Record<Capability, CapabilityMeta> = {
   'view_workdone_reports': {
     label: 'View work-done reports',
     description: 'View aggregated work-done and time reports across the team.',
-    persona: 'supervisory',
-    category: 'Work tracking',
-  },
-  'manage_solution_log': {
-    label: 'Manage solution log',
-    description: 'Maintain the solution log and reusable knowledge base entries.',
     persona: 'supervisory',
     category: 'Work tracking',
   },

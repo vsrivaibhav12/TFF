@@ -31,11 +31,15 @@ export default async function SettingsPage({ rolePrefix }: Props) {
     { href: `${rolePrefix}/settings/compliance-rules`, title: 'Compliance calendar rules', body: 'Edit the statutory due-date master. Add, disable, or change reminder windows.', icon: Calendar, testid: 'set-rules', cap: 'manage_compliance_rules' },
     { href: `${rolePrefix}/settings/labels`, title: 'Labels', body: 'Categorise tasks and clients with custom colour-coded labels.', icon: Lock, testid: 'set-labels', cap: 'manage_labels' },
     { href: `${rolePrefix}/services`, title: 'Service catalogue', body: 'Define services, sub-services, and reusable task templates.', icon: SettingsIcon, testid: 'set-catalogue', cap: 'services.manage' },
-    { href: `${rolePrefix}/settings/tax-rates`, title: 'Income tax rates', body: 'Set slab rates, surcharge, and cess for each assessee category.', icon: FileText, testid: 'set-tax-rates', cap: 'manage_compliance_rules' },
   ];
+
+  // This screen only exists under /admin. Linking to it from the team workspace
+  // produced a 404, so hide it there until a team version is built.
+  const ADMIN_ONLY_CARDS = new Set(['set-roles']);
 
   const CARDS: SettingCard[] = [];
   for (const c of ALL_CARDS) {
+    if (rolePrefix === '/team' && ADMIN_ONLY_CARDS.has(c.testid)) continue;
     if (me.role === 'admin' || await hasCapability(me, c.cap)) {
       CARDS.push(c);
     }

@@ -5,7 +5,7 @@ import { fetchAll } from '@/lib/supabase/fetch-all';
 import { mergeById, wrapLike } from '@/lib/supabase/safe-search';
 
 const DEFAULT_CLIENT_FIELDS =
-  'id, business_name, pan, gstin, category, primary_contact_person, primary_contact_email, primary_contact_phone, primary_owner_id, group_id, portal_enabled, city, created_at, updated_at, client_groups!clients_group_id_fkey(name)';
+  'id, business_name, pan, gstin, category, primary_contact_person, primary_contact_email, primary_contact_phone, primary_owner_id, group_id, city, created_at, updated_at, client_groups!clients_group_id_fkey(name)';
 
 export async function listAccessibleClients(opts: {
   groupId?: string;
@@ -17,15 +17,8 @@ export async function listAccessibleClients(opts: {
   fields?: string[];
 } = {}) {
   const sb = createClient();
-  const limit = opts.limit ?? 1000;
   const offset = opts.offset ?? 0;
   const selectFields = opts.fields ? opts.fields.join(', ') : DEFAULT_CLIENT_FIELDS;
-
-  const baseQuery = () =>
-    sb.from('clients').select(selectFields).eq('is_deleted', false);
-
-  const fetchOrdered = (query: any) =>
-    query.order('business_name', { ascending: true });
 
   const applyFilters = (query: any) => {
     if (opts.groupId) query = query.eq('group_id', opts.groupId);
@@ -33,26 +26,37 @@ export async function listAccessibleClients(opts: {
     return query;
   };
 
-  let data: any[] = [];
+  // PostgREST silently caps every response at max_rows (1000). Without an
+  // explicit range, any client list longer than that is truncated, which hid
+  // every client sorted after roughly the letter S. Always page explicitly.
+  // `id` is a tie-breaker so ranges stay stable between pages.
+  const run = async (build: () => any): Promise<any[]> => {
+    const ordered = () => build().order('business_name', { ascending: true }).order('id', { ascending: true });
+    if (opts.limit !== undefined) {
+      const wanted = offset + opts.limit;
+      return fetchAll<any>(ordered, wanted, 1000);
+    }
+    return fetchAll<any>(ordered);
+  };
 
+  const base = () => applyFilters(sb.from('clients').select(selectFields).eq('is_deleted', false));
+
+  let data: any[];
   if (opts.q) {
-    // Search across multiple columns with separate queries to avoid PostgREST
-    // `.or()` injection from user input.
+    // Separate queries per column avoid PostgREST `.or()` injection from user input.
     const term = wrapLike(opts.q);
-    const [nameRes, panRes] = await Promise.all([
-      fetchOrdered(applyFilters(sb.from('clients').select(selectFields).eq('is_deleted', false).ilike('business_name', term))),
-      fetchOrdered(applyFilters(sb.from('clients').select(selectFields).eq('is_deleted', false).ilike('pan', term))),
+    const [nameRows, panRows, gstinRows] = await Promise.all([
+      run(() => base().ilike('business_name', term)),
+      run(() => base().ilike('pan', term)),
+      run(() => base().ilike('gstin', term)),
     ]);
-    if (nameRes.error) throw nameRes.error;
-    if (panRes.error) throw panRes.error;
-    data = mergeById([nameRes.data ?? [], panRes.data ?? []]);
+    data = mergeById([nameRows, panRows, gstinRows]);
+    data.sort((a: any, b: any) => String(a.business_name).localeCompare(String(b.business_name)));
   } else {
-    const { data: rows, error } = await fetchOrdered(applyFilters(baseQuery()));
-    if (error) throw error;
-    data = rows ?? [];
+    data = await run(base);
   }
 
-  return data.slice(offset, offset + limit);
+  return opts.limit !== undefined ? data.slice(offset, offset + opts.limit) : data.slice(offset);
 }
 
 export async function countAccessibleClients(opts: {
@@ -61,24 +65,27 @@ export async function countAccessibleClients(opts: {
   q?: string;
 } = {}) {
   const sb = createClient();
-  let q = sb
-    .from('clients')
-    .select('id', { count: 'exact', head: true })
-    .eq('is_deleted', false);
-  if (opts.groupId) q = q.eq('group_id', opts.groupId);
-  if (opts.city) q = q.ilike('city', wrapLike(opts.city));
+  const applyFilters = (query: any) => {
+    if (opts.groupId) query = query.eq('group_id', opts.groupId);
+    if (opts.city) query = query.ilike('city', wrapLike(opts.city));
+    return query;
+  };
+
   if (opts.q) {
+    // A client can match on name AND pan, so adding counts double-counts.
+    // Fetch ids only and de-duplicate.
     const term = wrapLike(opts.q);
-    const nameQ = sb.from('clients').select('id', { count: 'exact', head: true }).eq('is_deleted', false).ilike('business_name', term);
-    const panQ = sb.from('clients').select('id', { count: 'exact', head: true }).eq('is_deleted', false).ilike('pan', term);
-    if (opts.groupId) {
-      nameQ.eq('group_id', opts.groupId);
-      panQ.eq('group_id', opts.groupId);
-    }
-    const [nameRes, panRes] = await Promise.all([nameQ, panQ]);
-    return (nameRes.count ?? 0) + (panRes.count ?? 0);
+    const idsFor = (col: string) =>
+      fetchAll<{ id: string }>(() =>
+        applyFilters(sb.from('clients').select('id').eq('is_deleted', false).ilike(col, term)).order('id'),
+      );
+    const [a, b, c] = await Promise.all([idsFor('business_name'), idsFor('pan'), idsFor('gstin')]);
+    return new Set([...a, ...b, ...c].map((r) => r.id)).size;
   }
-  const { count, error } = await q;
+
+  const { count, error } = await applyFilters(
+    sb.from('clients').select('id', { count: 'exact', head: true }).eq('is_deleted', false),
+  );
   if (error) throw error;
   return count ?? 0;
 }
@@ -115,17 +122,6 @@ export async function listTeamUsers() {
     .eq('is_active', true)
     .eq('is_deleted', false)
     .order('full_name');
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function listClientUsers(clientId: string) {
-  const sb = createClient();
-  const { data, error } = await sb
-    .from('client_users')
-    .select('id, role_in_client, is_active, user_id, users_profile!client_users_user_id_fkey(id, full_name, email)')
-    .eq('client_id', clientId)
-    .eq('is_deleted', false);
   if (error) throw error;
   return data ?? [];
 }

@@ -45,22 +45,6 @@ export function MobileFab({ actions }: MobileFabProps) {
         testId: 'fab-new-client',
       });
     }
-    if (pathname.includes('/queries')) {
-      defaultActions.push({
-        label: 'New query',
-        icon: <MessageSquare className="h-4 w-4" />,
-        onClick: () => setSheetOpen(true),
-        testId: 'fab-new-query',
-      });
-    }
-    if (pathname.includes('/notices')) {
-      defaultActions.push({
-        label: 'New notice',
-        icon: <ScrollText className="h-4 w-4" />,
-        onClick: () => setSheetOpen(true),
-        testId: 'fab-new-notice',
-      });
-    }
   }
 
   const fabActions = actions ?? defaultActions;
@@ -139,35 +123,7 @@ function MobileCreateSheet({ open, onClose, pathname, router }: { open: boolean;
             </span>
             <div>
               <div className="font-medium text-zinc-900">New client</div>
-              <div className="text-xs text-zinc-500">Add a client to the portal</div>
-            </div>
-          </button>
-        )}
-        {pathname?.includes('/queries') && (
-          <button
-            onClick={() => { onClose(); setTimeout(() => document.querySelector<HTMLButtonElement>('[data-testid="new-query-btn"]')?.click(), 0); }}
-            className="w-full flex items-center gap-3 p-3 rounded-xl border border-zinc-200 hover:bg-zinc-50 transition-colors text-left"
-          >
-            <span className="h-10 w-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center">
-              <MessageSquare className="h-5 w-5" />
-            </span>
-            <div>
-              <div className="font-medium text-zinc-900">New query</div>
-              <div className="text-xs text-zinc-500">Raise a question to your team</div>
-            </div>
-          </button>
-        )}
-        {pathname?.includes('/notices') && (
-          <button
-            onClick={() => { onClose(); setTimeout(() => document.querySelector<HTMLButtonElement>('[data-testid="notice-new"]')?.click(), 0); }}
-            className="w-full flex items-center gap-3 p-3 rounded-xl border border-zinc-200 hover:bg-zinc-50 transition-colors text-left"
-          >
-            <span className="h-10 w-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center">
-              <ScrollText className="h-5 w-5" />
-            </span>
-            <div>
-              <div className="font-medium text-zinc-900">New notice</div>
-              <div className="text-xs text-zinc-500">Track a new government notice</div>
+              <div className="text-xs text-zinc-500">Add a new client</div>
             </div>
           </button>
         )}

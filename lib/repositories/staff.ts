@@ -30,7 +30,7 @@ export async function getUserProfile(userId: string) {
   const sb = createClient();
   const { data, error } = await sb
     .from('users_profile')
-    .select('geo_check_in_required, reports_to, full_name, email, role, staff_payroll_settings(paid_leaves_per_month)')
+    .select('geo_check_in_required, reports_to, full_name, email, role, paid_leaves_per_month')
     .eq('id', userId)
     .eq('is_deleted', false)
     .maybeSingle();

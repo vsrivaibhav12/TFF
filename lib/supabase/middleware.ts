@@ -17,13 +17,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 const ROLE_HOME: Record<string, string> = {
   admin: '/admin',
   team: '/team',
-  client: '/portal',
 };
 
 const ROLE_ALLOWED_PREFIX: Record<string, string[]> = {
   admin: ['/admin', '/team'],
   team: ['/team'],
-  client: ['/portal'],
 };
 
 // Paths anyone authenticated may hit (account-self, legal, /api/cmdk for search, etc.)
@@ -51,13 +49,30 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: do NOT remove getUser(). It refreshes the session.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // IMPORTANT: keep an auth call here. It refreshes an expiring session cookie.
+  // getClaims() does that too but verifies the token locally against the project's
+  // public key (ES256) instead of calling the Auth server on every request, which
+  // removes one network round trip from every page load. It falls back to getUser().
+  type MiddlewareUser = { id: string; user_metadata?: Record<string, unknown> };
+  let user: MiddlewareUser | null = null;
+  try {
+    const { data: claims } = await supabase.auth.getClaims();
+    const sub = claims?.claims?.sub as string | undefined;
+    if (sub) {
+      user = { id: sub, user_metadata: (claims?.claims?.user_metadata as Record<string, unknown> | undefined) ?? {} };
+    }
+  } catch {
+    user = null;
+  }
+  if (!user) {
+    const {
+      data: { user: fetched },
+    } = await supabase.auth.getUser();
+    user = fetched ? { id: fetched.id, user_metadata: fetched.user_metadata } : null;
+  }
 
   const path = request.nextUrl.pathname;
-  const protectedPrefixes = ['/portal', '/team', '/admin'];
+  const protectedPrefixes = ['/team', '/admin'];
   const matchedProtected = protectedPrefixes.find((p) => path === p || path.startsWith(p + '/'));
 
   // 1) Not logged in → /login
@@ -68,26 +83,30 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 2) Logged in but hitting /login → redirect straight to their dashboard
+  // 2) Logged in but hitting /login → redirect straight to their dashboard.
+  //    The role comes from the database profile, never from user_metadata:
+  //    users can edit their own metadata, and a deactivated user whose metadata
+  //    still says "admin" would otherwise bounce between /login and /admin forever.
   if (path === '/login' && user) {
-    let role = user.user_metadata?.role as string | undefined;
-    if (!role) {
-      const { data: profile } = await supabase
-        .from('users_profile')
-        .select('role, is_active')
-        .eq('id', user.id)
-        .maybeSingle();
-      role = profile?.role as string | undefined;
-      if (!profile || profile.is_active === false || !role) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/login';
-        url.searchParams.set('reason', 'inactive');
-        return NextResponse.redirect(url);
-      }
+    const { data: profile } = await supabase
+      .from('users_profile')
+      .select('role, is_active')
+      .eq('id', user.id)
+      .maybeSingle();
+    const role = profile?.role as string | undefined;
+    if (!profile || profile.is_active === false || !role) {
+      // Do not redirect again: show the login page so they can sign out / switch account.
+      if (request.nextUrl.searchParams.get('reason') === 'inactive') return supabaseResponse;
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('reason', 'inactive');
+      return NextResponse.redirect(url);
     }
-    const home = ROLE_HOME[role] ?? '/';
+    // Client accounts have no workspace: leave them on the login page.
+    if (!ROLE_HOME[role]) return supabaseResponse;
     const url = request.nextUrl.clone();
-    url.pathname = home;
+    url.pathname = ROLE_HOME[role];
+    url.search = '';
     return NextResponse.redirect(url);
   }
 
@@ -96,8 +115,9 @@ export async function updateSession(request: NextRequest) {
     // Role-neutral paths (like /account) bypass the role-prefix check entirely
     const isNeutral = ROLE_NEUTRAL_PREFIXES.some((p) => path.startsWith(p));
     if (!isNeutral) {
-      // H-11: Try JWT user_metadata first to avoid a second DB call.
-      // The role is set in user_metadata during user creation (team.ts, client-service.ts).
+      // H-11: Try JWT user_metadata first to avoid a second DB call. This is routing
+      // convenience only (it picks the right section). user_metadata is editable by
+      // the user, so every layout re-checks the real role with requireRole().
       let role = user.user_metadata?.role as string | undefined;
       let isActive = true;
 

@@ -3,7 +3,7 @@ import { displayTaskName } from '@/lib/utils';
 import { DockLink } from '@/components/shell/dock-link';
 import { Badge } from '@/components/ui/badge';
 import { ProgressRing } from '@/components/ui/progress-ring';
-import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, AlertTriangle, MessageSquare, Briefcase, ArrowRight, TrendingUp, Pencil } from 'lucide-react';
+import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, Briefcase, ArrowRight, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AuditTimeline from '@/components/sophistication/audit-timeline';
 
@@ -12,8 +12,6 @@ interface Props {
   subs: any;
   auditLogs: any;
   openTasks: any;
-  openNotices: any;
-  openQueries: any;
   canEdit?: boolean;
   basePath: string;
   isModal?: boolean;
@@ -31,8 +29,6 @@ export default function TeamClientDetailShell({
   subs,
   auditLogs,
   openTasks,
-  openNotices,
-  openQueries,
   canEdit = false,
   basePath,
   isModal,
@@ -86,12 +82,10 @@ export default function TeamClientDetailShell({
               <h3 className="text-[13px] font-semibold text-zinc-700">Active work</h3>
               <div className="flex gap-2">
                 <Badge variant="outline" className="text-[11px]"><Briefcase className="h-3 w-3 mr-1" />{openTasks.length} tasks</Badge>
-                <Badge variant="outline" className="text-[11px]"><AlertTriangle className="h-3 w-3 mr-1" />{openNotices.length} notices</Badge>
-                <Badge variant="outline" className="text-[11px]"><MessageSquare className="h-3 w-3 mr-1" />{openQueries.length} queries</Badge>
               </div>
             </div>
 
-            {openTasks.length === 0 && openNotices.length === 0 && openQueries.length === 0 ? (
+            {openTasks.length === 0 ? (
               <div className="text-sm text-zinc-400 py-6 text-center">No active work items for this client.</div>
             ) : (
               <div className="space-y-2">
@@ -108,49 +102,8 @@ export default function TeamClientDetailShell({
                     <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-[#0D9488] transition-colors" />
                   </DockLink>
                 ))}
-                {openNotices.slice(0, 3).map((n: any) => (
-                  <div key={n.id} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 transition-colors group">
-                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0 border border-zinc-200">
-                      <AlertTriangle className="h-4 w-4 text-amber-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-medium text-zinc-900 truncate">{n.subject ?? n.notice_type}</div>
-                      <div className="text-[11px] text-zinc-400">{n.issuing_authority} · Due {n.due_date ?? '—'}</div>
-                    </div>
-                    <span className={`text-[11px] px-2 py-0.5 rounded border ${statusBadgeClass(n.status)}`}>{n.status}</span>
-                  </div>
-                ))}
-                {openQueries.slice(0, 3).map((q: any) => (
-                  <DockLink key={q.id} item={{ type: 'query', id: q.id }} href={`/team/queries/${q.id}`} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors group">
-                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0 border border-zinc-200">
-                      <MessageSquare className="h-4 w-4 text-[#0D9488]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-medium text-zinc-900 truncate">{q.subject}</div>
-                      <div className="text-[11px] text-zinc-400">Query · {q.status}</div>
-                    </div>
-                    <span className={`text-[11px] px-2 py-0.5 rounded border ${statusBadgeClass(q.status)}`}>{q.status}</span>
-                    <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-[#0D9488] transition-colors" />
-                  </DockLink>
-                ))}
               </div>
             )}
-          </div>
-
-          {/* vCFO Quick Link */}
-          <div className="tff-card p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-[13px] font-semibold text-zinc-700">vCFO advisory</h3>
-                <p className="text-sm text-zinc-500 mt-1">Cash runway, burn analysis and strategic recommendations.</p>
-              </div>
-              <Link
-                href={`/team/clients/${client.id}/vcfo`}
-                className="inline-flex items-center h-9 px-4 rounded-lg bg-teal-800 text-white text-sm font-medium hover:bg-teal-700 transition-colors"
-              >
-                <TrendingUp className="h-4 w-4 mr-1.5" /> Open workspace
-              </Link>
-            </div>
           </div>
 
         </div>

@@ -9,14 +9,15 @@
 
 **The Fiscal Fulcrum (TFF)** is a single-tenant operations portal for an Indian CA/CS practice based in Coimbatore. It is **not** a multi-tenant SaaS — it serves one firm and that firm's clients.
 
-The portal supports three user roles:
+The portal is used by firm staff only:
 - **admin** — firm owners; full access and every capability implicitly.
 - **team** — staff members; access scoped by client assignment + capability grants.
-- **client** — external business clients; access scoped to their own data + portal visibility settings.
 
-Key functional modules: client management, task engine, compliance tracking (GST/TDS/IT), document vault, credentials vault, DSC tracker, payroll, attendance/leave, vCFO advisory, BizLens financial intelligence, notice tracker, query messenger, unified inbox, and insight engine.
+The `client` role was removed (database constraint is admin/team only; the client portal, the client portal, BizLens, vCFO, notices, hearings, queries, payroll, GST/TDS/IT filings, tax projections, insights and saved views were removed in Nov 2026 because they were never used; restore from git history if needed).
 
-Production target: `https://portal.fiscalfulcrum.in` deployed on Vercel.
+Key functional modules: client management, task engine (with checklists), compliance calendar, document vault, credentials vault, DSC tracker, attendance/leave/approvals, work-done tracking, billing entities, reports, unified inbox.
+
+Production target: `https://portal.fiscalfulcrum.in` deployed on Vercel (function region `icn1`, next to the Supabase database in ap-northeast-2).
 
 ---
 
@@ -38,8 +39,6 @@ Production target: `https://portal.fiscalfulcrum.in` deployed on Vercel.
 | Drag-and-drop | `@dnd-kit/*` |
 | Toast | Sonner |
 | Test Runner | Node.js native test runner (`node:test`) with `tsx` |
-| Dev Proxy | Node `proxy.js` (8001 → 3000) and `frontend-proxy.js` (3000 → 3001) |
-| FastAPI Proxy | `backend/server.py` (8001 → 3001 by default, dev-only) |
 
 ESLint is configured via `.eslintrc.json` extending `next/core-web-vitals`. No Prettier configuration is present.
 
@@ -57,7 +56,6 @@ ESLint is configured via `.eslintrc.json` extending `next/core-web-vitals`. No P
     /cron            # Vercel Cron endpoints
   /legal             # Static legal pages (privacy, terms, SLA, engagement)
   /login             # Sign-in page (+ forgot password)
-  /portal            # Client portal (role-gated, mobile-first)
   /team              # Team workspace (role-gated, desktop-first)
   globals.css        # Tailwind directives + CSS variables
   layout.tsx         # Root layout (Inter font, Sonner Toaster, SWR + Dock providers)
@@ -65,22 +63,14 @@ ESLint is configured via `.eslintrc.json` extending `next/core-web-vitals`. No P
 
 /components          # React components by domain
   /billing           # Billing and invoice components
-  /bizlens           # BizLens output dashboard + tabs
   /charts            # Reusable chart wrappers
   /clients           # Client forms, tables, hover cards
   /credentials       # Credentials vault UI
   /dashboard         # Admin/team dashboard widgets
   /dsc               # DSC tracker
-  /gst               # GST data entry and views
-  /hearings          # Hearing management
   /inbox             # Unified inbox components
-  /insights          # Inline insight strips
   /motion            # Framer Motion wrappers
-  /notices           # Notice tracker
   /operations        # Compliance calendar, BizLens input form, vCFO
-  /payroll           # Payroll UI
-  /portal            # Client portal-specific components
-  /queries           # Query messenger
   /reports           # Report pages
   /services          # Service catalogue
   /settings          # Settings forms
@@ -88,10 +78,8 @@ ESLint is configured via `.eslintrc.json` extending `next/core-web-vitals`. No P
   /site              # Marketing site components
   /sophistication    # Saved views, bulk actions, audit timeline, editable cells
   /tasks             # Task dialogs, steps panel, work-done panel, Kanban
-  /tax-projections   # Tax projection UI
   /team              # Team-specific components
   /ui                # shadcn/ui primitives (Button, Card, Dialog, etc.)
-  /vcfo              # vCFO advisory UI
 
 /lib                 # All server-side logic lives here
   /actions           # Server Actions — thin wrappers over services
@@ -111,7 +99,6 @@ ESLint is configured via `.eslintrc.json` extending `next/core-web-vitals`. No P
   schema-additions.sql # v3.1 additive tables (capabilities, portal visibility, notification prefs)
   schema-v3-3.sql      # Additional schema additions
   schema-v3-4.sql      # Further schema additions
-  schema-bizlens.sql   # BizLens tables
   schema-hr-tables.sql # Attendance / leave / permission tables
   schema-unified-inbox.sql # Unified inbox view
   schema-weekly-approval.sql # Weekly approval tables
@@ -121,14 +108,6 @@ ESLint is configured via `.eslintrc.json` extending `next/core-web-vitals`. No P
 
 /scripts             # TypeScript one-off scripts (seed, schema apply, migrations, RLS tests)
 
-/backend             # FastAPI dev proxy (forwards /api/* from port 8001 → 3001)
-  server.py
-  requirements.txt
-
-/frontend            # Container shim only
-  package.json       # Runs /app/frontend-proxy.js in Emergent/K8s dev environment
-
-/legacy-bizlens      # Deprecated path; no longer present
 
 /memory              # Design docs and architecture decisions
   DESIGN_SYSTEM.md
@@ -163,30 +142,15 @@ npm run start
 # Lint
 npm run lint
 
-# Dev proxy (Emergent environment): forwards port 8001 → Next.js on 3000
-npm run proxy
 
 # Database scripts (all use tsx + dotenv)
-npm run db:apply-schema              # Apply base schema
-npm run db:apply-schema-additions    # Apply v3.1 additive schema
-npm run db:apply-rls-capabilities    # Apply capability RLS
-npm run db:apply-rls-additive        # Apply additive RLS (admin policies on clients, etc.)
-npm run db:apply-performance-indexes # Apply performance index migration
-npm run db:apply-phase-2             # Apply phase-2 task enhancements
-npm run db:fix-missing-columns       # Apply missing column fixes
 npm run db:seed                      # Seed demo data
 npm run db:seed-rollback             # Remove seeded demo data
 npm run db:rls-test                  # Run RLS tests
 npm run db:create-buckets            # Create Supabase Storage buckets
-npm run db:apply-weekly-approval     # Apply weekly approval schema
-npm run db:apply-hr-tables           # Apply HR tables
-npm run db:apply-task-indices        # Apply task indices
-npm run db:apply-attendance-rls      # Apply attendance RLS
-npm run db:apply-updated-at-migration # Apply updated_at triggers
-npm run db:apply-unique-constraint-fix # Apply unique constraint fix
-npm run db:wipe-client-data          # Wipe client data
 npm run db:seed-super-admins         # Seed super admin users
-npm run db:apply-migration           # Apply a specific migration
+npm run db:apply-baseline            # Build a new database from the baseline schema
+npm run db:apply-migration           # Apply a specific migration file
 ```
 
 ### Test commands
@@ -202,24 +166,6 @@ npm run test:watch
 npm run test:one __tests__/bizlens-service.test.ts
 ```
 
-### FastAPI dev proxy (alternative)
-
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn server:app --host 0.0.0.0 --port 8001
-```
-
-The FastAPI proxy is **dev-only**. It forwards to `NEXT_TARGET` (default `http://127.0.0.1:3001`). Vercel handles production directly.
-
-### Container dev proxies
-
-Two Node proxies exist for the Emergent/K8s dev environment:
-
-- `proxy.js` — listens on `0.0.0.0:8001`, forwards to `127.0.0.1:3000`. Run with `npm run proxy`.
-- `frontend-proxy.js` — spawns Next.js dev on port 3001 and proxies `0.0.0.0:3000 → 127.0.0.1:3001`. Used inside a container where the ingress hits port 3000.
-
-Both proxies manipulate `x-forwarded-host` / `host` headers so Next.js Server Actions CSRF checks pass through K8s ingress.
 
 ---
 
@@ -330,11 +276,11 @@ Three roles: `admin`, `team`, `client`.
 
 - `admin` implicitly holds every capability.
 - `team` holds **no capabilities by default**; admin grants explicitly via role templates or per-user deviations.
-- `client` is scoped entirely by RLS + portal visibility.
+- `client` has no workspace (sign-in disabled).
 
 ### Middleware (`middleware.ts`)
 
-- Redirects logged-out users from `/portal`, `/team`, `/admin` to `/login`.
+- Redirects logged-out users from `/team`, `/admin` to `/login`.
 - Redirects logged-in users hitting `/login` to `/` (role-routed).
 - Redirects users hitting a role-prefix that doesn't match their role to their home page.
 - Neutral prefixes (`/account`, `/legal`, `/api/cmdk`, `/api/notifications`, `/api/sub-services`) bypass role checks.
@@ -345,9 +291,6 @@ Three roles: `admin`, `team`, `client`.
 - `requireCapability(user, capability)` — throws `ServiceError('NO_CAPABILITY')` if user lacks capability.
 - `getCurrentUser()` — returns `{ id, email, role, full_name, is_active, is_prime_admin }` or `null`.
 
-### Portal Visibility
-
-Per-client toggle of which modules appear in the client portal. Default on portal-enable: `dashboard + tasks + queries` only. Admin opens additional modules per engagement. Every `/portal/<module>` page calls `ensureModuleVisible`; missing module → `notFound()`.
 
 ---
 
@@ -365,9 +308,10 @@ RLS is the **primary access-control boundary**. Every new table gets RLS policie
 
 ### Schema
 
-- Base schema: `db/schema.sql` v3 (locked, ~46 tables).
-- Additive schema files: `db/schema-additions.sql` v3.1, `db/schema-v3-3.sql`, `db/schema-v3-4.sql`, `db/schema-bizlens.sql`, `db/schema-hr-tables.sql`, `db/schema-unified-inbox.sql`, `db/schema-weekly-approval.sql`.
-- RLS policies: `db/rls-additive.sql`, `db/rls-capabilities.sql`, and various fix files.
+- The full schema is `db/baseline/2026-11-11-baseline.sql` (generated from the live database). Older schema, RLS and migration files are in `db/archive` for history only.
+- New changes: add a dated file to `db/migrations/` and apply it with `npm run db:apply-migration <file>`. See `db/README.md`.
+- Access rules can be checked at any time with `npm run db:rls-test` (read-only, always rolls back).
+- Rate limits are stored in the database (`rate_limit_counters` + `check_rate_limit()`), so they hold across Vercel instances. Use `rateLimitByUser()` from `lib/rate-limit.ts` (it is async).
 
 ### Key Patterns
 
@@ -375,6 +319,17 @@ RLS is the **primary access-control boundary**. Every new table gets RLS policie
 - **Versioning**: `is_current` + `superseded_by` for GST/TDS/IT filings and financial data.
 - **Audit log**: `global_audit_log` captures actor, timestamp, action, entity for sensitive writes.
 - **Partial unique index** on tasks prevents duplicate generation at DB level.
+
+---
+
+## Data access rules (read before writing queries)
+
+- **The API returns at most 1,000 rows per request and does not warn you.** Any list that can grow past 1,000 rows (clients, tasks, task steps, work-done, audit log, client_sub_services...) MUST be paged. Use `fetchAll()` from `lib/supabase/fetch-all.ts` (it adds a stable `ORDER BY id`), or `.range()` with an explicit order. A query with no `.limit()/.range()/fetchAll` is a bug on these tables.
+- **Keep `.in('col', [...])` lists under about 200 ids** (use `chunkArray`). Long lists make the request URL too long.
+- **Never trust a write that returns no error.** Row level security makes an `update` that matches no permitted row succeed with zero rows changed. Add `.select('id')` and check the result (see `toggleTaskStepAction`).
+- **Roles come from the database profile** (`getCurrentUser()`), never from `user_metadata`, which users can edit.
+- **Passwords**: one rule in `lib/auth/password-policy.ts` (10+ characters, letters and numbers).
+- **Search terms**: use `wrapLike()` for `.ilike()` values; never interpolate user text into `.or()`.
 
 ---
 
@@ -426,11 +381,10 @@ Defined in `vercel.json`. All schedules are UTC.
 | `/api/cron/due-alerts` | `30 3 * * *` | Daily task due-date email alerts (~09:00 IST) |
 | `/api/cron/dsc-alerts` | `30 2 * * *` | Daily DSC expiry alerts (~08:00 IST) |
 | `/api/cron/notification-digest` | `0 4 * * *` | Daily/weekly digest emails (~09:30 IST) |
-| `/api/cron/generate-insights` | `30 16 * * 0` | Weekly insight generation (Sunday ~22:00 IST) |
 | `/api/cron/refresh-compliance-events` | `0 1 * * *` | Refresh compliance calendar events |
 
 Cron handlers:
-- Must check `x-vercel-cron` header or `CRON_SECRET` query param.
+- Must call `isAuthorizedCron(request)` from `lib/auth/cron-auth.ts` (checks `Authorization: Bearer $CRON_SECRET`; the `x-vercel-cron` header is spoofable and is NOT trusted; the secret is never accepted in the URL).
 - Must use `createServiceClient()` (no user session).
 - Must set `maxDuration = 60` (Vercel Pro limit).
 
@@ -453,7 +407,7 @@ RESEND_API_KEY=re_...
 RESEND_FROM_EMAIL=noreply@thefiscalfulcrum.com
 
 # Crypto
-CREDENTIALS_KEY=<32+ char random string>  # AES-256-GCM key for credentials vault
+CREDENTIALS_KEY=<base64 of exactly 32 random bytes>  # AES-256-GCM key. Generate: openssl rand -base64 32
 
 # Cron
 CRON_SECRET=<random string>               # Vercel Cron auth

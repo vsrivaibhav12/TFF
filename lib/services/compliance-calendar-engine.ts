@@ -26,6 +26,8 @@
  *   - annual_turnover_above: number — applies when client.annual_turnover_estimate >= this
  */
 
+import { fetchAll } from '@/lib/supabase/fetch-all';
+
 export interface CalendarRule {
   id: string;
   rule_code: string;
@@ -258,13 +260,14 @@ export async function refreshComplianceEvents(opts: {
   const fromIso = opts.fromIso ?? new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().slice(0, 10);
   const toIso = opts.toIso ?? new Date(today.getFullYear() + 1, today.getMonth(), 1).toISOString().slice(0, 10);
 
-  const [{ data: rules }, profilesQ] = await Promise.all([
+  const [{ data: rules }, profiles] = await Promise.all([
     sb.from('compliance_calendar_rules').select('*').eq('is_active', true),
-    opts.clientId
-      ? sb.from('client_compliance_profiles').select('*').eq('client_id', opts.clientId)
-      : sb.from('client_compliance_profiles').select('*'),
+    fetchAll<any>(() =>
+      opts.clientId
+        ? sb.from('client_compliance_profiles').select('*').eq('client_id', opts.clientId)
+        : sb.from('client_compliance_profiles').select('*'),
+    ),
   ]);
-  const profiles = profilesQ.data ?? [];
   if (!rules || rules.length === 0 || profiles.length === 0) {
     return { generated: 0, rules: rules?.length ?? 0, clients: profiles.length };
   }
@@ -314,13 +317,14 @@ export async function refreshServiceDrivenComplianceEvents(opts: {
   const fromIso = opts.fromIso ?? new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().slice(0, 10);
   const toIso = opts.toIso ?? new Date(today.getFullYear() + 1, today.getMonth(), 1).toISOString().slice(0, 10);
 
-  let q = sb
-    .from('client_sub_services')
-    .select('id, client_id, sub_services(id, code, name, frequency, due_day_of_month, due_day_of_quarter, due_month, service_id)')
-    .eq('is_active', true);
-  if (opts.clientId) q = q.eq('client_id', opts.clientId);
-  const { data: cssRows, error: cssErr } = await q;
-  if (cssErr) throw cssErr;
+  const cssRows = await fetchAll<any>(() => {
+    let q = sb
+      .from('client_sub_services')
+      .select('id, client_id, sub_services(id, code, name, frequency, due_day_of_month, due_day_of_quarter, due_month, service_id)')
+      .eq('is_active', true);
+    if (opts.clientId) q = q.eq('client_id', opts.clientId);
+    return q;
+  });
   if (!cssRows || cssRows.length === 0) return { generated: 0, clientSubServices: 0 };
 
   const allEvents: Array<{

@@ -17,7 +17,7 @@ export default async function NotificationsPage() {
 
   return (
     <div className="space-y-10 max-w-4xl">
-      <BackButton href={me.role === 'admin' ? '/admin' : me.role === 'team' ? '/team' : '/portal'} />
+      <BackButton href={me.role === 'admin' ? '/admin' : '/team'} />
       <div>
         <h1 className="tff-page-title">Notification center</h1>
         <p className="tff-page-subtitle">

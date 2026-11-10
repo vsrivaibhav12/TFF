@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { DockLink } from '@/components/shell/dock-link';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, AlertTriangle, MessageSquare, Briefcase, ArrowRight, Pencil, Eye } from 'lucide-react';
+import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, Briefcase, ArrowRight, Pencil } from 'lucide-react';
 import AuditTimeline from '@/components/sophistication/audit-timeline';
 import { Button } from '@/components/ui/button';
 import { displayTaskName } from '@/lib/utils';
@@ -44,10 +44,6 @@ interface ClientSubService {
   services?: { name?: string | null } | null;
 }
 
-interface ClientUser {
-  id: string;
-}
-
 interface TeamAssignment {
   id: string;
   users_profile?: { full_name?: string | null } | null;
@@ -67,33 +63,15 @@ interface OpenTask {
   sub_services?: { name?: string | null } | null;
 }
 
-interface OpenNotice {
-  id: string;
-  status: string;
-  due_date?: string | null;
-  subject?: string | null;
-  notice_type?: string | null;
-  issuing_authority?: string | null;
-}
-
-interface OpenQuery {
-  id: string;
-  status: string;
-  subject?: string | null;
-}
-
 interface Props {
   client: Client;
   groups: Group[];
   owners: Owner[];
   clientServices: ClientService[];
   clientSubServices: ClientSubService[];
-  clientUsers: ClientUser[];
   teamAssignments: TeamAssignment[];
   auditLogs: AuditLog[];
   openTasks: OpenTask[];
-  openNotices: OpenNotice[];
-  openQueries: OpenQuery[];
   basePath: string;
   canEdit?: boolean;
   canDelete?: boolean;
@@ -113,19 +91,15 @@ export default function ClientDetailShell({
   owners,
   clientServices,
   clientSubServices,
-  clientUsers,
   teamAssignments,
   auditLogs,
   openTasks,
-  openNotices,
-  openQueries,
   basePath,
   canEdit = false,
   canDelete = false,
   isModal,
 }: Props) {
   const taskPrefix = basePath.replace('/clients', '/tasks');
-  const queryPrefix = basePath.replace('/clients', '/queries');
   return (
     <div className={`flex flex-col -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 ${isModal ? 'h-full' : 'h-[calc(100vh-6.5rem)]'}`}>
       {!isModal && (
@@ -158,11 +132,6 @@ export default function ClientDetailShell({
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`${basePath}/${client.id}/preview`}>
-                    <Eye className="h-3.5 w-3.5 mr-1" /> View as client
-                  </Link>
-                </Button>
                 {canEdit && (
                   <Button variant="outline" size="sm" asChild>
                     <Link href={`${basePath}/${client.id}/edit`}>
@@ -180,12 +149,10 @@ export default function ClientDetailShell({
               <h3 className="text-[13px] font-semibold text-zinc-700">Active work</h3>
               <div className="flex gap-1.5">
                 <Badge variant="outline" className="text-[10px]"><Briefcase className="h-3 w-3 mr-1" />{openTasks.length}</Badge>
-                <Badge variant="outline" className="text-[10px]"><AlertTriangle className="h-3 w-3 mr-1" />{openNotices.length}</Badge>
-                <Badge variant="outline" className="text-[10px]"><MessageSquare className="h-3 w-3 mr-1" />{openQueries.length}</Badge>
               </div>
             </div>
 
-            {openTasks.length === 0 && openNotices.length === 0 && openQueries.length === 0 ? (
+            {openTasks.length === 0 ? (
               <div className="text-sm text-zinc-400 py-4 text-center">No active work items.</div>
             ) : (
               <div className="space-y-2">
@@ -199,30 +166,6 @@ export default function ClientDetailShell({
                       <div className="text-[10px] text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
                     </div>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{t.status}</span>
-                  </DockLink>
-                ))}
-                {openNotices.slice(0, 2).map((n) => (
-                  <div key={n.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-zinc-50 transition-colors group">
-                    <div className="w-7 h-7 rounded-md bg-white flex items-center justify-center flex-shrink-0 border border-zinc-200">
-                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[12px] font-medium text-zinc-900 truncate">{n.subject ?? n.notice_type}</div>
-                      <div className="text-[10px] text-zinc-400">{n.issuing_authority} · Due {n.due_date ?? '—'}</div>
-                    </div>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusBadgeClass(n.status)}`}>{n.status}</span>
-                  </div>
-                ))}
-                {openQueries.slice(0, 2).map((q) => (
-                  <DockLink key={q.id} item={{ type: 'query', id: q.id }} href={`${queryPrefix}/${q.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-zinc-50 hover:bg-zinc-100 transition-colors group">
-                    <div className="w-7 h-7 rounded-md bg-white flex items-center justify-center flex-shrink-0 border border-zinc-200">
-                      <MessageSquare className="h-3.5 w-3.5 text-[#0D9488]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[12px] font-medium text-zinc-900 truncate">{q.subject}</div>
-                      <div className="text-[10px] text-zinc-400">Query · {q.status}</div>
-                    </div>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusBadgeClass(q.status)}`}>{q.status}</span>
                   </DockLink>
                 ))}
               </div>
@@ -306,11 +249,6 @@ export default function ClientDetailShell({
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-3">
                     <h1 className="text-[22px] font-semibold tracking-tight text-zinc-900">{client.business_name}</h1>
-                    <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex">
-                      <Link href={`${basePath}/${client.id}/preview`}>
-                        <Eye className="h-3.5 w-3.5 mr-1" /> View as client
-                      </Link>
-                    </Button>
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-2">
                     {client.pan && <span className="text-[12px] text-zinc-500 font-mono">PAN {client.pan}</span>}
@@ -331,12 +269,10 @@ export default function ClientDetailShell({
                 <h3 className="text-[13px] font-semibold text-zinc-700">Active work</h3>
                 <div className="flex gap-2">
                   <Badge variant="outline" className="text-[11px]"><Briefcase className="h-3 w-3 mr-1" />{openTasks.length} tasks</Badge>
-                  <Badge variant="outline" className="text-[11px]"><AlertTriangle className="h-3 w-3 mr-1" />{openNotices.length} notices</Badge>
-                  <Badge variant="outline" className="text-[11px]"><MessageSquare className="h-3 w-3 mr-1" />{openQueries.length} queries</Badge>
                 </div>
               </div>
 
-              {openTasks.length === 0 && openNotices.length === 0 && openQueries.length === 0 ? (
+              {openTasks.length === 0 ? (
                 <div className="text-sm text-zinc-400 py-6 text-center">No active work items for this client.</div>
               ) : (
                 <div className="space-y-2">
@@ -350,31 +286,6 @@ export default function ClientDetailShell({
                         <div className="text-[11px] text-zinc-400">{t.status} · Due {t.due_date ?? '—'}</div>
                       </div>
                       <span className={`text-[11px] px-2 py-0.5 rounded border ${statusBadgeClass(t.status)}`}>{t.status}</span>
-                      <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-[#0D9488] transition-colors" />
-                    </DockLink>
-                  ))}
-                  {openNotices.slice(0, 3).map((n) => (
-                    <div key={n.id} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 transition-colors group">
-                      <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0 border border-zinc-200">
-                        <AlertTriangle className="h-4 w-4 text-amber-500" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-medium text-zinc-900 truncate">{n.subject ?? n.notice_type}</div>
-                        <div className="text-[11px] text-zinc-400">{n.issuing_authority} · Due {n.due_date ?? '—'}</div>
-                      </div>
-                      <span className={`text-[11px] px-2 py-0.5 rounded border ${statusBadgeClass(n.status)}`}>{n.status}</span>
-                    </div>
-                  ))}
-                  {openQueries.slice(0, 3).map((q) => (
-                    <DockLink key={q.id} item={{ type: 'query', id: q.id }} href={`${queryPrefix}/${q.id}`} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors group">
-                      <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0 border border-zinc-200">
-                        <MessageSquare className="h-4 w-4 text-[#0D9488]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-medium text-zinc-900 truncate">{q.subject}</div>
-                        <div className="text-[11px] text-zinc-400">Query · {q.status}</div>
-                      </div>
-                      <span className={`text-[11px] px-2 py-0.5 rounded border ${statusBadgeClass(q.status)}`}>{q.status}</span>
                       <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-[#0D9488] transition-colors" />
                     </DockLink>
                   ))}
@@ -411,7 +322,6 @@ export default function ClientDetailShell({
                 clientId={client.id}
                 assignments={teamAssignments as TeamAssignment[]}
                 availableTeam={owners as { id: string; full_name: string; email: string }[]}
-                clientUsers={clientUsers as ClientUser[]}
               />
             </div>
 

@@ -52,7 +52,7 @@ async function upsertProfile(id: string, email: string, full_name: string, role:
 }
 
 function requireSeedPasswords() {
-  const vars = ['ADMIN_SEED_PASSWORD', 'TEAM_SEED_PASSWORD', 'CLIENT_SEED_PASSWORD'];
+  const vars = ['ADMIN_SEED_PASSWORD', 'TEAM_SEED_PASSWORD'];
   const missing = vars.filter((v) => !process.env[v]);
   if (missing.length) {
     console.error(`Missing seed password env vars: ${missing.join(', ')}. Set them in .env.local.`);
@@ -78,14 +78,7 @@ async function main() {
   await upsertProfile(teamId, teamEmail, 'Demo Team Member', 'team');
   console.log(`[seed] team:  ${teamEmail} / ${teamPassword}`);
 
-  // 3. Client user
-  const clientEmail = 'client.demo@fiscalfulcrum.in';
-  const clientPassword = process.env.CLIENT_SEED_PASSWORD!;
-  const clientUserId = await ensureAuthUser(clientEmail, clientPassword, 'Demo Client User');
-  await upsertProfile(clientUserId, clientEmail, 'Demo Client User', 'client');
-  console.log(`[seed] client:${clientEmail} / ${clientPassword}`);
-
-  // 4. Client group + client
+  // 3. Client group + client
   const { data: grp, error: grpErr } = await sb
     .from('client_groups')
     .upsert({ name: '[DEMO] Demo Group', description: SEED_TAG }, { onConflict: 'name' })
@@ -111,7 +104,6 @@ async function main() {
         group_id: grp!.id,
         primary_owner_id: teamId,
         lifecycle_stage: 'caas_bizlens',
-        portal_enabled: true,
         notes: SEED_TAG,
       })
       .select('id')
@@ -120,24 +112,7 @@ async function main() {
     clientRowId = data!.id;
   }
 
-  // 5. Link client_user (no unique constraint in schema; check-then-insert)
-  const { data: existingLink } = await sb
-    .from('client_users')
-    .select('id')
-    .eq('client_id', clientRowId)
-    .eq('user_id', clientUserId)
-    .maybeSingle();
-  if (!existingLink) {
-    const { error: cuErr } = await sb.from('client_users').insert({
-      client_id: clientRowId,
-      user_id: clientUserId,
-      role_in_client: 'owner',
-      is_active: true,
-    });
-    if (cuErr) throw cuErr;
-  }
-
-  // 6. Team-client assignment (no unique key in schema; check-then-insert)
+  // 5. Team-client assignment (no unique key in schema; check-then-insert)
   const { data: existingAssign } = await sb
     .from('team_client_assignment')
     .select('id')
@@ -153,30 +128,11 @@ async function main() {
     });
   }
 
-  // 7. Portal visibility — enable ALL modules for the demo client
-  const ALL_MODULES = [
-    'portal.dashboard', 'portal.tasks', 'portal.documents', 'portal.queries',
-    'portal.bizlens', 'portal.vcfo', 'portal.compliance_calendar', 'portal.insights',
-    'portal.tax_projection', 'portal.notices', 'portal.vendors',
-  ];
-  const visibilityRows = ALL_MODULES.map((m) => ({
-    client_id: clientRowId,
-    module_key: m,
-    is_enabled: true,
-    updated_by: adminId,
-  }));
-  const { error: visErr } = await sb
-    .from('client_portal_visibility')
-    .upsert(visibilityRows, { onConflict: 'client_id,module_key' });
-  if (visErr) console.warn('[seed] visibility upsert warning:', visErr.message);
-  console.log('[seed] portal visibility: all modules enabled for demo client');
-
   console.log('[seed] DONE');
   console.log('---');
   console.log('Login credentials (DEMO):');
   console.log(`  admin  : ${adminEmail}        / ${adminPassword}`);
   console.log(`  team   : ${teamEmail}         / ${teamPassword}`);
-  console.log(`  client : ${clientEmail}       / ${clientPassword}`);
 }
 
 main().catch((e) => {

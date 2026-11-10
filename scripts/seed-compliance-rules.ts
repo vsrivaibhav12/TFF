@@ -1,5 +1,5 @@
 /**
- * Seed compliance_calendar_rules from db/seed-compliance-rules.sql.
+ * Seed compliance_calendar_rules from db/seeds/seed-compliance-rules.sql.
  * Idempotent (ON CONFLICT DO NOTHING).
  */
 import { config as loadEnv } from 'dotenv';
@@ -23,7 +23,7 @@ async function runSql(query: string, label: string) {
 }
 
 async function main() {
-  const sql = fs.readFileSync(path.join(process.cwd(), 'db', 'seed-compliance-rules.sql'), 'utf8');
+  const sql = fs.readFileSync(path.join(process.cwd(), 'db', 'seeds', 'seed-compliance-rules.sql'), 'utf8');
   await runSql(sql, 'seed-compliance-rules');
   const verify = await runSql(
     `SELECT COUNT(*)::text AS c, MIN(rule_code) AS first_code, MAX(rule_code) AS last_code FROM compliance_calendar_rules;`,

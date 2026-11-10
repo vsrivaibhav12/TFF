@@ -1,7 +1,0 @@
-{
-  "name": "frontend-shim",
-  "private": true,
-  "scripts": {
-    "start": "exec node /app/frontend-proxy.js"
-  }
-}

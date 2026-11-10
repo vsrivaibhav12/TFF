@@ -7,26 +7,16 @@
  */
 export const NAV_CAPABILITY_MAP: Record<string, string | string[]> = {
   // Team primary pages — read caps govern visibility; write caps are checked inside pages/actions
-  '/team/clients': ['clients.read.all', 'clients.create', 'clients.edit', 'clients.delete', 'clients.assign_team', 'clients.toggle_portal'],
+  '/team/clients': ['clients.read.all', 'clients.create', 'clients.edit', 'clients.delete', 'clients.assign_team'],
   '/team/tasks': ['tasks.view', 'tasks.create', 'tasks.edit', 'tasks.assign', 'tasks.complete', 'tasks.delete'],
-  '/team/notices': ['notices.view', 'notices.manage'],
-  '/team/hearings': ['hearings.view', 'hearings.manage'],
-  '/team/queries': ['queries.view', 'queries.assign'],
-  '/team/inbox': 'queries.view',
+  '/team/inbox': 'tasks.view',
   '/team/approvals': ['attendance.approve', 'leave.approve', 'permission.approve'],
   '/team/work-done': ['workdone.manage', 'view_workdone_reports'],
 
   // Admin-delegated pages (shown in team sidebar when granted)
   '/admin/dsc': ['dsc.view', 'dsc.manage'],
   '/admin/credentials': ['credentials.view', 'credentials.manage'],
-  '/admin/notices': ['notices.view', 'notices.manage'],
-  '/admin/hearings': ['hearings.view', 'hearings.manage'],
-  '/admin/gst': ['compliance.view', 'compliance.enter'],
-  '/admin/tax-projections': ['compliance.view', 'compliance.enter'],
   '/admin/compliance': ['compliance.view', 'compliance.enter', 'manage_compliance_rules'],
-  '/admin/bizlens': ['bizlens.view', 'bizlens.enter'],
-  '/admin/vcfo': ['vcfo.view', 'vcfo.enter'],
-  '/admin/payroll': ['payroll.run'],
   '/admin/billing': ['manage_billing_entities'],
   '/admin/services': ['services.view', 'services.manage'],
   '/admin/team': 'staff.manage',
@@ -38,11 +28,6 @@ export const NAV_CAPABILITY_MAP: Record<string, string | string[]> = {
   // Team equivalents of admin-delegated pages
   '/team/dsc': ['dsc.view', 'dsc.manage'],
   '/team/credentials': ['credentials.view', 'credentials.manage'],
-  '/team/gst': ['compliance.view', 'compliance.enter'],
-  '/team/tax-projections': ['compliance.view', 'compliance.enter'],
-  '/team/bizlens': ['bizlens.view', 'bizlens.enter'],
-  '/team/vcfo': ['vcfo.view', 'vcfo.enter'],
-  '/team/payroll': ['payroll.run'],
   '/team/billing': ['manage_billing_entities'],
   '/team/services': ['services.view', 'services.manage'],
   '/team/reports': ['view_workdone_reports', 'audit.view'],

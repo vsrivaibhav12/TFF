@@ -73,7 +73,7 @@ export function NotFoundState({
 export function NotFoundStatePortal({
   title = 'Module restricted or not found',
   message = 'The module you are trying to access has not been enabled for your business profile, or the link is incorrect. Please contact your engagement team if you believe this is an error.',
-  homeHref = '/portal',
+  homeHref = '/',
   homeLabel = 'Return to dashboard',
 }: Partial<NotFoundStateProps>) {
   return (

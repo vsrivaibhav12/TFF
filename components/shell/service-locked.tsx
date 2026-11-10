@@ -9,10 +9,7 @@ const KIND_LABEL: Record<ServiceKind, string> = {
   tds: 'TDS',
   income_tax: 'Income Tax',
   compliance: 'Compliance',
-  bizlens: 'BizLens analytics',
-  vcfo: 'vCFO advisory',
   notice: 'Notice handling',
-  payroll: 'Payroll',
   other: 'this service',
 };
 

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { TaskStatus } from '@/lib/validation/schemas';
 import { todayIST } from '@/lib/utils';
 import { mergeById, wrapLike } from '@/lib/supabase/safe-search';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 
 export interface TaskRow {
   id: string;
@@ -55,7 +56,7 @@ function normalizeFkArray(row: Record<string, unknown>, key: string) {
   }
 }
 
-export async function listTasks(opts: {
+type TaskFilterOpts = {
   clientId?: string;
   assignedTo?: string;
   status?: Array<TaskStatus | 'blocked' | 'stuck'>;
@@ -70,28 +71,94 @@ export async function listTasks(opts: {
   isVerified?: boolean;
   labels?: string[];
   q?: string;
-  limit?: number;
-  offset?: number;
-} = {}): Promise<TaskRow[]> {
-  const sb = createClient();
+};
 
-  // Pre-filter by labels if specified
-  let labelTaskIds: string[] | undefined;
+// Keep `.in('id', [...])` lists short: each uuid adds ~40 characters to the
+// request URL, and very long URLs are rejected by the API gateway.
+const ID_CHUNK = 200;
+
+/**
+ * Resolve label and free-text search into a list of matching task ids.
+ * Returns undefined when neither filter is used, [] when nothing matches.
+ * Every lookup is paged so results stay complete beyond 1,000 rows.
+ */
+async function resolveTaskIdFilter(
+  sb: ReturnType<typeof createClient>,
+  opts: Pick<TaskFilterOpts, 'labels' | 'q'>,
+): Promise<string[] | undefined> {
+  let ids: Set<string> | undefined;
+
   if (opts.labels?.length) {
-    const { data: la } = await sb
-      .from('task_label_assignments')
-      .select('task_id')
-      .in('label_code', opts.labels);
-    labelTaskIds = [...new Set((la ?? []).map((d: { task_id: string }) => d.task_id))];
-    if (labelTaskIds.length === 0) return [];
+    const rows = await fetchAll<{ task_id: string }>(() =>
+      sb.from('task_label_assignments').select('task_id').in('label_code', opts.labels!).order('task_id').order('label_code'),
+      50000, 1000, null,
+    );
+    ids = new Set(rows.map((r) => r.task_id));
+    if (ids.size === 0) return [];
   }
 
-  let q = sb
-    .from('tasks')
-    .select('id, task_number, title, status, priority, due_date, period_year, period_month, period_quarter, assigned_to, reviewer_id, sub_service_id, client_id, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status, is_billable, bill_reference, is_verified, created_at, updated_at, clients!tasks_client_id_fkey(id, business_name), users_profile!tasks_assigned_to_fkey(id, full_name, email), sub_services!tasks_sub_service_id_fkey(id, code, name)')
-    .eq('is_deleted', false)
-    .order('due_date', { ascending: true, nullsFirst: false });
-  if (labelTaskIds?.length) q = q.in('id', labelTaskIds);
+  if (opts.q?.trim()) {
+    const term = wrapLike(opts.q.trim());
+    // Separate queries (not .or()) so user text can never alter the filter syntax.
+    const [titleM, numberM, clientM, subM] = await Promise.all([
+      fetchAll<{ id: string }>(() => sb.from('tasks').select('id').ilike('title', term).eq('is_deleted', false).order('id')),
+      fetchAll<{ id: string }>(() => sb.from('tasks').select('id').ilike('task_number', term).eq('is_deleted', false).order('id')),
+      fetchAll<{ id: string }>(() => sb.from('clients').select('id').ilike('business_name', term).eq('is_deleted', false).order('id')),
+      fetchAll<{ id: string }>(() => sb.from('sub_services').select('id').ilike('name', term).eq('is_deleted', false).order('id')),
+    ]);
+    const matched = new Set<string>(mergeById([titleM, numberM]).map((r) => r.id));
+
+    // Tasks that belong to matching clients / sub-services.
+    const clientIds = clientM.map((r) => r.id);
+    const subIds = subM.map((r) => r.id);
+    for (let i = 0; i < clientIds.length; i += ID_CHUNK) {
+      const chunk = clientIds.slice(i, i + ID_CHUNK);
+      const rows = await fetchAll<{ id: string }>(() => sb.from('tasks').select('id').in('client_id', chunk).eq('is_deleted', false).order('id'));
+      rows.forEach((r) => matched.add(r.id));
+    }
+    for (let i = 0; i < subIds.length; i += ID_CHUNK) {
+      const chunk = subIds.slice(i, i + ID_CHUNK);
+      const rows = await fetchAll<{ id: string }>(() => sb.from('tasks').select('id').in('sub_service_id', chunk).eq('is_deleted', false).order('id'));
+      rows.forEach((r) => matched.add(r.id));
+    }
+
+    ids = ids ? new Set([...ids].filter((id) => matched.has(id))) : matched;
+    if (ids.size === 0) return [];
+  }
+
+  return ids ? [...ids] : undefined;
+}
+
+function applyStatusFilter(query: any, status: TaskFilterOpts['status']) {
+  let q = query;
+  if (!status?.length) return q;
+  const hasBlocked = status.includes('blocked');
+  const hasStuck = status.includes('stuck');
+  const realStatuses = status.filter((s): s is TaskStatus =>
+    s === 'pending' || s === 'in_progress' || s === 'completed' || s === 'cancelled',
+  );
+
+  if (hasBlocked && hasStuck && realStatuses.length === 0) {
+    q = q.or('is_blocked_on_client.eq.true,is_stuck.eq.true');
+  } else if (hasBlocked && hasStuck && realStatuses.length > 0) {
+    q = q.or(`is_blocked_on_client.eq.true,is_stuck.eq.true,status.in.(${realStatuses.join(',')})`);
+  } else if (hasBlocked && realStatuses.length > 0) {
+    q = q.or(`is_blocked_on_client.eq.true,status.in.(${realStatuses.join(',')})`);
+  } else if (hasStuck && realStatuses.length > 0) {
+    q = q.or(`is_stuck.eq.true,status.in.(${realStatuses.join(',')})`);
+  } else if (hasBlocked) {
+    q = q.eq('is_blocked_on_client', true);
+  } else if (hasStuck) {
+    q = q.eq('is_stuck', true);
+  } else if (realStatuses.length > 0) {
+    q = q.in('status', realStatuses);
+  }
+  return q;
+}
+
+function applyTaskFilters(query: any, opts: TaskFilterOpts, ids: string[] | undefined) {
+  let q = query;
+  if (ids) q = q.in('id', ids);
   if (opts.clientId) q = q.eq('client_id', opts.clientId);
   if (opts.subServiceIds?.length) q = q.in('sub_service_id', opts.subServiceIds);
   if (opts.dueFrom) q = q.gte('due_date', opts.dueFrom);
@@ -102,68 +169,27 @@ export async function listTasks(opts: {
   if (opts.isStuck !== undefined) q = q.eq('is_stuck', opts.isStuck);
   if (opts.isVerified !== undefined) q = q.eq('is_verified', opts.isVerified);
   if (opts.priority?.length) q = q.in('priority', opts.priority);
-  
-  if (opts.assignedTo === 'unassigned') {
-    q = q.is('assigned_to', null);
-  } else if (opts.assignedTo) {
-    q = q.eq('assigned_to', opts.assignedTo);
-  }
+  if (opts.assignedTo === 'unassigned') q = q.is('assigned_to', null);
+  else if (opts.assignedTo) q = q.eq('assigned_to', opts.assignedTo);
+  return applyStatusFilter(q, opts.status);
+}
 
-  if (opts.q?.trim()) {
-    const term = wrapLike(opts.q.trim());
-    // Search related tables and local columns with separate queries to avoid
-    // PostgREST `.or()` injection from user input.
-    const [
-      { data: titleMatches },
-      { data: numberMatches },
-      { data: clientMatches },
-      { data: subServiceMatches },
-    ] = await Promise.all([
-      sb.from('tasks').select('id').ilike('title', term).eq('is_deleted', false),
-      sb.from('tasks').select('id').ilike('task_number', term).eq('is_deleted', false),
-      sb.from('clients').select('id').ilike('business_name', term).eq('is_deleted', false),
-      sb.from('sub_services').select('id').ilike('name', term).eq('is_deleted', false),
-    ]);
-    const matchedIds = mergeById([
-      titleMatches ?? [],
-      numberMatches ?? [],
-      clientMatches ?? [],
-      subServiceMatches ?? [],
-    ]).map((r) => r.id);
-    if (matchedIds.length === 0) {
-      // No matches — force empty result without issuing another query.
-      return [];
-    }
-    q = q.in('id', matchedIds);
-  }
+const TASK_LIST_SELECT = 'id, task_number, title, status, priority, due_date, period_year, period_month, period_quarter, assigned_to, reviewer_id, sub_service_id, client_id, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status, is_billable, bill_reference, is_verified, created_at, updated_at, clients!tasks_client_id_fkey(id, business_name), users_profile!tasks_assigned_to_fkey(id, full_name, email), sub_services!tasks_sub_service_id_fkey(id, code, name)';
 
-  if (opts.status?.length) {
-    const hasBlocked = opts.status.includes('blocked');
-    const hasStuck = opts.status.includes('stuck');
-    const realStatuses = opts.status.filter((s): s is TaskStatus =>
-      s === 'pending' || s === 'in_progress' || s === 'completed' || s === 'cancelled',
-    );
-
-    if (hasBlocked && hasStuck && realStatuses.length === 0) {
-      q = q.or('is_blocked_on_client.eq.true,is_stuck.eq.true');
-    } else if (hasBlocked && hasStuck && realStatuses.length > 0) {
-      q = q.or(`is_blocked_on_client.eq.true,is_stuck.eq.true,status.in.(${realStatuses.join(',')})`);
-    } else if (hasBlocked && realStatuses.length > 0) {
-      q = q.or(`is_blocked_on_client.eq.true,status.in.(${realStatuses.join(',')})`);
-    } else if (hasStuck && realStatuses.length > 0) {
-      q = q.or(`is_stuck.eq.true,status.in.(${realStatuses.join(',')})`);
-    } else if (hasBlocked) {
-      q = q.eq('is_blocked_on_client', true);
-    } else if (hasStuck) {
-      q = q.eq('is_stuck', true);
-    } else if (realStatuses.length > 0) {
-      q = q.in('status', realStatuses);
-    }
-  }
-
-  const limit = opts.limit ?? 100;
-  const offset = opts.offset ?? 0;
-  q = q.range(offset, offset + limit - 1);
+async function fetchTaskRows(
+  sb: ReturnType<typeof createClient>,
+  opts: TaskFilterOpts,
+  ids: string[] | undefined,
+  offset: number,
+  limit: number,
+): Promise<TaskRow[]> {
+  const q = applyTaskFilters(
+    sb.from('tasks').select(TASK_LIST_SELECT).eq('is_deleted', false)
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .order('id', { ascending: true }),
+    opts,
+    ids,
+  ).range(offset, offset + limit - 1);
   const { data, error } = await q;
   if (error) throw error;
   for (const row of (data ?? []) as Record<string, unknown>[]) {
@@ -174,108 +200,52 @@ export async function listTasks(opts: {
   return (data ?? []) as unknown as TaskRow[];
 }
 
-export async function countTasks(opts: {
-  clientId?: string;
-  assignedTo?: string;
-  status?: Array<TaskStatus | 'blocked' | 'stuck'>;
-  priority?: string[];
-  subServiceIds?: string[];
-  dueFrom?: string;
-  dueTo?: string;
-  periodYear?: number;
-  periodMonth?: number;
-  isBillable?: boolean;
-  isStuck?: boolean;
-  isVerified?: boolean;
-  labels?: string[];
-  q?: string;
-} = {}) {
+export async function listTasks(opts: TaskFilterOpts & { limit?: number; offset?: number } = {}): Promise<TaskRow[]> {
   const sb = createClient();
+  const limit = opts.limit ?? 100;
+  const offset = opts.offset ?? 0;
 
-  let labelTaskIds: string[] | undefined;
-  if (opts.labels?.length) {
-    const { data: la } = await sb
-      .from('task_label_assignments')
-      .select('task_id')
-      .in('label_code', opts.labels);
-    labelTaskIds = [...new Set((la ?? []).map((d: { task_id: string }) => d.task_id))];
-    if (labelTaskIds.length === 0) return 0;
+  const ids = await resolveTaskIdFilter(sb, opts);
+  if (ids && ids.length === 0) return [];
+
+  if (!ids || ids.length <= ID_CHUNK) {
+    return fetchTaskRows(sb, opts, ids, offset, limit);
   }
 
-  let q = sb
-    .from('tasks')
-    .select('id', { count: 'exact', head: true })
-    .eq('is_deleted', false);
-  if (labelTaskIds?.length) q = q.in('id', labelTaskIds);
-  if (opts.clientId) q = q.eq('client_id', opts.clientId);
-  if (opts.subServiceIds?.length) q = q.in('sub_service_id', opts.subServiceIds);
-  if (opts.dueFrom) q = q.gte('due_date', opts.dueFrom);
-  if (opts.dueTo) q = q.lte('due_date', opts.dueTo);
-  if (opts.periodYear) q = q.eq('period_year', opts.periodYear);
-  if (opts.periodMonth) q = q.eq('period_month', opts.periodMonth);
-  if (opts.isBillable !== undefined) q = q.eq('is_billable', opts.isBillable);
-  if (opts.isStuck !== undefined) q = q.eq('is_stuck', opts.isStuck);
-  if (opts.isVerified !== undefined) q = q.eq('is_verified', opts.isVerified);
-  if (opts.priority?.length) q = q.in('priority', opts.priority);
-
-  if (opts.assignedTo === 'unassigned') {
-    q = q.is('assigned_to', null);
-  } else if (opts.assignedTo) {
-    q = q.eq('assigned_to', opts.assignedTo);
+  // Large id lists: query in chunks, then merge, sort and page in memory.
+  const all: TaskRow[] = [];
+  for (let i = 0; i < ids.length; i += ID_CHUNK) {
+    all.push(...(await fetchTaskRows(sb, opts, ids.slice(i, i + ID_CHUNK), 0, ID_CHUNK)));
   }
+  all.sort((x, y) => {
+    if (x.due_date === y.due_date) return x.id.localeCompare(y.id);
+    if (x.due_date === null) return 1;
+    if (y.due_date === null) return -1;
+    return x.due_date < y.due_date ? -1 : 1;
+  });
+  return all.slice(offset, offset + limit);
+}
 
-  if (opts.q?.trim()) {
-    const term = wrapLike(opts.q.trim());
-    const [
-      { data: titleMatches },
-      { data: numberMatches },
-      { data: clientMatches },
-      { data: subServiceMatches },
-    ] = await Promise.all([
-      sb.from('tasks').select('id').ilike('title', term).eq('is_deleted', false),
-      sb.from('tasks').select('id').ilike('task_number', term).eq('is_deleted', false),
-      sb.from('clients').select('id').ilike('business_name', term).eq('is_deleted', false),
-      sb.from('sub_services').select('id').ilike('name', term).eq('is_deleted', false),
-    ]);
-    const matchedIds = mergeById([
-      titleMatches ?? [],
-      numberMatches ?? [],
-      clientMatches ?? [],
-      subServiceMatches ?? [],
-    ]).map((r) => r.id);
-    if (matchedIds.length === 0) {
-      return 0;
-    }
-    q = q.in('id', matchedIds);
-  }
+export async function countTasks(opts: TaskFilterOpts = {}) {
+  const sb = createClient();
+  const ids = await resolveTaskIdFilter(sb, opts);
+  if (ids && ids.length === 0) return 0;
 
-  if (opts.status?.length) {
-    const hasBlocked = opts.status.includes('blocked');
-    const hasStuck = opts.status.includes('stuck');
-    const realStatuses = opts.status.filter((s): s is TaskStatus =>
-      s === 'pending' || s === 'in_progress' || s === 'completed' || s === 'cancelled',
+  const countFor = async (subset: string[] | undefined) => {
+    const q = applyTaskFilters(
+      sb.from('tasks').select('id', { count: 'exact', head: true }).eq('is_deleted', false),
+      opts,
+      subset,
     );
+    const { count, error } = await q;
+    if (error) throw error;
+    return count ?? 0;
+  };
 
-    if (hasBlocked && hasStuck && realStatuses.length === 0) {
-      q = q.or('is_blocked_on_client.eq.true,is_stuck.eq.true');
-    } else if (hasBlocked && hasStuck && realStatuses.length > 0) {
-      q = q.or(`is_blocked_on_client.eq.true,is_stuck.eq.true,status.in.(${realStatuses.join(',')})`);
-    } else if (hasBlocked && realStatuses.length > 0) {
-      q = q.or(`is_blocked_on_client.eq.true,status.in.(${realStatuses.join(',')})`);
-    } else if (hasStuck && realStatuses.length > 0) {
-      q = q.or(`is_stuck.eq.true,status.in.(${realStatuses.join(',')})`);
-    } else if (hasBlocked) {
-      q = q.eq('is_blocked_on_client', true);
-    } else if (hasStuck) {
-      q = q.eq('is_stuck', true);
-    } else if (realStatuses.length > 0) {
-      q = q.in('status', realStatuses);
-    }
-  }
-
-  const { count, error } = await q;
-  if (error) throw error;
-  return count ?? 0;
+  if (!ids || ids.length <= ID_CHUNK) return countFor(ids);
+  let total = 0;
+  for (let i = 0; i < ids.length; i += ID_CHUNK) total += await countFor(ids.slice(i, i + ID_CHUNK));
+  return total;
 }
 
 export async function getTask(id: string): Promise<TaskDetail | null> {

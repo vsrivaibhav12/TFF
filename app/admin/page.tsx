@@ -21,7 +21,6 @@ import {
 import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-container';
 import { dueLabel } from '@/lib/utils';
 import { PriorityList } from '@/components/dashboard/priority-list';
-import { AdminPayrollPrompt } from '@/components/dashboard/smart-prompts';
 import { AdminQuickActions } from '@/components/dashboard/admin-quick-actions';
 import { NeedsAttentionHub, type AttentionItem } from '@/components/dashboard/needs-attention-hub';
 import { ActivityFeed } from '@/components/dashboard/activity-feed';
@@ -31,7 +30,6 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <AdminPayrollPrompt />
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Firm overview</h1>
@@ -57,12 +55,9 @@ async function DashboardBody() {
       activeEngagements,
       recentTasks,
       upcomingDeadlines,
-      upcomingNotices,
       attentionTasks,
       pendingApprovals,
       attendanceToday,
-      openQueriesCount,
-      openQueries,
       recentAuditLogs,
     },
     complianceCells,
@@ -101,15 +96,6 @@ async function DashboardBody() {
       reason: t.is_stuck ? 'Stuck' : 'Pending',
       color: (t.is_stuck ? 'red' : 'amber') as AttentionItem['color'],
       href: `/admin/tasks/${t.id}`,
-    })),
-    ...(openQueries ?? []).map((q: any) => ({
-      id: q.id,
-      type: 'query' as const,
-      title: q.subject ?? 'Open query',
-      client: q.clients?.business_name ?? '—',
-      reason: 'Open',
-      color: 'blue' as AttentionItem['color'],
-      href: `/admin/queries/${q.id}`,
     })),
     ...(pendingApprovals.total > 0 ? [{
       id: 'approvals',
@@ -219,18 +205,12 @@ async function DashboardBody() {
             <PriorityList tasks={recentTasks} href="/admin/tasks" />
           </div>
           <div className="lg:col-span-7 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <StatCard
                 label="Team attendance today"
                 value={`${attendanceToday.presentCount ?? 0} / ${attendanceToday.teamTotal ?? 0}`}
                 icon={<LogIn className="h-5 w-5" />}
                 href="/admin/attendance"
-              />
-              <StatCard
-                label="Open queries"
-                value={openQueriesCount ?? 0}
-                icon={<MessageSquare className="h-5 w-5" />}
-                href="/admin/queries"
               />
               <StatCard
                 label="Pending approvals"
@@ -244,41 +224,6 @@ async function DashboardBody() {
         </div>
       </StaggerItem>
 
-      {(upcomingNotices ?? []).length > 0 && (
-        <StaggerItem>
-          <div className="tff-card tff-card-pad">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-base font-semibold text-zinc-900 tracking-tight">Notice deadlines</h3>
-                <p className="text-xs text-zinc-500 mt-0.5">Upcoming notice due dates</p>
-              </div>
-              <Link href="/admin/notices" className="text-xs text-teal-700 hover:underline font-medium inline-flex items-center gap-1">
-                View all <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-            <div className="space-y-0">
-              {(upcomingNotices ?? []).map((n, i) => (
-                <DockLink
-                  key={n.id}
-                  item={{ type: 'notice', id: n.id }}
-                  href={`/admin/notices/${n.id}`}
-                  className={`flex items-center gap-3 py-3 ${i !== (upcomingNotices ?? []).length - 1 ? 'border-b border-zinc-100' : ''} hover:bg-zinc-50/50 transition-colors`}
-                >
-                  <div className="h-9 w-9 rounded-lg flex flex-col items-center justify-center shrink-0 border text-zinc-600 bg-zinc-50 border-zinc-200">
-                    <span className="text-[9px] font-bold leading-none">{new Date(n.due_date).toLocaleString('en-GB', { month: 'short' }).toUpperCase()}</span>
-                    <span className="text-sm font-bold leading-tight tabular-nums">{new Date(n.due_date).getDate()}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{n.subject ?? 'Untitled notice'}</div>
-                    <div className="text-[11px] text-zinc-400 mt-0.5">{dueLabel(n.due_date)}</div>
-                  </div>
-                  <div className="text-[11px] text-zinc-500 shrink-0">{n.clients?.business_name}</div>
-                </DockLink>
-              ))}
-            </div>
-          </div>
-        </StaggerItem>
-      )}
     </StaggerContainer>
   );
 }
