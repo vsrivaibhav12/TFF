@@ -1,6 +1,6 @@
-import { getClientGstFrequency } from '@/lib/repositories/periods';
 'use server';
 
+import { getClientGstFrequency } from '@/lib/repositories/periods';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { hasCapabilities } from '@/lib/auth/capabilities-cache';
