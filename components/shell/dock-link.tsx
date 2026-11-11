@@ -1,22 +1,25 @@
 'use client';
+import { forwardRef } from 'react';
 import { useDockActions } from '@/lib/state/dock-state';
 import type { DockItem } from '@/lib/state/dock-state';
 import { trackRecentItem } from '@/lib/state/recent-items';
 import Link from 'next/link';
 
-interface DockLinkProps {
+interface DockLinkProps extends Omit<React.ComponentPropsWithoutRef<'a'>, 'href' | 'onClick'> {
   item: DockItem;
   href?: string; // fallback href for new-tab / context menu
   children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
 }
 
 /**
  * Hybrid link that opens in the dock on left-click,
  * but respects middle-click / right-click for native browser behavior.
+ * It forwards its ref and extra props so it can be a Radix `asChild` trigger.
  */
-export function DockLink({ item, href, children, className, style }: DockLinkProps) {
+export const DockLink = forwardRef<HTMLAnchorElement, DockLinkProps>(function DockLink(
+  { item, href, children, ...rest },
+  ref,
+) {
   const { push } = useDockActions();
 
   const handleClick = (e: React.MouseEvent) => {
@@ -30,13 +33,8 @@ export function DockLink({ item, href, children, className, style }: DockLinkPro
   };
 
   return (
-    <Link
-      href={href ?? `/${item.type}s/${item.id}`}
-      onClick={handleClick}
-      className={className}
-      style={style}
-    >
+    <Link ref={ref} {...rest} href={href ?? `/${item.type}s/${item.id}`} onClick={handleClick}>
       {children}
     </Link>
   );
-}
+});
