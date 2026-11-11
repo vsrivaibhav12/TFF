@@ -6,12 +6,17 @@ import { listExpiringDsc } from '@/lib/repositories/dsc';
 import { getTaskClosureVelocity } from '@/lib/repositories/tasks';
 import { MicroBarChart } from '@/components/charts/micro-bar-chart';
 import { Sparkline } from '@/components/charts/sparkline';
+import { DeadlineProgress, WorkloadBars, AgeingBars } from '@/components/dashboard/home-widgets';
+import { getAdminHome } from '@/lib/services/home-service';
+import { addDaysIso, formatInrCompact } from '@/lib/services/home-metrics';
 import Link from 'next/link';
 import {
   Users,
   AlertTriangle,
   Briefcase,
-  TrendingUp,
+  CalendarClock,
+  Clock,
+  Wallet,
   ShieldCheck,
   LogIn,
 } from 'lucide-react';
@@ -58,23 +63,30 @@ async function DashboardBody() {
     complianceCells,
     dscExpiring,
     closureVelocity,
+    home,
   ] = await Promise.all([
     getAdminDashboardData(),
     loadComplianceDashboard({ horizonMonths: 3 }),
     listExpiringDsc(90),
     getTaskClosureVelocity(30),
+    getAdminHome(),
   ]);
 
-  const bestByRule = new Map<string, typeof complianceCells[0]>();
-  for (const cell of complianceCells) {
-    const existing = bestByRule.get(cell.rule_code);
-    if (!existing || cell.period_due_date < existing.period_due_date) {
-      bestByRule.set(cell.rule_code, cell);
-    }
-  }
-  const topCompliance = Array.from(bestByRule.values())
-    .sort((a, b) => a.period_due_date.localeCompare(b.period_due_date))
-    .slice(0, 6);
+  // Filing deadlines in the next 14 days, soonest first.
+  const horizon = addDaysIso(home.todayIso, 14);
+  const deadlineRows = complianceCells
+    .filter((c) => c.period_due_date <= horizon)
+    .sort((x, y) => x.period_due_date.localeCompare(y.period_due_date))
+    .slice(0, 6)
+    .map((c) => ({
+      key: `${c.rule_code}::${c.period_label}`,
+      name: c.rule_name,
+      period: c.period_label,
+      due_date: c.period_due_date,
+      filed: c.filed,
+      total: c.total_clients,
+      overdue: c.overdue,
+    }));
 
   // One query for the whole 90-day window, bucketed here (was three separate queries).
   const todayMs = Date.parse(`${todayIST()}T00:00:00Z`);
@@ -116,16 +128,34 @@ async function DashboardBody() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Active clients" value={(activeClients ?? 0).toLocaleString('en-IN')} icon={<Users className="h-5 w-5" />} href="/admin/clients" />
-        <StatCard label="Open tasks" value={(openTasks ?? 0).toLocaleString('en-IN')} icon={<Briefcase className="h-5 w-5" />} href="/admin/tasks" />
-        <StatCard label="Active engagements" value={(activeEngagements ?? 0).toLocaleString('en-IN')} icon={<TrendingUp className="h-5 w-5" />} href="/admin/clients" />
         <StatCard
-          label="Overdue tasks"
-          value={overdueTasks ?? 0}
-          hint={(openTasks ?? 0) > 0 ? `of ${(openTasks ?? 0).toLocaleString('en-IN')} open` : undefined}
+          label="Due this week"
+          value={home.dueThisWeek}
+          hint={`of ${home.open.toLocaleString('en-IN')} open`}
+          icon={<CalendarClock className="h-5 w-5" />}
+          href={`/admin/tasks?due_from=${home.todayIso}&due_to=${addDaysIso(home.todayIso, 7)}`}
+        />
+        <StatCard
+          label="Overdue"
+          value={home.overdue}
           icon={<AlertTriangle className="h-5 w-5" />}
-          href="/admin/tasks"
+          href={`/admin/tasks?due_to=${addDaysIso(home.todayIso, -1)}`}
           tone="red"
+        />
+        <StatCard
+          label="Waiting on client"
+          value={home.waiting}
+          hint={home.ageing.d8_plus > 0 ? `${home.ageing.d8_plus} for 8 days or more` : undefined}
+          icon={<Clock className="h-5 w-5" />}
+          href="/admin/tasks?status=blocked"
+          tone="amber"
+        />
+        <StatCard
+          label="Done, not yet billed"
+          value={formatInrCompact(home.unbilled.amount)}
+          hint={`${home.unbilled.count.toLocaleString('en-IN')} task${home.unbilled.count === 1 ? '' : 's'}`}
+          icon={<Wallet className="h-5 w-5" />}
+          href="/admin/reports/pending-billing"
         />
       </div>
 
@@ -138,40 +168,16 @@ async function DashboardBody() {
         </div>
       </div>
 
-      {topCompliance.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="tff-section-title">Compliance this quarter</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {topCompliance.map((c) => {
-              const pct = c.total_clients > 0 ? Math.round((c.filed / c.total_clients) * 100) : 0;
-              const tone = pct >= 90 ? 'success' : pct >= 60 ? 'warning' : 'danger';
-              return (
-                <Link
-                  key={c.rule_code}
-                  href={`/admin/compliance?rule=${c.rule_code}`}
-                  className="tff-card p-3 hover:border-teal-200 transition-colors group"
-                >
-                  <div className="text-xs font-medium text-zinc-600 truncate">{c.rule_name}</div>
-                  <div className="text-xs text-zinc-500 mt-0.5">{c.period_label}</div>
-                  <div className={`text-xl font-semibold tabular-nums tracking-tight mt-2 ${tone === 'success' ? 'text-teal-700' : tone === 'warning' ? 'text-amber-600' : 'text-red-600'}`}>
-                    {c.filed}<span className="text-zinc-500 text-sm font-medium">/{c.total_clients}</span>
-                  </div>
-                  <div className="mt-2 h-1.5 w-full rounded-full bg-zinc-100 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${tone === 'success' ? 'bg-teal-500' : tone === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-xs text-zinc-500 tabular-nums">{pct}% filed</span>
-                    {c.overdue > 0 && <span className="text-xs text-red-600 font-medium tabular-nums">{c.overdue} overdue</span>}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      <DeadlineProgress rows={deadlineRows} href="/admin/compliance" />
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-7">
+          <WorkloadBars rows={home.workload} tasksHref="/admin/tasks" />
+        </div>
+        <div className="lg:col-span-5">
+          <AgeingBars buckets={home.ageing} href="/admin/tasks?status=blocked" />
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-7">
