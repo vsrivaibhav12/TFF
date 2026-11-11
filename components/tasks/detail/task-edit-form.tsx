@@ -13,18 +13,16 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { assignTaskAction } from '@/lib/actions/tasks';
 import { diffFields } from '@/lib/services/field-diff';
 import { taskToEditValues } from '@/lib/services/task-edit-values';
+import { PeriodPicker } from '@/components/ui/period-picker';
+import { defaultPeriodKey, resolveTaskPeriodType, subServicePeriodType } from '@/lib/periods';
+import { todayIST } from '@/lib/utils';
 import type { TaskDetailCtx } from './use-task-detail';
 
 const LIMITED_KEYS = [
-  'sub_service_id', 'task_template_id', 'period_year', 'period_month', 'period_quarter',
+  'sub_service_id', 'task_template_id', 'period_key',
   'is_billable', 'bill_reference', 'bill_amount', 'arn_reference', 'is_arn_client_visible', 'description',
 ] as const;
 const FULL_KEYS = [...LIMITED_KEYS, 'priority', 'due_date'] as const;
-
-function intOrNull(v: string): number | null {
-  const n = parseInt(v, 10);
-  return Number.isNaN(n) ? null : n;
-}
 
 function floatOrNull(v: string): number | null {
   const n = parseFloat(v);
@@ -37,7 +35,7 @@ function sameIds(a: string[], b: string[]): boolean {
 
 /** One form for every editable field of a task, with a single Save. */
 export function TaskEditForm({ ctx }: { ctx: TaskDetailCtx }) {
-  const { task, team, subServices, taskTemplates, editMode, canAssign, saveField, setEditing, onRefresh } = ctx;
+  const { task, team, subServices, taskTemplates, editMode, canAssign, clientGstFrequency, saveField, setEditing, onRefresh } = ctx;
   const limited = editMode === 'limited';
 
   // Everything is compared against what the task looked like when the form opened, so a refresh of the
@@ -48,9 +46,7 @@ export function TaskEditForm({ ctx }: { ctx: TaskDetailCtx }) {
 
   const [subServiceId, setSubServiceId] = useState(task.sub_service_id ?? '');
   const [templateId, setTemplateId] = useState(task.task_template_id ?? '');
-  const [periodYear, setPeriodYear] = useState(task.period_year != null ? String(task.period_year) : '');
-  const [periodMonth, setPeriodMonth] = useState(task.period_month != null ? String(task.period_month) : '');
-  const [periodQuarter, setPeriodQuarter] = useState(task.period_quarter != null ? String(task.period_quarter) : '');
+  const [periodKey, setPeriodKey] = useState(snapshot.period_key ?? '');
   const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.slice(0, 10) : '');
   const [priority, setPriority] = useState(task.priority);
   const [assigneeIds, setAssigneeIds] = useState<string[]>(originalAssignees);
@@ -63,6 +59,23 @@ export function TaskEditForm({ ctx }: { ctx: TaskDetailCtx }) {
   const [description, setDescription] = useState(task.description ?? '');
   const [busy, setBusy] = useState(false);
 
+  const typeFor = (subId: string) => {
+    const s = subServices.find((x) => x.sub_service_id === subId);
+    return s ? resolveTaskPeriodType(subServicePeriodType(s), clientGstFrequency ?? null) : 'none';
+  };
+  const periodType = typeFor(subServiceId);
+
+  function chooseService(next: string) {
+    const nextType = typeFor(next);
+    setSubServiceId(next);
+    setTemplateId('');
+    // A different kind of period needs a fresh choice. Offer the period that has just ended.
+    if (nextType !== periodType) {
+      const [y, m] = todayIST().split('-').map(Number);
+      setPeriodKey(defaultPeriodKey(nextType, { year: y, month: m }) ?? '');
+    }
+  }
+
   const templatesForService = taskTemplates.filter((t) => t.sub_service_id === subServiceId);
   const teamOptions = team.map((u) => ({ value: u.id, label: u.full_name, searchString: u.full_name.toLowerCase() }));
 
@@ -71,9 +84,7 @@ export function TaskEditForm({ ctx }: { ctx: TaskDetailCtx }) {
     const after: Record<string, unknown> = {
       sub_service_id: subServiceId || null,
       task_template_id: templateId || null,
-      period_year: intOrNull(periodYear),
-      period_month: intOrNull(periodMonth),
-      period_quarter: intOrNull(periodQuarter),
+      period_key: periodKey || null,
       is_billable: billable,
       bill_reference: billRef || null,
       bill_amount: floatOrNull(billAmount),
@@ -126,7 +137,7 @@ export function TaskEditForm({ ctx }: { ctx: TaskDetailCtx }) {
           <Label className="text-xs text-zinc-500">Service</Label>
           <Select
             value={subServiceId}
-            onValueChange={(v) => { setSubServiceId(v); setTemplateId(''); }}
+            onValueChange={chooseService}
           >
             <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select service" /></SelectTrigger>
             <SelectContent>
@@ -157,11 +168,7 @@ export function TaskEditForm({ ctx }: { ctx: TaskDetailCtx }) {
 
         <div className="space-y-1.5 sm:col-span-2">
           <Label className="text-xs text-zinc-500">Period</Label>
-          <div className="grid grid-cols-3 gap-2">
-            <Input type="number" min={2000} max={2100} value={periodYear} onChange={(e) => setPeriodYear(e.target.value)} placeholder="Year" aria-label="Period year" className="h-9 text-sm" />
-            <Input type="number" min={1} max={12} value={periodMonth} onChange={(e) => setPeriodMonth(e.target.value)} placeholder="Month (1-12)" aria-label="Period month" className="h-9 text-sm" />
-            <Input type="number" min={1} max={4} value={periodQuarter} onChange={(e) => setPeriodQuarter(e.target.value)} placeholder="Quarter (1-4)" aria-label="Period quarter" className="h-9 text-sm" />
-          </div>
+          <PeriodPicker type={periodType} value={periodKey} onChange={setPeriodKey} />
         </div>
 
         {!limited && (

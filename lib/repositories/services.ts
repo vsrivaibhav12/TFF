@@ -27,7 +27,7 @@ export async function listSubServices(serviceId?: string) {
   const sb = createClient();
   let q = sb
     .from('sub_services')
-    .select('id, code, name, frequency, due_day_of_month, is_billable, is_recurring, requires_client_input, is_active, service_id, services(code, name)')
+    .select('id, code, name, frequency, period_type, due_day_of_month, is_billable, is_recurring, requires_client_input, is_active, service_id, services(code, name)')
     .eq('is_deleted', false)
     .eq('is_active', true)
     .order('code');

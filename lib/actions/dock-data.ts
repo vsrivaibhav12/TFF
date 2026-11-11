@@ -1,3 +1,4 @@
+import { getClientGstFrequency } from '@/lib/repositories/periods';
 'use server';
 
 import { requireRole } from '@/lib/auth/require-role';
@@ -27,6 +28,8 @@ async function listSubServicesForTaskPicker(clientId: string) {
   return (all as any[]).map((s) => ({
     sub_service_id: s.id,
     linked: linkedIds.has(s.id),
+    period_type: s.period_type ?? null,
+    frequency: s.frequency ?? null,
     sub_services: { name: s.name, services: s.services ? { name: s.services.name } : null },
   }));
 }
@@ -48,7 +51,7 @@ export async function getTaskDockData(id: string) {
     const task = await getTask(id);
     if (!task) return fail('Task not found');
 
-    const [activity, notes, team, steps, cfDefs, cfValues, allLabels, assignedLabels, workdone, subServices, taskTemplates] = await Promise.all([
+    const [activity, notes, team, steps, cfDefs, cfValues, allLabels, assignedLabels, workdone, subServices, taskTemplates, clientGstFrequency] = await Promise.all([
       listTaskActivity(id),
       listTaskNotes(id),
       listTeamUsers(),
@@ -60,6 +63,7 @@ export async function getTaskDockData(id: string) {
       listWorkDoneForTask(id),
       listSubServicesForTaskPicker(task.client_id!),
       listTaskTemplates(),
+      getClientGstFrequency(task.client_id!),
     ]);
 
     const taskCaps = await hasCapabilities(me, ['tasks.edit', 'tasks.complete', 'tasks.delete', 'tasks.assign']);
@@ -88,6 +92,7 @@ export async function getTaskDockData(id: string) {
       canDelete,
       isAdmin,
       canAssign,
+      clientGstFrequency,
     });
   } catch (e: any) {
     return fail(e.message);

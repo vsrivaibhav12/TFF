@@ -3675,6 +3675,7 @@ export type Database = {
           is_deleted: boolean | null
           is_recurring: boolean | null
           name: string
+          period_type: string
           requires_client_input: boolean | null
           requires_verification: boolean
           service_id: string
@@ -3694,6 +3695,7 @@ export type Database = {
           is_deleted?: boolean | null
           is_recurring?: boolean | null
           name: string
+          period_type?: string
           requires_client_input?: boolean | null
           requires_verification?: boolean
           service_id: string
@@ -3713,6 +3715,7 @@ export type Database = {
           is_deleted?: boolean | null
           is_recurring?: boolean | null
           name?: string
+          period_type?: string
           requires_client_input?: boolean | null
           requires_verification?: boolean
           service_id?: string
@@ -4348,6 +4351,8 @@ export type Database = {
           labels: string[] | null
           period_month: number | null
           period_quarter: number | null
+          period_key: string | null
+          period_type: string | null
           period_year: number | null
           priority: string | null
           profit_centre_code: string | null
@@ -4398,6 +4403,8 @@ export type Database = {
           labels?: string[] | null
           period_month?: number | null
           period_quarter?: number | null
+          period_key?: string | null
+          period_type?: string | null
           period_year?: number | null
           priority?: string | null
           profit_centre_code?: string | null
@@ -4448,6 +4455,8 @@ export type Database = {
           labels?: string[] | null
           period_month?: number | null
           period_quarter?: number | null
+          period_key?: string | null
+          period_type?: string | null
           period_year?: number | null
           priority?: string | null
           profit_centre_code?: string | null

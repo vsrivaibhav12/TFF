@@ -55,6 +55,7 @@ export const createTaskSchema = z.object({
   period_year: z.number().int().min(2000).max(2100).optional().nullable(),
   period_month: z.number().int().min(1).max(12).optional().nullable(),
   period_quarter: z.number().int().min(1).max(4).optional().nullable(),
+  period_key: z.string().max(20).optional().nullable(),
   is_billable: z.boolean().default(false),
   bill_reference: z.string().max(80).optional().nullable(),
   bill_amount: z.number().nonnegative().optional().nullable(),

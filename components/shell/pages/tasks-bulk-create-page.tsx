@@ -1,3 +1,4 @@
+import { subServicePeriodType, type SubServicePeriodType } from '@/lib/periods';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
@@ -21,10 +22,14 @@ export default async function BulkTaskCreatePage({ searchParams }: { searchParam
   let clients = allClients;
   let templates = [];
   let subServiceName = undefined;
+  let periodType: SubServicePeriodType | null = null;
 
   if (searchParams.sub_service_id) {
-    const { data: sub } = await sb.from('sub_services').select('name').eq('id', searchParams.sub_service_id).single();
-    if (sub) subServiceName = sub.name;
+    const { data: sub } = await sb.from('sub_services').select('name, frequency, period_type').eq('id', searchParams.sub_service_id).single();
+    if (sub) {
+      subServiceName = sub.name;
+      periodType = subServicePeriodType(sub);
+    }
 
     const links = await fetchAll<{ client_id: string }>(() =>
       sb.from('client_sub_services').select('client_id').eq('sub_service_id', searchParams.sub_service_id!).eq('is_active', true),
@@ -57,6 +62,7 @@ export default async function BulkTaskCreatePage({ searchParams }: { searchParam
         templates={templates ?? []}
         initialSubServiceId={searchParams.sub_service_id}
         subServiceName={subServiceName}
+        periodType={periodType}
       />
     </div>
   );

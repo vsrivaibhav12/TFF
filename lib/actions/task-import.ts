@@ -1,4 +1,5 @@
 'use server';
+import { parsePeriodKey } from '@/lib/periods';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
@@ -159,10 +160,13 @@ export async function commitTaskImportAction(input: {
       // Automatically assign the first active task template
       const taskTemplateId = templateMap.get(subServiceId);
 
+      // A canonical period key (for example FY2026-27-Q2) is used as given.
+      const periodKeyGiven = r.period ? parsePeriodKey(r.period.trim().toUpperCase()) : null;
+
       // Uniform title generation across all creation paths
       let periodMonth: number | null = null;
       let periodQuarter: number | null = null;
-      if (r.period) {
+      if (r.period && !periodKeyGiven) {
         const pNum = parseInt(r.period.replace(/\D/g, ''), 10);
         if (!isNaN(pNum)) {
           if (r.period.toLowerCase().includes('q')) {
@@ -188,10 +192,11 @@ export async function commitTaskImportAction(input: {
         title: newTitle,
         priority: (r.priority || 'medium') as any,
         assigned_to: assigneeId,
-        period_year: r.period_year ? parseInt(r.period_year, 10) : undefined,
+        period_year: periodKeyGiven ? undefined : r.period_year ? parseInt(r.period_year, 10) : undefined,
       };
 
-      // Period already parsed for title generation above
+      // Period already parsed for title generation above. createTaskAction checks it against the service.
+      if (periodKeyGiven) payload.period_key = periodKeyGiven.key;
       if (periodMonth !== null) payload.period_month = periodMonth;
       if (periodQuarter !== null) payload.period_quarter = periodQuarter;
 

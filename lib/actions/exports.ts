@@ -1,5 +1,6 @@
 'use server';
 
+import { formatPeriodColumns } from '@/lib/periods';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { hasCapabilities } from '@/lib/auth/capabilities-cache';
@@ -22,11 +23,8 @@ type Exported = { rows: Row[]; truncated: boolean };
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : 'Export failed');
 
-function periodLabel(t: { period_month: number | null; period_quarter: number | null; period_year: number | null }): string {
-  if (!t.period_year) return '';
-  if (t.period_month) return `${new Date(t.period_year, t.period_month - 1).toLocaleString('en-IN', { month: 'short' })} ${t.period_year}`;
-  if (t.period_quarter) return `Q${t.period_quarter} ${t.period_year}`;
-  return String(t.period_year);
+function periodLabel(t: { period_month: number | null; period_quarter: number | null; period_year: number | null; period_key?: string | null }): string {
+  return formatPeriodColumns(t);
 }
 
 export async function exportTasksAction(filters: TaskFilterParams): Promise<ActionResult<Exported>> {

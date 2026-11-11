@@ -2,7 +2,9 @@
 import { useState, useTransition, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRolePrefix } from '@/lib/hooks/use-role-prefix';
-import { buildTaskTitle } from '@/lib/utils';
+import { buildTaskTitle, todayIST } from '@/lib/utils';
+import { PeriodPicker } from '@/components/ui/period-picker';
+import { defaultPeriodKey, resolveTaskPeriodType, type SubServicePeriodType } from '@/lib/periods';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,9 +23,11 @@ interface Props {
   templates?: { id: string; title: string; description: string | null }[];
   initialSubServiceId?: string;
   subServiceName?: string;
+  /** Period type of the chosen sub-service. Without a sub-service the tasks have no period. */
+  periodType?: SubServicePeriodType | null;
 }
 
-export default function BulkTaskForm({ clients, team, groups, templates = [], initialSubServiceId, subServiceName }: Props) {
+export default function BulkTaskForm({ clients, team, groups, templates = [], initialSubServiceId, subServiceName, periodType: declaredPeriodType }: Props) {
   const router = useRouter();
   const prefix = useRolePrefix();
   const [pending, startTransition] = useTransition();
@@ -40,9 +44,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
     description: '',
     priority: 'medium' as const,
     due_date: '',
-    period_year: '',
-    period_month: '',
-    period_quarter: '',
+    period_key: '',
     is_billable: false,
     bill_reference: '',
     bill_amount: '',
@@ -64,13 +66,19 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
     if (subServiceName) {
       const newTitle = buildTaskTitle({
         subServiceName,
-        periodYear: f.period_year ? parseInt(f.period_year, 10) : null,
-        periodMonth: f.period_month ? parseInt(f.period_month, 10) : null,
-        periodQuarter: f.period_quarter ? parseInt(f.period_quarter, 10) : null,
+        periodKey: f.period_key || null,
       });
       setAutoTitle(newTitle);
     }
-  }, [f.task_template_id, templates, subServiceName, f.period_year, f.period_month, f.period_quarter]);
+  }, [f.task_template_id, templates, subServiceName, f.period_key]);
+
+  // GST sub-services depend on each client's filing frequency; the server checks every client and reports mismatches.
+  const periodType = declaredPeriodType ? resolveTaskPeriodType(declaredPeriodType, null) : 'none';
+  useEffect(() => {
+    if (periodType === 'none') return;
+    const [y, m] = todayIST().split('-').map(Number);
+    setF((p) => (p.period_key ? p : { ...p, period_key: defaultPeriodKey(periodType, { year: y, month: m }) ?? '' }));
+  }, [periodType]);
 
   // 3. Assignees
   const [assigneeMap, setAssigneeMap] = useState<Record<string, { assignee?: string; reviewer?: string }>>({});
@@ -172,9 +180,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
           due_date: f.due_date,
           sub_service_id: f.sub_service_id || undefined,
           task_template_id: (f.task_template_id && f.task_template_id !== 'unassigned') ? f.task_template_id : undefined,
-          period_year: f.period_year ? parseInt(f.period_year, 10) : undefined,
-          period_month: f.period_month ? parseInt(f.period_month, 10) : undefined,
-          period_quarter: f.period_quarter ? parseInt(f.period_quarter, 10) : undefined,
+          period_key: f.period_key || undefined,
           is_billable: f.is_billable,
           bill_reference: f.bill_reference || undefined,
           bill_amount: f.bill_amount ? parseFloat(f.bill_amount) : undefined,
@@ -308,11 +314,15 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-3 border-t border-zinc-100 pt-3 mt-1">
-            <div className="space-y-2"><Label>Period year</Label><Input type="number" min={2000} max={2100} value={f.period_year} onChange={(e) => set('period_year', e.target.value)} placeholder="2026" /></div>
-            <div className="space-y-2"><Label>Period month</Label><Input type="number" min={1} max={12} value={f.period_month} onChange={(e) => set('period_month', e.target.value)} placeholder="1-12" /></div>
-            <div className="space-y-2"><Label>Quarter</Label><Input type="number" min={1} max={4} value={f.period_quarter} onChange={(e) => set('period_quarter', e.target.value)} placeholder="1-4" /></div>
-          </div>
+          {periodType !== 'none' && (
+            <div className="space-y-2 border-t border-zinc-100 pt-3 mt-1">
+              <Label>Period</Label>
+              <PeriodPicker type={periodType} value={f.period_key} onChange={(k) => set('period_key', k)} />
+              {declaredPeriodType === 'gst_frequency' && (
+                <p className="text-xs text-zinc-500">Clients that file quarterly need a quarter. Those tasks are reported as failed so you can create them separately.</p>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-3 border-t border-zinc-100 pt-3 mt-1">
             <Checkbox id="billable" checked={f.is_billable} onCheckedChange={(v) => set('is_billable', v === true)} />
             <Label htmlFor="billable" className="cursor-pointer">Billable</Label>

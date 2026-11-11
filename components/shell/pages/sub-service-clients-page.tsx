@@ -29,7 +29,7 @@ export default async function SubServiceClientsPage({ params, rolePrefix }: Prop
   const sb = createClient();
   const { data: subService } = await sb
     .from('sub_services')
-    .select('id, name, code, frequency, service_id, services!inner(name, code)')
+    .select('id, name, code, frequency, period_type, service_id, services!inner(name, code)')
     .eq('id', id)
     .eq('is_deleted', false)
     .maybeSingle();

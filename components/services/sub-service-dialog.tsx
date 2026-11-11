@@ -1,4 +1,5 @@
 'use client';
+import { PERIOD_TYPE_LABELS, SUB_SERVICE_PERIOD_TYPES, subServicePeriodType } from '@/lib/periods';
 import { useState, useTransition } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
     code: initial?.code ?? '',
     description: initial?.description ?? '',
     frequency: initial?.frequency ?? 'monthly',
+    period_type: subServicePeriodType({ period_type: initial?.period_type, frequency: initial?.frequency ?? 'monthly' }) as string,
     due_day_of_month: initial?.due_day_of_month ?? null,
     due_day_of_quarter: initial?.due_day_of_quarter ?? null,
     due_month: initial?.due_month ?? null,
@@ -73,6 +75,16 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
               </Select>
             </div>
             <div className="space-y-2"><Label>Default due day of month</Label><Input type="number" min={1} max={31} value={f.due_day_of_month ?? ''} onChange={(e) => set('due_day_of_month', e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 20" /></div>
+          </div>
+          <div className="space-y-2">
+            <Label>Period</Label>
+            <Select value={f.period_type} onValueChange={(v) => set('period_type', v)}>
+              <SelectTrigger data-testid="sub-svc-period-type"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {SUB_SERVICE_PERIOD_TYPES.map((x) => <SelectItem key={x} value={x}>{PERIOD_TYPE_LABELS[x]}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-zinc-500">The period each task covers: a month, a quarter, a half-year or a financial year. Services such as registrations have no period.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2"><Label>Due day of quarter</Label><Input type="number" min={1} max={31} value={f.due_day_of_quarter ?? ''} onChange={(e) => set('due_day_of_quarter', e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 15" /></div>

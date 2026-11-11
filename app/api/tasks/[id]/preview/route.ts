@@ -11,6 +11,7 @@ interface TaskPreviewRow {
   period_year: number | null;
   period_month: number | null;
   period_quarter: number | null;
+  period_key: string | null;
   clients: { business_name: string } | { business_name: string }[] | null;
   sub_services: { name: string } | { name: string }[] | null;
   users_profile: { full_name: string } | { full_name: string }[] | null;
@@ -38,6 +39,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
       period_year,
       period_month,
       period_quarter,
+      period_key,
       clients!tasks_client_id_fkey(business_name),
       sub_services!tasks_sub_service_id_fkey(name),
       users_profile!tasks_assigned_to_fkey(full_name),
@@ -68,6 +70,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     period_year: task.period_year,
     period_month: task.period_month,
     period_quarter: task.period_quarter,
+    period_key: task.period_key,
     client_name: Array.isArray(clients) ? clients[0]?.business_name ?? null : clients?.business_name ?? null,
     assignee_name: Array.isArray(usersProfile) ? usersProfile[0]?.full_name ?? null : usersProfile?.full_name ?? null,
     latest_note: latestNote,

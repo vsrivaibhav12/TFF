@@ -195,6 +195,7 @@ function renderPanel(type: string, data: any, prefix: string, onRefresh?: () => 
           canDelete={data.canDelete ?? false}
           isAdmin={data.isAdmin ?? false}
           canAssign={data.canAssign ?? false}
+          clientGstFrequency={data.clientGstFrequency ?? null}
           startInEdit={startInEdit}
           basePath={`${prefix}/tasks`}
           clientPath={`${prefix}/clients/${data.task.client_id}`}

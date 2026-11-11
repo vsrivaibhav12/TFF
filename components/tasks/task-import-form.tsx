@@ -77,6 +77,11 @@ export default function TaskImportForm() {
               <p className="text-zinc-500 text-xs">
                 <strong>Priority</strong> must be one of: low, medium, high, urgent.
               </p>
+              <p className="text-zinc-500 text-xs">
+                <strong>Period</strong> must fit the service. Monthly: Year plus a month number (for example 2026 and 10), or the key 2026-10.
+                Quarterly: Year is the financial year start (2026 for FY 2026-27) plus Q1 to Q4 (Q1 is April to June), or a key such as FY2026-27-Q2.
+                Yearly: Year is the financial year start, or a key such as FY2025-26. Services with no period must leave both blank.
+              </p>
             </div>
           </div>
           <form onSubmit={onUploadPreview} className="flex items-center gap-3 pt-2">

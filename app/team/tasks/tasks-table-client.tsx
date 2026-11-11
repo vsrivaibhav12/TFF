@@ -1,5 +1,6 @@
 'use client';
 
+import { formatPeriodColumns } from '@/lib/periods';
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { useDebouncedCallback } from '@/lib/hooks/use-debounced-callback';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -33,6 +34,7 @@ interface TaskRow {
   period_year?: number | null;
   period_month?: number | null;
   period_quarter?: number | null;
+  period_key?: string | null;
   is_verified?: boolean;
   is_stuck?: boolean;
   clients?: { business_name: string } | null;
@@ -285,13 +287,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 tabular-nums">
-                    {t.period_month && t.period_year
-                      ? `${new Date(t.period_year, t.period_month - 1).toLocaleString('default', { month: 'short' })} ${t.period_year}`
-                      : t.period_quarter && t.period_year
-                      ? `Q${t.period_quarter} ${t.period_year}`
-                      : t.period_year
-                      ? String(t.period_year)
-                      : '—'}
+                    {formatPeriodColumns(t) || '—'}
                   </span>
                   <span className={cn('text-xs tabular-nums', overdue ? 'text-red-600 font-medium' : dueSoon ? 'text-amber-600 font-medium' : 'text-zinc-500')}>
                     {formatDateIST(t.due_date)}
@@ -450,13 +446,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                   {colVisible('period') && (
                     <div className="min-w-0 overflow-hidden">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 tabular-nums">
-                        {t.period_month && t.period_year
-                          ? `${new Date(t.period_year, t.period_month - 1).toLocaleString('default', { month: 'short' })} ${t.period_year}`
-                          : t.period_quarter && t.period_year
-                          ? `Q${t.period_quarter} ${t.period_year}`
-                          : t.period_year
-                          ? String(t.period_year)
-                          : '—'}
+                        {formatPeriodColumns(t) || '—'}
                       </span>
                     </div>
                   )}

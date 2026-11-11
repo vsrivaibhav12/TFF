@@ -14,6 +14,8 @@ export const CLOSED_TASK_EDITABLE_FIELDS: readonly string[] = [
   'period_year',
   'period_month',
   'period_quarter',
+  'period_key',
+  'period_type',
   'sub_service_id',
   'task_template_id',
   'is_billable',

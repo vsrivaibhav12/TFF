@@ -10,6 +10,8 @@ import * as taskService from '@/lib/services/task-service';
 import { canModifyTask, canCompleteTask, canEditTaskFields } from '@/lib/services/task-modify-guard';
 import { diffFields } from '@/lib/services/field-diff';
 import { auditClosedTaskEdit } from '@/lib/services/task-edit-audit';
+import { resolveTaskPeriod } from '@/lib/services/task-period';
+import { getTaskPeriodContext } from '@/lib/repositories/periods';
 import * as taskRepo from '@/lib/repositories/tasks';
 import { ensureClientSubServiceLink } from '@/lib/repositories/client-sub-services';
 import { createClient } from '@/lib/supabase/server';
@@ -38,6 +40,17 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
     const parsed = createTaskSchema.safeParse(input);
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
     
+    // The period must fit what the sub-service declares (none, monthly, quarterly, ...).
+    const periodCtx = await getTaskPeriodContext(parsed.data.sub_service_id, parsed.data.client_id);
+    const resolvedPeriod = resolveTaskPeriod(periodCtx, {
+      period_key: parsed.data.period_key,
+      period_year: parsed.data.period_year,
+      period_month: parsed.data.period_month,
+      period_quarter: parsed.data.period_quarter,
+    });
+    if (!resolvedPeriod.ok) return fail(resolvedPeriod.reason, 'VALIDATION');
+    const { period_key: _ignoredKey, ...taskFields } = parsed.data;
+
     // Inherit is_billable from sub-service if linked
     let isBillable = parsed.data.is_billable ?? false;
     if (parsed.data.sub_service_id) {
@@ -63,7 +76,9 @@ export async function createTaskAction(input: CreateTaskInput): Promise<ActionRe
     }
 
     const data = await taskRepo.createTaskWithAutoNumber({
-      ...parsed.data,
+      ...taskFields,
+      ...(resolvedPeriod.columns ?? {}),
+      title: resolvedPeriod.title ?? parsed.data.title,
       status: 'pending',
       is_billable: isBillable,
       bill_amount: null,
@@ -496,82 +511,6 @@ export async function reopenTaskAction(input: { task_id: string; reason: string 
 }
 
 
-const bulkCreateTasksSchema = z.object({
-  client_ids: z.array(z.string().uuid()).min(1),
-  sub_service_id: z.string().uuid(),
-  assigned_to: z.string().uuid().optional().nullable(),
-  due_date: z.string().date(),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
-  period_year: z.number().int().min(2000).max(2100),
-  period_month: z.number().int().min(1).max(12).optional().nullable(),
-  period_quarter: z.number().int().min(1).max(4).optional().nullable(),
-});
-
-export async function bulkCreateTasksAction(input: z.infer<typeof bulkCreateTasksSchema>): Promise<ActionResult<{ created: number }>> {
-  try {
-    const me = await requireRole(['admin', 'team']);
-    await requireCapability(me, 'tasks.create');
-    const parsed = bulkCreateTasksSchema.safeParse(input);
-    if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
-
-    const sb = createClient();
-
-    // Fetch sub-service details for naming and is_billable
-    const { data: subService } = await sb
-      .from('sub_services')
-      .select('name, is_billable')
-      .eq('id', parsed.data.sub_service_id)
-      .maybeSingle();
-
-    let created = 0;
-    for (const clientId of parsed.data.client_ids) {
-      const { data: client } = await sb
-        .from('clients')
-        .select('business_name')
-        .eq('id', clientId)
-        .maybeSingle();
-
-      const title = buildTaskTitle({
-        subServiceName: subService?.name ?? 'Task',
-        clientName: client?.business_name,
-        periodYear: parsed.data.period_year,
-        periodMonth: parsed.data.period_month,
-        periodQuarter: parsed.data.period_quarter,
-      });
-
-      try {
-        await taskRepo.createTaskWithAutoNumber({
-          client_id: clientId,
-          sub_service_id: parsed.data.sub_service_id,
-          title,
-          description: '',
-          priority: parsed.data.priority,
-          assigned_to: parsed.data.assigned_to,
-          due_date: parsed.data.due_date,
-          period_year: parsed.data.period_year,
-          period_month: parsed.data.period_month,
-          period_quarter: parsed.data.period_quarter,
-          status: 'pending',
-          is_billable: subService?.is_billable ?? false,
-          bill_amount: null,
-          bill_reference: null,
-        });
-        created++;
-      } catch {
-        // Non-critical: individual client failure does not block bulk creation
-      }
-    }
-
-    await writeAudit({ action: 'task.bulk_create', entity_type: 'task', performed_by: me.id, details: { created, sub_service_id: parsed.data.sub_service_id } });
-    revalidatePath('/team/tasks');
-    revalidatePath('/admin/tasks');
-    return ok({ created });
-  } catch (e: unknown) {
-    return fail(errorMessage(e), errorCode(e));
-  }
-}
-
-
 const bulkUpdateTasksSchema = z.object({
   task_ids: z.array(z.string().uuid()).min(1),
   updates: z.object({
@@ -716,6 +655,7 @@ const updateTaskSchema = z.object({
   period_year: z.number().int().min(2000).max(2100).optional().nullable(),
   period_month: z.number().int().min(1).max(12).optional().nullable(),
   period_quarter: z.number().int().min(1).max(4).optional().nullable(),
+  period_key: z.string().max(20).optional().nullable(),
   sub_service_id: z.string().uuid().optional().nullable(),
   task_template_id: z.string().uuid().optional().nullable(),
   arn_reference: z.string().max(100).optional().nullable(),
@@ -756,27 +696,39 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
       }
     }
 
-    // Regenerate title if sub-service or period changes so the stored title stays consistent.
-    // A title typed by the user in the same request wins over the generated one.
-    const titleNeedsRegen =
-      updates.title === undefined &&
-      (updates.sub_service_id !== undefined ||
-        updates.period_year !== undefined ||
-        updates.period_month !== undefined ||
-        updates.period_quarter !== undefined);
-    if (titleNeedsRegen) {
-      const subServiceId = updates.sub_service_id ?? task.sub_service_id;
-      let subServiceName = task.sub_services?.name ?? task.title?.split(' — ')[0] ?? 'Task';
-      if (subServiceId) {
-        const { data: sub } = await sb.from('sub_services').select('name, is_billable').eq('id', subServiceId).maybeSingle();
-        if (sub?.name) subServiceName = sub.name;
-        // Inherit billable flag from the new sub-service unless the user explicitly set it.
-        if (updates.sub_service_id !== undefined && updates.is_billable === undefined && sub && sub.is_billable !== null) {
-          updates.is_billable = sub.is_billable;
-        }
-      }
+    // Period: it must fit the sub-service's period type. The uniform columns and the title are
+    // rebuilt from it. A title typed by the user in the same request wins over the generated one.
+    const userTypedTitle = updates.title !== undefined;
+    const periodTouched = (['period_year', 'period_month', 'period_quarter', 'period_key'] as const)
+      .some((k) => updates[k] !== undefined);
+    const subServiceTouched = updates.sub_service_id !== undefined;
+    if ((periodTouched || subServiceTouched) && effectiveSubServiceId) {
+      const periodCtx = await getTaskPeriodContext(effectiveSubServiceId, task.client_id as string);
+      // A picked key is the whole truth. Otherwise combine the new columns with the stored ones.
+      const periodInput = updates.period_key !== undefined
+        ? { period_key: updates.period_key }
+        : {
+            period_key: periodTouched ? null : task.period_key ?? null,
+            period_year: updates.period_year !== undefined ? updates.period_year : task.period_year,
+            period_month: updates.period_month !== undefined ? updates.period_month : task.period_month,
+            period_quarter: updates.period_quarter !== undefined ? updates.period_quarter : task.period_quarter,
+          };
+      const resolvedPeriod = resolveTaskPeriod(periodCtx, periodInput);
+      if (!resolvedPeriod.ok) return fail(resolvedPeriod.reason, 'VALIDATION');
+      if (resolvedPeriod.columns) Object.assign(updates, resolvedPeriod.columns);
+      if (!userTypedTitle && resolvedPeriod.title) updates.title = resolvedPeriod.title;
+    }
+
+    // Inherit the billable flag from a newly chosen sub-service unless the user set it explicitly.
+    if (subServiceTouched && updates.sub_service_id && updates.is_billable === undefined) {
+      const { data: sub } = await sb.from('sub_services').select('is_billable').eq('id', updates.sub_service_id).maybeSingle();
+      if (sub && sub.is_billable !== null) updates.is_billable = sub.is_billable;
+    }
+
+    // A task with no sub-service has no period type to check; keep its title consistent as before.
+    if (!effectiveSubServiceId && !userTypedTitle && updates.title === undefined && (periodTouched || subServiceTouched)) {
       updates.title = buildTaskTitle({
-        subServiceName,
+        subServiceName: task.sub_services?.name ?? task.title?.split(' — ')[0] ?? 'Task',
         clientName: task.clients?.business_name ?? undefined,
         periodYear: updates.period_year ?? task.period_year ?? null,
         periodMonth: updates.period_month ?? task.period_month ?? null,

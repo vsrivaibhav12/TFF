@@ -6,6 +6,7 @@ export type TaskEditValues = {
   period_year: number | null;
   period_month: number | null;
   period_quarter: number | null;
+  period_key: string | null;
   is_billable: boolean;
   bill_reference: string | null;
   bill_amount: number | null;
@@ -22,6 +23,7 @@ interface TaskLike {
   period_year?: number | null;
   period_month?: number | null;
   period_quarter?: number | null;
+  period_key?: string | null;
   is_billable?: boolean | null;
   bill_reference?: string | null;
   bill_amount?: number | null;
@@ -32,6 +34,14 @@ interface TaskLike {
   due_date?: string | null;
 }
 
+/** Older monthly tasks have a month and year but no key yet; they still count as that month. */
+function legacyMonthlyKey(task: TaskLike): string | null {
+  if (task.period_year && task.period_month && !task.period_quarter) {
+    return `${task.period_year}-${String(task.period_month).padStart(2, '0')}`;
+  }
+  return null;
+}
+
 /** Snapshot of the editable values of a task. The form diffs against the snapshot taken when it opened. */
 export function taskToEditValues(task: TaskLike): TaskEditValues {
   return {
@@ -40,6 +50,7 @@ export function taskToEditValues(task: TaskLike): TaskEditValues {
     period_year: task.period_year ?? null,
     period_month: task.period_month ?? null,
     period_quarter: task.period_quarter ?? null,
+    period_key: task.period_key ?? legacyMonthlyKey(task),
     is_billable: task.is_billable ?? false,
     bill_reference: task.bill_reference ?? null,
     bill_amount: task.bill_amount ?? null,

@@ -1,5 +1,6 @@
 'use client';
 
+import { formatPeriodColumns } from '@/lib/periods';
 import { DockLink } from '@/components/shell/dock-link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -121,7 +122,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
               <ReadField label="Priority"><span className="capitalize">{task.priority}</span></ReadField>
               <ReadField label="Due date">{task.due_date ? formatDateIST(task.due_date) : '—'}</ReadField>
               <ReadField label="Period">
-                {task.period_month && task.period_year ? `${task.period_month}/${task.period_year}${task.period_quarter ? ` · Q${task.period_quarter}` : ''}` : '—'}
+                {formatPeriodColumns(task) || '—'}
               </ReadField>
               <ReadField label="Assignees">
                 {(task.assignees?.length ? task.assignees : task.assignee ? [task.assignee] : []).map((a) => a.full_name).join(', ') || '—'}

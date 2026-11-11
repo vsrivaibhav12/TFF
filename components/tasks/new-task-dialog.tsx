@@ -13,12 +13,14 @@ import { createTaskAction } from '@/lib/actions/tasks';
 import { toast } from 'sonner';
 import { Plus, ChevronDown } from 'lucide-react';
 import { todayIST, buildTaskTitle } from '@/lib/utils';
+import { PeriodPicker } from '@/components/ui/period-picker';
+import { defaultPeriodKey, parsePeriodKey, resolveTaskPeriodType, subServicePeriodType } from '@/lib/periods';
 
 interface Props {
   /** Pre-loaded clients for synchronous title generation fallback. When omitted, async search is used. */
   clients?: { id: string; business_name: string; pan?: string | null }[];
   team: { id: string; full_name: string }[];
-  allSubServices?: { id: string; name: string; code?: string | null }[];
+  allSubServices?: { id: string; name: string; code?: string | null; period_type?: string | null; frequency?: string | null }[];
   defaultClientId?: string;
   triggerLabel?: string;
   triggerVariant?: 'default' | 'outline';
@@ -53,10 +55,9 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
     priority: 'medium' as const,
     assigned_to: currentUserId ?? '',
     due_date: getTomorrowIST(),
-    period_year: '',
-    period_month: '',
-    period_quarter: '',
+    period_key: '',
   });
+  const [gstFrequency, setGstFrequency] = useState<string | null>(null);
   // Keep auto-generated title in a ref so we can pass it to createTaskAction
   // without showing an input field
   const [autoTitle, setAutoTitle] = useState('');
@@ -94,13 +95,24 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
       const newTitle = buildTaskTitle({
         subServiceName: subName,
         clientName,
-        periodYear: f.period_year ? parseInt(f.period_year, 10) : null,
-        periodMonth: f.period_month ? parseInt(f.period_month, 10) : null,
-        periodQuarter: f.period_quarter ? parseInt(f.period_quarter, 10) : null,
+        periodKey: f.period_key || null,
       });
       setAutoTitle(newTitle);
     }
-  }, [f.client_id, f.sub_service_id, f.period_year, f.period_month, f.period_quarter, clientSubServices, clients, selectedClient]);
+  }, [f.client_id, f.sub_service_id, f.period_key, clientSubServices, clients, selectedClient]);
+
+  // What kind of period this task takes: set by the sub-service, and for GST by the client's filing frequency.
+  const chosenSub = allSubServices.find((s) => s.id === f.sub_service_id);
+  const periodType = chosenSub ? resolveTaskPeriodType(subServicePeriodType(chosenSub), gstFrequency) : 'none';
+
+  // Offer the period that has just ended, and replace a period of the wrong kind when the service or client changes.
+  useEffect(() => {
+    if (!f.sub_service_id) return;
+    const [y, m] = todayIST().split('-').map(Number);
+    const parsed = f.period_key ? parsePeriodKey(f.period_key) : null;
+    if (parsed && parsed.type === periodType) return;
+    setF((p) => ({ ...p, period_key: defaultPeriodKey(periodType, { year: y, month: m }) ?? '' }));
+  }, [f.sub_service_id, periodType]);
 
   // Load this client's sub-services and basic info when client changes
   useEffect(() => {
@@ -109,6 +121,7 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
       .then((r) => r.json())
       .then((j) => {
         setClientSubServices(j.items ?? []);
+        setGstFrequency(j.gstFrequency ?? null);
         if (j.client) setSelectedClient(j.client);
       })
       .catch(() => {
@@ -164,16 +177,14 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
         due_date: f.due_date || undefined,
         sub_service_id: f.sub_service_id || undefined,
         task_template_id: f.task_template_id || undefined,
-        period_year: f.period_year ? parseInt(f.period_year, 10) : undefined,
-        period_month: f.period_month ? parseInt(f.period_month, 10) : undefined,
-        period_quarter: f.period_quarter ? parseInt(f.period_quarter, 10) : undefined,
+        period_key: f.period_key || undefined,
         is_billable: false,
       };
       const r = await createTaskAction(payload);
       if (r.success) {
         toast.success('Task created');
         setOpen(false);
-        setF({ client_id: defaultClientId ?? '', sub_service_id: '', task_template_id: '', title: '', description: '', priority: 'medium', assigned_to: currentUserId ?? '', due_date: getTomorrowIST(), period_year: '', period_month: '', period_quarter: '' });
+        setF({ client_id: defaultClientId ?? '', sub_service_id: '', task_template_id: '', title: '', description: '', priority: 'medium', assigned_to: currentUserId ?? '', due_date: getTomorrowIST(), period_key: '' });
         setAutoTitle('');
         clearAutoSave();
       } else {
@@ -265,11 +276,12 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-2"><Label>Period year</Label><Input type="number" min={2000} max={2100} value={f.period_year} onChange={(e) => set('period_year', e.target.value)} placeholder="2026" /></div>
-            <div className="space-y-2"><Label>Period month</Label><Input type="number" min={1} max={12} value={f.period_month} onChange={(e) => set('period_month', e.target.value)} placeholder="1-12" /></div>
-            <div className="space-y-2"><Label>Quarter</Label><Input type="number" min={1} max={4} value={f.period_quarter} onChange={(e) => set('period_quarter', e.target.value)} placeholder="1-4" /></div>
-          </div>
+          {f.sub_service_id && (
+            <div className="space-y-2">
+              <Label>Period</Label>
+              <PeriodPicker type={periodType} value={f.period_key} onChange={(k) => set('period_key', k)} />
+            </div>
+          )}
 
           <Button
             type="button"

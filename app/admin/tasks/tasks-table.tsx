@@ -1,4 +1,5 @@
 'use client';
+import { formatPeriodColumns } from '@/lib/periods';
 import { useState, useMemo, useTransition } from 'react';
 import { useDebouncedCallback } from '@/lib/hooks/use-debounced-callback';
 import Link from 'next/link';
@@ -38,6 +39,7 @@ type Task = {
   period_year?: number | null;
   period_month?: number | null;
   period_quarter?: number | null;
+  period_key?: string | null;
   is_stuck: boolean;
   is_verified?: boolean;
   clients?: { business_name: string } | null;
@@ -369,13 +371,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                   {colVisible('period') && (
                     <TableCell className={rowPadding}>
                       <span className="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 tabular-nums">
-                        {t.period_month && t.period_year
-                          ? `${new Date(t.period_year, t.period_month - 1).toLocaleString('default', { month: 'short' })} ${t.period_year}`
-                          : t.period_quarter && t.period_year
-                          ? `Q${t.period_quarter} ${t.period_year}`
-                          : t.period_year
-                          ? String(t.period_year)
-                          : '—'}
+                        {formatPeriodColumns(t) || '—'}
                       </span>
                     </TableCell>
                   )}

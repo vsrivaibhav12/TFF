@@ -1,5 +1,6 @@
 'use client';
 
+import { formatPeriodColumns } from '@/lib/periods';
 import { useState } from 'react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ interface TaskPreview {
   period_year: number | null;
   period_month: number | null;
   period_quarter: number | null;
+  period_key: string | null;
   assignee_name: string | null;
   client_name: string | null;
   latest_note: string | null;
@@ -84,17 +86,11 @@ export function TaskHoverCard({ taskId, children }: { taskId: string; children: 
                   <span>Due {formatDateIST(data.due_date)}</span>
                 </div>
               )}
-              {(data.period_year || data.period_month || data.period_quarter) && (
+              {(data.period_key || data.period_year || data.period_month || data.period_quarter) && (
                 <div className="flex items-center gap-1.5">
                   <Calendar className="h-3 w-3 text-zinc-500" />
                   <span>
-                    {data.period_month && data.period_year
-                      ? `${new Date(data.period_year, data.period_month - 1).toLocaleString('default', { month: 'short' })} ${data.period_year}`
-                      : data.period_quarter && data.period_year
-                      ? `Q${data.period_quarter} ${data.period_year}`
-                      : data.period_year
-                      ? String(data.period_year)
-                      : '—'}
+                    {formatPeriodColumns(data) || '—'}
                   </span>
                 </div>
               )}

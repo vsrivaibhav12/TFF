@@ -9,6 +9,7 @@ export interface Task {
   period_year?: number | null;
   period_month?: number | null;
   period_quarter?: number | null;
+  period_key?: string | null;
   assigned_to?: string | null;
   reviewer_id?: string | null;
   client_id: string;
@@ -61,6 +62,8 @@ export interface TeamMember {
 
 export interface SubService {
   sub_service_id: string;
+  period_type?: string | null;
+  frequency?: string | null;
   sub_services?: { name?: string | null; services?: { name?: string | null } | null } | null;
 }
 
@@ -91,6 +94,8 @@ export interface Props {
   isAdmin: boolean;
   /** May change assignees and reviewers (tasks.assign or admin). */
   canAssign: boolean;
+  /** The client's GST filing frequency, used to resolve monthly or quarterly periods. */
+  clientGstFrequency?: string | null;
   /** Open the panel with the edit form already showing. */
   startInEdit?: boolean;
   basePath: string;

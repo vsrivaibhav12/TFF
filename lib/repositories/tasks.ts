@@ -15,6 +15,7 @@ export interface TaskRow {
   period_year: number | null;
   period_month: number | null;
   period_quarter: number | null;
+  period_key?: string | null;
   assigned_to: string | null;
   reviewer_id: string | null;
   sub_service_id: string | null;
@@ -197,7 +198,7 @@ function applyTaskFilters(query: any, opts: TaskFilterOpts, ids: string[] | unde
   return applyStatusFilter(q, opts.status);
 }
 
-const TASK_LIST_SELECT = 'id, task_number, title, status, priority, due_date, period_year, period_month, period_quarter, assigned_to, reviewer_id, sub_service_id, client_id, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status, is_billable, bill_reference, is_verified, created_at, updated_at, clients!tasks_client_id_fkey(id, business_name), users_profile!tasks_assigned_to_fkey(id, full_name, email), sub_services!tasks_sub_service_id_fkey(id, code, name)';
+const TASK_LIST_SELECT = 'id, task_number, title, status, priority, due_date, period_year, period_month, period_quarter, period_key, assigned_to, reviewer_id, sub_service_id, client_id, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status, is_billable, bill_reference, is_verified, created_at, updated_at, clients!tasks_client_id_fkey(id, business_name), users_profile!tasks_assigned_to_fkey(id, full_name, email), sub_services!tasks_sub_service_id_fkey(id, code, name)';
 
 async function fetchTaskRows(
   sb: ReturnType<typeof createClient>,
@@ -280,7 +281,7 @@ export async function getTask(id: string): Promise<TaskDetail | null> {
       client_id, sub_service_id, task_template_id,
       assigned_to, reviewer_id,
       created_date, due_date, started_date, completed_date,
-      period_month, period_year, period_quarter,
+      period_month, period_year, period_quarter, period_key, period_type,
       is_billable, bill_reference, bill_amount, billed, billed_date,
       is_recurring, arn_reference, is_arn_client_visible,
       is_verified, is_blocked_on_client, is_stuck, stuck_reason_code, verification_status,

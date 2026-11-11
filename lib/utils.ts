@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from 'clsx';
+import { parsePeriodKey, formatPeriod } from '@/lib/periods';
 import { twMerge } from 'tailwind-merge';
 import type { KeyboardEvent } from 'react';
 
@@ -185,12 +186,17 @@ export function buildTaskTitle(opts: {
   periodYear?: number | null;
   periodMonth?: number | null;
   periodQuarter?: number | null;
+  /** Canonical period key (see lib/periods.ts). When given it replaces the legacy year, month and quarter. */
+  periodKey?: string | null;
 }): string {
   const parts: string[] = [opts.subServiceName];
   if (opts.clientName) parts.push(opts.clientName);
 
   const periodParts: string[] = [];
-  if (opts.periodYear) {
+  const keyed = opts.periodKey ? parsePeriodKey(opts.periodKey) : null;
+  if (keyed) {
+    periodParts.push(formatPeriod(keyed));
+  } else if (opts.periodYear) {
     if (opts.periodMonth) {
       periodParts.push(`${opts.periodMonth}/${opts.periodYear}`);
     } else if (opts.periodQuarter) {

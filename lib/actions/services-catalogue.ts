@@ -118,6 +118,7 @@ const subServiceSchema = z.object({
   code: z.string().min(1).max(40),
   description: z.string().optional(),
   frequency: z.enum(['monthly', 'quarterly', 'annually', 'on_demand']),
+  period_type: z.enum(['none', 'monthly', 'quarterly', 'half_yearly', 'yearly', 'gst_frequency']).optional(),
   due_day_of_month: z.number().int().min(1).max(31).optional().nullable(),
   due_day_of_quarter: z.number().int().min(1).max(31).optional().nullable(),
   due_month: z.number().int().min(1).max(12).optional().nullable(),
