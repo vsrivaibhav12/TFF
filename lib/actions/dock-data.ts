@@ -62,10 +62,12 @@ export async function getTaskDockData(id: string) {
       listTaskTemplates(),
     ]);
 
-    const taskCaps = await hasCapabilities(me, ['tasks.edit', 'tasks.complete', 'tasks.delete']);
+    const taskCaps = await hasCapabilities(me, ['tasks.edit', 'tasks.complete', 'tasks.delete', 'tasks.assign']);
     const canEdit = taskCaps.has('tasks.edit');
     const canEditSteps = taskCaps.has('tasks.complete');
     const canDelete = taskCaps.has('tasks.delete');
+    const isAdmin = me.role === 'admin';
+    const canAssign = isAdmin || taskCaps.has('tasks.assign');
 
     return ok({
       task,
@@ -84,6 +86,8 @@ export async function getTaskDockData(id: string) {
       canEdit,
       canEditSteps,
       canDelete,
+      isAdmin,
+      canAssign,
     });
   } catch (e: any) {
     return fail(e.message);

@@ -171,7 +171,7 @@ export default async function TasksListPage({
             {isAdminView ? (
               <AdminTasksTable tasks={tasks as any} todayIso={todayIso} team={team ?? []} canDelete={canDelete} />
             ) : (
-              <TeamTasksTable tasks={tasks as any} todayIso={todayIso} canEdit={canEdit} canComplete={canComplete} canDelete={canDelete} />
+              <TeamTasksTable tasks={tasks as any} todayIso={todayIso} canEdit={canEdit} canComplete={canComplete} canDelete={canDelete} isAdmin={isAdmin} />
             )}
           </TaskViewWrapper>
 

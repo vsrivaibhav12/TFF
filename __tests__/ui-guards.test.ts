@@ -27,4 +27,19 @@ describe('UI guards', () => {
     }
     assert.deepEqual(offenders, [], `Empty SelectItem values:\n${offenders.join('\n')}`);
   });
+
+  it('no edit control is visible only on hover (keyboard and touch users could not reach it)', () => {
+    const offenders: string[] = [];
+    for (const dir of ['app', 'components']) {
+      for (const file of walk(join(process.cwd(), dir))) {
+        const lines = readFileSync(file, 'utf-8').split('\n');
+        lines.forEach((line, i) => {
+          if (line.includes('Pencil') && line.includes('opacity-0')) {
+            offenders.push(`${file.replace(process.cwd(), '')}:${i + 1}`);
+          }
+        });
+      }
+    }
+    assert.deepEqual(offenders, [], `Hover-only edit controls:\n${offenders.join('\n')}`);
+  });
 });

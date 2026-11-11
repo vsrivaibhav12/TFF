@@ -4,6 +4,7 @@ import { useDebouncedCallback } from '@/lib/hooks/use-debounced-callback';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { DockLink } from '@/components/shell/dock-link';
+import { TaskRowEditButton } from '@/components/tasks/task-row-edit-button';
 import { TaskHoverCard } from '@/components/tasks/task-hover-card';
 import { Badge } from '@/components/ui/badge';
 import { getStatusColour, getPriorityColour } from '@/lib/semantic-colours';
@@ -357,6 +358,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                           </ExpandableCell>
                         </DockLink>
                       </TaskHoverCard>
+                      <TaskRowEditButton taskId={t.id} status={t.status} canEdit isAdmin />
                       {t.labels && t.labels.length > 0 && (
                         <div className="mt-1">
                           <TaskLabelPills labels={t.labels} maxVisible={2} size="xs" />

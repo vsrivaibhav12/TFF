@@ -1,3 +1,13 @@
+/** A label with a read-only value, used in the task panel's details grid. */
+export function ReadField({ label, children }: { label: string; children: import('react').ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <div className="text-xs text-zinc-500 mb-1">{label}</div>
+      <div className="text-sm font-semibold text-zinc-900">{children}</div>
+    </div>
+  );
+}
+
 export function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">

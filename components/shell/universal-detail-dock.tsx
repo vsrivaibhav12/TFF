@@ -108,7 +108,7 @@ function DockPanelAsync({ item }: { item: DockItem }) {
 
   // After any change inside the panel (status, notes, flags, work logs) refetch the panel's data.
   // Without this the cached copy stayed stale and the panel looked as if nothing had happened.
-  return renderPanel(item.type, data.data, prefix, () => { void mutate(); });
+  return renderPanel(item.type, data.data, prefix, () => { void mutate(); }, item.mode === 'edit');
 }
 
 function DockPanelLegacy({ item }: { item: DockItem }) {
@@ -163,7 +163,7 @@ function DockPanelLegacy({ item }: { item: DockItem }) {
   if (loading) return <PanelSkeleton />;
   if (error) return <div className="p-6 text-center text-sm text-red-500">{error}</div>;
 
-  return renderPanel(item.type, taskData ?? clientData ?? teamData, prefix, refresh);
+  return renderPanel(item.type, taskData ?? clientData ?? teamData, prefix, refresh, item.mode === 'edit');
 }
 
 function usePathnamePrefix() {
@@ -171,11 +171,12 @@ function usePathnamePrefix() {
   return pathname.startsWith('/team') ? '/team' : '/admin';
 }
 
-function renderPanel(type: string, data: any, prefix: string, onRefresh?: () => void) {
+function renderPanel(type: string, data: any, prefix: string, onRefresh?: () => void, startInEdit = false) {
   if (type === 'task' && data?.task) {
     return (
       <div className="px-2 md:px-4 py-4 min-h-full">
         <TaskDetailShell
+          key={`${data.task.id}${startInEdit ? ':edit' : ''}`}
           task={data.task}
           activity={data.activity}
           notes={data.notes}
@@ -192,6 +193,9 @@ function renderPanel(type: string, data: any, prefix: string, onRefresh?: () => 
           canEdit={data.canEdit ?? false}
           canEditSteps={data.canEditSteps ?? false}
           canDelete={data.canDelete ?? false}
+          isAdmin={data.isAdmin ?? false}
+          canAssign={data.canAssign ?? false}
+          startInEdit={startInEdit}
           basePath={`${prefix}/tasks`}
           clientPath={`${prefix}/clients/${data.task.client_id}`}
           isModal={true}

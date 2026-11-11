@@ -7,7 +7,9 @@ import { requireCapability } from '@/lib/auth/require-capability';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 import { createTaskSchema, transitionTaskSchema, updateTaskBillingSchema, updateTaskArnSchema, reopenTaskSchema, type CreateTaskInput, type TaskStatus } from '@/lib/validation/schemas';
 import * as taskService from '@/lib/services/task-service';
-import { canModifyTask, canCompleteTask } from '@/lib/services/task-modify-guard';
+import { canModifyTask, canCompleteTask, canEditTaskFields } from '@/lib/services/task-modify-guard';
+import { diffFields } from '@/lib/services/field-diff';
+import { auditClosedTaskEdit } from '@/lib/services/task-edit-audit';
 import * as taskRepo from '@/lib/repositories/tasks';
 import { ensureClientSubServiceLink } from '@/lib/repositories/client-sub-services';
 import { createClient } from '@/lib/supabase/server';
@@ -208,7 +210,8 @@ export async function updateTaskLabelsAction(taskId: string, labels: string[]): 
     await requireCapability(me, 'tasks.edit');
     const task = await taskRepo.getTask(taskId);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+    const check = canEditTaskFields(task, ['labels'], { isAdmin: me.role === 'admin' });
+    if (!check.ok) return fail(check.reason, check.code);
 
     const sb = createClient();
     // Remove existing labels
@@ -243,7 +246,8 @@ export async function updateTaskCustomFieldsAction(taskId: string, fields: Recor
     await requireCapability(me, 'manage_custom_fields');
     const task = await taskRepo.getTask(taskId);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+    const check = canEditTaskFields(task, ['custom_fields'], { isAdmin: me.role === 'admin' });
+    if (!check.ok) return fail(check.reason, check.code);
 
     const sb = createClient();
     for (const [definitionId, value] of Object.entries(fields)) {
@@ -336,17 +340,24 @@ export async function updateTaskBillingAction(input: { task_id: string; is_billa
     
     const task = await taskRepo.getTask(parsed.data.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (task.is_deleted) {
-      return fail('Deleted tasks cannot be modified', 'IMMUTABLE');
-    }
-    
-    await taskRepo.updateTaskRecord(parsed.data.task_id, {
+    const check = canEditTaskFields(task, ['is_billable', 'bill_reference', 'bill_amount'], { isAdmin: me.role === 'admin' });
+    if (!check.ok) return fail(check.reason, check.code);
+
+    const billingUpdate = {
       is_billable: parsed.data.is_billable,
       bill_reference: parsed.data.bill_reference || null,
       bill_amount: parsed.data.bill_amount ?? null,
+    };
+    await taskRepo.updateTaskRecord(parsed.data.task_id, {
+      ...billingUpdate,
       updated_at: new Date().toISOString(),
     });
-    
+    await auditClosedTaskEdit({
+      task,
+      performedBy: me.id,
+      fields: diffFields(task as unknown as Record<string, unknown>, billingUpdate, Object.keys(billingUpdate)),
+    });
+
     await taskRepo.addTaskActivity({
       task_id: parsed.data.task_id,
       action: 'billing_updated',
@@ -404,16 +415,23 @@ export async function updateTaskArnAction(input: { task_id: string; arn_referenc
     
     const task = await taskRepo.getTask(parsed.data.task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (task.is_deleted) {
-      return fail('Deleted tasks cannot be modified', 'IMMUTABLE');
-    }
-    
-    await taskRepo.updateTaskRecord(parsed.data.task_id, {
+    const check = canEditTaskFields(task, ['arn_reference', 'is_arn_client_visible'], { isAdmin: me.role === 'admin' });
+    if (!check.ok) return fail(check.reason, check.code);
+
+    const arnUpdate = {
       arn_reference: parsed.data.arn_reference || null,
       is_arn_client_visible: parsed.data.is_arn_client_visible ?? false,
+    };
+    await taskRepo.updateTaskRecord(parsed.data.task_id, {
+      ...arnUpdate,
       updated_at: new Date().toISOString(),
     });
-    
+    await auditClosedTaskEdit({
+      task,
+      performedBy: me.id,
+      fields: diffFields(task as unknown as Record<string, unknown>, arnUpdate, Object.keys(arnUpdate)),
+    });
+
     await taskRepo.addTaskActivity({
       task_id: parsed.data.task_id,
       action: 'arn_updated',
@@ -717,7 +735,9 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
     const { task_id, ...updates } = parsed.data;
     const task = await taskRepo.getTask(task_id);
     if (!task) return fail('Task not found', 'NOT_FOUND');
-    if (!canModifyTask(task)) return fail('Completed or deleted tasks cannot be modified', 'IMMUTABLE');
+    const editCheck = canEditTaskFields(task, Object.keys(updates), { isAdmin: me.role === 'admin' });
+    if (!editCheck.ok) return fail(editCheck.reason, editCheck.code);
+    const wasCompleted = task.status === 'completed';
 
     const sb = createClient();
 
@@ -737,11 +757,13 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
     }
 
     // Regenerate title if sub-service or period changes so the stored title stays consistent.
+    // A title typed by the user in the same request wins over the generated one.
     const titleNeedsRegen =
-      updates.sub_service_id !== undefined ||
-      updates.period_year !== undefined ||
-      updates.period_month !== undefined ||
-      updates.period_quarter !== undefined;
+      updates.title === undefined &&
+      (updates.sub_service_id !== undefined ||
+        updates.period_year !== undefined ||
+        updates.period_month !== undefined ||
+        updates.period_quarter !== undefined);
     if (titleNeedsRegen) {
       const subServiceId = updates.sub_service_id ?? task.sub_service_id;
       let subServiceName = task.sub_services?.name ?? task.title?.split(' — ')[0] ?? 'Task';
@@ -773,8 +795,18 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
       updated_at: new Date().toISOString(),
     });
 
-    // A task that has no checklist yet gets the new sub-service's SOP steps.
-    if (subServiceChanged && !updates.task_template_id) {
+    if (wasCompleted) {
+      await writeAudit({
+        action: 'task.update_closed',
+        entity_type: 'task',
+        entity_id: task_id,
+        performed_by: me.id,
+        details: { fields: diffFields(task as unknown as Record<string, unknown>, { ...task, ...updates } as unknown as Record<string, unknown>, Object.keys(updates)) },
+      });
+    }
+
+    // A task that has no checklist yet gets the new sub-service's SOP steps. Completed tasks keep their checklist as it was.
+    if (subServiceChanged && !wasCompleted && !updates.task_template_id) {
       try {
         const { count } = await sb.from('task_steps').select('id', { count: 'exact', head: true }).eq('task_id', task_id);
         if (!count) {

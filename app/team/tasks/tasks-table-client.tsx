@@ -7,6 +7,7 @@ import { useTransition } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { DockLink } from '@/components/shell/dock-link';
+import { TaskRowEditButton } from '@/components/tasks/task-row-edit-button';
 import { TaskHoverCard } from '@/components/tasks/task-hover-card';
 import { EditableCell } from '@/components/tasks/editable-cell';
 import { Badge } from '@/components/ui/badge';
@@ -92,7 +93,7 @@ const DEFAULT_COLUMNS = [
   { key: 'verified', label: 'Verified', visible: true, optional: true },
 ];
 
-export default function TasksTableClient({ tasks, todayIso, canEdit = false, canComplete = false, canDelete = false }: { tasks: TaskRow[]; todayIso?: string; canEdit?: boolean; canComplete?: boolean; canDelete?: boolean }) {
+export default function TasksTableClient({ tasks, todayIso, canEdit = false, canComplete = false, canDelete = false, isAdmin = false }: { tasks: TaskRow[]; todayIso?: string; canEdit?: boolean; canComplete?: boolean; canDelete?: boolean; isAdmin?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -438,6 +439,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                           {displayTaskName(t)}
                         </DockLink>
                       </TaskHoverCard>
+                      <TaskRowEditButton taskId={t.id} status={t.status} canEdit={canEdit} isAdmin={isAdmin} />
                       {t.labels && t.labels.length > 0 && (
                         <div className="mt-1">
                           <TaskLabelPills labels={t.labels} maxVisible={2} size="xs" />

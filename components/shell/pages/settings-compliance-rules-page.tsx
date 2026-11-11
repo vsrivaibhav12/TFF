@@ -8,6 +8,7 @@ import { ChevronLeft, RefreshCw } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import RefreshEventsBtn from '@/app/admin/settings/compliance-rules/refresh-button';
 import RuleRowToggle from '@/app/admin/settings/compliance-rules/rule-row-toggle';
+import RuleEditDialog from '@/app/admin/settings/compliance-rules/rule-edit-dialog';
 
 
 export default async function ComplianceRulesPage(_props: unknown, rolePrefix: string) {
@@ -77,7 +78,10 @@ export default async function ComplianceRulesPage(_props: unknown, rolePrefix: s
                     )}
                   </div>
                 </div>
-                <RuleRowToggle id={r.id} isActive={r.is_active} />
+                <div className="flex items-center gap-3 shrink-0">
+                  <RuleEditDialog rule={r} />
+                  <RuleRowToggle id={r.id} isActive={r.is_active} />
+                </div>
               </div>
             ))}
           </div>

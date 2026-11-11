@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Power } from 'lucide-react';
+import { Plus, Power, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   upsertProfitCentreAction,
@@ -33,17 +33,36 @@ export default function CentresAdmin({
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [editingCode, setEditingCode] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const upsert = kind === 'profit' ? upsertProfitCentreAction : upsertCostCentreAction;
 
+  function startEdit(r: Row) {
+    setEditingCode(r.code);
+    setCode(r.code);
+    setName(r.name);
+    setDescription(r.description ?? '');
+  }
+
+  function resetForm() {
+    setEditingCode(null);
+    setCode(''); setName(''); setDescription('');
+  }
+
   function add() {
     if (!code || !name) return;
+    const existing = editingCode ? rows.find((r) => r.code === editingCode) : undefined;
     startTransition(async () => {
-      const r = await upsert({ code: code.toUpperCase(), name, description: description || null, is_active: true });
+      const r = await upsert({
+        code: code.toUpperCase(),
+        name,
+        description: description || null,
+        is_active: existing ? existing.is_active : true,
+      });
       if (!r.success) toast.error(r.error);
       else {
-        toast.success(`${title.replace(/s$/, '')} added`);
-        setCode(''); setName(''); setDescription('');
+        toast.success(`${title.replace(/s$/, '')} ${editingCode ? 'updated' : 'added'}`);
+        resetForm();
         router.refresh();
       }
     });
@@ -70,11 +89,16 @@ export default function CentresAdmin({
                 {!r.is_active && <Badge variant="outline" className="ml-2 text-xs">inactive</Badge>}
                 {r.description && <p className="text-xs text-zinc-500 mt-0.5 ml-1">{r.description}</p>}
               </div>
-              {r.is_active && (
-                <Button size="sm" variant="ghost" onClick={() => deactivate(r.code)} disabled={pending}>
-                  <Power className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="outline" onClick={() => startEdit(r)} disabled={pending} aria-label={`Edit ${r.name}`} data-testid={`centre-${kind}-edit-${r.code}`}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
                 </Button>
-              )}
+                {r.is_active && (
+                  <Button size="sm" variant="ghost" onClick={() => deactivate(r.code)} disabled={pending} aria-label={`Deactivate ${r.name}`}>
+                    <Power className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
             </li>
           ))}
         </ul>
@@ -84,7 +108,7 @@ export default function CentresAdmin({
       <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-3 border-t border-zinc-100">
         <div className="sm:col-span-2 space-y-1">
           <Label className="text-xs">Code</Label>
-          <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="CAS" maxLength={12} data-testid={`centre-${kind}-code`} />
+          <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="CAS" maxLength={12} disabled={!!editingCode} data-testid={`centre-${kind}-code`} />
         </div>
         <div className="sm:col-span-4 space-y-1">
           <Label className="text-xs">Name</Label>
@@ -94,10 +118,13 @@ export default function CentresAdmin({
           <Label className="text-xs">Description (optional)</Label>
           <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="One-line description" />
         </div>
-        <div className="sm:col-span-1 flex items-end">
-          <Button onClick={add} disabled={pending || !code || !name} className="w-full" data-testid={`centre-${kind}-add`}>
-            <Plus className="h-3.5 w-3.5" />
+        <div className="sm:col-span-1 flex items-end gap-1">
+          <Button onClick={add} disabled={pending || !code || !name} className="w-full" data-testid={`centre-${kind}-add`} aria-label={editingCode ? 'Save changes' : 'Add'}>
+            {editingCode ? 'Save' : <Plus className="h-3.5 w-3.5" />}
           </Button>
+          {editingCode && (
+            <Button variant="outline" onClick={resetForm} disabled={pending}>Cancel</Button>
+          )}
         </div>
       </div>
     </section>

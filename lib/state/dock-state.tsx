@@ -5,6 +5,8 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 export interface DockItem {
   type: 'task' | 'client' | 'team';
   id: string;
+  /** 'edit' opens the panel with the edit form showing. */
+  mode?: 'view' | 'edit';
 }
 
 export type DockState = DockItem[];

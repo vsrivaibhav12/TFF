@@ -7,6 +7,7 @@ import { addManualWorkDoneAction, deleteWorkDoneAction } from '@/lib/actions/wor
 import { setTaskBlockedOnClientAction, setTaskStuckAction } from '@/lib/actions/task-flags';
 import { toast } from 'sonner';
 import { useConfirm } from '@/components/ui/use-confirm';
+import { taskEditMode } from '@/lib/services/task-modify-guard';
 import type { Props } from './types';
 
 /** All state and handlers for the task detail view; both layouts read from this one object. */
@@ -28,6 +29,9 @@ export function useTaskDetail(props: Props) {
     canEdit,
     canEditSteps,
     canDelete,
+    isAdmin,
+    canAssign,
+    startInEdit,
     basePath,
     clientPath,
     isModal,
@@ -46,39 +50,12 @@ export function useTaskDetail(props: Props) {
   const task = optimistic ? { ...serverTask, ...optimistic } : serverTask;
 
   const isClosed = task.status === 'completed' || task.status === 'cancelled';
-  const [editingDesc, setEditingDesc] = useState(false);
-  const [editingPeriod, setEditingPeriod] = useState(false);
-  const [editingPriority, setEditingPriority] = useState(false);
-  const [editingDueDate, setEditingDueDate] = useState(false);
-  const [editingAssignee, setEditingAssignee] = useState(false);
-  const [editingBilling, setEditingBilling] = useState(false);
-  const [editingArn, setEditingArn] = useState(false);
-  const [editingFinance, setEditingFinance] = useState(false);
-  const [editingService, setEditingService] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState(false);
-  const [selectedSubServiceId, setSelectedSubServiceId] = useState(task.sub_service_id || '');
-  const [selectedTemplateId, setSelectedTemplateId] = useState(task.task_template_id || '');
-
-  // Resync local edit state when the task data refreshes (e.g. after a successful save).
+  const editMode = taskEditMode(task, { canEdit, isAdmin });
+  const [editing, setEditing] = useState(!!startInEdit && editMode !== 'none');
+  // If the task becomes uneditable while the form is open (for example it was completed), close the form.
   useEffect(() => {
-    setSelectedSubServiceId(task.sub_service_id || '');
-    setSelectedTemplateId(task.task_template_id || '');
-  }, [task.id, task.sub_service_id, task.task_template_id]);
-  const [description, setDescription] = useState(task.description || '');
-  const [periodYear, setPeriodYear] = useState<string>(String(task.period_year ?? ''));
-  const [periodMonth, setPeriodMonth] = useState<string>(String(task.period_month ?? ''));
-  const [periodQuarter, setPeriodQuarter] = useState<string>(String(task.period_quarter ?? ''));
-  const [priority, setPriority] = useState(task.priority);
-  const [dueDate, setDueDate] = useState<string>(task.due_date ? task.due_date.slice(0, 10) : '');
-  const [assignedTo, setAssignedTo] = useState<string>(task.assigned_to || '');
-  const [assigneeIds, setAssigneeIds] = useState<string[]>(task.assignees?.map((a) => a.id) ?? (task.assigned_to ? [task.assigned_to] : []));
-  const [reviewerIds, setReviewerIds] = useState<string[]>(task.reviewers?.map((r) => r.id) ?? (task.reviewer_id ? [task.reviewer_id] : []));
-  
-  const [billable, setBillable] = useState(task.is_billable ?? false);
-  const [billRef, setBillRef] = useState<string>(task.bill_reference ?? '');
-  const [billAmount, setBillAmount] = useState<string>(String(task.bill_amount ?? ''));
-  const [arnRef, setArnRef] = useState<string>(task.arn_reference ?? '');
-  const [arnVisible, setArnVisible] = useState(task.is_arn_client_visible ?? false);
+    if (editMode === 'none') setEditing(false);
+  }, [editMode]);
 
   const [saving, setSaving] = useState(false);
   const [newNote, setNewNote] = useState('');
@@ -240,64 +217,17 @@ export function useTaskDetail(props: Props) {
     canEdit,
     canEditSteps,
     canDelete,
+    isAdmin,
+    canAssign,
     basePath,
     clientPath,
     isModal,
     onRefresh,
     router,
     isClosed,
-    editingDesc,
-    setEditingDesc,
-    editingPeriod,
-    setEditingPeriod,
-    editingPriority,
-    setEditingPriority,
-    editingDueDate,
-    setEditingDueDate,
-    editingAssignee,
-    setEditingAssignee,
-    editingBilling,
-    setEditingBilling,
-    editingArn,
-    setEditingArn,
-    editingFinance,
-    setEditingFinance,
-    editingService,
-    setEditingService,
-    editingTemplate,
-    setEditingTemplate,
-    selectedSubServiceId,
-    setSelectedSubServiceId,
-    selectedTemplateId,
-    setSelectedTemplateId,
-    description,
-    setDescription,
-    periodYear,
-    setPeriodYear,
-    periodMonth,
-    setPeriodMonth,
-    periodQuarter,
-    setPeriodQuarter,
-    priority,
-    setPriority,
-    dueDate,
-    setDueDate,
-    assignedTo,
-    setAssignedTo,
-    assigneeIds,
-    setAssigneeIds,
-    reviewerIds,
-    setReviewerIds,
-    billable,
-    setBillable,
-    billRef,
-    setBillRef,
-    billAmount,
-    setBillAmount,
-    arnRef,
-    setArnRef,
-    arnVisible,
-    setArnVisible,
+    editMode,
+    editing,
+    setEditing,
     saving,
     setSaving,
     newNote,

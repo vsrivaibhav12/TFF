@@ -5,16 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Pencil, Check, X, Loader2, Plus, Clock, Trash2 } from 'lucide-react';
+import { Pencil, Loader2, Plus, Clock, Trash2 } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { MultiSelect } from '@/components/ui/multi-select';
-import { Switch } from '@/components/ui/switch';
 import { formatDateIST, formatTimeIST, timeAgo, cn } from '@/lib/utils';
 import TaskStepsPanel from '@/components/tasks/task-steps-panel';
 import CustomFieldsPanel from '@/components/tasks/custom-fields-panel';
-import { assignTaskAction } from '@/lib/actions/tasks';
-import { toast } from 'sonner';
-import { fmtHM } from './helpers';
+import { fmtHM, ReadField } from './helpers';
+import { TaskEditForm } from './task-edit-form';
 import { TaskStatusStepper } from './status-stepper';
 import type { Task } from './types';
 import type { TaskDetailCtx } from './use-task-detail';
@@ -30,64 +27,14 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
     allLabels,
     assignedLabels,
     workdone,
-    subServices,
     taskTemplates,
     currentUserId,
-    canEdit,
     canEditSteps,
     clientPath,
-    onRefresh,
     isClosed,
-    editingDesc,
-    setEditingDesc,
-    editingPeriod,
-    setEditingPeriod,
-    editingPriority,
-    setEditingPriority,
-    editingDueDate,
-    setEditingDueDate,
-    editingAssignee,
-    setEditingAssignee,
-    editingBilling,
-    setEditingBilling,
-    editingArn,
-    setEditingArn,
-    editingService,
-    setEditingService,
-    editingTemplate,
-    setEditingTemplate,
-    selectedSubServiceId,
-    setSelectedSubServiceId,
-    selectedTemplateId,
-    setSelectedTemplateId,
-    description,
-    setDescription,
-    periodYear,
-    setPeriodYear,
-    periodMonth,
-    setPeriodMonth,
-    periodQuarter,
-    setPeriodQuarter,
-    priority,
-    setPriority,
-    dueDate,
-    setDueDate,
-    assigneeIds,
-    setAssigneeIds,
-    reviewerIds,
-    setReviewerIds,
-    billable,
-    setBillable,
-    billRef,
-    setBillRef,
-    billAmount,
-    setBillAmount,
-    arnRef,
-    setArnRef,
-    arnVisible,
-    setArnVisible,
-    saving,
-    setSaving,
+    editMode,
+    editing,
+    setEditing,
     newNote,
     setNewNote,
     addingNote,
@@ -111,7 +58,6 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
     loggingWork,
     workPending,
     addNote,
-    saveField,
     handleTransition,
     transitioning,
     handleBlockedToggle,
@@ -130,6 +76,11 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                 <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
                   Billable
                 </span>
+              )}
+              {editMode !== 'none' && !editing && (
+                <Button type="button" size="sm" variant="outline" className="ml-auto h-7" onClick={() => setEditing(true)} data-testid="task-edit-button">
+                  <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+                </Button>
               )}
             </div>
             <h1 className="text-base font-semibold text-zinc-900 leading-tight mb-2">
@@ -162,291 +113,54 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
             onTransition={handleTransition}
           />
 
-          {/* Editable Metadata Grid */}
-          <div className="tff-card p-4 grid grid-cols-2 gap-x-6 gap-y-4">
-            {/* Priority */}
-            <div className="group min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-xs text-zinc-500">Priority</div>
-                {canEdit && !isClosed && !editingPriority && (
-                  <button type="button" onClick={() => setEditingPriority(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
-                )}
-              </div>
-              {editingPriority ? (
-                <div className="flex items-center gap-1">
-                  <Select value={priority} onValueChange={(v) => setPriority(v as Task['priority'])}>
-                    <SelectTrigger className="h-7 text-xs w-24 px-1"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="urgent">Urgent</SelectItem></SelectContent>
-                  </Select>
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ priority })) setEditingPriority(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPriority(task.priority); setEditingPriority(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
-                </div>
-              ) : (
-                <div className="text-sm font-semibold text-zinc-900 capitalize">{task.priority}</div>
-              )}
+          {/* Details: read-only values, or the edit form */}
+          {editing ? (
+            <TaskEditForm ctx={ctx} />
+          ) : (
+            <div className="tff-card p-4 grid grid-cols-2 gap-x-6 gap-y-4">
+              <ReadField label="Priority"><span className="capitalize">{task.priority}</span></ReadField>
+              <ReadField label="Due date">{task.due_date ? formatDateIST(task.due_date) : '—'}</ReadField>
+              <ReadField label="Period">
+                {task.period_month && task.period_year ? `${task.period_month}/${task.period_year}${task.period_quarter ? ` · Q${task.period_quarter}` : ''}` : '—'}
+              </ReadField>
+              <ReadField label="Assignees">
+                {(task.assignees?.length ? task.assignees : task.assignee ? [task.assignee] : []).map((a) => a.full_name).join(', ') || '—'}
+              </ReadField>
+              <ReadField label="Billing">
+                {task.is_billable ? `Yes · ${task.bill_reference || 'No ref'} · ₹${task.bill_amount ?? 0}` : 'No'}
+              </ReadField>
+              <ReadField label="ARN">{task.arn_reference || '—'}</ReadField>
+              <ReadField label="Service">
+                {task.sub_services ? `${task.sub_services.services?.name ?? ''} › ${task.sub_services.name}` : '—'}
+              </ReadField>
+              <ReadField label="Template">
+                {taskTemplates.find((t) => t.id === task.task_template_id)?.title || '—'}
+              </ReadField>
             </div>
-
-            {/* Due date */}
-            <div className="group min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-xs text-zinc-500">Due date</div>
-                {canEdit && !isClosed && !editingDueDate && (
-                  <button type="button" onClick={() => setEditingDueDate(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
-                )}
-              </div>
-              {editingDueDate ? (
-                <div className="flex items-center gap-1">
-                  <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-7 text-xs w-28 px-1" />
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ due_date: dueDate || null })) setEditingDueDate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setDueDate(task.due_date ? task.due_date.slice(0, 10) : ''); setEditingDueDate(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
-                </div>
-              ) : (
-                <div className="text-sm font-semibold text-zinc-900">{task.due_date ? formatDateIST(task.due_date) : '—'}</div>
-              )}
-            </div>
-
-            {/* Period */}
-            <div className="group min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-xs text-zinc-500">Period</div>
-                {canEdit && !isClosed && !editingPeriod && (
-                  <button type="button" onClick={() => setEditingPeriod(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
-                )}
-              </div>
-              {editingPeriod ? (
-                <div className="flex items-center gap-1">
-                  <Input type="number" value={periodYear} onChange={(e) => setPeriodYear(e.target.value)} className="w-14 h-6 text-xs px-1" placeholder="YYYY" />
-                  <Input type="number" value={periodMonth} onChange={(e) => setPeriodMonth(e.target.value)} className="w-10 h-6 text-xs px-1" placeholder="MM" />
-                  <Input type="number" value={periodQuarter} onChange={(e) => setPeriodQuarter(e.target.value)} className="w-10 h-6 text-xs px-1" placeholder="Q" />
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => { if (await saveField({ period_year: periodYear ? parseInt(periodYear) : null, period_month: periodMonth ? parseInt(periodMonth) : null, period_quarter: periodQuarter ? parseInt(periodQuarter) : null })) setEditingPeriod(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                  <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setPeriodYear(String(task.period_year ?? '')); setPeriodMonth(String(task.period_month ?? '')); setPeriodQuarter(String(task.period_quarter ?? '')); setEditingPeriod(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
-                </div>
-              ) : (
-                <div className="text-sm font-semibold text-zinc-900">{task.period_month && task.period_year ? `${task.period_month}/${task.period_year}${task.period_quarter ? ` · Q${task.period_quarter}` : ''}` : '—'}</div>
-              )}
-            </div>
-
-            {/* Assignees */}
-            <div className="group min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-xs text-zinc-500">Assignees</div>
-                {!isClosed && !editingAssignee && (
-                  <button type="button" onClick={() => setEditingAssignee(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
-                )}
-              </div>
-              {editingAssignee ? (
-                <div className="space-y-2">
-                  <MultiSelect
-                    options={team.map((u) => ({ value: u.id, label: u.full_name, searchString: u.full_name.toLowerCase() }))}
-                    value={assigneeIds}
-                    onChange={setAssigneeIds}
-                    placeholder="Select assignees"
-                    searchPlaceholder="Search team..."
-                  />
-                  <div className="text-xs text-zinc-500">Reviewers</div>
-                  <MultiSelect
-                    options={team.map((u) => ({ value: u.id, label: u.full_name, searchString: u.full_name.toLowerCase() }))}
-                    value={reviewerIds}
-                    onChange={setReviewerIds}
-                    placeholder="Select reviewers"
-                    searchPlaceholder="Search team..."
-                  />
-                  <div className="flex items-center gap-1">
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
-                      setSaving(true);
-                      const r = await assignTaskAction({ task_id: task.id, assigned_to: assigneeIds, reviewer_id: reviewerIds });
-                      setSaving(false);
-                      if (!r.success) { toast.error(r.error); return; }
-                      toast.success('Assignment updated');
-                      setEditingAssignee(false);
-                      onRefresh?.();
-                    }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
-                      setAssigneeIds(task.assignees?.map((a) => a.id) ?? (task.assigned_to ? [task.assigned_to] : []));
-                      setReviewerIds(task.reviewers?.map((r) => r.id) ?? (task.reviewer_id ? [task.reviewer_id] : []));
-                      setEditingAssignee(false);
-                    }}><X className="h-3 w-3 text-zinc-500" /></Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-sm font-semibold text-zinc-900">
-                  {(task.assignees?.length ? task.assignees : task.assignee ? [task.assignee] : []).map((a) => a.full_name).join(', ') || '—'}
-                </div>
-              )}
-            </div>
-
-            {/* Billing */}
-            <div className="group min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-xs text-zinc-500">Billing</div>
-                {canEdit && !isClosed && !editingBilling && (
-                  <button type="button" onClick={() => setEditingBilling(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
-                )}
-              </div>
-              {editingBilling ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-500">Billable</span>
-                    <Switch checked={billable} onCheckedChange={setBillable} />
-                  </div>
-                  {billable && (
-                    <div className="space-y-1">
-                      <Input value={billRef} onChange={(e) => setBillRef(e.target.value)} placeholder="Ref" className="h-6 text-xs" />
-                      <Input type="number" value={billAmount} onChange={(e) => setBillAmount(e.target.value)} placeholder="Amount" className="h-6 text-xs" />
-                    </div>
-                  )}
-                  <div className="flex gap-1">
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
-                      const numAmount = parseFloat(billAmount);
-                      if (await saveField({ is_billable: billable, bill_reference: billRef || null, bill_amount: isNaN(numAmount) ? null : numAmount })) setEditingBilling(false);
-                    }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
-                      setBillable(task.is_billable ?? false);
-                      setBillRef(task.bill_reference ?? '');
-                      setBillAmount(String(task.bill_amount ?? ''));
-                      setEditingBilling(false);
-                    }}><X className="h-3 w-3 text-zinc-500" /></Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-sm font-semibold text-zinc-900">{task.is_billable ? `Yes · ${task.bill_reference || 'No ref'} · ₹${task.bill_amount ?? 0}` : 'No'}</div>
-              )}
-            </div>
-
-            {/* ARN */}
-            <div className="group min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-xs text-zinc-500">ARN</div>
-                {canEdit && !isClosed && !editingArn && (
-                  <button type="button" onClick={() => setEditingArn(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
-                )}
-              </div>
-              {editingArn ? (
-                <div className="space-y-2">
-                  <Input value={arnRef} onChange={(e) => setArnRef(e.target.value)} placeholder="ARN reference" className="h-6 text-xs" />
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-500">Client visible</span>
-                    <Switch checked={arnVisible} onCheckedChange={setArnVisible} />
-                  </div>
-                  <div className="flex gap-1">
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async () => {
-                      if (await saveField({ arn_reference: arnRef || null, is_arn_client_visible: arnVisible })) setEditingArn(false);
-                    }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => {
-                      setArnRef(task.arn_reference ?? '');
-                      setArnVisible(task.is_arn_client_visible ?? false);
-                      setEditingArn(false);
-                    }}><X className="h-3 w-3 text-zinc-500" /></Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-sm font-semibold text-zinc-900">{task.arn_reference || '—'}</div>
-              )}
-            </div>
-
-            {/* Service */}
-            <div className="group min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-xs text-zinc-500">Service</div>
-                {canEdit && !isClosed && !editingService && (
-                  <button type="button" onClick={() => setEditingService(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit" title="Edit service"><Pencil className="h-3.5 w-3.5" /></button>
-                )}
-              </div>
-              {editingService ? (
-                <div className="space-y-2">
-                  <Select value={selectedSubServiceId} onValueChange={(v) => { setSelectedSubServiceId(v); setSelectedTemplateId(''); }}>
-                    <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Select service" /></SelectTrigger>
-                    <SelectContent>
-                      {subServices.map((s) => (
-                        <SelectItem key={s.sub_service_id} value={s.sub_service_id} className="text-xs">
-                          {s.sub_services?.services?.name ? `${s.sub_services.services.name} › ` : ''}{s.sub_services?.name || s.sub_service_id}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="flex gap-1">
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await saveField({ sub_service_id: selectedSubServiceId || null, task_template_id: null })) setEditingService(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSubServiceId(task.sub_service_id || ''); setSelectedTemplateId(task.task_template_id || ''); setEditingService(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-sm font-semibold text-zinc-900">{task.sub_services ? `${task.sub_services.services?.name ?? ''} › ${task.sub_services.name}` : '—'}</div>
-              )}
-            </div>
-
-            {/* Template */}
-            <div className="group min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-xs text-zinc-500">Template</div>
-                {canEdit && !isClosed && !editingTemplate && (
-                  <button type="button" onClick={() => setEditingTemplate(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit" title="Edit template"><Pencil className="h-3.5 w-3.5" /></button>
-                )}
-              </div>
-              {editingTemplate ? (
-                <div className="space-y-2">
-                  <Select value={selectedTemplateId || '__none__'} onValueChange={(v) => setSelectedTemplateId(v === '__none__' ? '' : v)}>
-                    <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Select template" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__" className="text-xs">No template</SelectItem>
-                      {(() => {
-                        const availableTemplates = taskTemplates.filter((t) => t.sub_service_id === (selectedSubServiceId || task.sub_service_id));
-                        if (availableTemplates.length === 0) {
-                          return <SelectItem value="__empty__" disabled className="text-xs text-zinc-500">No templates for this sub-service</SelectItem>;
-                        }
-                        return availableTemplates.map((t) => (
-                          <SelectItem key={t.id} value={t.id} className="text-xs">{t.title}</SelectItem>
-                        ));
-                      })()}
-                    </SelectContent>
-                  </Select>
-                  <div className="flex gap-1">
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const taskTemplateId = selectedTemplateId && selectedTemplateId !== '__empty__' ? selectedTemplateId : null; if (await saveField({ task_template_id: taskTemplateId })) setEditingTemplate(false); }} disabled={saving}><Check className="h-3 w-3 text-teal-600" /></Button>
-                    <Button type="button" size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedTemplateId(task.task_template_id || ''); setEditingTemplate(false); }}><X className="h-3 w-3 text-zinc-500" /></Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-sm font-semibold text-zinc-900">{taskTemplates.find((t) => t.id === task.task_template_id)?.title || (canEdit && !isClosed ? <span className="text-zinc-500 font-normal">No template — click to set</span> : '—')}</div>
-              )}
-            </div>
-          </div>
+          )}
 
           {/* Steps — always visible */}
           {steps.length > 0 && (
             <TaskStepsPanel taskId={task.id} initial={steps} editable={canEditSteps} allowAddStep={canEditSteps} enforceSequence status={task.status as import('@/lib/validation/schemas').TaskStatus} currentUserName={team.find(u => u.id === currentUserId)?.full_name ?? 'You'} />
           )}
 
-          {/* Description */}
-          <div className="tff-card p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="tff-section-title">Description</h3>
-              {canEdit && !isClosed && !editingDesc && (
-                <button type="button" onClick={() => setEditingDesc(true)} className="text-zinc-500 hover:text-zinc-800 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>
+          {/* Description (edited through the edit form) */}
+          {!editing && (
+            <div className="tff-card p-4">
+              <h3 className="tff-section-title mb-2">Description</h3>
+              <p className={cn('text-xs text-zinc-600 whitespace-pre-wrap leading-relaxed', !descExpanded && 'line-clamp-3')}>
+                {task.description || <span className="text-zinc-500 italic">No description provided.</span>}
+              </p>
+              {task.description && task.description.length > 120 && (
+                <button type="button" onClick={() => setDescExpanded(!descExpanded)} className="mt-2 text-xs text-teal-600 hover:text-teal-700 font-medium">
+                  {descExpanded ? 'Show less' : 'Show more'}
+                </button>
               )}
             </div>
-            {editingDesc ? (
-              <div className="space-y-2">
-                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="text-sm" />
-                <div className="flex gap-2">
-                  <Button type="button" size="sm" onClick={async () => { if (await saveField({ description: description || null })) setEditingDesc(false); }} disabled={saving}>Save</Button>
-                  <Button type="button" size="sm" variant="outline" onClick={() => { setDescription(task.description || ''); setEditingDesc(false); }}>Cancel</Button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <p className={cn('text-xs text-zinc-600 whitespace-pre-wrap leading-relaxed', !descExpanded && 'line-clamp-3')}>
-                  {task.description || <span className="text-zinc-500 italic">No description provided.</span>}
-                </p>
-                {task.description && task.description.length > 120 && (
-                  <button type="button" onClick={() => setDescExpanded(!descExpanded)} className="mt-2 text-xs text-teal-600 hover:text-teal-700 font-medium">
-                    {descExpanded ? 'Show less' : 'Show more'}
-                  </button>
-                )}
-              </>
-            )}
-          </div>
+          )}
 
           {/* Labels */}
-          <CustomFieldsPanel taskId={task.id} definitions={cfDefs} values={cfValues} allLabels={allLabels} assignedLabels={assignedLabels} readonly={isClosed} />
+          <CustomFieldsPanel taskId={task.id} definitions={cfDefs} values={cfValues} allLabels={allLabels} assignedLabels={assignedLabels} readonly={editMode === 'none'} />
 
           {/* Work logging */}
           <div className="tff-card p-4 space-y-3">

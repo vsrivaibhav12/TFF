@@ -87,6 +87,12 @@ export interface Props {
   canEdit: boolean;
   canEditSteps: boolean;
   canDelete: boolean;
+  /** True for firm admins. Admins may also correct completed tasks. */
+  isAdmin: boolean;
+  /** May change assignees and reviewers (tasks.assign or admin). */
+  canAssign: boolean;
+  /** Open the panel with the edit form already showing. */
+  startInEdit?: boolean;
   basePath: string;
   clientPath: string;
   isModal?: boolean;
