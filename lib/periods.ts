@@ -276,3 +276,20 @@ export function defaultPeriodKey(type: PeriodType, today: { year: number; month:
       return null;
   }
 }
+
+/** The last day of a period, as an ISO date. Null for a period-less task. */
+export function periodEndIso(p: Period): string | null {
+  const lastDay = (y: number, m: number) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const iso = (y: number, m: number) => `${y}-${pad2(m)}-${pad2(lastDay(y, m))}`;
+  switch (p.type) {
+    case 'monthly': return iso(p.year as number, p.month as number);
+    case 'quarterly': {
+      // Q1 ends June, Q2 September, Q3 December, Q4 March of the following year.
+      const endMonth = 6 + 3 * ((p.quarter as number) - 1);
+      return endMonth > 12 ? iso((p.year as number) + 1, endMonth - 12) : iso(p.year as number, endMonth);
+    }
+    case 'half_yearly': return p.half === 1 ? iso(p.year as number, 9) : iso((p.year as number) + 1, 3);
+    case 'yearly': return iso((p.year as number) + 1, 3);
+    default: return null;
+  }
+}

@@ -1,4 +1,5 @@
 'use client';
+import { canGrantCapability } from '@/lib/auth/capability-grant';
 import { useMemo, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -29,12 +30,15 @@ export default function CapabilitiesForm({
   all,
   granted,
   templateCaps,
+  isSuperAdmin = false,
 }: {
   userId: string;
   userName: string;
   all: string[];
   granted: string[];
   templateCaps: string[];
+  /** Only a super admin can change super-admin-only capabilities. */
+  isSuperAdmin?: boolean;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set(granted));
   const [filter, setFilter] = useState('');
@@ -44,6 +48,7 @@ export default function CapabilitiesForm({
   const grouped = useMemo(() => groupByPersona(all), [all]);
 
   function toggle(cap: string) {
+    if (!canGrantCapability({ is_prime_admin: isSuperAdmin }, cap)) return;
     setSelected((s) => {
       const ns = new Set(s);
       if (ns.has(cap)) ns.delete(cap);
@@ -129,6 +134,7 @@ export default function CapabilitiesForm({
                         id={`cap-${cap}`}
                         checked={isSelected}
                         onCheckedChange={() => toggle(cap)}
+                        disabled={!canGrantCapability({ is_prime_admin: isSuperAdmin }, cap)}
                         data-testid={`cap-${cap}`}
                         className="mt-0.5"
                       />
@@ -137,6 +143,9 @@ export default function CapabilitiesForm({
                           {meta.label}
                         </Label>
                         <p className="text-xs text-zinc-500 mt-0.5">{meta.description}</p>
+                        {!canGrantCapability({ is_prime_admin: isSuperAdmin }, cap) && (
+                          <p className="text-xs text-amber-700 mt-0.5">Only a super admin can change this.</p>
+                        )}
                         <code className="text-xs text-zinc-500 font-mono mt-1 block">{cap}</code>
                       </div>
                       <div className="flex flex-col items-end gap-1">

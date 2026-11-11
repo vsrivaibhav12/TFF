@@ -884,6 +884,7 @@ export type Database = {
         Row: {
           access_level: string | null
           client_id: string
+          default_assignee_id: string | null
           created_at: string | null
           fee_amount: number | null
           id: string
@@ -894,6 +895,7 @@ export type Database = {
         Insert: {
           access_level?: string | null
           client_id: string
+          default_assignee_id?: string | null
           created_at?: string | null
           fee_amount?: number | null
           id?: string
@@ -904,6 +906,7 @@ export type Database = {
         Update: {
           access_level?: string | null
           client_id?: string
+          default_assignee_id?: string | null
           created_at?: string | null
           fee_amount?: number | null
           id?: string
@@ -1139,6 +1142,7 @@ export type Database = {
           id: string
           is_deleted: boolean
           period_label: string
+          period_key: string | null
           rule_code: string
           rule_id: string | null
           status: string
@@ -1154,6 +1158,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           period_label: string
+          period_key?: string | null
           rule_code: string
           rule_id?: string | null
           status?: string
@@ -1169,6 +1174,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           period_label?: string
+          period_key?: string | null
           rule_code?: string
           rule_id?: string | null
           status?: string
@@ -1212,6 +1218,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      compliance_deadlines: {
+        Row: {
+          created_at: string
+          due_date: string
+          extension_note: string | null
+          id: string
+          original_due_date: string | null
+          period_key: string
+          sub_service_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          due_date: string
+          extension_note?: string | null
+          id?: string
+          original_due_date?: string | null
+          period_key: string
+          sub_service_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          due_date?: string
+          extension_note?: string | null
+          id?: string
+          original_due_date?: string | null
+          period_key?: string
+          sub_service_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       compliance_calendar_rules: {
         Row: {
@@ -5188,6 +5230,21 @@ export type Database = {
     Functions: {
       current_user_role: { Args: never; Returns: string }
       user_has_capability: { Args: { cap: string }; Returns: boolean }
+      list_deadline_clients: { Args: { p_sub_service_id: string; p_period_key: string }; Returns: Json }
+      create_deadline_tasks: {
+        Args: {
+          p_sub_service_id: string
+          p_period_key: string
+          p_period_type: string
+          p_period_year: number | null
+          p_period_month: number | null
+          p_period_quarter: number | null
+          p_due_date: string
+          p_priority: string
+          p_rows: Json
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

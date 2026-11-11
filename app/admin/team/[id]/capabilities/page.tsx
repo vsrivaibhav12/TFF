@@ -1,3 +1,4 @@
+import { requireRole } from '@/lib/auth/require-role';
 import Link from 'next/link';
 import { parseParams, IdParamSchema } from '@/lib/validation/params';
 import { notFound } from 'next/navigation';
@@ -10,6 +11,7 @@ import { ChevronLeft } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 export default async function CapabilitiesPage({ params }: { params: { id: string } }) {
+  const me = await requireRole('admin');
   const { id } = parseParams(params, IdParamSchema);
   const sb = createClient();
   const { data: user } = await sb
@@ -59,6 +61,7 @@ export default async function CapabilitiesPage({ params }: { params: { id: strin
         all={ALL_CAPABILITIES as unknown as string[]}
         granted={granted}
         templateCaps={templateCaps}
+        isSuperAdmin={me.is_prime_admin === true}
       />
     </div>
   );

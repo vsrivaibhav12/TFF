@@ -27,6 +27,7 @@
  */
 
 import { fetchAll } from '@/lib/supabase/fetch-all';
+import { fiscalQuarterOfMonth, fyStartYear as fiscalYearStart, makeHalfYearly, makeMonthly, makeQuarterly, makeYearly } from '@/lib/periods';
 
 export interface CalendarRule {
   id: string;
@@ -67,6 +68,8 @@ export interface GeneratedEvent {
   rule_id: string;
   rule_code: string;
   period_label: string;
+  /** Canonical period key (see lib/periods.ts), the same for every client and used to link tasks. */
+  period_key: string;
   due_date: string; // ISO yyyy-mm-dd
 }
 
@@ -131,6 +134,7 @@ export function generateEventsForRule(
   profile: ClientProfile,
   fromIso: string,
   toIso: string,
+  opts: { ignorePredicates?: boolean } = {},
 ): GeneratedEvent[] {
   if (!rule.is_active) return [];
   const events: GeneratedEvent[] = [];
@@ -139,14 +143,15 @@ export function generateEventsForRule(
   const toY = parseInt(toIso.slice(0, 4), 10);
   const toM = parseInt(toIso.slice(5, 7), 10);
 
-  function add(period_label: string, dueIso: string, periodMeta?: { month?: number; quarter?: number }) {
-    if (!passesPredicates(rule, profile, periodMeta)) return;
+  function add(period_label: string, period_key: string, dueIso: string, periodMeta?: { month?: number; quarter?: number }) {
+    if (!opts.ignorePredicates && !passesPredicates(rule, profile, periodMeta)) return;
     if (dueIso < fromIso || dueIso > toIso) return;
     events.push({
       client_id: profile.client_id,
       rule_id: rule.id,
       rule_code: rule.rule_code,
       period_label,
+      period_key,
       due_date: dueIso,
     });
   }
@@ -160,8 +165,8 @@ export function generateEventsForRule(
     else if (rule.due_date_formula.includes('+60d')) offsetDays = 60;
     const due = new Date(agm.getTime() + offsetDays * 86400_000);
     const dueIso = due.toISOString().slice(0, 10);
-    const { fyLabel } = fyForDate(agm.getFullYear(), agm.getMonth() + 1, profile.fy_start_month);
-    add(fyLabel, dueIso);
+    const { fyLabel, fyStartYear } = fyForDate(agm.getFullYear(), agm.getMonth() + 1, profile.fy_start_month);
+    add(fyLabel, makeYearly(fyStartYear).key as string, dueIso);
     return events;
   }
 
@@ -173,7 +178,7 @@ export function generateEventsForRule(
       const targetY = m + rule.due_month_offset > 12 ? y + Math.floor((m + rule.due_month_offset - 1) / 12) : y;
       const targetM = ((m + rule.due_month_offset - 1) % 12) + 1;
       const dueDay = Math.min(rule.due_day ?? 1, lastDayOfMonth(targetY, targetM));
-      add(`${monthName(m)} ${y}`, dateISO(targetY, targetM, dueDay), { month: m });
+      add(`${monthName(m)} ${y}`, makeMonthly(y, m).key as string, dateISO(targetY, targetM, dueDay), { month: m });
       m += 1;
       if (m > 12) { m = 1; y += 1; }
     }
@@ -199,7 +204,7 @@ export function generateEventsForRule(
         const dueM = ((dueMAbs - 1) % 12) + 1;
         const dueDay = Math.min(rule.due_day ?? lastDayOfMonth(dueY, dueM), lastDayOfMonth(dueY, dueM));
         const fyLabel = `Q${q} ${fyStartYear}-${(fyStartYear + 1).toString().slice(2)}`;
-        add(fyLabel, dateISO(dueY, dueM, dueDay), { quarter: q, month: qLastM });
+        add(fyLabel, makeQuarterly(fyStartYear, q).key as string, dateISO(dueY, dueM, dueDay), { quarter: q, month: qLastM });
       }
     }
     return events;
@@ -217,7 +222,7 @@ export function generateEventsForRule(
         const dueM = ((dueMAbs - 1) % 12) + 1;
         const dueDay = Math.min(rule.due_day ?? 1, lastDayOfMonth(dueY, dueM));
         const fyLabel = `${monthName(halfM)} ${halfY}`;
-        add(fyLabel, dateISO(dueY, dueM, dueDay), { month: halfM });
+        add(fyLabel, makeHalfYearly(fyStartYear, halfStartOffset === 0 ? 1 : 2).key as string, dateISO(dueY, dueM, dueDay), { month: halfM });
       }
     }
     return events;
@@ -232,7 +237,7 @@ export function generateEventsForRule(
       const dueM = ((dueMAbs - 1) % 12) + 1;
       const dueDay = Math.min(rule.due_day ?? lastDayOfMonth(dueY, dueM), lastDayOfMonth(dueY, dueM));
       const fyLabel = `FY ${fyStartYear}-${(fyStartYear + 1).toString().slice(2)}`;
-      add(fyLabel, dateISO(dueY, dueM, dueDay));
+      add(fyLabel, makeYearly(fyStartYear).key as string, dateISO(dueY, dueM, dueDay));
     }
     return events;
   }
@@ -333,6 +338,7 @@ export async function refreshServiceDrivenComplianceEvents(opts: {
     sub_service_id: string;
     rule_code: string;
     period_label: string;
+    period_key: string;
     due_date: string;
     status: 'upcoming';
   }> = [];
@@ -359,7 +365,7 @@ export async function refreshServiceDrivenComplianceEvents(opts: {
   return { generated, clientSubServices: cssRows.length };
 }
 
-function generateSubServiceEvents(
+export function generateSubServiceEvents(
   subService: {
     id: string;
     code: string;
@@ -372,8 +378,8 @@ function generateSubServiceEvents(
   clientId: string,
   fromIso: string,
   toIso: string,
-): Array<{ client_id: string; rule_id: null; sub_service_id: string; rule_code: string; period_label: string; due_date: string }> {
-  const events: Array<{ client_id: string; rule_id: null; sub_service_id: string; rule_code: string; period_label: string; due_date: string }> = [];
+): Array<{ client_id: string; rule_id: null; sub_service_id: string; rule_code: string; period_label: string; period_key: string; due_date: string }> {
+  const events: Array<{ client_id: string; rule_id: null; sub_service_id: string; rule_code: string; period_label: string; period_key: string; due_date: string }> = [];
   const fromY = parseInt(fromIso.slice(0, 4), 10);
   const fromM = parseInt(fromIso.slice(5, 7), 10);
   const toY = parseInt(toIso.slice(0, 4), 10);
@@ -391,6 +397,7 @@ function generateSubServiceEvents(
         sub_service_id: subService.id,
         rule_code: code,
         period_label: `${monthName(m)} ${y}`,
+        period_key: makeMonthly(y, m).key as string,
         due_date: dateISO(y, m, dueDay),
       });
       m += 1;
@@ -415,7 +422,9 @@ function generateSubServiceEvents(
           rule_id: null,
           sub_service_id: subService.id,
           rule_code: code,
+          // The label is a calendar quarter; the key is the fiscal quarter covering the same months.
           period_label: `Q${q} ${y}`,
+          period_key: makeQuarterly(fiscalYearStart(y, qLastM), fiscalQuarterOfMonth(qLastM)).key as string,
           due_date: dateISO(dueY, dueM, dueDay),
         });
       }
@@ -435,6 +444,7 @@ function generateSubServiceEvents(
         sub_service_id: subService.id,
         rule_code: code,
         period_label: `FY ${y}-${(y + 1).toString().slice(2)}`,
+        period_key: makeYearly(y).key as string,
         due_date: dateISO(y, dueM, dueDay),
       });
     }

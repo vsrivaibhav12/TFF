@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/auth/require-role';
 import { ALL_CAPABILITIES, type Capability } from '@/lib/auth/capabilities';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { writeAudit } from '@/lib/services/audit-service';
+import { canGrantCapability } from '@/lib/auth/capability-grant';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 import { notify } from '@/lib/services/notification-service';
 
@@ -92,6 +93,12 @@ export async function setUserCapabilityOverridesAction(input: {
         // Explicit grant that is deselected → revoke
         toRevoke.add(cap);
       }
+    }
+
+    // Some capabilities can only be granted or revoked by a super admin.
+    const blocked = [...toGrant, ...toRevoke].filter((c) => !canGrantCapability(me, c));
+    if (blocked.length > 0) {
+      return fail(`Only a super admin can grant or revoke: ${blocked.join(', ')}`, 'FORBIDDEN');
     }
 
     // Grants: insert or re-activate

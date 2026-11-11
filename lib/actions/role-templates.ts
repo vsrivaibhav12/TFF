@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
 import { ALL_CAPABILITIES, type Capability } from '@/lib/auth/capabilities';
 import { requireCapability } from '@/lib/auth/require-capability';
+import { canGrantCapability, restrictedCapabilityChanges } from '@/lib/auth/capability-grant';
 import { writeAudit } from '@/lib/services/audit-service';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 
@@ -34,6 +35,16 @@ export async function upsertRoleTemplateAction(
 
     const sb = createClient();
     let id = parsed.data.id;
+
+    // A template that adds or drops a super-admin-only capability can only be saved by a super admin.
+    const currentCaps: string[] = id
+      ? ((await sb.from('staff_role_template_capabilities').select('capability').eq('template_id', id)).data ?? []).map((r: any) => r.capability)
+      : [];
+    const restricted = restrictedCapabilityChanges(currentCaps, parsed.data.capabilities).filter((c) => !canGrantCapability(me, c));
+    if (restricted.length > 0) {
+      return fail(`Only a super admin can change this role template's access to: ${restricted.join(', ')}`, 'FORBIDDEN');
+    }
+
     if (id) {
       const { error } = await sb
         .from('staff_role_templates')
@@ -125,6 +136,12 @@ export async function applyRoleTemplateAction(input: {
     if (error) return fail(error.message, 'DB');
     const templateCaps = new Set<string>((caps ?? []).map((r: any) => r.capability));
 
+    // Applying a template that carries a super-admin-only capability grants it.
+    const blocked = restrictedCapabilityChanges([], templateCaps).filter((c) => !canGrantCapability(me, c));
+    if (blocked.length > 0) {
+      return fail(`Only a super admin can apply a role template that includes: ${blocked.join(', ')}`, 'FORBIDDEN');
+    }
+
     // Clean up redundant explicit rows that are now covered by the template
     const { data: existingRows } = await sb
       .from('staff_capabilities')
@@ -171,6 +188,15 @@ export async function clearRoleTemplateAction(userId: string): Promise<ActionRes
     const me = await requireRole(['admin']);
     await requireCapability(me, 'staff.grant_capabilities');
     const sb = createClient();
+
+    // Clearing a template that carries a super-admin-only capability revokes it.
+    const { data: prof } = await sb.from('users_profile').select('active_role_template_id').eq('id', userId).maybeSingle();
+    if (prof?.active_role_template_id) {
+      const { data: tcaps } = await sb.from('staff_role_template_capabilities').select('capability').eq('template_id', prof.active_role_template_id);
+      const blocked = restrictedCapabilityChanges((tcaps ?? []).map((r: any) => r.capability), []).filter((c) => !canGrantCapability(me, c));
+      if (blocked.length > 0) return fail(`Only a super admin can clear a role template that includes: ${blocked.join(', ')}`, 'FORBIDDEN');
+    }
+
     const { error } = await sb
       .from('users_profile')
       .update({ active_role_template_id: null })

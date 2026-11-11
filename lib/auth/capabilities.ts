@@ -29,7 +29,7 @@ export const ALL_CAPABILITIES = [
   'tasks.view', 'tasks.create', 'tasks.edit', 'tasks.assign', 'tasks.complete', 'tasks.delete',
 
   // Compliance
-  'compliance.view', 'compliance.enter',
+  'compliance.view', 'compliance.enter', 'compliance.generate_tasks',
 
   // Payroll / HR / approvals
   'attendance.view_all', 'attendance.approve', 'leave.approve', 'permission.approve',
@@ -212,6 +212,12 @@ export const CAPABILITY_DETAILS: Record<Capability, CapabilityMeta> = {
   'compliance.enter': {
     label: 'Enter compliance data',
     description: 'Record filing status, dates, and notes against compliance events.',
+    persona: 'supervisory',
+    category: 'Compliance',
+  },
+  'compliance.generate_tasks': {
+    label: 'Create tasks from deadlines',
+    description: 'Create tasks for every linked client of a compliance deadline and assign them. Only a super admin can grant this.',
     persona: 'supervisory',
     category: 'Compliance',
   },

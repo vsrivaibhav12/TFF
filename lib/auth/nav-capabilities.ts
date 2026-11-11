@@ -16,7 +16,7 @@ export const NAV_CAPABILITY_MAP: Record<string, string | string[]> = {
   // Admin-delegated pages (shown in team sidebar when granted)
   '/admin/dsc': ['dsc.view', 'dsc.manage'],
   '/admin/credentials': ['credentials.view', 'credentials.manage'],
-  '/admin/compliance': ['compliance.view', 'compliance.enter', 'manage_compliance_rules'],
+  '/admin/compliance': ['compliance.view', 'compliance.enter', 'manage_compliance_rules', 'compliance.generate_tasks'],
   '/admin/billing': ['manage_billing_entities'],
   '/admin/services': ['services.view', 'services.manage'],
   '/admin/team': 'staff.manage',
@@ -32,6 +32,7 @@ export const NAV_CAPABILITY_MAP: Record<string, string | string[]> = {
   '/team/services': ['services.view', 'services.manage'],
   '/team/reports': ['view_workdone_reports', 'audit.view', 'attendance.view_all'],
   '/team/audit': 'audit.view',
+  '/team/compliance': 'compliance.generate_tasks',
   '/team/settings': ['staff.manage', 'manage_custom_fields', 'manage_compliance_rules', 'manage_billing_entities'],
 };
 
