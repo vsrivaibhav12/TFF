@@ -18,6 +18,7 @@ import {
   periodFromInput,
   periodOptions,
   defaultPeriodKey,
+  currentPeriodKey,
 } from '../lib/periods';
 
 describe('financial year helpers', () => {
@@ -199,5 +200,17 @@ describe('defaultPeriodKey (the period that has just ended)', () => {
   });
   test('none has no default', () => {
     assert.equal(defaultPeriodKey('none', { year: 2026, month: 11 }), null);
+  });
+});
+
+describe('currentPeriodKey (the period still running)', () => {
+  test('each type', () => {
+    assert.equal(currentPeriodKey('monthly', { year: 2026, month: 11 }), '2026-11');
+    assert.equal(currentPeriodKey('quarterly', { year: 2026, month: 11 }), 'FY2026-27-Q3');
+    assert.equal(currentPeriodKey('quarterly', { year: 2027, month: 2 }), 'FY2026-27-Q4');
+    assert.equal(currentPeriodKey('half_yearly', { year: 2026, month: 11 }), 'FY2026-27-H2');
+    assert.equal(currentPeriodKey('half_yearly', { year: 2026, month: 6 }), 'FY2026-27-H1');
+    assert.equal(currentPeriodKey('yearly', { year: 2027, month: 2 }), 'FY2026-27');
+    assert.equal(currentPeriodKey('none', { year: 2026, month: 11 }), null);
   });
 });

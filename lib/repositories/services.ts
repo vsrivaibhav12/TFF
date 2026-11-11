@@ -53,7 +53,7 @@ export async function listClientSubServices(clientId: string) {
   const sb = createClient();
   const { data, error } = await sb
     .from('client_sub_services')
-    .select('id, sub_service_id, is_active, sub_services(id, code, name, frequency, service_id, services(code, name))')
+    .select('id, sub_service_id, is_active, default_assignee_id, sub_services(id, code, name, frequency, service_id, services(code, name))')
     .eq('client_id', clientId)
     .eq('is_active', true)
     .eq('sub_services.is_deleted', false);

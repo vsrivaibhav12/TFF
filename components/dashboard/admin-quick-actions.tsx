@@ -8,6 +8,7 @@ import {
   Timer,
   ClipboardList,
   Layers,
+  CalendarClock,
 } from 'lucide-react';
 
 export function AdminQuickActions() {
@@ -17,6 +18,7 @@ export function AdminQuickActions() {
     { label: 'New task', icon: Plus, variant: 'default' as const, onClick: () => router.push('/admin/tasks') },
     { label: 'New client', icon: Users, variant: 'secondary' as const, onClick: () => router.push('/admin/clients') },
     { label: 'Log work', icon: Timer, variant: 'secondary' as const, onClick: () => router.push('/admin/work-done') },
+    { label: 'Deadline tasks', icon: CalendarClock, variant: 'secondary' as const, onClick: () => router.push('/admin/compliance/create-tasks') },
     { label: 'Bulk tasks', icon: Layers, variant: 'secondary' as const, onClick: () => router.push('/admin/tasks/bulk-create') },
   ];
 

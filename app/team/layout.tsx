@@ -21,6 +21,7 @@ export default async function TeamLayout({ children }: { children: React.ReactNo
     { href: '/team/dsc', label: 'DSC', icon: 'key' as const, section: 'Work' },
     { href: '/team/billing', label: 'Billing', icon: 'receipt' as const, section: 'Work' },
     { href: '/team/services', label: 'Services', icon: 'layers' as const, section: 'Work' },
+    { href: '/team/compliance/create-tasks', label: 'Deadline tasks', icon: 'calendar-check' as const, section: 'Work' },
 
     /* ── My workplace ── */
     { href: '/team/attendance', label: 'Attendance', icon: 'calendar-check' as const, section: 'My workplace' },

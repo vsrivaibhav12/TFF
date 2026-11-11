@@ -293,3 +293,15 @@ export function periodEndIso(p: Period): string | null {
     default: return null;
   }
 }
+
+/** The period that today falls in (the one still running). */
+export function currentPeriodKey(type: PeriodType, today: { year: number; month: number }): string | null {
+  const fy = fyStartYear(today.year, today.month);
+  switch (type) {
+    case 'monthly': return makeMonthly(today.year, today.month).key;
+    case 'quarterly': return makeQuarterly(fy, fiscalQuarterOfMonth(today.month)).key;
+    case 'half_yearly': return makeHalfYearly(fy, fiscalQuarterOfMonth(today.month) <= 2 ? 1 : 2).key;
+    case 'yearly': return makeYearly(fy).key;
+    default: return null;
+  }
+}

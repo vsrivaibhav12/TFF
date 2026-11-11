@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +8,7 @@ import Link from 'next/link';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { CheckCircle2, Clock, AlertTriangle, CalendarDays, Briefcase, Timer, TrendingUp } from 'lucide-react';
+import { CheckCircle2, Clock, AlertTriangle, CalendarDays, Briefcase, Timer, TrendingUp, CalendarClock } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import ExportButton from '@/components/sophistication/export-button';
 import SimpleBarChart from '@/components/compliance/simple-bar-chart';
@@ -31,18 +33,19 @@ export default async function AdminCompliancePage() {
   const horizonIso = new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10);
 
   // Fetch compliance events with linked tasks — includes both rule-driven and service-driven
-  const { data: events } = await sb
-    .from('compliance_calendar_events')
-    .select(`
+  // Every event in the window. The API returns at most 1,000 rows per request, so page through them.
+  const events = await fetchAll<ComplianceEvent>(() =>
+    sb
+      .from('compliance_calendar_events')
+      .select(`
       id, rule_code, period_label, due_date, status, task_id,
       compliance_calendar_rules(display_name, service_kind),
       sub_services(name),
       tasks(status, completed_date, due_date, is_stuck)
     `)
-    .gte('due_date', todayIso)
-    .lte('due_date', horizonIso)
-    .limit(1000)
-    .returns<ComplianceEvent[]>();
+      .gte('due_date', todayIso)
+      .lte('due_date', horizonIso),
+  );
 
   // Aggregate metrics
   let total = 0;
@@ -154,7 +157,12 @@ export default async function AdminCompliancePage() {
             Filing health across your portfolio. Track what is on time, delayed or overdue.
           </p>
         </div>
-        <ExportButton data={periodRows} filename="compliance-dashboard" format="excel" />
+        <div className="flex items-center gap-2">
+          <Link href="/admin/compliance/create-tasks">
+            <Button size="sm" data-testid="create-deadline-tasks-link"><CalendarClock className="h-4 w-4 mr-1" /> Create tasks for a deadline</Button>
+          </Link>
+          <ExportButton data={periodRows} filename="compliance-dashboard" format="excel" />
+        </div>
       </div>
 
       {total === 0 ? (

@@ -1,4 +1,5 @@
 'use client';
+import { setDefaultAssigneeAction } from '@/lib/actions/deadline-tasks';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,8 @@ interface ClientService {
 
 interface ClientSubService {
   id: string;
+  sub_service_id?: string;
+  default_assignee_id?: string | null;
   sub_services?: { id?: string; name?: string | null; code?: string | null; frequency?: string | null; services?: { name?: string | null } | null } | null;
   is_active?: boolean;
 }
@@ -84,6 +87,14 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
     } catch (e) {
       toast.error('Failed to load services');
     }
+  }
+
+  function setDefaultAssignee(subServiceId: string, userId: string | null) {
+    startTransition(async () => {
+      const r = await setDefaultAssigneeAction({ client_id: clientId, sub_service_id: subServiceId, user_id: userId });
+      if (!r.success) toast.error(r.error);
+      else { toast.success(userId ? 'Default assignee saved' : 'Default assignee cleared'); router.refresh(); }
+    });
   }
 
   async function unlinkSub(linkId: string) {
@@ -277,6 +288,22 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
+                  {s.sub_service_id && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-500">Default assignee</span>
+                      <Select
+                        value={s.default_assignee_id ?? '__none__'}
+                        onValueChange={(v) => setDefaultAssignee(s.sub_service_id as string, v === '__none__' ? null : v)}
+                        disabled={pending}
+                      >
+                        <SelectTrigger className="h-8 w-44 text-xs" aria-label={`Default assignee for ${s.sub_services?.name ?? 'service'}`}><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">Not set</SelectItem>
+                          {teamUsers.map((u) => <SelectItem key={u.id} value={u.id}>{u.full_name ?? u.email}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   {s.is_active ? <Badge variant="success" className="bg-teal-50 text-teal-600 border-teal-100">Active</Badge> : <Badge variant="outline">Paused</Badge>}
                   <Button variant="ghost" size="sm" onClick={() => unlinkSub(s.id)} disabled={pending} className="text-zinc-500 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button>
                 </div>
