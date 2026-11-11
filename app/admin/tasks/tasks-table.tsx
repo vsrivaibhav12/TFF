@@ -1,7 +1,6 @@
 'use client';
 import { formatPeriodColumns } from '@/lib/periods';
 import { useState, useMemo, useTransition } from 'react';
-import { useDebouncedCallback } from '@/lib/hooks/use-debounced-callback';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { DockLink } from '@/components/shell/dock-link';
@@ -20,7 +19,7 @@ import { ResizableTableHead } from '@/components/ui/resizable-table-head';
 import { useColumnWidths } from '@/lib/hooks/use-column-widths';
 import { formatDateIST, cn, displayTaskName } from '@/lib/utils';
 import {
-  Search, Filter, AlertTriangle, Building2, ArrowUpRight, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck, Trash2,
+  Filter, AlertTriangle, Building2, ArrowUpRight, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck, Trash2,
 } from 'lucide-react';
 import { TaskLabelPills } from '@/components/tasks/task-label-pills';
 import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
@@ -67,11 +66,7 @@ const DEFAULT_COLUMNS = [
 ];
 
 export default function TasksTable({ tasks, todayIso, team = [], canDelete = false }: { tasks: Task[]; todayIso: string; team?: { id: string; full_name: string }[]; canDelete?: boolean }) {
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-  const search = searchParams.get('q') ?? '';
   const [sortKey, setSortKey] = useState<string>('due_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -232,29 +227,11 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
   const colVisible = (key: string) => columns.find((c) => c.key === key)?.visible ?? true;
   const rowPadding = density === 'compact' ? 'py-1.5' : 'py-3';
 
-  const onSearch = useDebouncedCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const v = e.target.value.trim();
-    if (v) params.set('q', v);
-    else params.delete('q');
-    params.delete('page');
-    startTransition(() => router.push(`${pathname}?${params.toString()}`));
-  }, 300);
 
   return (
     <div className="space-y-4">
       <ConfirmDialog />
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-          <input
-            type="text"
-            placeholder="Search tasks…"
-            defaultValue={search}
-            onChange={onSearch}
-            className="pl-9 pr-3 h-9 rounded-md border border-zinc-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 w-60"
-          />
-        </div>
         <div className="flex items-center gap-3 ml-auto">
           <TableToolbar
             columns={columns}

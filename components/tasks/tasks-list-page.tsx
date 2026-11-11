@@ -16,6 +16,7 @@ import NewTaskDialog from '@/components/tasks/new-task-dialog';
 import AdvancedTaskFilters from '@/components/tasks/advanced-task-filters';
 import { TaskViewWrapper } from '@/components/tasks/task-view-wrapper';
 import { TaskLabelFilterBar } from '@/components/tasks/task-label-filter-bar';
+import { TaskSearchBox } from '@/components/tasks/task-search-box';
 import { TaskQuickFilters } from '@/components/tasks/task-quick-filters';
 import { TaskSummaryTiles, type TileView } from '@/components/tasks/task-summary-tiles';
 import { taskTiles, tileFilterOpts, tileHref, tileIsActive } from '@/lib/tasks/tiles';
@@ -152,6 +153,7 @@ export default async function TasksListPage({
       <TaskSummaryTiles tiles={tileViews} split={split} />
 
       <div className="tff-card p-3 space-y-3">
+        <TaskSearchBox />
         <div className="flex flex-wrap items-center justify-between gap-2">
           <TaskQuickFilters meId={me.id} todayIso={todayIso} weekEndIso={addDaysIso(7)} yesterdayIso={addDaysIso(-1)} />
           {canAssign && totalCount > 0 && (

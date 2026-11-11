@@ -2,7 +2,6 @@
 
 import { formatPeriodColumns } from '@/lib/periods';
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { useDebouncedCallback } from '@/lib/hooks/use-debounced-callback';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useTransition } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -20,7 +19,7 @@ import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 import { transitionTaskAction, updateTaskAction, bulkDeleteTasksAction } from '@/lib/actions/tasks';
 import { TaskLabelPills } from '@/components/tasks/task-label-pills';
 import { SwipeableRow } from '@/components/ui/swipeable-row';
-import { ShieldCheck, User, Check, Search, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Trash2 } from 'lucide-react';
+import { ShieldCheck, User, Check, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
 
@@ -97,10 +96,7 @@ const DEFAULT_COLUMNS = [
 
 export default function TasksTableClient({ tasks, todayIso, canEdit = false, canComplete = false, canDelete = false, isAdmin = false }: { tasks: TaskRow[]; todayIso?: string; canEdit?: boolean; canComplete?: boolean; canDelete?: boolean; isAdmin?: boolean }) {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-  const search = searchParams.get('q') ?? '';
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sortKey, setSortKey] = useState<string>('due_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -108,14 +104,6 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
 
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const onSearch = useDebouncedCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const v = e.target.value.trim();
-    if (v) params.set('q', v);
-    else params.delete('q');
-    params.delete('page');
-    startTransition(() => router.push(`${pathname}?${params.toString()}`));
-  }, 300);
 
   const filtered = useMemo(() => {
     let data = [...tasks];
@@ -307,16 +295,6 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
       {/* Desktop virtual table */}
       <div className="hidden md:block space-y-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-            <input
-              type="text"
-              placeholder="Search tasks…"
-              defaultValue={search}
-              onChange={onSearch}
-              className="pl-9 pr-3 h-9 rounded-md border border-zinc-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 w-60"
-            />
-          </div>
           <div className="flex items-center gap-3 ml-auto">
             <TableToolbar
               columns={columns}
