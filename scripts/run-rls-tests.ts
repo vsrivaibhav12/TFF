@@ -13,6 +13,12 @@
  *  3. A team member cannot create a profile for someone else.
  *  4. A team member can still edit harmless fields on their own profile.
  *  5. Staff can read profiles; the profiles table is not readable anonymously.
+ *  6. Deadline task creation (delegation): a team member without the compliance.generate_tasks
+ *     capability is refused by both database functions and cannot write deadline dates.
+ *  7. A team member WITH the capability gets past the permission check.
+ *  8. An explicit revoke beats a role template that grants the capability.
+ *  9. A visitor who is not signed in cannot run either function.
+ * 10. A team member cannot grant themselves the capability.
  */
 import 'dotenv/config';
 import * as dotenv from 'dotenv';
@@ -79,6 +85,61 @@ const checks: Array<{ name: string; body: string; expect: (d: string) => boolean
     expect: (d) => /profiles=[1-9]/.test(d),
   },
 ];
+
+// Shared set-up (runs as the database owner, before the role switch): a team member with no route to the capability.
+const noCapability = `uid := (SELECT id FROM public.users_profile WHERE role='team' AND is_active LIMIT 1);
+      DELETE FROM public.staff_capabilities WHERE user_id=uid AND capability='compliance.generate_tasks';
+      UPDATE public.users_profile SET active_role_template_id=NULL WHERE id=uid;`;
+const FN = `sid := (SELECT id FROM public.sub_services LIMIT 1);`;
+const tryCall = (label: string, call: string) =>
+  `BEGIN ${call}; res := res || '${label}=ALLOWED;'; EXCEPTION WHEN insufficient_privilege THEN res := res || '${label}=blocked;'; WHEN OTHERS THEN res := res || '${label}=passed-permission(' || SQLSTATE || ');'; END;`;
+const listCall = `PERFORM public.list_deadline_clients(sid, '2026-10')`;
+const createCall = `PERFORM public.create_deadline_tasks(sid, '2026-10', 'monthly', 2026, 10, NULL, (current_date + 30), 'medium', '[]'::jsonb)`;
+
+checks.push(
+  {
+    name: '6. team member without the capability cannot create deadline tasks',
+    body: `DECLARE sid uuid; BEGIN ${noCapability} ${FN} ${asTeam}
+      ${tryCall('list', listCall)}
+      ${tryCall('create', createCall)}
+      ${tryCall('write_date', `INSERT INTO public.compliance_deadlines (sub_service_id, period_key, due_date) VALUES (sid, '2026-10', current_date + 30)`)}
+    END;`,
+    expect: (d) => d.includes('list=blocked') && d.includes('create=blocked') && d.includes('write_date=blocked'),
+  },
+  {
+    name: '7. team member with the capability passes the permission check',
+    body: `DECLARE sid uuid; BEGIN ${noCapability} ${FN}
+      INSERT INTO public.staff_capabilities (user_id, capability, granted_by) VALUES (uid, 'compliance.generate_tasks', uid);
+      ${asTeam}
+      ${tryCall('list', listCall)}
+      ${tryCall('create', createCall)}
+    END;`,
+    expect: (d) => !d.includes('list=blocked') && !d.includes('create=blocked'),
+  },
+  {
+    name: '8. an explicit revoke beats a role template that grants it',
+    body: `DECLARE sid uuid; BEGIN ${noCapability} ${FN}
+      INSERT INTO public.staff_capabilities (user_id, capability, granted_by, revoked_at, revoked_by) VALUES (uid, 'compliance.generate_tasks', uid, now(), uid);
+      ${asTeam}
+      ${tryCall('list', listCall)}
+    END;`,
+    expect: (d) => d.includes('list=blocked'),
+  },
+  {
+    name: '9. a visitor who is not signed in cannot run either function',
+    body: `DECLARE sid uuid; BEGIN ${FN} ${asAnon}
+      ${tryCall('list', listCall)}
+      ${tryCall('create', createCall)}
+    END;`,
+    expect: (d) => d.includes('list=blocked') && d.includes('create=blocked'),
+  },
+  {
+    name: '10. a team member cannot grant themselves the capability',
+    body: `${noCapability} ${asTeam}
+      BEGIN INSERT INTO public.staff_capabilities (user_id, capability, granted_by) VALUES (uid, 'compliance.generate_tasks', uid); res := res || 'self_grant=ALLOWED;'; EXCEPTION WHEN OTHERS THEN res := res || 'self_grant=blocked;'; END;`,
+    expect: (d) => d.includes('self_grant=blocked'),
+  },
+);
 
 (async () => {
   let failed = 0;
