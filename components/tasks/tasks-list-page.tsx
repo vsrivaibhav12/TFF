@@ -17,6 +17,8 @@ import AdvancedTaskFilters from '@/components/tasks/advanced-task-filters';
 import { TaskViewWrapper } from '@/components/tasks/task-view-wrapper';
 import { TaskLabelFilterBar } from '@/components/tasks/task-label-filter-bar';
 import { TaskQuickFilters } from '@/components/tasks/task-quick-filters';
+import { TaskSummaryTiles, type TileView } from '@/components/tasks/task-summary-tiles';
+import { taskTiles, tileFilterOpts, tileHref, tileIsActive } from '@/lib/tasks/tiles';
 import { ReassignAllMatching } from '@/components/tasks/reassign-all-matching';
 import { parseTaskFilterParams, type TaskFilterParams } from '@/lib/tasks/filter-params';
 import AdminTasksTable from '@/app/admin/tasks/tasks-table';
@@ -28,7 +30,7 @@ const PAGE_SIZE = 50;
 export type TasksSearchParams = {
   status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string;
   due_from?: string; due_to?: string; page?: string; period_year?: string; period_month?: string;
-  is_billable?: string; is_stuck?: string; is_verified?: string; label?: string | string[]; q?: string;
+  is_billable?: string; is_stuck?: string; is_verified?: string; verification?: string; label?: string | string[]; q?: string;
 };
 
 function buildTaskUrl(base: string, sp: Record<string, string | string[] | undefined>, overrides: Record<string, string | undefined>) {
@@ -82,16 +84,27 @@ export default async function TasksListPage({
 
   const todayIso = todayIST();
 
-  // Stat cards count the whole filtered result, not just the rows on this page.
-  const [rawTasks, team, subServices, totalCount, stuck, dueToday, allLabels] = await Promise.all([
+  // The summary tiles count the whole result for their own scope, keeping every other filter that is applied.
+  const flat: Record<string, string | undefined> = {};
+  for (const [k, v] of Object.entries(searchParams)) if (typeof v === 'string') flat[k] = v;
+  const tiles = taskTiles({ todayIso, weekEndIso: addDaysIso(7), yesterdayIso: addDaysIso(-1), isAdmin: isAdminView });
+
+  const [rawTasks, team, subServices, totalCount, allLabels, tileCounts, splitCounts] = await Promise.all([
     listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
     listTeamUsers(),
     listSubServices(),
     countTasks(filterOpts),
-    countTasks({ ...filterOpts, stuckOrHigh: true }),
-    countTasks({ ...filterOpts, dueOn: todayIso }),
     listLabels(),
+    Promise.all(tiles.map((tile) => countTasks({ ...tileFilterOpts(tile, flat), labels: baseFilter.labels, assignedTo: tileFilterOpts(tile, flat).assignedTo ?? assignedTo }))),
+    Promise.all((['pending', 'in_progress', 'completed'] as const).map((s) => countTasks({ ...filterOpts, status: [s] }))),
   ]);
+  const tileViews: TileView[] = tiles.map((tile, i) => ({
+    tile,
+    count: tileCounts[i],
+    href: tileHref(tile, flat, base),
+    active: tileIsActive(tile, flat),
+  }));
+  const split = { pending: splitCounts[0], in_progress: splitCounts[1], completed: splitCounts[2] };
 
   const [tasksWithLabels, tasksWithProgress] = await Promise.all([
     enrichTasksWithLabels(rawTasks),
@@ -136,11 +149,7 @@ export default async function TasksListPage({
         }
       />
 
-      <p className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-zinc-600 tabular-nums -mt-2">
-        <span><span className="font-semibold text-zinc-900">{totalCount.toLocaleString('en-IN')}</span> matching</span>
-        <span><span className={stuck > 0 ? 'font-semibold text-red-600' : 'font-semibold text-zinc-900'}>{stuck.toLocaleString('en-IN')}</span> stuck or high priority</span>
-        <span><span className={dueToday > 0 ? 'font-semibold text-amber-600' : 'font-semibold text-zinc-900'}>{dueToday.toLocaleString('en-IN')}</span> due today</span>
-      </p>
+      <TaskSummaryTiles tiles={tileViews} split={split} />
 
       <div className="tff-card p-3 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

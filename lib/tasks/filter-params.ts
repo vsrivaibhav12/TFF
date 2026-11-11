@@ -5,7 +5,7 @@ import type { TaskStatus } from '@/lib/validation/schemas';
 export type TaskFilterParams = {
   status?: string; priority?: string; assigned?: string; client?: string; sub_service?: string;
   due_from?: string; due_to?: string; period_year?: string; period_month?: string;
-  is_billable?: string; is_stuck?: string; is_verified?: string; label?: string | string[]; q?: string;
+  is_billable?: string; is_stuck?: string; is_verified?: string; verification?: string; label?: string | string[]; q?: string;
 };
 
 /** The task list opens on work that is still open. This is the built-in scope, not a filter the user applies. */
@@ -61,6 +61,7 @@ export function parseTaskFilterParams(sp: TaskFilterParams): TaskFilterOpts {
     isBillable: triState(sp.is_billable),
     isStuck: triState(sp.is_stuck),
     isVerified: triState(sp.is_verified),
+    verificationStatus: sp.verification || undefined,
     labels,
     q: sp.q,
   };

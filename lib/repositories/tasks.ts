@@ -70,6 +70,8 @@ export type TaskFilterOpts = {
   isBillable?: boolean;
   isStuck?: boolean;
   isVerified?: boolean;
+  /** Verification state of the task, for example 'pending' for completed work awaiting a reviewer. */
+  verificationStatus?: string;
   labels?: string[];
   q?: string;
   /** Only tasks that are stuck or high priority (used by the list stat cards). */
@@ -190,6 +192,7 @@ function applyTaskFilters(query: any, opts: TaskFilterOpts, ids: string[] | unde
   if (opts.isBillable !== undefined) q = q.eq('is_billable', opts.isBillable);
   if (opts.isStuck !== undefined) q = q.eq('is_stuck', opts.isStuck);
   if (opts.isVerified !== undefined) q = q.eq('is_verified', opts.isVerified);
+  if (opts.verificationStatus) q = q.eq('verification_status', opts.verificationStatus);
   if (opts.priority?.length) q = q.in('priority', opts.priority);
   if (opts.stuckOrHigh) q = q.or('is_stuck.eq.true,priority.eq.high');
   if (opts.dueOn) q = q.eq('due_date', opts.dueOn);
