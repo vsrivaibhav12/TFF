@@ -24,6 +24,8 @@ import { ClientsEmptyIllustration } from '@/components/ui/empty-illustrations';
 import { PriorityList } from '@/components/dashboard/priority-list';
 import { TeamAttendancePrompt } from '@/components/dashboard/smart-prompts';
 import { TeamQuickActions } from '@/components/dashboard/team-quick-actions';
+import { WeekStrip, WaitingList, WorkloadBars } from '@/components/dashboard/home-widgets';
+import { getManagerHome, getMemberHome } from '@/lib/services/home-service';
 
 export default async function TeamWorkspace() {
   const me = await requireRole(['team', 'admin']);
@@ -51,15 +53,17 @@ async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole
 
   const [directReports, approvalCaps] = await Promise.all([
     isAdmin ? Promise.resolve([]) : getDirectReports(me.id),
-    hasCapabilities(me, ['leave.approve', 'permission.approve', 'attendance.approve']),
+    hasCapabilities(me, ['leave.approve', 'permission.approve', 'attendance.approve', 'verify_tasks']),
   ]);
   const isManager = directReports.length > 0;
   const canApproveLeave = me.role === 'admin' || approvalCaps.has('leave.approve');
   const canApprovePermission = me.role === 'admin' || approvalCaps.has('permission.approve');
   const canApproveAttendance = me.role === 'admin' || approvalCaps.has('attendance.approve');
+  const canVerify = me.role === 'admin' || approvalCaps.has('verify_tasks');
   const canSeeApprovals = canApproveLeave || canApprovePermission || canApproveAttendance || isManager;
 
-  const [counts, overdueCount, dueSoonRaw, clients, pendingLeaveAll, pendingPermissionAll, todayAttendance] = await Promise.all([
+  const reportIdsForHome = directReports.map((r) => r.id);
+  const [counts, overdueCount, dueSoonRaw, clients, pendingLeaveAll, pendingPermissionAll, todayAttendance, memberHome, managerHome] = await Promise.all([
     countTasksByStatus({ assignedTo: me.id }),
     countOverdueTasks({ assignedTo: me.id }),
     listTasks({ assignedTo: me.id, status: ['pending', 'in_progress'], limit: 6 }),
@@ -67,6 +71,8 @@ async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole
     canSeeApprovals ? listLeaveRequests({ status: 'pending' }) : Promise.resolve([]),
     canSeeApprovals ? listPermissionRequests({ status: 'pending' }) : Promise.resolve([]),
     getTodayAttendance(me.id),
+    getMemberHome(me.id),
+    isManager ? getManagerHome(reportIdsForHome, canVerify) : Promise.resolve(null),
   ]);
 
   const dueSoon = await enrichTasksWithProgress(dueSoonRaw ?? []);
@@ -150,7 +156,30 @@ async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole
         <StaggerItem className="xl:col-span-2">
           <PriorityList tasks={dueSoon} href="/team/tasks" emptyMessage="No pending tasks" />
         </StaggerItem>
+        <StaggerItem className="space-y-4">
+          <WeekStrip days={memberHome.strip} href="/team/tasks" />
+          <div className="tff-card p-4 flex items-center justify-between text-sm">
+            <span className="text-zinc-500">Hours logged today</span>
+            <span className="font-medium text-zinc-900 tabular-nums">{Math.floor(memberHome.minutesToday / 60)}h {memberHome.minutesToday % 60}m</span>
+          </div>
+          <WaitingList tasks={memberHome.waiting} todayIso={memberHome.todayIso} href="/team/tasks?status=blocked" />
+        </StaggerItem>
       </div>
+
+      {managerHome && (
+        <StaggerItem>
+          <div className="space-y-3" data-testid="manager-home">
+            <div>
+              <h2 className="text-base font-semibold text-zinc-900 tracking-tight">Your team</h2>
+              <p className="text-sm text-zinc-500 mt-1">
+                <span className="tabular-nums">{managerHome.overdue}</span> overdue · <span className="tabular-nums">{managerHome.dueThisWeek}</span> due this week
+                {canVerify ? <> · <span className="tabular-nums">{managerHome.toVerify}</span> awaiting your verification</> : null}
+              </p>
+            </div>
+            <WorkloadBars rows={managerHome.workload} title="Workload of your reports" tasksHref="/team/tasks" />
+          </div>
+        </StaggerItem>
+      )}
 
       <StaggerItem>
         <div className="tff-card tff-card-pad">

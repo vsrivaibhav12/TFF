@@ -142,3 +142,41 @@ export function WeekStrip({ days, href }: { days: Array<{ date: string; weekday:
     </section>
   );
 }
+
+function daysSince(iso: string | null, todayIso: string): number | null {
+  if (!iso) return null;
+  return Math.max(0, Math.round((Date.parse(`${todayIso}T00:00:00Z`) - Date.parse(`${iso.slice(0, 10)}T00:00:00Z`)) / 86_400_000));
+}
+
+/** This person's tasks waiting on a client, with how long they have waited. */
+export function WaitingList({ tasks, todayIso, href }: { tasks: Array<{ id: string; title: string; updated_at: string | null; client_name: string | null }>; todayIso: string; href: string }) {
+  return (
+    <section className="tff-card p-4 space-y-2" data-testid="waiting-list">
+      <div className="flex items-center justify-between">
+        <h3 className="tff-section-title">Waiting on client</h3>
+        <span className="text-xs text-zinc-500">Days since last update</span>
+      </div>
+      {tasks.length === 0 ? (
+        <p className="text-sm text-zinc-500">Nothing is waiting on a client.</p>
+      ) : (
+        <ul className="divide-y divide-zinc-100">
+          {tasks.map((t) => {
+            const d = daysSince(t.updated_at, todayIso);
+            return (
+              <li key={t.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                <span className="min-w-0">
+                  <span className="block truncate text-zinc-900">{t.title}</span>
+                  {t.client_name && <span className="block truncate text-xs text-zinc-500">{t.client_name}</span>}
+                </span>
+                <span className={cn('text-xs tabular-nums whitespace-nowrap rounded-full px-2 py-0.5', d !== null && d >= 8 ? 'bg-red-50 text-red-700' : d !== null && d >= 4 ? 'bg-amber-50 text-amber-700' : 'bg-zinc-100 text-zinc-600')}>
+                  {d === null ? 'No date' : `${d} day${d === 1 ? '' : 's'}`}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <Link href={href} className="text-xs text-teal-700 hover:underline font-medium">See all</Link>
+    </section>
+  );
+}

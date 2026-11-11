@@ -163,7 +163,7 @@ npm run test
 npm run test:watch
 
 # Run a single test file
-npm run test:one __tests__/bizlens-service.test.ts
+npm run test:one __tests__/periods.test.ts
 ```
 
 
@@ -272,7 +272,7 @@ Error:         red-600 (#DC2626)
 
 ### Role Model
 
-Three roles: `admin`, `team`, `client`.
+Two roles: `admin` and `team` (the `client` role was removed).
 
 - `admin` implicitly holds every capability.
 - `team` holds **no capabilities by default**; admin grants explicitly via role templates or per-user deviations.
@@ -322,6 +322,14 @@ RLS is the **primary access-control boundary**. Every new table gets RLS policie
 
 ---
 
+## Periods, deadlines and migrations
+
+- **Periods** are defined once in `lib/periods.ts`: none, monthly, quarterly, half-yearly, yearly (and `gst_frequency`, which resolves per client). Quarters are fiscal (Q1 = Apr-Jun). Every period has a canonical key (`2026-10`, `FY2026-27-Q2`, `FY2026-27-H1`, `FY2026-27`). Use `formatPeriodColumns()` to show one and `PeriodPicker` to choose one. Never add free month/quarter/year inputs. A sub-service declares its `period_type`; `createTaskAction` and `updateTaskAction` reject a period that does not fit it.
+- **Deadlines**: a deadline is a sub-service plus a period plus a due date. The date comes from `compliance_deadlines` (a changed date), else the compliance rule linked to the sub-service, else the sub-service's own due day (`lib/services/deadline-due-date.ts`). Tasks for a deadline are created through the `create_deadline_tasks` database function so a delegate needs no wider access.
+- **Delegation**: the `compliance.generate_tasks` capability (create tasks from deadlines). Only a super admin (`is_prime_admin`) can grant or revoke it (`lib/auth/capability-grant.ts`).
+- **Completed tasks** can be corrected by admins only, for a fixed list of fields (`lib/services/task-modify-guard.ts`); every such edit is audited. Any new action that changes a task must call `canEditTaskFields`.
+- **Migrations** are applied by hand with `npm run db:apply-migration`, in date order. Code that reads a new column fails until its migration is applied, so apply first, then deploy. Pending at the time of writing: `2026-11-13-period-types.sql`, then `2026-11-14-compliance-task-creation.sql`.
+
 ## Data access rules (read before writing queries)
 
 - **The API returns at most 1,000 rows per request and does not warn you.** Any list that can grow past 1,000 rows (clients, tasks, task steps, work-done, audit log, client_sub_services...) MUST be paged. Use `fetchAll()` from `lib/supabase/fetch-all.ts` (it adds a stable `ORDER BY id`), or `.range()` with an explicit order. A query with no `.limit()/.range()/fetchAll` is a bug on these tables.
@@ -348,18 +356,15 @@ npm run test:one __tests__/some-file.test.ts
 Test setup: `__tests__/setup.js` (CommonJS entry) and `__tests__/setup.ts` (TypeScript source).
 
 Current test coverage includes:
-- `__tests__/bizlens-service.test.ts` — BizLens math engine.
-- `__tests__/task-transitions.test.ts` — Task status transitions and guardrails.
-- `__tests__/compliance-calendar-engine.test.ts` — Compliance calendar logic.
+- `__tests__/periods.test.ts`, `task-period.test.ts`, `period-review.test.ts` — the period model: financial years, keys, formatting, validation, review.
+- `__tests__/task-edit-guard.test.ts`, `task-action-guards.test.ts`, `field-diff.test.ts`, `task-edit-values.test.ts` — who may edit which task fields, and that every task-changing action applies the rule.
+- `__tests__/deadline-due-date.test.ts`, `deadline-plan.test.ts`, `deadline-create.test.ts`, `deadline-helpers.test.ts` — compliance deadlines: due dates, which clients are ready, creation rules, nudge timing, workload split, super-admin-only capability.
+- `__tests__/task-tiles.test.ts`, `task-filter-params.test.ts`, `home-metrics.test.ts` — tasks page tiles, URL filters and dashboard arithmetic.
+- `__tests__/task-transitions.test.ts`, `task-control-guardrails.test.ts` — task status transitions and completion guardrails.
+- `__tests__/compliance-calendar-engine.test.ts` — the compliance calendar rules engine.
 - `__tests__/encryption.test.ts` — AES-256-GCM credentials vault encryption.
-- `__tests__/validation-schemas.test.ts` — Zod schema validation.
-- `__tests__/utils.test.ts` — Utility helpers.
-- `__tests__/db-smoke.test.ts` — Database smoke tests.
-- `__tests__/runtime-safety.test.ts` — Runtime safety checks.
-- `__tests__/client-visible-status.test.ts` — Client-facing status rules.
-- `__tests__/group-f-polish.test.ts` — Group F polish rules.
-- `__tests__/result-helpers.test.ts` — Action result helpers.
-- `__tests__/task-control-guardrails.test.ts` — Task control guardrails.
+- `__tests__/validation-schemas.test.ts`, `utils.test.ts`, `result-helpers.test.ts`, `csv-utils.test.ts`, `safe-search.test.ts`, `security-helpers.test.ts`, `reports.test.ts`, `links.test.ts`, `ui-guards.test.ts`, `runtime-safety.test.ts`, `group-f-polish.test.ts` — helpers and source-level guards.
+- `__tests__/db-smoke.test.ts` — **connects to the database in `.env.local`** and checks that every table the code reads exists. It fails until pending migrations are applied.
 
 ### RLS / Security Tests
 
@@ -377,7 +382,7 @@ Defined in `vercel.json`. All schedules are UTC.
 
 | Path | Schedule (UTC) | Purpose |
 |---|---|---|
-| `/api/cron/generate-monthly-tasks` | `0 1 1 * *` | Create recurring tasks on 1st of month (~06:30 IST) |
+| `/api/cron/deadline-nudges` | `0 3 * * *` | Remind admins and deadline-task delegates when a period has ended and a week before the due date, if clients still lack tasks (~08:30 IST). Creates nothing. |
 | `/api/cron/due-alerts` | `30 3 * * *` | Daily task due-date email alerts (~09:00 IST) |
 | `/api/cron/dsc-alerts` | `30 2 * * *` | Daily DSC expiry alerts (~08:00 IST) |
 | `/api/cron/notification-digest` | `0 4 * * *` | Daily/weekly digest emails (~09:30 IST) |

@@ -210,3 +210,15 @@ Not changed, with reasons:
 - **Sub-service SOP steps.** The SOP step actions have no screen at all; checklists are managed through task templates. Raised for review: either add a screen or retire the unused actions.
 - **Compliance rule predicates** (`applies_when`) and periodicity are shown but not editable from the dialog, to avoid breaking the rule engine.
 - **Full-page task layout.** Removed. It was unreachable because the task panel is only shown in the detail dock.
+
+## Appendix B: what was built, and where it differs from this spec
+
+Phases 2 to 5 were built after the spec was approved. Differences and decisions:
+
+- **Period model.** Built as specified (`lib/periods.ts`). The old month-only unique index is kept; a new unique index on the period key covers every period type. Quarterly and yearly tasks saved earlier get no key; they appear on the Period review page (Settings) for an admin to confirm.
+- **Task tables.** The admin and team task tables were not merged. They are built differently (a resizable-column table with per-column search versus a virtualised grid with swipe rows), so merging them without seeing the result on screen was not safe. Only the period display and the Edit button were unified.
+- **Compliance rules already had `sub_service_id`**, so no column was added. Events gained `period_key`.
+- **Delegation** uses two database functions (`list_deadline_clients`, `create_deadline_tasks`) that check the caller, instead of new policies on clients and tasks. Only admins and holders of `compliance.generate_tasks` can run them, and delegates gain no other access.
+- **Cron.** `generate-monthly-tasks` is removed. `deadline-nudges` runs daily at 03:00 UTC and only sends reminders.
+- **Home dashboards.** Waiting-on-client ageing uses days since the task last changed, because the database does not record when a task was marked as waiting. The older "active clients" and "active engagements" tiles were dropped from the admin home.
+- **Pending database work.** Both migrations must be applied (period types first) before the new code runs against a database. `npm run test` includes a database check that stays red until then.
