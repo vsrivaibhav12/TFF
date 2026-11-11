@@ -89,3 +89,11 @@ describe('statusSplitWidths', () => {
     assert.equal(w.pending + w.in_progress + w.completed, 100);
   });
 });
+
+describe('the unassigned view', () => {
+  test('only the Unassigned tile is active, not Open', () => {
+    assert.equal(tileIsActive(tile('unassigned'), { assigned: 'unassigned' }), true);
+    assert.equal(tileIsActive(tile('open'), { assigned: 'unassigned' }), false);
+    assert.equal(tileIsActive(tile('open'), { assigned: 'u1' }), true);
+  });
+});

@@ -65,3 +65,21 @@ describe('buildTaskTitle with a period key', () => {
     assert.equal(buildTaskTitle({ subServiceName: 'GSTR-1', clientName: 'Acme', periodYear: 2026, periodMonth: 4 }), 'GSTR-1 — Acme — 4/2026');
   });
 });
+
+import { storedPeriodInput } from '../lib/services/task-period';
+
+describe('storedPeriodInput (what an unchanged task period counts as when its service changes)', () => {
+  test('a keyed period is used as it is', () => {
+    assert.deepEqual(storedPeriodInput({ period_key: 'FY2026-27-Q2', period_year: 2026, period_quarter: 2 }), { period_key: 'FY2026-27-Q2' });
+  });
+  test('an older monthly task still counts as that month', () => {
+    assert.deepEqual(storedPeriodInput({ period_year: 2026, period_month: 10 }), { period_year: 2026, period_month: 10 });
+  });
+  test('older quarterly and yearly tasks are not guessed: they were calendar quarters and years', () => {
+    assert.deepEqual(storedPeriodInput({ period_year: 2026, period_quarter: 1 }), {});
+    assert.deepEqual(storedPeriodInput({ period_year: 2026 }), {});
+  });
+  test('no period', () => {
+    assert.deepEqual(storedPeriodInput({}), {});
+  });
+});

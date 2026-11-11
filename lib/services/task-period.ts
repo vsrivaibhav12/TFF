@@ -42,3 +42,21 @@ export function resolveTaskPeriod(ctx: PeriodContext, input: PeriodInput): Resol
     }),
   };
 }
+
+/**
+ * What a task's stored period counts as when only its service changes. Older monthly tasks are exact.
+ * Older quarterly and yearly tasks used calendar quarters and years, so they are not carried over:
+ * the person chooses the period again.
+ */
+export function storedPeriodInput(task: {
+  period_key?: string | null;
+  period_year?: number | null;
+  period_month?: number | null;
+  period_quarter?: number | null;
+}): PeriodInput {
+  if (task.period_key) return { period_key: task.period_key };
+  if (task.period_year && task.period_month && !task.period_quarter) {
+    return { period_year: task.period_year, period_month: task.period_month };
+  }
+  return {};
+}

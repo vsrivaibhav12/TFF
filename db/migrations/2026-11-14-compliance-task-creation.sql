@@ -204,6 +204,13 @@ begin
   if p_period_key is null or p_due_date is null or p_sub_service_id is null then
     raise exception 'A sub-service, period and due date are required' using errcode = '22023';
   end if;
+  -- tasks_due_date_check: a task cannot be due before the day it is created.
+  if p_due_date < current_date then
+    raise exception 'The due date cannot be in the past' using errcode = '22023';
+  end if;
+  if not exists (select 1 from public.sub_services s where s.id = p_sub_service_id and s.is_deleted = false and s.is_active is not false) then
+    raise exception 'This service is not available' using errcode = '22023';
+  end if;
 
   -- Task numbers are T-YY-NNNN. One caller at a time so two screens cannot take the same number.
   perform pg_advisory_xact_lock(hashtext('tff.task_number'));
@@ -223,6 +230,7 @@ begin
     begin
       if not exists (
         select 1 from public.client_sub_services css
+        join public.clients cl on cl.id = css.client_id and cl.is_deleted = false
         where css.client_id = v_client and css.sub_service_id = p_sub_service_id and css.is_active is not false
       ) then
         v_failed := v_failed || jsonb_build_object('client_id', v_client, 'reason', 'This client is not linked to the service');
@@ -251,7 +259,8 @@ begin
       end if;
 
       v_max := v_max + 1;
-      v_num := v_prefix || lpad(v_max::text, 4, '0');
+      -- Four digits at least; lpad would cut a number past 9999.
+      v_num := v_prefix || case when v_max >= 10000 then v_max::text else lpad(v_max::text, 4, '0') end;
 
       insert into public.tasks (
         client_id, sub_service_id, title, status, priority, assigned_to, due_date,

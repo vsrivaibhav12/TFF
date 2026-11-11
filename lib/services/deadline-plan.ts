@@ -11,7 +11,7 @@ import {
   type CalendarRule,
   type ClientProfile,
 } from '@/lib/services/compliance-calendar-engine';
-import { resolveDeadlineDueDate, type DeadlineDueDate, type DeadlineSubService } from '@/lib/services/deadline-due-date';
+import { resolveDeadlineDueDate, rulesForPeriod, type DeadlineDueDate, type DeadlineSubService } from '@/lib/services/deadline-due-date';
 
 export type PlanClientInput = {
   client_id: string;
@@ -42,7 +42,7 @@ const label = (t: PeriodType) => t.replace('_', '-');
 export function buildDeadlinePlan(args: {
   subService: DeadlineSubService & { period_type?: string | null };
   periodKey: string;
-  rule?: CalendarRule | null;
+  rules?: CalendarRule[];
   override?: string | null;
   clients: PlanClientInput[];
 }): DeadlinePlanResult {
@@ -60,11 +60,12 @@ export function buildDeadlinePlan(args: {
 
   const due = resolveDeadlineDueDate({
     period,
-    rule: args.rule,
+    rules: args.rules,
     subService: args.subService,
     override: args.override,
   });
 
+  const matchingRules = rulesForPeriod(args.rules, period);
   const from = `${period.year}-01-01`;
   const to = `${(period.year as number) + 1}-12-31`;
 
@@ -76,8 +77,9 @@ export function buildDeadlinePlan(args: {
       return { ...c, status: 'not_applicable' as const, reason: `Files ${label(clientType)}, not ${label(period.type)}` };
     }
 
-    if (args.rule && c.profile) {
-      const applies = generateEventsForRule(args.rule, c.profile, from, to).some((e) => e.period_key === period.key);
+    if (matchingRules.length > 0 && c.profile) {
+      // A client is in if any rule of this kind covers it (a GST service can have one rule per filing frequency).
+      const applies = matchingRules.some((r) => generateEventsForRule(r, c.profile as ClientProfile, from, to).some((e) => e.period_key === period.key));
       if (!applies) return { ...c, status: 'not_applicable' as const, reason: 'The compliance rule does not apply to this client' };
     }
     return { ...c, status: 'ready' as const };

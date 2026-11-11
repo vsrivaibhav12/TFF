@@ -121,6 +121,9 @@ export function AgeingBars({ buckets, href }: { buckets: { d0_3: number; d4_7: n
 
 /** Tasks falling due on each of the next few days. */
 export function WeekStrip({ days, href }: { days: Array<{ date: string; weekday: string; count: number }>; href: string }) {
+  // The base link may already carry a query (for example the person's own tasks).
+  const joiner = href.includes('?') ? '&' : '?';
+  const dayHref = (date: string) => href + joiner + 'due_from=' + date + '&due_to=' + date;
   return (
     <section className="tff-card p-4 space-y-3" data-testid="week-strip">
       <div className="flex items-center justify-between">
@@ -131,7 +134,7 @@ export function WeekStrip({ days, href }: { days: Array<{ date: string; weekday:
         {days.map((d, i) => (
           <Link
             key={d.date}
-            href={`${href}?due_from=${d.date}&due_to=${d.date}`}
+            href={dayHref(d.date)}
             className={cn('flex-1 rounded-lg bg-zinc-50 px-1 py-2 text-center text-xs text-zinc-500 hover:bg-zinc-100', i === 0 && 'ring-1 ring-teal-600')}
           >
             <div className="text-lg font-medium text-zinc-900 tabular-nums leading-tight">{d.count}</div>

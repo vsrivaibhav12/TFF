@@ -90,7 +90,7 @@ export default function CreateDeadlineTasks({
     setPlan(null);
   }
 
-  async function loadPlan() {
+  async function loadPlan(keepChoices = false) {
     if (!subId || !periodKey) return;
     setLoading(true);
     setLoadError('');
@@ -99,11 +99,20 @@ export default function CreateDeadlineTasks({
     if (!r.success) { setPlan(null); setLoadError(r.error); return; }
     setPlan(r.data);
     const ready = r.data.clients.filter((c) => c.status === 'ready');
-    setSelected(new Set(ready.map((c) => c.client_id)));
-    const initial: Record<string, string> = {};
-    for (const c of ready) if (c.default_assignee_id) initial[c.client_id] = c.default_assignee_id;
-    setAssign(initial);
-    setDueDate(r.data.due_date ?? '');
+    setSelected((prev) => (keepChoices && prev.size > 0 ? new Set(ready.filter((c) => prev.has(c.client_id)).map((c) => c.client_id)) : new Set(ready.map((c) => c.client_id))));
+    // Pre-fill defaults, but only for people who are still active. Keep choices already made when only the date changed.
+    const activeIds = new Set(team.map((m) => m.id));
+    setAssign((prev) => {
+      const initial: Record<string, string> = {};
+      for (const c of ready) {
+        if (keepChoices && prev[c.client_id]) initial[c.client_id] = prev[c.client_id];
+        else if (c.default_assignee_id && activeIds.has(c.default_assignee_id)) initial[c.client_id] = c.default_assignee_id;
+      }
+      return initial;
+    });
+    // A task cannot be due before today, so a statutory date that has passed becomes today.
+    const today = todayIST();
+    setDueDate(r.data.due_date && r.data.due_date >= today ? r.data.due_date : today);
     setView('pick');
   }
 
@@ -345,7 +354,7 @@ export default function CreateDeadlineTasks({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
             <div className="space-y-1.5">
               <Label htmlFor="deadline-due">Due date on the tasks</Label>
-              <Input id="deadline-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              <Input id="deadline-due" type="date" min={todayIST()} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Priority</Label>
@@ -367,6 +376,9 @@ export default function CreateDeadlineTasks({
                 Remember these people as each client&apos;s default for this service
               </Label>
             </div>
+          )}
+          {plan.due_date && plan.due_date < todayIST() && dueDate === todayIST() && (
+            <p className="text-sm text-zinc-500">The statutory date ({formatDateIST(plan.due_date)}) has passed, so the tasks are due today.</p>
           )}
           {!dueDate && <p className="text-sm text-red-600">Set a due date before creating.</p>}
           <div className="flex gap-2">
@@ -410,7 +422,7 @@ export default function CreateDeadlineTasks({
           subId={subId}
           periodKey={periodKey}
           current={plan.due_date}
-          onChanged={() => void loadPlan()}
+          onChanged={() => void loadPlan(true)}
         />
       )}
     </div>
@@ -439,7 +451,7 @@ function ChangeDueDateDialog({
     start(async () => {
       const r = await changeDeadlineDueDateAction({ sub_service_id: subId, period_key: periodKey, due_date: date, note: note || null, move_open_tasks: move });
       if (!r.success) { toast.error(r.error); return; }
-      toast.success(move && r.data.tasks_open > 0 ? `Due date changed. ${r.data.tasks_moved} of ${r.data.tasks_open} open tasks moved.` : 'Due date changed');
+      toast.success(move ? `Due date changed. ${r.data.tasks_moved} open task${r.data.tasks_moved === 1 ? '' : 's'} moved.` : 'Due date changed');
       onOpenChange(false);
       onChanged();
     });
@@ -452,7 +464,7 @@ function ChangeDueDateDialog({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="new-due">New due date</Label>
-            <Input id="new-due" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input id="new-due" type="date" min={todayIST()} value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="due-note">Reason (optional)</Label>
@@ -461,7 +473,7 @@ function ChangeDueDateDialog({
           <div className="flex items-center gap-2">
             <Checkbox id="move-open-tasks" checked={move} onCheckedChange={(v) => setMove(v === true)} />
             <Label htmlFor="move-open-tasks" className="text-sm font-normal text-zinc-700 cursor-pointer">
-              Also move the due date on open tasks for this deadline
+              Also move the due date on open tasks for this deadline that you can see
             </Label>
           </div>
         </div>

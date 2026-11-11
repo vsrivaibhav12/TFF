@@ -26,7 +26,7 @@ const rule = (over: Partial<CalendarRule> = {}): CalendarRule => ({
 
 describe('buildDeadlinePlan', () => {
   test('every linked client is ready when nothing excludes it', () => {
-    const r = buildDeadlinePlan({ subService: sub(), periodKey: '2026-10', rule: rule(), clients: [client('a'), client('b')] });
+    const r = buildDeadlinePlan({ subService: sub(), periodKey: '2026-10', rules: [rule()], clients: [client('a'), client('b')] });
     assert.ok(r.ok);
     if (r.ok) {
       assert.deepEqual(r.plan.counts, { linked: 2, applicable: 2, exists: 0, ready: 2, notApplicable: 0 });
@@ -36,7 +36,7 @@ describe('buildDeadlinePlan', () => {
   });
 
   test('clients that already have a task are marked, not offered again', () => {
-    const r = buildDeadlinePlan({ subService: sub(), periodKey: '2026-10', rule: rule(), clients: [client('a', { existing_task_id: 't1' }), client('b')] });
+    const r = buildDeadlinePlan({ subService: sub(), periodKey: '2026-10', rules: [rule()], clients: [client('a', { existing_task_id: 't1' }), client('b')] });
     assert.ok(r.ok);
     if (r.ok) {
       assert.deepEqual(r.plan.clients.map((c) => c.status), ['exists', 'ready']);
@@ -46,7 +46,7 @@ describe('buildDeadlinePlan', () => {
 
   test('a rule predicate removes clients it does not apply to', () => {
     const r = buildDeadlinePlan({
-      subService: sub(), periodKey: '2026-10', rule: rule({ applies_when: { is_tds_deductor: true } }),
+      subService: sub(), periodKey: '2026-10', rules: [rule({ applies_when: { is_tds_deductor: true } })],
       clients: [client('a', { profile: profile({ is_tds_deductor: true }) }), client('b', { profile: profile() })],
     });
     assert.ok(r.ok);
@@ -57,13 +57,13 @@ describe('buildDeadlinePlan', () => {
   });
 
   test('a client with no compliance profile cannot be excluded by a predicate', () => {
-    const r = buildDeadlinePlan({ subService: sub(), periodKey: '2026-10', rule: rule({ applies_when: { is_tds_deductor: true } }), clients: [client('a')] });
+    const r = buildDeadlinePlan({ subService: sub(), periodKey: '2026-10', rules: [rule({ applies_when: { is_tds_deductor: true } })], clients: [client('a')] });
     assert.ok(r.ok && r.plan.clients[0].status === 'ready');
   });
 
   test('GST service: a quarterly filer is not applicable to a monthly period', () => {
     const r = buildDeadlinePlan({
-      subService: sub('gst_frequency'), periodKey: '2026-10', rule: rule(),
+      subService: sub('gst_frequency'), periodKey: '2026-10', rules: [rule()],
       clients: [client('a', { gst_filing_frequency: 'monthly' }), client('b', { gst_filing_frequency: 'qrmp' }), client('c', { gst_filing_frequency: null })],
     });
     assert.ok(r.ok);
@@ -74,7 +74,7 @@ describe('buildDeadlinePlan', () => {
   });
 
   test('an override moves the due date', () => {
-    const r = buildDeadlinePlan({ subService: sub(), periodKey: '2026-10', rule: rule(), override: '2026-11-18', clients: [client('a')] });
+    const r = buildDeadlinePlan({ subService: sub(), periodKey: '2026-10', rules: [rule()], override: '2026-11-18', clients: [client('a')] });
     assert.ok(r.ok && r.plan.due.dueDate === '2026-11-18' && r.plan.due.source === 'override');
   });
 
@@ -88,6 +88,20 @@ describe('buildDeadlinePlan', () => {
     const r = buildDeadlinePlan({ subService: sub('none'), periodKey: '2026-10', clients: [] });
     assert.equal(r.ok, false);
     if (!r.ok) assert.match(r.reason, /no period/i);
+  });
+
+  test('QRMP clients are ready for a quarter when a quarterly rule is linked next to a monthly one', () => {
+    const monthly = rule({ rule_code: 'GSTR3B_M', applies_when: { gst_filing_frequency: 'monthly' } });
+    const quarterly = rule({ rule_code: 'GSTR3B_Q', periodicity: 'quarterly', due_day: 22, applies_when: { gst_filing_frequency: 'qrmp' } });
+    const r = buildDeadlinePlan({
+      subService: sub('gst_frequency'), periodKey: 'FY2026-27-Q2', rules: [monthly, quarterly],
+      clients: [client('a', { gst_filing_frequency: 'qrmp', profile: profile({ gst_filing_frequency: 'qrmp' } as Partial<ClientProfile>) }), client('b', { gst_filing_frequency: 'monthly' })],
+    });
+    assert.ok(r.ok);
+    if (r.ok) {
+      assert.deepEqual(r.plan.clients.map((c) => c.status), ['ready', 'not_applicable']);
+      assert.equal(r.plan.due.dueDate, '2026-10-22');
+    }
   });
 
   test('with no due date configured the plan still lists clients, without a date', () => {

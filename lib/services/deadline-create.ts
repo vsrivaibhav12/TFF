@@ -24,8 +24,10 @@ export type CreateRowsResult = {
 
 export type CreateDeps = {
   subService: DeadlineSubService & { period_type?: string | null };
-  rule: CalendarRule | null;
+  rules: CalendarRule[];
   override: string | null;
+  /** Today's date (YYYY-MM-DD). A task cannot be due before the day it is created. */
+  todayIso: string;
   listClients: () => Promise<PlanClientInput[]>;
   createRows: (args: CreateRowsArgs) => Promise<CreateRowsResult>;
 };
@@ -53,17 +55,22 @@ export async function createDeadlineTasks(deps: CreateDeps, input: DeadlineCreat
   const planned = buildDeadlinePlan({
     subService: deps.subService,
     periodKey: input.period_key,
-    rule: deps.rule,
+    rules: deps.rules,
     override: deps.override,
     clients,
   });
   if (!planned.ok) return { ok: false, reason: planned.reason };
   const { plan } = planned;
 
-  const dueDate = input.due_date || plan.due.dueDate;
+  let dueDate = input.due_date || plan.due.dueDate;
   if (!dueDate || !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
     return { ok: false, reason: 'Set a due date for this deadline' };
   }
+  if (input.due_date && input.due_date < deps.todayIso) {
+    return { ok: false, reason: 'Choose today or a later date for the tasks' };
+  }
+  // The statutory date may already have passed; the tasks are then due today.
+  if (dueDate < deps.todayIso) dueDate = deps.todayIso;
 
   const byId = new Map(plan.clients.map((c) => [c.client_id, c]));
   const summary: DeadlineCreateSummary = { created: [], skipped: [], failed: [], plan };

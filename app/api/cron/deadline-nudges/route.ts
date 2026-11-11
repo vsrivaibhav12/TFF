@@ -6,7 +6,7 @@ import { buildDeadlinePlan } from '@/lib/services/deadline-plan';
 import { nudgeReason } from '@/lib/services/deadline-nudge';
 import {
   getDeadlineOverride,
-  getRuleForSubService,
+  getRulesForSubService,
   listDeadlineClientsDirect,
   listSchedulableSubServices,
 } from '@/lib/repositories/deadlines';
@@ -60,26 +60,30 @@ export async function GET(request: NextRequest) {
         const period = parsePeriodKey(key);
         const periodEnd = period ? periodEndIso(period) : null;
         if (!period || !periodEnd) continue;
-        const [rule, override] = await Promise.all([getRuleForSubService(sb, sub.id), getDeadlineOverride(sb, sub.id, key)]);
+        const [rules, override] = await Promise.all([getRulesForSubService(sb, sub.id), getDeadlineOverride(sb, sub.id, key)]);
 
         // Cheap check first: does today matter for this deadline at all?
         const dueGuess = override?.due_date ?? null;
-        const planned = buildDeadlinePlan({ subService: sub, periodKey: key, rule, override: dueGuess, clients: [] });
+        const planned = buildDeadlinePlan({ subService: sub, periodKey: key, rules, override: dueGuess, clients: [] });
         if (!planned.ok) continue;
         const reason = nudgeReason({ periodEnd, dueDate: planned.plan.due.dueDate, today });
         if (!reason) continue;
 
         checked++;
         const clients = await listDeadlineClientsDirect(sb, sub.id, key);
-        const full = buildDeadlinePlan({ subService: sub, periodKey: key, rule, override: dueGuess, clients });
+        const full = buildDeadlinePlan({ subService: sub, periodKey: key, rules, override: dueGuess, clients });
         if (!full.ok || full.plan.counts.ready === 0) continue;
 
         const ready = full.plan.counts.ready;
         const due = full.plan.due.dueDate;
-        const rows = recipients.map((user_id) => ({
+        const title = `${sub.name}, ${formatPeriod(full.plan.period)}: ${ready} client${ready === 1 ? ' has' : 's have'} no task`;
+        // A second run on the same day must not repeat the reminder.
+        const { data: already } = await sb.from('notifications').select('user_id').eq('related_entity_id', sub.id).eq('title', title).gte('created_at', `${today}T00:00:00`);
+        const sent = new Set((already ?? []).map((r) => r.user_id));
+        const rows = recipients.filter((id) => !sent.has(id)).map((user_id) => ({
           user_id,
           notification_type: 'compliance_due',
-          title: `${sub.name}, ${formatPeriod(full.plan.period)}: ${ready} client${ready === 1 ? ' has' : 's have'} no task`,
+          title,
           message: `${reason === 'opened' ? 'The period has ended.' : 'The due date is a week away.'} ${due ? `Due ${due}. ` : ''}Open Compliance, choose Create tasks for a deadline, and assign them.`,
           related_entity_type: 'sub_service',
           related_entity_id: sub.id,
@@ -97,7 +101,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, today, subServices: subServices.length, deadlinesNudged: checked, notifications: nudges, errors });
+  const timedOut = Date.now() - startedAt > TIME_BUDGET_MS;
+  return NextResponse.json({ ok: !timedOut && errors.length === 0, timedOut, today, subServices: subServices.length, deadlinesNudged: checked, notifications: nudges, errors });
 }
 
 /** Active admins, plus everyone holding the capability directly or through a role template. */

@@ -43,3 +43,14 @@ describe('UI guards', () => {
     assert.deepEqual(offenders, [], `Hover-only edit controls:\n${offenders.join('\n')}`);
   });
 });
+
+describe('tasks page', () => {
+  it('declares `base` before the summary tiles use it (a use inside a callback is not caught by the type checker)', () => {
+    const text = readFileSync(join(process.cwd(), 'components/tasks/tasks-list-page.tsx'), 'utf-8');
+    const declared = text.indexOf('const base =');
+    const used = text.indexOf('tileHref(tile, flat, base)');
+    assert.ok(declared >= 0 && used >= 0);
+    assert.ok(declared < used, 'const base must come before its first use');
+    assert.equal(text.split('const base =').length - 1, 1, 'base must be declared once');
+  });
+});

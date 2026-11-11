@@ -1,3 +1,4 @@
+import { classifyTaskInsertError, formatTaskNumber, friendlyTaskWriteMessage, parseTaskSequence } from '@/lib/services/task-number';
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import type { TaskStatus } from '@/lib/validation/schemas';
@@ -171,7 +172,8 @@ function applyStatusFilter(query: any, status: TaskFilterOpts['status']) {
   } else if (hasStuck && realStatuses.length > 0) {
     q = q.or(`is_stuck.eq.true,status.in.(${realStatuses.join(',')})`);
   } else if (hasBlocked) {
-    q = q.eq('is_blocked_on_client', true);
+    // Waiting on a client is about work still open, which is also what the dashboards count.
+    q = q.eq('is_blocked_on_client', true).in('status', ['pending', 'in_progress']);
   } else if (hasStuck) {
     q = q.eq('is_stuck', true);
   } else if (realStatuses.length > 0) {
@@ -418,7 +420,7 @@ export async function setTaskRoleUser(taskId: string, role: 'assignee' | 'review
 export async function updateTaskRecord(id: string, payload: Record<string, unknown>) {
   const sb = createClient();
   const { error } = await sb.from('tasks').update(payload).eq('id', id);
-  if (error) throw error;
+  if (error) throw Object.assign(new Error(friendlyTaskWriteMessage(error.message)), { code: error.code });
 }
 
 export async function softDeleteTaskRecord(id: string, userId: string) {
@@ -462,18 +464,27 @@ export async function createTaskWithAutoNumber(payload: Record<string, unknown>,
   const prefix = `T-${yy}-`;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const { data: maxRow } = await sb
+    // Text order puts T-26-9999 after T-26-10000, so look for five-digit numbers first.
+    const { data: longRow } = await sb
       .from('tasks')
       .select('task_number')
       .eq('is_deleted', false)
-      .ilike('task_number', `${prefix}%`)
+      .ilike('task_number', `${prefix}_____%`)
       .order('task_number', { ascending: false })
       .limit(1)
       .maybeSingle();
+    const { data: maxRow } = longRow
+      ? { data: longRow }
+      : await sb
+          .from('tasks')
+          .select('task_number')
+          .eq('is_deleted', false)
+          .ilike('task_number', `${prefix}%`)
+          .order('task_number', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-    const lastNum = maxRow?.task_number ? parseInt(maxRow.task_number.slice(-4), 10) : 0;
-    const next = (lastNum + 1 + attempt).toString().padStart(4, '0');
-    const candidate = `${prefix}${next}`;
+    const candidate = formatTaskNumber(prefix, parseTaskSequence(maxRow?.task_number) + 1 + attempt);
 
     const { data: inserted, error } = await sb
       .from('tasks')
@@ -483,11 +494,10 @@ export async function createTaskWithAutoNumber(payload: Record<string, unknown>,
 
     if (!error) return inserted as { id: string; task_number: string };
 
-    // Retry only on unique violation (23505)
-    if (error.code === '23505' || error.message?.includes('tasks_task_number_key')) {
-      continue;
-    }
-    throw error;
+    // Retry only when the task number was taken. Any other failure is reported as it is, in plain words.
+    const kind = classifyTaskInsertError(error);
+    if (kind === 'retry_number') continue;
+    throw Object.assign(new Error(friendlyTaskWriteMessage(error.message ?? 'Could not create the task')), { code: kind === 'duplicate_period' ? 'DUPLICATE_PERIOD' : error.code });
   }
 
   throw new Error('Failed to generate unique task number after maximum retries');

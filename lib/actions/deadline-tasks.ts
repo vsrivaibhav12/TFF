@@ -8,13 +8,14 @@ import { ok, fail, type ActionResult } from '@/lib/actions/result';
 import { writeAudit } from '@/lib/services/audit-service';
 import { notify } from '@/lib/services/notification-service';
 import { formatPeriod, parsePeriodKey } from '@/lib/periods';
+import { todayIST } from '@/lib/utils';
 import { buildDeadlinePlan, type PlanClientStatus } from '@/lib/services/deadline-plan';
 import { createDeadlineTasks } from '@/lib/services/deadline-create';
 import { resolveDeadlineDueDate } from '@/lib/services/deadline-due-date';
 import {
   createDeadlineRowsRpc,
   getDeadlineOverride,
-  getRuleForSubService,
+  getRulesForSubService,
   getSubServiceForDeadline,
   listDeadlineClientsRpc,
   listOpenDeadlineTasks,
@@ -63,9 +64,9 @@ export async function getDeadlinePlanAction(input: z.infer<typeof planSchema>): 
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
 
     const sb = createClient();
-    const [subService, rule, override] = await Promise.all([
+    const [subService, rules, override] = await Promise.all([
       getSubServiceForDeadline(sb, parsed.data.sub_service_id),
-      getRuleForSubService(sb, parsed.data.sub_service_id),
+      getRulesForSubService(sb, parsed.data.sub_service_id),
       getDeadlineOverride(sb, parsed.data.sub_service_id, parsed.data.period_key),
     ]);
     if (!subService) return fail('Service not found', 'NOT_FOUND');
@@ -74,7 +75,7 @@ export async function getDeadlinePlanAction(input: z.infer<typeof planSchema>): 
     const planned = buildDeadlinePlan({
       subService,
       periodKey: parsed.data.period_key,
-      rule,
+      rules,
       override: override?.due_date ?? null,
       clients,
     });
@@ -128,9 +129,9 @@ export async function createDeadlineTasksAction(input: z.infer<typeof createSche
     if (!parsed.success) return fail(parsed.error.errors[0]?.message ?? 'Invalid input', 'VALIDATION');
 
     const sb = createClient();
-    const [subService, rule, override] = await Promise.all([
+    const [subService, rules, override] = await Promise.all([
       getSubServiceForDeadline(sb, parsed.data.sub_service_id),
-      getRuleForSubService(sb, parsed.data.sub_service_id),
+      getRulesForSubService(sb, parsed.data.sub_service_id),
       getDeadlineOverride(sb, parsed.data.sub_service_id, parsed.data.period_key),
     ]);
     if (!subService) return fail('Service not found', 'NOT_FOUND');
@@ -138,8 +139,9 @@ export async function createDeadlineTasksAction(input: z.infer<typeof createSche
     const r = await createDeadlineTasks(
       {
         subService,
-        rule,
+        rules,
         override: override?.due_date ?? null,
+        todayIso: todayIST(),
         listClients: () => listDeadlineClientsRpc(sb, parsed.data.sub_service_id, parsed.data.period_key),
         createRows: (args) => createDeadlineRowsRpc(sb, args),
       },
@@ -186,7 +188,7 @@ const extensionSchema = z.object({
 /** Change the due date of a deadline (for example a government extension) for every client at once. */
 export async function changeDeadlineDueDateAction(
   input: z.infer<typeof extensionSchema>,
-): Promise<ActionResult<{ events_updated: boolean; tasks_moved: number; tasks_open: number }>> {
+): Promise<ActionResult<{ events_updated: number; tasks_moved: number; tasks_open: number }>> {
   try {
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'compliance.generate_tasks');
@@ -195,14 +197,16 @@ export async function changeDeadlineDueDateAction(
     const period = parsePeriodKey(parsed.data.period_key);
     if (!period) return fail('That period is not valid', 'VALIDATION');
 
+    if (parsed.data.due_date < todayIST()) return fail('Choose today or a later date', 'VALIDATION');
+
     const sb = createClient();
-    const [subService, rule] = await Promise.all([
+    const [subService, rules] = await Promise.all([
       getSubServiceForDeadline(sb, parsed.data.sub_service_id),
-      getRuleForSubService(sb, parsed.data.sub_service_id),
+      getRulesForSubService(sb, parsed.data.sub_service_id),
     ]);
     if (!subService) return fail('Service not found', 'NOT_FOUND');
 
-    const original = resolveDeadlineDueDate({ period, rule, subService });
+    const original = resolveDeadlineDueDate({ period, rules, subService });
     await upsertDeadlineOverride(sb, {
       sub_service_id: parsed.data.sub_service_id,
       period_key: parsed.data.period_key,
@@ -211,7 +215,7 @@ export async function changeDeadlineDueDateAction(
       note: parsed.data.note ?? null,
       user_id: me.id,
     });
-    await setEventDueDates(sb, parsed.data.sub_service_id, parsed.data.period_key, parsed.data.due_date);
+    const eventsUpdated = await setEventDueDates(sb, parsed.data.sub_service_id, parsed.data.period_key, parsed.data.due_date);
 
     let tasksMoved = 0;
     let tasksOpen = 0;
@@ -254,7 +258,7 @@ export async function changeDeadlineDueDateAction(
     revalidatePath('/admin/tasks');
     revalidatePath('/team/tasks');
     revalidatePath('/admin/compliance');
-    return ok({ events_updated: true, tasks_moved: tasksMoved, tasks_open: tasksOpen });
+    return ok({ events_updated: eventsUpdated, tasks_moved: tasksMoved, tasks_open: tasksOpen });
   } catch (e: unknown) {
     return fail(errorMessage(e), errorCode(e));
   }

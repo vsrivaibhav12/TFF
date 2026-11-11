@@ -14,7 +14,8 @@ function deps(clients: PlanClientInput[], over: Partial<CreateDeps> = {}): Creat
   const calls: Array<Parameters<CreateDeps['createRows']>[0]> = [];
   return {
     subService: sub,
-    rule: null,
+    rules: [],
+    todayIso: '2026-10-05',
     override: null,
     listClients: async () => clients,
     createRows: async (args) => {
@@ -37,7 +38,7 @@ describe('createDeadlineTasks', () => {
     assert.ok(r.ok);
     assert.equal(d.calls.length, 1);
     const call = d.calls[0];
-    assert.equal(call.due_date, '2026-10-11');
+    assert.equal(call.due_date, '2026-11-11');
     assert.equal(call.period_key, '2026-10');
     assert.equal(call.period_type, 'monthly');
     assert.equal(call.period_year, 2026);
@@ -100,6 +101,21 @@ describe('createDeadlineTasks', () => {
     const e = await createDeadlineTasks(none, input([{ client_id: 'a', assigned_to: 'u1' }]));
     assert.equal(e.ok, false);
     if (!e.ok) assert.match(e.reason, /due date/i);
+  });
+
+  test('a due date in the past is refused, because a task cannot be due before it is created', async () => {
+    const d = deps([client('a')]);
+    const r = await createDeadlineTasks(d, input([{ client_id: 'a', assigned_to: 'u1' }], '2026-10-04'));
+    assert.equal(r.ok, false);
+    if (!r.ok) assert.match(r.reason, /today or a later date/i);
+    assert.equal(d.calls.length, 0);
+  });
+
+  test('the deadline date is used even when it has passed, by moving the task date to today', async () => {
+    const d = deps([client('a')], { todayIso: '2026-11-20' });
+    const r = await createDeadlineTasks(d, input([{ client_id: 'a', assigned_to: 'u1' }]));
+    assert.ok(r.ok);
+    assert.equal(d.calls[0].due_date, '2026-11-20');
   });
 
   test('nothing to create returns an empty result without calling the database', async () => {

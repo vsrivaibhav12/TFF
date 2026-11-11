@@ -34,17 +34,16 @@ export async function listSchedulableSubServices(sb: SupabaseClient): Promise<Sc
   }));
 }
 
-/** The compliance rule linked to a sub-service. If several are linked, the first active one is used. */
-export async function getRuleForSubService(sb: SupabaseClient, subServiceId: string): Promise<CalendarRule | null> {
+/** The active compliance rules linked to a sub-service (a GST service can have monthly and quarterly ones). */
+export async function getRulesForSubService(sb: SupabaseClient, subServiceId: string): Promise<CalendarRule[]> {
   const { data, error } = await sb
     .from('compliance_calendar_rules')
     .select('*')
     .eq('sub_service_id', subServiceId)
     .eq('is_active', true)
-    .order('rule_code')
-    .limit(1);
+    .order('rule_code');
   if (error) throw error;
-  return ((data ?? [])[0] as CalendarRule | undefined) ?? null;
+  return (data ?? []) as CalendarRule[];
 }
 
 export async function getDeadlineOverride(sb: SupabaseClient, subServiceId: string, periodKey: string): Promise<{ due_date: string; original_due_date: string | null; extension_note: string | null } | null> {
@@ -166,15 +165,16 @@ export async function upsertDeadlineOverride(
 }
 
 /** Events of this deadline get the new due date, so the calendar and the dashboards agree. */
-export async function setEventDueDates(sb: SupabaseClient, subServiceId: string, periodKey: string, dueDate: string): Promise<void> {
+export async function setEventDueDates(sb: SupabaseClient, subServiceId: string, periodKey: string, dueDate: string): Promise<number> {
   const { data: rules, error: re } = await sb.from('compliance_calendar_rules').select('id').eq('sub_service_id', subServiceId);
   if (re) throw re;
   const ruleIds = (rules ?? []).map((r: { id: string }) => r.id);
   const filter = ruleIds.length > 0
     ? `sub_service_id.eq.${subServiceId},rule_id.in.(${ruleIds.join(',')})`
     : `sub_service_id.eq.${subServiceId}`;
-  const { error } = await sb.from('compliance_calendar_events').update({ due_date: dueDate }).eq('period_key', periodKey).or(filter);
+  const { data, error } = await sb.from('compliance_calendar_events').update({ due_date: dueDate }).eq('period_key', periodKey).or(filter).select('id');
   if (error) throw error;
+  return (data ?? []).length;
 }
 
 /** Open tasks of a deadline: the ones an extension may move. */

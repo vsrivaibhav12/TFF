@@ -43,6 +43,8 @@ export function tileFilterOpts(tile: Tile, current: Params): TaskFilterOpts {
 }
 
 export function tileIsActive(tile: Tile, current: Params): boolean {
+  // The unassigned view is its own tile; the Open tile is not also lit for it.
+  if (tile.key === 'open' && current.assigned === 'unassigned') return false;
   const entries = Object.entries(tile.set);
   if (!entries.every(([k, v]) => current[k] === v)) return false;
   // Scope parameters the tile does not set must be absent, or another view is showing.

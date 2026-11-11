@@ -33,6 +33,8 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
     requires_verification: initial?.requires_verification ?? false,
     is_active: initial?.is_active ?? true,
   });
+  // Until the period is chosen by hand, it follows the schedule (an on-demand service has no period).
+  const [periodChosen, setPeriodChosen] = useState(!!initial?.period_type);
   const [showAdvanced, setShowAdvanced] = useState(
     !!(initial?.is_recurring === false || initial?.requires_client_input === false || initial?.requires_verification)
   );
@@ -69,7 +71,7 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
           <div className="space-y-2"><Label>Description</Label><Textarea rows={2} value={f.description} onChange={(e) => set('description', e.target.value)} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2"><Label>Frequency</Label>
-              <Select value={f.frequency} onValueChange={(v) => set('frequency', v)}>
+              <Select value={f.frequency} onValueChange={(v) => { set('frequency', v); if (!periodChosen) set('period_type', subServicePeriodType({ frequency: v })); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{['monthly', 'quarterly', 'annually', 'on_demand'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
               </Select>
@@ -78,7 +80,7 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
           </div>
           <div className="space-y-2">
             <Label>Period</Label>
-            <Select value={f.period_type} onValueChange={(v) => set('period_type', v)}>
+            <Select value={f.period_type} onValueChange={(v) => { setPeriodChosen(true); set('period_type', v); }}>
               <SelectTrigger data-testid="sub-svc-period-type"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {SUB_SERVICE_PERIOD_TYPES.map((x) => <SelectItem key={x} value={x}>{PERIOD_TYPE_LABELS[x]}</SelectItem>)}

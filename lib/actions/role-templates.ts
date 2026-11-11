@@ -136,10 +136,17 @@ export async function applyRoleTemplateAction(input: {
     if (error) return fail(error.message, 'DB');
     const templateCaps = new Set<string>((caps ?? []).map((r: any) => r.capability));
 
-    // Applying a template that carries a super-admin-only capability grants it.
-    const blocked = restrictedCapabilityChanges([], templateCaps).filter((c) => !canGrantCapability(me, c));
+    // Swapping templates can grant a super-admin-only capability (the new template has it) or revoke one
+    // (the current template has it and the new one does not). Compare against the user's current template.
+    const { data: currentProfile } = await sb.from('users_profile').select('active_role_template_id').eq('id', input.user_id).maybeSingle();
+    let currentCaps: string[] = [];
+    if (currentProfile?.active_role_template_id) {
+      const { data: cur } = await sb.from('staff_role_template_capabilities').select('capability').eq('template_id', currentProfile.active_role_template_id);
+      currentCaps = (cur ?? []).map((r: any) => r.capability);
+    }
+    const blocked = restrictedCapabilityChanges(currentCaps, templateCaps).filter((c) => !canGrantCapability(me, c));
     if (blocked.length > 0) {
-      return fail(`Only a super admin can apply a role template that includes: ${blocked.join(', ')}`, 'FORBIDDEN');
+      return fail(`Only a super admin can change a role template that adds or removes: ${blocked.join(', ')}`, 'FORBIDDEN');
     }
 
     // Clean up redundant explicit rows that are now covered by the template

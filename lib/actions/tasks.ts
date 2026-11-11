@@ -10,7 +10,7 @@ import * as taskService from '@/lib/services/task-service';
 import { canModifyTask, canCompleteTask, canEditTaskFields } from '@/lib/services/task-modify-guard';
 import { diffFields } from '@/lib/services/field-diff';
 import { auditClosedTaskEdit } from '@/lib/services/task-edit-audit';
-import { resolveTaskPeriod } from '@/lib/services/task-period';
+import { resolveTaskPeriod, storedPeriodInput } from '@/lib/services/task-period';
 import { getTaskPeriodContext } from '@/lib/repositories/periods';
 import * as taskRepo from '@/lib/repositories/tasks';
 import { ensureClientSubServiceLink } from '@/lib/repositories/client-sub-services';
@@ -707,12 +707,14 @@ export async function updateTaskAction(input: z.infer<typeof updateTaskSchema>):
       // A picked key is the whole truth. Otherwise combine the new columns with the stored ones.
       const periodInput = updates.period_key !== undefined
         ? { period_key: updates.period_key }
-        : {
-            period_key: periodTouched ? null : task.period_key ?? null,
-            period_year: updates.period_year !== undefined ? updates.period_year : task.period_year,
-            period_month: updates.period_month !== undefined ? updates.period_month : task.period_month,
-            period_quarter: updates.period_quarter !== undefined ? updates.period_quarter : task.period_quarter,
-          };
+        : periodTouched
+          ? {
+              period_key: null,
+              period_year: updates.period_year !== undefined ? updates.period_year : task.period_year,
+              period_month: updates.period_month !== undefined ? updates.period_month : task.period_month,
+              period_quarter: updates.period_quarter !== undefined ? updates.period_quarter : task.period_quarter,
+            }
+          : storedPeriodInput(task);
       const resolvedPeriod = resolveTaskPeriod(periodCtx, periodInput);
       if (!resolvedPeriod.ok) return fail(resolvedPeriod.reason, 'VALIDATION');
       if (resolvedPeriod.columns) Object.assign(updates, resolvedPeriod.columns);

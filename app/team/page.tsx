@@ -157,12 +157,12 @@ async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole
           <PriorityList tasks={dueSoon} href="/team/tasks" emptyMessage="No pending tasks" />
         </StaggerItem>
         <StaggerItem className="space-y-4">
-          <WeekStrip days={memberHome.strip} href="/team/tasks" />
+          <WeekStrip days={memberHome.strip} href={`/team/tasks?assigned=${me.id}`} />
           <div className="tff-card p-4 flex items-center justify-between text-sm">
             <span className="text-zinc-500">Hours logged today</span>
             <span className="font-medium text-zinc-900 tabular-nums">{Math.floor(memberHome.minutesToday / 60)}h {memberHome.minutesToday % 60}m</span>
           </div>
-          <WaitingList tasks={memberHome.waiting} todayIso={memberHome.todayIso} href="/team/tasks?status=blocked" />
+          <WaitingList tasks={memberHome.waiting} todayIso={memberHome.todayIso} href={`/team/tasks?status=blocked&assigned=${me.id}`} />
         </StaggerItem>
       </div>
 
@@ -173,7 +173,7 @@ async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole
               <h2 className="text-base font-semibold text-zinc-900 tracking-tight">Your team</h2>
               <p className="text-sm text-zinc-500 mt-1">
                 <span className="tabular-nums">{managerHome.overdue}</span> overdue · <span className="tabular-nums">{managerHome.dueThisWeek}</span> due this week
-                {canVerify ? <> · <span className="tabular-nums">{managerHome.toVerify}</span> awaiting your verification</> : null}
+                {canVerify ? <> · <span className="tabular-nums">{managerHome.toVerify}</span> awaiting verification</> : null}
               </p>
             </div>
             <WorkloadBars rows={managerHome.workload} title="Workload of your reports" tasksHref="/team/tasks" />

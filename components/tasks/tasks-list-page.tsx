@@ -88,6 +88,7 @@ export default async function TasksListPage({
   const flat: Record<string, string | undefined> = {};
   for (const [k, v] of Object.entries(searchParams)) if (typeof v === 'string') flat[k] = v;
   const tiles = taskTiles({ todayIso, weekEndIso: addDaysIso(7), yesterdayIso: addDaysIso(-1), isAdmin: isAdminView });
+  const base = `/${variant}/tasks`;
 
   const [rawTasks, team, subServices, totalCount, allLabels, tileCounts, splitCounts] = await Promise.all([
     listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
@@ -113,7 +114,6 @@ export default async function TasksListPage({
   const tasks = tasksWithLabels.map((t, i) => ({ ...t, ...tasksWithProgress[i] }));
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  const base = `/${variant}/tasks`;
 
 
   const showCreateTools = isAdminView || canCreate;

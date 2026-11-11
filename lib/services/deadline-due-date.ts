@@ -1,9 +1,8 @@
 // Pure: what is the statutory due date for a sub-service in a given period?
-// Order: an admin's override, then the compliance rule linked to the sub-service, then the sub-service's own due day.
-import type { Period } from '@/lib/periods';
+// Order: an admin's override, then a compliance rule linked to the sub-service, then the sub-service's own due day.
+import { periodEndIso, type Period, type PeriodType } from '@/lib/periods';
 import {
   generateEventsForRule,
-  generateSubServiceEvents,
   type CalendarRule,
   type ClientProfile,
 } from '@/lib/services/compliance-calendar-engine';
@@ -38,9 +37,50 @@ const NEUTRAL_PROFILE: ClientProfile = {
   fy_start_month: 4,
 };
 
+const PERIODICITY: Record<PeriodType, CalendarRule['periodicity'] | null> = {
+  none: null,
+  monthly: 'monthly',
+  quarterly: 'quarterly',
+  half_yearly: 'half_yearly',
+  yearly: 'yearly',
+};
+
+/** The rules of a sub-service that describe this kind of period (a GST service can have monthly and quarterly rules). */
+export function rulesForPeriod(rules: CalendarRule[] | undefined | null, period: Period): CalendarRule[] {
+  const wanted = PERIODICITY[period.type];
+  return wanted ? (rules ?? []).filter((r) => r.periodicity === wanted) : [];
+}
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const lastDay = (y: number, m: number) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+
+/**
+ * The due date a sub-service sets for itself, with no rule. Returns are filed after the period ends,
+ * so the date falls in the month after a month, quarter or half-year, and in the next calendar year
+ * (default July) for a financial year.
+ */
+function subServiceDueDate(period: Period, sub: DeadlineSubService): string | null {
+  const end = periodEndIso(period);
+  if (!end) return null;
+  const [endY, endM] = end.split('-').map(Number);
+
+  if (period.type === 'yearly') {
+    if (sub.due_month === null && sub.due_day_of_month === null) return null;
+    const month = sub.due_month ?? 7;
+    const year = (period.year as number) + 1;
+    return `${year}-${pad(month)}-${pad(Math.min(sub.due_day_of_month ?? lastDay(year, month), lastDay(year, month)))}`;
+  }
+
+  const day = period.type === 'quarterly' ? (sub.due_day_of_quarter ?? sub.due_day_of_month) : sub.due_day_of_month;
+  if (day === null || day === undefined) return null;
+  const month = endM === 12 ? 1 : endM + 1;
+  const year = endM === 12 ? endY + 1 : endY;
+  return `${year}-${pad(month)}-${pad(Math.min(day, lastDay(year, month)))}`;
+}
+
 export function resolveDeadlineDueDate(args: {
   period: Period;
-  rule?: CalendarRule | null;
+  rules?: CalendarRule[] | null;
   subService?: DeadlineSubService | null;
   override?: string | null;
 }): DeadlineDueDate {
@@ -52,15 +92,15 @@ export function resolveDeadlineDueDate(args: {
   const from = `${args.period.year}-01-01`;
   const to = `${args.period.year + 1}-12-31`;
 
-  if (args.rule) {
-    const hit = generateEventsForRule(args.rule, NEUTRAL_PROFILE, from, to, { ignorePredicates: true })
+  for (const rule of rulesForPeriod(args.rules, args.period)) {
+    const hit = generateEventsForRule(rule, NEUTRAL_PROFILE, from, to, { ignorePredicates: true })
       .find((e) => e.period_key === args.period.key);
     if (hit) return { dueDate: hit.due_date, source: 'rule' };
   }
 
   if (args.subService) {
-    const hit = generateSubServiceEvents(args.subService, '', from, to).find((e) => e.period_key === args.period.key);
-    if (hit) return { dueDate: hit.due_date, source: 'sub_service' };
+    const date = subServiceDueDate(args.period, args.subService);
+    if (date) return { dueDate: date, source: 'sub_service' };
   }
 
   return { dueDate: null, source: 'none' };
