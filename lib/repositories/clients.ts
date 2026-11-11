@@ -150,11 +150,13 @@ export async function createClientRecord(payload: any) {
 
 export async function updateClientRecord(id: string, payload: any) {
   const sb = createClient();
-  const { error } = await sb
+  const { data, error } = await sb
     .from('clients')
     .update(payload)
-    .eq('id', id);
+    .eq('id', id)
+    .select('id');
   if (error) throw error;
+  if (!data || data.length === 0) throw Object.assign(new Error('Client not found or you do not have permission to change it.'), { code: 'NOT_FOUND' });
 }
 
 export async function assignTeamMember(clientId: string, teamUserId: string, role: string) {
@@ -172,11 +174,13 @@ export async function assignTeamMember(clientId: string, teamUserId: string, rol
 export async function unassignTeamMember(assignmentId: string) {
   const sb = createClient();
   const { todayIST } = await import('@/lib/utils');
-  const { error } = await sb
+  const { data, error } = await sb
     .from('team_client_assignment')
     .update({ assigned_to: todayIST() })
-    .eq('id', assignmentId);
+    .eq('id', assignmentId)
+    .select('id');
   if (error) throw error;
+  if (!data || data.length === 0) throw Object.assign(new Error('Assignment not found or you do not have permission to end it.'), { code: 'NOT_FOUND' });
 }
 
 export async function createClientGroupRecord(payload: { name: string; description?: string | null }) {

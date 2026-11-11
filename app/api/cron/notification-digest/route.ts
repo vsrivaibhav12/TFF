@@ -27,13 +27,15 @@ export async function GET(request: NextRequest) {
   const { data: prefs } = await sb.from('notification_preferences').select('user_id, email_frequency').in('email_frequency', ['daily', 'weekly']);
   const sentTo: string[] = [];
   for (const p of prefs ?? []) {
+    // One user's failure (bad address, email provider error) must not stop everyone after them.
+    try {
     const freq = (p as any).email_frequency;
     if (freq === 'weekly' && !isSunday) continue;
     const window = freq === 'daily' ? 24 : 24 * 7;
     const cutoff = new Date(today.getTime() - window * 3600 * 1000).toISOString();
     const { data: items } = await sb
       .from('notifications')
-      .select('title, message, created_at')
+      .select('id, title, message, created_at')
       .eq('user_id', (p as any).user_id)
       .eq('email_sent', false)
       .gte('created_at', cutoff)
@@ -50,9 +52,13 @@ export async function GET(request: NextRequest) {
       <ul style="padding-left:18px">${items.map((i: any) => `<li><strong>${escapeHtml(i.title)}</strong><br>${escapeHtml(i.message)}</li>`).join('')}</ul>
     </div>`;
     await sendEmail({ to: (profile as any).email, subject: `[TFF] ${freq === 'daily' ? 'Daily' : 'Weekly'} digest · ${items.length} update(s)`, html });
-    // Mark these as emailed
-    await sb.from('notifications').update({ email_sent: true }).eq('user_id', (p as any).user_id).in('title', items.map((i: any) => i.title));
+    // Mark exactly the rows that were emailed. Matching by title also hit unsent rows
+    // outside the window or past the 50-row cap, which were then never emailed.
+    await sb.from('notifications').update({ email_sent: true }).in('id', items.map((i: any) => i.id));
     sentTo.push((profile as any).email);
+    } catch (error) {
+      console.error('notification-digest: failed for user', (p as any).user_id, error);
+    }
   }
   return NextResponse.json({ digests_sent: sentTo.length, recipients: sentTo });
 }

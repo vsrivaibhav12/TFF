@@ -419,18 +419,21 @@ export async function setTaskRoleUser(taskId: string, role: 'assignee' | 'review
 
 export async function updateTaskRecord(id: string, payload: Record<string, unknown>) {
   const sb = createClient();
-  const { error } = await sb.from('tasks').update(payload).eq('id', id);
+  const { data, error } = await sb.from('tasks').update(payload).eq('id', id).select('id');
   if (error) throw Object.assign(new Error(friendlyTaskWriteMessage(error.message)), { code: error.code });
+  // Row level security turns a forbidden update into zero rows changed with no error.
+  if (!data || data.length === 0) throw Object.assign(new Error('Task not found or you do not have permission to change it.'), { code: 'NOT_FOUND' });
 }
 
 export async function softDeleteTaskRecord(id: string, userId: string) {
   const sb = createClient();
-  const { error } = await sb.from('tasks').update({
+  const { data, error } = await sb.from('tasks').update({
     is_deleted: true,
     deleted_at: new Date().toISOString(),
     deleted_by: userId,
-  }).eq('id', id);
+  }).eq('id', id).select('id');
   if (error) throw error;
+  if (!data || data.length === 0) throw Object.assign(new Error('Task not found or you do not have permission to delete it.'), { code: 'NOT_FOUND' });
 }
 
 /**

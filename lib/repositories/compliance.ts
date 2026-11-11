@@ -22,9 +22,11 @@ export async function getComplianceStatusForClients(clientIds: string[]) {
         result[row.client_id] = { gst: 'unknown', tds: 'unknown', it: 'unknown' };
       }
       const type = row.filing_type?.toLowerCase();
-      if (type === 'gst') result[row.client_id].gst = row.status;
-      if (type === 'tds') result[row.client_id].tds = row.status;
-      if (type === 'it') result[row.client_id].it = row.status;
+      // Rows arrive newest first, so the first one seen for a filing type is the current status.
+      const entry = result[row.client_id];
+      if (type === 'gst' && entry.gst === 'unknown') entry.gst = row.status;
+      if (type === 'tds' && entry.tds === 'unknown') entry.tds = row.status;
+      if (type === 'it' && entry.it === 'unknown') entry.it = row.status;
     }
   }
   return result;

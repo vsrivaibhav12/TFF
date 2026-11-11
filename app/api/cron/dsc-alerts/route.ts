@@ -54,10 +54,13 @@ export async function GET(request: NextRequest) {
   const sent: string[] = [];
   for (const d of rows ?? []) {
     if (d.expiry_alert_sent) continue;
+    // One bad record must not stop the alerts for the rest.
+    try {
     const businessName = escapeHtml(d.clients?.business_name ?? 'Client');
     const holderName = escapeHtml(d.holder_name ?? '');
     const expiryDate = escapeHtml(d.expiry_date ?? '');
-    const subject = `DSC expiring soon — ${businessName} · ${holderName}`;
+    // The subject is plain text, so it uses the raw names (escaped text would show as "&amp;").
+    const subject = `DSC expiring soon — ${d.clients?.business_name ?? 'Client'} · ${d.holder_name ?? ''}`;
     const html = `<div style="font-family:Inter,Arial,sans-serif;color:#18181b"><h2>The Fiscal Fulcrum</h2><p>The DSC for <strong>${holderName}</strong> at <strong>${businessName}</strong> expires on <strong>${expiryDate}</strong>.</p><p>Renew before expiry to avoid filing disruptions.</p></div>`;
 
     if (d.holder_contact_email) {
@@ -81,6 +84,9 @@ export async function GET(request: NextRequest) {
     }
 
     await sb.from('dsc_records').update({ expiry_alert_sent: true, expiry_alert_sent_date: today.toISOString().slice(0, 10) }).eq('id', d.id);
+    } catch (error) {
+      console.error('dsc-alerts: failed for record', d.id, error);
+    }
   }
 
   return NextResponse.json({ checked: (rows ?? []).length, sent });

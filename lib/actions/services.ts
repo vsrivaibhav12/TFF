@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
+import { chunkArray } from '@/lib/supabase/fetch-all';
 
 export async function linkSubServiceAction(input: { client_id: string; sub_service_id: string }): Promise<ActionResult<void>> {
   try {
@@ -33,8 +34,9 @@ export async function unlinkSubServiceAction(input: { id: string; client_id: str
     const me = await requireRole(['admin', 'team']);
     await requireCapability(me, 'services.assign');
     const sb = createClient();
-    const { error } = await sb.from('client_sub_services').delete().eq('id', input.id);
+    const { data: removed, error } = await sb.from('client_sub_services').delete().eq('id', input.id).select('id');
     if (error) return fail(error.message, 'DB');
+    if (!removed || removed.length === 0) return fail('Link not found or you do not have permission to remove it.', 'NOT_FOUND');
     revalidatePath(`/admin/clients/${input.client_id}`);
     return ok(undefined);
   } catch (e: any) {
@@ -49,13 +51,18 @@ export async function bulkLinkSubServiceAction(input: { client_ids: string[]; su
     const sb = createClient();
 
     // Find existing links to avoid duplicates
-    const { data: existing } = await sb
-      .from('client_sub_services')
-      .select('client_id')
-      .in('client_id', input.client_ids)
-      .eq('sub_service_id', input.sub_service_id);
-    const existingSet = new Set((existing ?? []).map((r: any) => r.client_id));
-    const toLink = input.client_ids.filter((id) => !existingSet.has(id));
+    // Chunk the id list: a long .in() list makes the request URL too long.
+    const existingSet = new Set<string>();
+    for (const chunk of chunkArray(input.client_ids, 150)) {
+      const { data: existing, error: lookupError } = await sb
+        .from('client_sub_services')
+        .select('client_id')
+        .in('client_id', chunk)
+        .eq('sub_service_id', input.sub_service_id);
+      if (lookupError) return fail(lookupError.message, 'DB');
+      for (const r of (existing ?? []) as Array<{ client_id: string }>) existingSet.add(r.client_id);
+    }
+    const toLink = Array.from(new Set(input.client_ids)).filter((id) => !existingSet.has(id));
 
     if (toLink.length === 0) {
       return ok({ linked: 0, skipped: input.client_ids.length });
