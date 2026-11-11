@@ -90,7 +90,10 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
   useEffect(() => {
     if (!f.client_id || !f.sub_service_id) return;
     const clientName = selectedClient?.business_name ?? clients.find((c) => c.id === f.client_id)?.business_name ?? '';
-    const subName = clientSubServices.find((cs: any) => cs.sub_service_id === f.sub_service_id)?.sub_services?.name ?? '';
+    // Unlinked sub-services (linked on save) are not in clientSubServices, so fall back to the full list.
+    const subName = clientSubServices.find((cs: any) => cs.sub_service_id === f.sub_service_id)?.sub_services?.name
+      ?? allSubServices.find((s) => s.id === f.sub_service_id)?.name
+      ?? '';
     if (clientName && subName) {
       const newTitle = buildTaskTitle({
         subServiceName: subName,
@@ -99,7 +102,7 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
       });
       setAutoTitle(newTitle);
     }
-  }, [f.client_id, f.sub_service_id, f.period_key, clientSubServices, clients, selectedClient]);
+  }, [f.client_id, f.sub_service_id, f.period_key, clientSubServices, clients, selectedClient, allSubServices]);
 
   // What kind of period this task takes: set by the sub-service, and for GST by the client's filing frequency.
   const chosenSub = allSubServices.find((s) => s.id === f.sub_service_id);
