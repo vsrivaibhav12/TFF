@@ -11,6 +11,7 @@ import TeamClientDetailShell from '@/components/clients/team-client-detail-shell
 import TeamDetailShell from '@/components/team/team-detail-shell';
 import useSWR from 'swr';
 import { ENABLE_STREAMED_DOCK } from '@/lib/flags';
+import { cn } from '@/lib/utils';
 
 const fetchers = {
   task: getTaskDockData,
@@ -44,9 +45,14 @@ export function UniversalDetailDock() {
         onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); clear(); } }}
       />
       <div
-        className="fixed right-0 top-0 bottom-0 w-full md:w-[50vw] md:min-w-[640px] max-w-full md:max-w-[90vw] bg-[#F6F7F9] shadow-[0_20px_60px_rgba(15,23,42,0.18)] z-[101] flex flex-col border-l border-[#E8EAEE] transition-transform duration-200 ease-out"
+        className={cn(
+          'fixed right-0 top-0 bottom-0 z-[101] flex w-full max-w-full flex-col border-l border-[#E8EAEE] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.18)] transition-transform duration-200 ease-out',
+          topItem.type === 'task' ? 'md:w-[540px]' : 'md:w-[50vw] md:min-w-[640px] md:max-w-[90vw]',
+        )}
         style={{ transform: 'translateX(0)' }}
       >
+        {/* The task panel puts its actions here, on the left edge, outside the pane */}
+        <div id="dock-rail" className="absolute right-full top-16 z-[102] mr-3" />
         <div className="h-14 flex items-center justify-between px-4 border-b border-[#E8EAEE] bg-white shrink-0">
           <div className="flex items-center gap-2">
             {isStacked && (

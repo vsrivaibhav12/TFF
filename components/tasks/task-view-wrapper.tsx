@@ -29,7 +29,7 @@ export function TaskViewWrapper({ tasks, hrefPrefix, children }: TaskViewWrapper
   const [view, setView] = useState<'list' | 'board'>('list');
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-end">
         <div className="flex items-center bg-zinc-100 rounded-lg p-0.5">
           <button

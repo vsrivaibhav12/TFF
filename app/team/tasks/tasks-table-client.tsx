@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { getStatusColour } from '@/lib/semantic-colours';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProgressMicro } from '@/components/ui/progress-micro';
-import { fmtHM } from '@/components/tasks/detail/helpers';
+import { TaskCellContent, type CellContext } from '@/components/tasks/task-cells';
 import { formatDateIST, cn, displayTaskName } from '@/lib/utils';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 import { transitionTaskAction, updateTaskAction, bulkDeleteTasksAction } from '@/lib/actions/tasks';
@@ -49,18 +49,33 @@ interface TaskRow {
 
 const COL_WIDTHS: Record<string, string> = {
   select: '40px',
-  task_number: '80px',
-  client: '150px',
-  sub_service: '180px',
-  period: '90px',
-  status: '90px',
-  due_date: '100px',
-  owner: '120px',
-  labels: '100px',
-  progress: '90px',
-  time_spent: '90px',
+  task_number: '90px',
+  sub_service: '2fr',
+  client: '1.4fr',
+  period: '100px',
+  progress: '84px',
+  due_date: '110px',
+  status: '140px',
+  time_spent: '84px',
+  owner: '130px',
+  labels: '140px',
   priority: '100px',
-  verified: '80px',
+  verified: '90px',
+};
+
+const HEAD: Record<string, { label: string; sort?: string }> = {
+  task_number: { label: 'No', sort: 'task_number' },
+  sub_service: { label: 'Task', sort: 'sub_service' },
+  client: { label: 'Client', sort: 'client' },
+  period: { label: 'Period', sort: 'period' },
+  progress: { label: 'Steps' },
+  due_date: { label: 'Due', sort: 'due_date' },
+  status: { label: 'Status' },
+  time_spent: { label: 'Time' },
+  owner: { label: 'Owner', sort: 'owner' },
+  labels: { label: 'Labels' },
+  priority: { label: 'Priority' },
+  verified: { label: '' },
 };
 
 function getGridCols(columns: { key: string; visible: boolean }[]): string {
@@ -82,20 +97,22 @@ const PRIORITY_OPTIONS = [
   { value: 'urgent', label: 'Urgent', color: 'destructive' },
 ];
 
+import { TASK_TABLE_ID } from '@/lib/tasks/table-layout';
+
 const DEFAULT_COLUMNS = [
   { key: 'select', label: 'Select', visible: true, optional: false },
   { key: 'task_number', label: 'Number', visible: false, optional: true },
-  { key: 'client', label: 'Client', visible: true, optional: false },
   { key: 'sub_service', label: 'Task', visible: true, optional: false },
+  { key: 'client', label: 'Client', visible: true, optional: false },
   { key: 'period', label: 'Period', visible: true, optional: false },
-  { key: 'status', label: 'Status', visible: true, optional: false },
+  { key: 'progress', label: 'Steps', visible: true, optional: true },
   { key: 'due_date', label: 'Due', visible: true, optional: false },
+  { key: 'status', label: 'Status', visible: true, optional: false },
+  { key: 'time_spent', label: 'Time', visible: true, optional: true },
   { key: 'owner', label: 'Owner', visible: true, optional: true },
   { key: 'labels', label: 'Labels', visible: false, optional: true },
-  { key: 'progress', label: 'Progress', visible: true, optional: true },
-  { key: 'time_spent', label: 'Time spent', visible: true, optional: true },
-  { key: 'priority', label: 'Priority', visible: true, optional: true },
-  { key: 'verified', label: 'Verified', visible: true, optional: true },
+  { key: 'priority', label: 'Priority', visible: false, optional: true },
+  { key: 'verified', label: 'Verified', visible: false, optional: true },
 ];
 
 export default function TasksTableClient({ tasks, todayIso, canEdit = false, canComplete = false, canDelete = false, isAdmin = false }: { tasks: TaskRow[]; todayIso?: string; canEdit?: boolean; canComplete?: boolean; canDelete?: boolean; isAdmin?: boolean }) {
@@ -104,7 +121,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sortKey, setSortKey] = useState<string>('due_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  const { columns, setColumns, density, setDensity } = useTablePrefs('team-tasks-v2', DEFAULT_COLUMNS, 'comfortable');
+  const { columns, setColumns, density, setDensity, resetLayout } = useTablePrefs(TASK_TABLE_ID, DEFAULT_COLUMNS, 'compact');
 
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -148,7 +165,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
   const rowVirtualizer = useVirtualizer({
     count: filtered.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => density === 'compact' ? 40 : 52,
+    estimateSize: () => density === 'compact' ? 36 : 48,
     overscan: 8,
   });
 
@@ -244,7 +261,20 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
 
   const colVisible = (key: string) => columns.find((c) => c.key === key)?.visible ?? true;
   const gridTemplateColumns = getGridCols(columns);
-  const rowHeight = density === 'compact' ? 40 : 52;
+  const visibleCols = columns.filter((c) => c.visible);
+  const cellCtx: CellContext = {
+    todayIso: todayIso ?? '',
+    base: '/team',
+    canEdit,
+    isAdmin,
+    statusSlot: canComplete
+      ? (t) => <EditableCell value={t.status} options={STATUS_OPTIONS} onSave={(val) => handleUpdateStatus(t.id, val)} />
+      : undefined,
+    prioritySlot: canEdit
+      ? (t) => <EditableCell value={t.priority ?? ''} options={PRIORITY_OPTIONS} onSave={(val) => handleUpdatePriority(t.id, val)} />
+      : undefined,
+  };
+  const rowHeight = density === 'compact' ? 36 : 48;
 
   return (
     <>
@@ -305,6 +335,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
               onColumnsChange={setColumns}
               density={density}
               onDensityChange={setDensity}
+              onReset={resetLayout}
             />
             <div className="text-sm text-zinc-500">
               {tasks.length} tasks
@@ -312,78 +343,39 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
           </div>
         </div>
 
-        <div ref={parentRef} className="tff-card overflow-auto border border-zinc-200 rounded-xl" style={{ height: '60vh' }}>
+        <div ref={parentRef} className="tff-card overflow-auto" style={{ height: 'calc(100vh - 340px)', minHeight: 360 }}>
           {/* Sticky header */}
-          <div className="sticky top-0 z-10 grid items-center bg-zinc-50/80 backdrop-blur-sm border-b border-zinc-200 px-4 h-12" style={{ gridTemplateColumns }}>
-            {colVisible('select') && (
-              <div>
-                <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" data-testid="task-select-all" />
-              </div>
-            )}
-            {colVisible('task_number') && (
-              <button className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1" onClick={() => toggleSort('task_number')}>
-                No <SortIcon col="task_number" />
-              </button>
-            )}
-            {colVisible('client') && (
-              <button className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1" onClick={() => toggleSort('client')}>
-                Client <SortIcon col="client" />
-              </button>
-            )}
-            {colVisible('sub_service') && (
-              <button className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1" onClick={() => toggleSort('sub_service')}>
-                Task <SortIcon col="sub_service" />
-              </button>
-            )}
-            {colVisible('period') && (
-              <button className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1" onClick={() => toggleSort('period')}>
-                Period <SortIcon col="period" />
-              </button>
-            )}
-            {colVisible('status') && (
-              <span className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</span>
-            )}
-            {colVisible('due_date') && (
-              <button className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1" onClick={() => toggleSort('due_date')}>
-                Due <SortIcon col="due_date" />
-              </button>
-            )}
-            {colVisible('owner') && (
-              <button className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1" onClick={() => toggleSort('owner')}>
-                Owner <SortIcon col="owner" />
-              </button>
-            )}
-            {colVisible('labels') && (
-              <span className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider text-center">Labels</span>
-            )}
-            {colVisible('progress') && (
-              <span className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider text-center">Progress</span>
-            )}
-            {colVisible('time_spent') && (
-              <span className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider text-center">Time spent</span>
-            )}
-            {colVisible('priority') && (
-              <span className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Priority</span>
-            )}
-            {colVisible('verified') && (
-              <span className="sr-only">Verified</span>
-            )}
+          <div className="sticky top-0 z-10 grid h-10 items-center border-b border-[#E8EAEE] bg-slate-50/90 px-4 backdrop-blur-sm" style={{ gridTemplateColumns }}>
+            {visibleCols.map((c) => {
+              if (c.key === 'select') {
+                return (
+                  <div key={c.key}>
+                    <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" data-testid="task-select-all" />
+                  </div>
+                );
+              }
+              const h = HEAD[c.key] ?? { label: c.label };
+              const cls = 'flex items-center gap-1 text-left text-xs font-medium text-slate-500';
+              return h.sort ? (
+                <button key={c.key} className={cls} onClick={() => toggleSort(h.sort!)}>
+                  {h.label} <SortIcon col={h.sort} />
+                </button>
+              ) : (
+                <span key={c.key} className={h.label ? cls : 'sr-only'}>{h.label || 'Verified'}</span>
+              );
+            })}
           </div>
 
           {/* Virtual body */}
           <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const t = filtered[virtualRow.index];
-              const overdue = t.due_date && todayIso && t.due_date < todayIso && t.status !== 'completed' && t.status !== 'cancelled';
-              const dueSoon = t.due_date && todayIso && t.due_date === todayIso && t.status !== 'completed' && t.status !== 'cancelled';
-              const urgencyBorder = overdue ? 'border-l-2 border-l-red-500' : dueSoon ? 'border-l-2 border-l-amber-500' : t.status === 'in_progress' ? 'border-l-2 border-l-teal-500' : '';
               return (
                 <div
                   key={t.id}
                   className={cn(
-                    'absolute left-0 w-full grid items-center px-4 border-b border-zinc-100 hover:bg-zinc-50/60 transition-colors',
-                    selected.has(t.id) ? 'bg-teal-50/40' : '',
-                    urgencyBorder
+                    'group/row absolute left-0 grid w-full items-center border-b border-[#E8EAEE] px-4 transition-colors hover:bg-slate-50/70',
+                    selected.has(t.id) && 'bg-[#E6F6F3]/60',
                   )}
                   style={{
                     height: `${virtualRow.size}px`,
@@ -392,133 +384,25 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                   }}
                   data-testid={`task-row-${t.id}`}
                 >
-                  {colVisible('select') && (
-                    <div className="min-w-0 overflow-hidden">
-                      <Checkbox
-                        checked={selected.has(t.id)}
-                        onCheckedChange={() => toggle(t.id)}
-                        aria-label={`Select task ${displayTaskName(t)}`}
-                        data-testid={`task-select-${t.id}`}
-                      />
-                    </div>
-                  )}
-                  {colVisible('task_number') && (
-                    <div className="min-w-0 overflow-hidden">
-                      <span className="text-xs font-mono tabular-nums text-zinc-500">{t.task_number ?? '—'}</span>
-                    </div>
-                  )}
-                  {colVisible('client') && (
-                    <div className="min-w-0 overflow-hidden text-sm text-zinc-500 truncate pr-2">{t.clients?.business_name ?? '—'}</div>
-                  )}
-                  {colVisible('sub_service') && (
-                    <div className="min-w-0 overflow-hidden pr-2">
-                      {!colVisible('task_number') && t.task_number && (
-                        <span className="block text-xs font-mono tabular-nums text-zinc-500">{t.task_number}</span>
-                      )}
-                      <TaskHoverCard taskId={t.id}>
-                        <DockLink item={{ type: 'task', id: t.id }} href={`/team/tasks/${t.id}`} className="font-semibold text-zinc-900 hover:text-teal-700 truncate block text-sm">
-                          {displayTaskName(t)}
-                        </DockLink>
-                      </TaskHoverCard>
-                      <TaskRowEditButton taskId={t.id} status={t.status} canEdit={canEdit} isAdmin={isAdmin} />
-                      {t.labels && t.labels.length > 0 && (
-                        <div className="mt-1">
-                          <TaskLabelPills labels={t.labels} maxVisible={2} size="xs" />
+                  {visibleCols.map((c) => {
+                    if (c.key === 'select') {
+                      return (
+                        <div key={c.key} className="min-w-0 overflow-hidden">
+                          <Checkbox
+                            checked={selected.has(t.id)}
+                            onCheckedChange={() => toggle(t.id)}
+                            aria-label={`Select task ${displayTaskName(t)}`}
+                            data-testid={`task-select-${t.id}`}
+                          />
                         </div>
-                      )}
-                    </div>
-                  )}
-                  {colVisible('period') && (
-                    <div className="min-w-0 overflow-hidden">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 tabular-nums">
-                        {formatPeriodColumns(t) || '—'}
-                      </span>
-                    </div>
-                  )}
-                  {colVisible('status') && (
-                    <div className="min-w-0 overflow-hidden">
-                      {canComplete ? (
-                        <EditableCell
-                          value={t.status}
-                          options={STATUS_OPTIONS}
-                          onSave={(val) => handleUpdateStatus(t.id, val)}
-                        />
-                      ) : (
-                        <Badge variant={(STATUS_OPTIONS.find((o) => o.value === t.status)?.color as any) || 'outline'}>
-                          {STATUS_OPTIONS.find((o) => o.value === t.status)?.label || t.status}
-                        </Badge>
-                      )}
-                      {t.is_stuck && (
-                        <span className="text-xs font-medium text-red-600 flex items-center gap-1 mt-1">
-                          <AlertTriangle className="h-3 w-3" /> Stuck
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {colVisible('due_date') && (
-                    <div className={cn('min-w-0 overflow-hidden text-xs tabular-nums', overdue ? 'text-red-600 font-medium' : dueSoon ? 'text-amber-600 font-medium' : 'text-zinc-700')}>
-                      {t.due_date ? formatDateIST(t.due_date) : '—'}
-                    </div>
-                  )}
-                  {colVisible('owner') && (
-                    <div className="min-w-0 overflow-hidden text-xs text-zinc-700 truncate pr-2">
-                      {t.users_profile?.full_name ?? <span className="text-zinc-500">Unassigned</span>}
-                    </div>
-                  )}
-                  {colVisible('labels') && (
-                    <div className="min-w-0 overflow-hidden text-center">
-                      <div className="flex flex-wrap justify-center gap-1">
-                        {t.labels && t.labels.length > 0 ? (
-                          <>
-                            {t.labels.slice(0, 3).map((l) => (
-                              <span key={l.code} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border" style={{ backgroundColor: l.color_hex ? l.color_hex + '20' : '#f4f4f5', borderColor: l.color_hex || '#e4e4e7', color: l.color_hex || '#52525b' }}>
-                                {l.display_name}
-                              </span>
-                            ))}
-                            {t.labels.length > 3 && (
-                              <span className="text-xs text-zinc-500">+{t.labels.length - 3}</span>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-xs text-zinc-300">—</span>
-                        )}
+                      );
+                    }
+                    return (
+                      <div key={c.key} className="min-w-0 overflow-hidden pr-2">
+                        <TaskCellContent col={c.key} t={t as never} ctx={cellCtx} />
                       </div>
-                    </div>
-                  )}
-                  {colVisible('progress') && (
-                    <div className="min-w-0 overflow-hidden text-center">
-                      <ProgressMicro progress={t.progress_pct ?? 0} completed={t.step_completed ?? 0} total={t.step_total ?? 0} />
-                    </div>
-                  )}
-                  {colVisible('time_spent') && (
-                    <div className="min-w-0 overflow-hidden text-center text-xs tabular-nums text-zinc-600">
-                      {t.minutes_logged ? fmtHM(t.minutes_logged) : '—'}
-                    </div>
-                  )}
-                  {colVisible('priority') && (
-                    <div className="min-w-0 overflow-hidden">
-                      {canEdit ? (
-                        <EditableCell
-                          value={t.priority}
-                          options={PRIORITY_OPTIONS}
-                          onSave={(val) => handleUpdatePriority(t.id, val)}
-                        />
-                      ) : (
-                        <Badge variant={(PRIORITY_OPTIONS.find((o) => o.value === t.priority)?.color as any) || 'outline'}>
-                          {PRIORITY_OPTIONS.find((o) => o.value === t.priority)?.label || t.priority}
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-                  {colVisible('verified') && (
-                    <div className="min-w-0 overflow-hidden">
-                      {t.is_verified && (
-                        <span className="text-xs font-medium text-teal-700 flex items-center gap-1 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5 w-fit">
-                          <ShieldCheck className="h-3 w-3" /> Verified
-                        </span>
-                      )}
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
               );
             })}

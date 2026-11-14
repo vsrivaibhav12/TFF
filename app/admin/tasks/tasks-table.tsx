@@ -1,31 +1,23 @@
 'use client';
-import { formatPeriodColumns } from '@/lib/periods';
 import { useState, useMemo, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { DockLink } from '@/components/shell/dock-link';
-import { TaskRowEditButton } from '@/components/tasks/task-row-edit-button';
-import { TaskHoverCard } from '@/components/tasks/task-hover-card';
-import { Badge } from '@/components/ui/badge';
-import { getStatusColour, getPriorityColour } from '@/lib/semantic-colours';
 import { Checkbox } from '@/components/ui/checkbox';
 
 import { useConfirm } from '@/components/ui/use-confirm';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { ExpandableCell } from '@/components/ui/expandable-cell';
 import { ResizableTableHead } from '@/components/ui/resizable-table-head';
 import { useColumnWidths } from '@/lib/hooks/use-column-widths';
-import { formatDateIST, cn, displayTaskName } from '@/lib/utils';
+import { cn, displayTaskName } from '@/lib/utils';
 import {
   Filter, AlertTriangle, Building2, ArrowUpRight, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck, Trash2,
 } from 'lucide-react';
-import { TaskLabelPills } from '@/components/tasks/task-label-pills';
 import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
-import { ProgressMicro } from '@/components/ui/progress-micro';
-import { fmtHM } from '@/components/tasks/detail/helpers';
+import { TaskCellContent } from '@/components/tasks/task-cells';
 import { transitionTaskAction, bulkDeleteTasksAction, bulkUpdateTasksAction } from '@/lib/actions/tasks';
 import { toast } from 'sonner';
 
@@ -52,21 +44,38 @@ type Task = {
   step_completed?: number;
 };
 
+import { TASK_TABLE_ID } from '@/lib/tasks/table-layout';
+
 const DEFAULT_COLUMNS = [
   { key: 'select', label: 'Select', visible: true, optional: false },
   { key: 'task_number', label: 'Number', visible: false, optional: true },
-  { key: 'client', label: 'Client', visible: true, optional: false },
   { key: 'sub_service', label: 'Task', visible: true, optional: false },
+  { key: 'client', label: 'Client', visible: true, optional: false },
   { key: 'period', label: 'Period', visible: true, optional: false },
+  { key: 'progress', label: 'Steps', visible: true, optional: true },
+  { key: 'due_date', label: 'Due', visible: true, optional: false },
   { key: 'status', label: 'Status', visible: true, optional: false },
-  { key: 'due', label: 'Due', visible: true, optional: false },
+  { key: 'time_spent', label: 'Time', visible: true, optional: true },
   { key: 'owner', label: 'Owner', visible: true, optional: true },
   { key: 'labels', label: 'Labels', visible: false, optional: true },
-  { key: 'progress', label: 'Progress', visible: true, optional: true },
-  { key: 'time_spent', label: 'Time spent', visible: true, optional: true },
-  { key: 'priority', label: 'Priority', visible: true, optional: true },
+  { key: 'priority', label: 'Priority', visible: false, optional: true },
   { key: 'actions', label: 'Actions', visible: true, optional: false },
 ];
+
+/** Header text and the sort key for each sortable column. */
+const HEAD: Record<string, { label: string; sort?: string }> = {
+  task_number: { label: 'Number', sort: 'task_number' },
+  sub_service: { label: 'Task', sort: 'sub_service' },
+  client: { label: 'Client', sort: 'client' },
+  period: { label: 'Period', sort: 'period' },
+  progress: { label: 'Steps' },
+  due_date: { label: 'Due', sort: 'due_date' },
+  status: { label: 'Status' },
+  time_spent: { label: 'Time' },
+  owner: { label: 'Owner', sort: 'owner' },
+  labels: { label: 'Labels' },
+  priority: { label: 'Priority' },
+};
 
 export default function TasksTable({ tasks, todayIso, team = [], canDelete = false }: { tasks: Task[]; todayIso: string; team?: { id: string; full_name: string }[]; canDelete?: boolean }) {
   const searchParams = useSearchParams();
@@ -75,21 +84,21 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [colSearch, setColSearch] = useState<Record<string, string>>({});
   const [ConfirmDialog, confirm] = useConfirm();
-  const { columns, setColumns, density, setDensity } = useTablePrefs('admin-tasks-v2', DEFAULT_COLUMNS, 'comfortable');
-  const { widths, setWidth, loaded } = useColumnWidths('admin-tasks', {
-    select: 44,
-    task_number: 80,
-    client: 160,
-    sub_service: 190,
-    period: 92,
-    status: 100,
-    due: 92,
+  const { columns, setColumns, density, setDensity, resetLayout } = useTablePrefs(TASK_TABLE_ID, DEFAULT_COLUMNS, 'compact');
+  const { widths, setWidth, loaded } = useColumnWidths('admin-tasks-v4', {
+    select: 40,
+    task_number: 90,
+    sub_service: 280,
+    client: 220,
+    period: 100,
+    progress: 84,
+    due_date: 110,
+    status: 140,
+    time_spent: 84,
     owner: 130,
-    labels: 120,
-    progress: 92,
-    time_spent: 92,
-    priority: 92,
-    actions: 60,
+    labels: 140,
+    priority: 100,
+    actions: 44,
   });
 
   const assignees = useMemo(() => {
@@ -229,7 +238,9 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
   }
 
   const colVisible = (key: string) => columns.find((c) => c.key === key)?.visible ?? true;
-  const rowPadding = density === 'compact' ? 'py-1.5' : 'py-3';
+  const visibleCols = columns.filter((c) => c.visible);
+  const cellCtx = { todayIso, base: '/admin', canEdit: true, isAdmin: true };
+  const rowPadding = density === 'compact' ? 'py-1' : 'py-2.5';
 
 
   return (
@@ -242,6 +253,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
             onColumnsChange={setColumns}
             density={density}
             onDensityChange={setDensity}
+            onReset={resetLayout}
           />
           <div className="text-sm text-zinc-500">
             {tasks.length} tasks
@@ -252,205 +264,64 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
       <div className="tff-card overflow-x-auto">
         <Table className="min-w-[1000px]" style={{ tableLayout: 'fixed' }}>
           <TableHeader>
-            <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
-              {colVisible('select') && (
-                <TableHead className="w-10">
-                  <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" />
-                </TableHead>
-              )}
-              {colVisible('task_number') && (
-                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.task_number : undefined} onResize={(w) => setWidth('task_number', w)} onClick={() => toggleSort('task_number')}>
-                  <span className="flex items-center gap-1">Number <SortIcon col="task_number" /></span>
-                </ResizableTableHead>
-              )}
-              {colVisible('client') && (
-                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.client : undefined} onResize={(w) => setWidth('client', w)} onClick={() => toggleSort('client')}>
-                  <span className="flex items-center gap-1">Client <SortIcon col="client" /></span>
-                </ResizableTableHead>
-              )}
-              {colVisible('sub_service') && (
-                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.sub_service : undefined} onResize={(w) => setWidth('sub_service', w)} onClick={() => toggleSort('sub_service')}>
-                  <span className="flex items-center gap-1">Task <SortIcon col="sub_service" /></span>
-                </ResizableTableHead>
-              )}
-              {colVisible('period') && (
-                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.period : undefined} onResize={(w) => setWidth('period', w)} onClick={() => toggleSort('period')}>
-                  <span className="flex items-center gap-1">Period <SortIcon col="period" /></span>
-                </ResizableTableHead>
-              )}
-              {colVisible('status') && (
-                <ResizableTableHead className="text-center" width={loaded ? widths.status : undefined} onResize={(w) => setWidth('status', w)}>Status</ResizableTableHead>
-              )}
-              {colVisible('due') && (
-                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.due : undefined} onResize={(w) => setWidth('due', w)} onClick={() => toggleSort('due_date')}>
-                  <span className="flex items-center gap-1">Due <SortIcon col="due_date" /></span>
-                </ResizableTableHead>
-              )}
-              {colVisible('owner') && (
-                <ResizableTableHead className="cursor-pointer select-none" width={loaded ? widths.owner : undefined} onResize={(w) => setWidth('owner', w)} onClick={() => toggleSort('owner')}>
-                  <span className="flex items-center gap-1">Owner <SortIcon col="owner" /></span>
-                </ResizableTableHead>
-              )}
-              {colVisible('labels') && (
-                <ResizableTableHead className="text-center" width={loaded ? widths.labels : undefined} onResize={(w) => setWidth('labels', w)}>Labels</ResizableTableHead>
-              )}
-              {colVisible('progress') && (
-                <ResizableTableHead className="text-center" width={loaded ? widths.progress : undefined} onResize={(w) => setWidth('progress', w)}>Progress</ResizableTableHead>
-              )}
-              {colVisible('time_spent') && (
-                <ResizableTableHead className="text-center" width={loaded ? widths.time_spent : undefined} onResize={(w) => setWidth('time_spent', w)}>Time spent</ResizableTableHead>
-              )}
-              {colVisible('priority') && (
-                <ResizableTableHead className="text-center" width={loaded ? widths.priority : undefined} onResize={(w) => setWidth('priority', w)}>Priority</ResizableTableHead>
-              )}
-              {colVisible('actions') && (
-                <TableHead></TableHead>
-              )}
+            <TableRow className="bg-slate-50/70 hover:bg-slate-50/70">
+              {visibleCols.map((c) => {
+                if (c.key === 'select') {
+                  return (
+                    <TableHead key={c.key} className="w-10">
+                      <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" />
+                    </TableHead>
+                  );
+                }
+                if (c.key === 'actions') return <TableHead key={c.key} />;
+                const h = HEAD[c.key] ?? { label: c.label };
+                return (
+                  <ResizableTableHead
+                    key={c.key}
+                    className={cn(h.sort && 'cursor-pointer select-none')}
+                    width={loaded ? widths[c.key] : undefined}
+                    onResize={(w) => setWidth(c.key, w)}
+                    onClick={h.sort ? () => toggleSort(h.sort!) : undefined}
+                  >
+                    <span className="flex items-center gap-1">{h.label}{h.sort && <SortIcon col={h.sort} />}</span>
+                  </ResizableTableHead>
+                );
+              })}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((t) => {
-              const overdue = t.due_date && t.due_date < todayIso && t.status !== 'completed' && t.status !== 'cancelled';
-              const dueSoon = t.due_date && t.due_date === todayIso && t.status !== 'completed' && t.status !== 'cancelled';
-              const urgencyBorder = overdue ? 'border-l-2 border-l-red-500' : dueSoon ? 'border-l-2 border-l-amber-500' : t.status === 'in_progress' ? 'border-l-2 border-l-teal-500' : '';
-              return (
-                <TableRow key={t.id} className={cn('transition-colors hover:bg-zinc-50/60', selected.has(t.id) ? 'bg-teal-50/40' : '', urgencyBorder)} data-row>
-                  {colVisible('select') && (
-                    <TableCell className={rowPadding}>
-                      <Checkbox checked={selected.has(t.id)} onCheckedChange={() => toggle(t.id)} aria-label={`Select task ${displayTaskName(t)}`} />
-                    </TableCell>
-                  )}
-                  {colVisible('task_number') && (
-                    <TableCell className={rowPadding}>
-                      <span className="text-xs font-mono tabular-nums text-zinc-500">{t.task_number ?? '—'}</span>
-                    </TableCell>
-                  )}
-                  {colVisible('client') && (
-                    <TableCell className={rowPadding}>
-                      <ExpandableCell className="text-sm text-zinc-500" maxLines={1}>
-                        {t.clients?.business_name ?? '—'}
-                      </ExpandableCell>
-                    </TableCell>
-                  )}
-                  {colVisible('sub_service') && (
-                    <TableCell className={rowPadding}>
-                      {!colVisible('task_number') && t.task_number && (
-                        <span className="block text-xs font-mono tabular-nums text-zinc-500">{t.task_number}</span>
-                      )}
-                      <TaskHoverCard taskId={t.id}>
-                        <DockLink item={{ type: 'task', id: t.id }} href={`/admin/tasks/${t.id}`} className="font-semibold text-zinc-900 hover:text-teal-700 text-sm block">
-                          <ExpandableCell maxLines={1}>
-                            {displayTaskName(t)}
-                          </ExpandableCell>
+            {filtered.map((t) => (
+              <TableRow key={t.id} className={cn('group/row transition-colors', selected.has(t.id) && 'bg-[#E6F6F3]/60')} data-row>
+                {visibleCols.map((c) => {
+                  if (c.key === 'select') {
+                    return (
+                      <TableCell key={c.key} className={rowPadding}>
+                        <Checkbox checked={selected.has(t.id)} onCheckedChange={() => toggle(t.id)} aria-label={`Select task ${displayTaskName(t)}`} />
+                      </TableCell>
+                    );
+                  }
+                  if (c.key === 'actions') {
+                    return (
+                      <TableCell key={c.key} className={cn('text-right', rowPadding)}>
+                        <DockLink
+                          item={{ type: 'task', id: t.id }}
+                          href={`/admin/tasks/${t.id}`}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 opacity-0 transition hover:bg-slate-100 hover:text-slate-900 group-hover/row:opacity-100"
+                          aria-label="Open task"
+                        >
+                          <ArrowUpRight className="h-4 w-4" />
                         </DockLink>
-                      </TaskHoverCard>
-                      <TaskRowEditButton taskId={t.id} status={t.status} canEdit isAdmin />
-                      {t.labels && t.labels.length > 0 && (
-                        <div className="mt-1">
-                          <TaskLabelPills labels={t.labels} maxVisible={2} size="xs" />
-                        </div>
-                      )}
+                      </TableCell>
+                    );
+                  }
+                  return (
+                    <TableCell key={c.key} className={cn('overflow-hidden', rowPadding)}>
+                      <TaskCellContent col={c.key} t={t as never} ctx={cellCtx} />
                     </TableCell>
-                  )}
-                  {colVisible('period') && (
-                    <TableCell className={rowPadding}>
-                      <span className="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 tabular-nums">
-                        {formatPeriodColumns(t) || '—'}
-                      </span>
-                    </TableCell>
-                  )}
-                  {colVisible('status') && (
-                    <TableCell className={cn('text-center', rowPadding)}>
-                      <div className="flex flex-col items-center gap-1">
-                        <Badge className={cn('text-xs whitespace-nowrap', getStatusColour(t.status).bg, getStatusColour(t.status).text, getStatusColour(t.status).border)}>
-                          {t.status.replace('_', ' ')}
-                        </Badge>
-                        {t.is_verified && (
-                          <span className="text-xs font-medium text-teal-700 flex items-center gap-1 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5">
-                            <ShieldCheck className="h-3 w-3" /> Verified
-                          </span>
-                        )}
-                        {t.is_stuck && (
-                          <span className="text-xs font-medium text-red-600 flex items-center gap-1">
-                            <AlertTriangle className="h-3 w-3" /> Stuck
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                  )}
-                  {colVisible('due') && (
-                    <TableCell className={rowPadding}>
-                      <span className={cn('text-xs tabular-nums whitespace-nowrap', overdue ? 'text-red-600 font-medium' : dueSoon ? 'text-amber-600 font-medium' : 'text-zinc-700')}>
-                        {t.due_date ? formatDateIST(t.due_date) : '—'}
-                      </span>
-                    </TableCell>
-                  )}
-                  {colVisible('owner') && (
-                    <TableCell className={rowPadding}>
-                      {t.users_profile?.full_name ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-semibold border border-teal-200">
-                            {t.users_profile.full_name.slice(0, 1)}
-                          </div>
-                          <span className="text-xs text-zinc-700">{t.users_profile.full_name}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-zinc-500">Unassigned</span>
-                      )}
-                    </TableCell>
-                  )}
-                  {colVisible('labels') && (
-                    <TableCell className={cn('text-center', rowPadding)}>
-                      <div className="flex flex-wrap justify-center gap-1">
-                        {t.labels && t.labels.length > 0 ? (
-                          <>
-                            {t.labels.slice(0, 3).map((l) => (
-                              <span key={l.code} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border" style={{ backgroundColor: l.color_hex ? l.color_hex + '20' : '#f4f4f5', borderColor: l.color_hex || '#e4e4e7', color: l.color_hex || '#52525b' }}>
-                                {l.display_name}
-                              </span>
-                            ))}
-                            {t.labels.length > 3 && (
-                              <span className="text-xs text-zinc-500">+{t.labels.length - 3}</span>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-xs text-zinc-300">—</span>
-                        )}
-                      </div>
-                    </TableCell>
-                  )}
-                  {colVisible('progress') && (
-                    <TableCell className={cn('text-center', rowPadding)}>
-                      <ProgressMicro progress={t.progress_pct ?? 0} completed={t.step_completed ?? 0} total={t.step_total ?? 0} />
-                    </TableCell>
-                  )}
-                  {colVisible('time_spent') && (
-                    <TableCell className={cn('text-center text-xs tabular-nums text-zinc-600', rowPadding)}>
-                      {t.minutes_logged ? fmtHM(t.minutes_logged) : '—'}
-                    </TableCell>
-                  )}
-                  {colVisible('priority') && (
-                    <TableCell className={cn('text-center', rowPadding)}>
-                      <Badge className={cn('text-xs', getPriorityColour(t.priority).bg, getPriorityColour(t.priority).text)}>
-                        {t.priority ?? '—'}
-                      </Badge>
-                    </TableCell>
-                  )}
-                  {colVisible('actions') && (
-                    <TableCell className={cn('text-right', rowPadding)}>
-                      <DockLink
-                        item={{ type: 'task', id: t.id }}
-                        href={`/admin/tasks/${t.id}`}
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-md text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
-                        aria-label="Open task"
-                      >
-                        <ArrowUpRight className="h-4 w-4" />
-                      </DockLink>
-                    </TableCell>
-                  )}
-                </TableRow>
-              );
-            })}
+                  );
+                })}
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>

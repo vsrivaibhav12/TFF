@@ -2,8 +2,8 @@
 export function ReadField({ label, children }: { label: string; children: import('react').ReactNode }) {
   return (
     <div className="min-w-0">
-      <div className="text-xs text-zinc-500 mb-1">{label}</div>
-      <div className="text-sm font-semibold text-zinc-900">{children}</div>
+      <div className="mb-0.5 text-[11.5px] text-slate-500">{label}</div>
+      <div className="text-[13px] font-medium text-slate-900">{children}</div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Check, Play, RotateCcw, Undo2, XCircle, Loader2, CheckCircle2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Check, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn, formatDateIST } from '@/lib/utils';
@@ -21,6 +21,7 @@ const STEPS: { key: Exclude<TaskStatus, 'cancelled'>; label: string }[] = [
  * because the parent passes an optimistic status.
  */
 export function TaskStatusStepper({
+  taskId,
   status,
   createdDate,
   startedDate,
@@ -32,6 +33,7 @@ export function TaskStatusStepper({
   transitioning,
   onTransition,
 }: {
+  taskId: string;
   status: string;
   createdDate?: string | null;
   startedDate?: string | null;
@@ -69,42 +71,45 @@ export function TaskStatusStepper({
     if (ok) setAskBilling(false);
   }
 
-  const spinner = (to: string) => (transitioning === to ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : null);
+
+  // The action rail starts completion by event, so the billing details form stays here with its own state.
+  const completeRef = useRef(complete);
+  completeRef.current = complete;
+  useEffect(() => {
+    function onComplete(e: Event) {
+      if ((e as CustomEvent).detail?.taskId === taskId) void completeRef.current();
+    }
+    window.addEventListener('tff:task-complete', onComplete);
+    return () => window.removeEventListener('tff:task-complete', onComplete);
+  }, [taskId]);
 
   return (
-    <section className="tff-card p-4 space-y-4" aria-label="Task status" data-testid="task-status-stepper">
+    <section className="space-y-3" aria-label="Task status" data-testid="task-status-stepper">
       {cancelled ? (
-        <div className="flex items-center gap-2 text-sm font-medium text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 rounded-[10px] border border-red-100 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
           <XCircle className="h-4 w-4 shrink-0" /> This task is cancelled
         </div>
       ) : (
-        <ol className="flex items-start" aria-label="Progress">
+        <ol className="flex flex-wrap gap-1.5" aria-label="Progress">
           {STEPS.map((s, i) => {
             const done = i < currentIdx || status === 'completed';
             const current = i === currentIdx && status !== 'completed';
-            const reached = done || current;
+            const date = dates[s.key];
             return (
-              <li key={s.key} className={cn('flex-1 min-w-0', i < STEPS.length - 1 && 'relative')} aria-current={current ? 'step' : undefined}>
-                {i < STEPS.length - 1 && (
-                  <span
-                    aria-hidden="true"
-                    className={cn('absolute left-[calc(50%+14px)] right-[calc(-50%+14px)] top-[13px] h-0.5 rounded-full transition-colors duration-300', i < currentIdx || status === 'completed' ? 'bg-teal-500' : 'bg-zinc-200')}
-                  />
-                )}
-                <div className="flex flex-col items-center text-center gap-1">
-                  <span
-                    className={cn(
-                      'relative z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-semibold transition-all duration-300',
-                      done && 'border-teal-600 bg-teal-600 text-white',
-                      current && 'border-teal-600 bg-white text-teal-700 ring-4 ring-teal-100',
-                      !reached && 'border-zinc-200 bg-white text-zinc-500',
-                    )}
-                  >
-                    {done ? <Check className="h-4 w-4" /> : i + 1}
-                  </span>
-                  <span className={cn('text-xs font-medium', reached ? 'text-zinc-900' : 'text-zinc-500')}>{s.label}</span>
-                  <span className="text-xs text-zinc-500 tabular-nums h-4">{reached && dates[s.key] ? formatDateIST(dates[s.key]) : ''}</span>
-                </div>
+              <li key={s.key} aria-current={current ? 'step' : undefined}>
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[13px]',
+                    current && 'border-transparent bg-[#E6F6F3] font-medium text-[#0B6B62]',
+                    done && 'border-transparent bg-[#E7F6EC] font-medium text-green-700',
+                    !current && !done && 'border-[#E8EAEE] text-slate-500',
+                  )}
+                  title={date ? formatDateIST(date) : undefined}
+                >
+                  {done && <Check className="h-3.5 w-3.5" />}
+                  {s.label}
+                  {(done || current) && date && <span className="text-xs font-normal tabular-nums opacity-70">{formatDateIST(date)}</span>}
+                </span>
               </li>
             );
           })}
@@ -113,52 +118,20 @@ export function TaskStatusStepper({
 
       <p className="sr-only" role="status" aria-live="polite">Status: {status.replace('_', ' ')}</p>
 
-      {canAct && (
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            {status === 'pending' && (
-              <Button size="sm" onClick={() => onTransition('in_progress')} disabled={busy} data-testid="stepper-start">
-                {spinner('in_progress') ?? <Play className="h-4 w-4 mr-1.5" />} Start task
-              </Button>
-            )}
-            {status === 'in_progress' && !askBilling && (
-              <Button size="sm" onClick={complete} disabled={busy} data-testid="stepper-complete">
-                {spinner('completed') ?? <CheckCircle2 className="h-4 w-4 mr-1.5" />} Mark complete
-              </Button>
-            )}
-            {(status === 'completed' || status === 'cancelled') && (
-              <Button size="sm" variant="outline" onClick={() => onTransition(status === 'completed' ? 'in_progress' : 'pending')} disabled={busy} data-testid="stepper-reopen">
-                {spinner(status === 'completed' ? 'in_progress' : 'pending') ?? <RotateCcw className="h-4 w-4 mr-1.5" />} Reopen task
-              </Button>
-            )}
-            {status === 'in_progress' && !askBilling && (
-              <Button size="sm" variant="ghost" onClick={() => onTransition('pending')} disabled={busy}>
-                {spinner('pending') ?? <Undo2 className="h-4 w-4 mr-1.5" />} Back to pending
-              </Button>
-            )}
-            {(status === 'pending' || status === 'in_progress') && !askBilling && (
-              <Button size="sm" variant="ghost" className="text-zinc-500 hover:text-red-600" onClick={() => onTransition('cancelled')} disabled={busy}>
-                {spinner('cancelled') ?? <XCircle className="h-4 w-4 mr-1.5" />} Cancel task
-              </Button>
-            )}
+      {canAct && askBilling && status === 'in_progress' && (
+        <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/60 p-3">
+          <p className="text-sm text-slate-700">This task is billable. Add the bill details to complete it.</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_8rem]">
+            <Input value={billRef} onChange={(e) => setBillRef(e.target.value)} placeholder="Bill reference" aria-label="Bill reference" />
+            <Input type="number" min={0} step={0.01} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount" aria-label="Bill amount" />
           </div>
-
-          {askBilling && status === 'in_progress' && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 space-y-3">
-              <p className="text-sm text-zinc-700">This task is billable. Add the bill details to complete it.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_8rem] gap-2">
-                <Input value={billRef} onChange={(e) => setBillRef(e.target.value)} placeholder="Bill reference" aria-label="Bill reference" />
-                <Input type="number" min={0} step={0.01} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount" aria-label="Bill amount" />
-              </div>
-              <Input value={arn} onChange={(e) => setArn(e.target.value)} placeholder="ARN or acknowledgement number (optional)" aria-label="ARN reference" />
-              <div className="flex items-center gap-2">
-                <Button size="sm" onClick={complete} disabled={busy || !billRef.trim() || !(parseFloat(amount) > 0)} data-testid="stepper-complete-confirm">
-                  {spinner('completed')} Complete task
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setAskBilling(false)} disabled={busy}>Back</Button>
-              </div>
-            </div>
-          )}
+          <Input value={arn} onChange={(e) => setArn(e.target.value)} placeholder="ARN or acknowledgement number (optional)" aria-label="ARN reference" />
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={complete} disabled={busy || !billRef.trim() || !(parseFloat(amount) > 0)} data-testid="stepper-complete-confirm">
+              {transitioning === 'completed' && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />} Complete task
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setAskBilling(false)} disabled={busy}>Back</Button>
+          </div>
         </div>
       )}
     </section>

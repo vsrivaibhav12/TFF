@@ -1,12 +1,16 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { orderColumns, type TableLayout } from '@/lib/services/saved-views';
 import type { ColumnDef, TableDensity } from './table-toolbar';
 
 interface TablePrefs {
   columns: Record<string, boolean>;
   density: TableDensity;
+  order?: string[];
 }
+
+const EVENT = 'tff:table-prefs';
 
 function getStorageKey(tableId: string): string {
   return `tff:table-prefs:${tableId}`;
@@ -32,6 +36,36 @@ function savePrefs(tableId: string, prefs: TablePrefs) {
   }
 }
 
+/** The layout this browser currently has for a table: column order, which columns are on, and density. */
+export function readTableLayout(tableId: string, defaultColumns: ColumnDef[]): TableLayout {
+  const saved = loadPrefs(tableId);
+  const cols = buildColumns(defaultColumns, saved);
+  return {
+    order: cols.map((c) => c.key),
+    visible: Object.fromEntries(cols.map((c) => [c.key, c.visible])),
+    density: saved?.density,
+  };
+}
+
+/** What this browser has stored for a table, without any page defaults. Empty when nothing was ever changed. */
+export function readStoredLayout(tableId: string): TableLayout {
+  const saved = loadPrefs(tableId);
+  if (!saved) return { order: [], visible: {} };
+  return { order: saved.order ?? [], visible: saved.columns ?? {}, density: saved.density };
+}
+
+/** Applies a layout (for example from a saved view) and tells any open table to reload it. */
+export function writeTableLayout(tableId: string, layout: TableLayout, defaultDensity: TableDensity = 'compact') {
+  savePrefs(tableId, { columns: layout.visible, order: layout.order, density: layout.density ?? defaultDensity });
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(EVENT, { detail: { tableId } }));
+}
+
+function buildColumns(defaults: ColumnDef[], saved: TablePrefs | null): ColumnDef[] {
+  if (!saved) return defaults;
+  const withVisibility = defaults.map((c) => ({ ...c, visible: c.optional === false ? true : (saved.columns?.[c.key] ?? c.visible) }));
+  return saved.order ? orderColumns(withVisibility, saved.order) : withVisibility;
+}
+
 export function useTablePrefs(
   tableId: string,
   defaultColumns: ColumnDef[],
@@ -41,31 +75,41 @@ export function useTablePrefs(
   setColumns: (cols: ColumnDef[]) => void;
   density: TableDensity;
   setDensity: (d: TableDensity) => void;
+  resetLayout: () => void;
 } {
-  const [columns, setColumnsState] = useState<ColumnDef[]>(() => {
-    const saved = loadPrefs(tableId);
-    if (saved?.columns) {
-      return defaultColumns.map((c) => ({
-        ...c,
-        visible: saved.columns[c.key] ?? c.visible,
-      }));
-    }
-    return defaultColumns;
-  });
+  // Start from the page defaults so the first render matches the server's HTML, then apply this browser's saved
+  // layout once the page has hydrated. Reading localStorage during the first render causes a hydration mismatch.
+  const [columns, setColumnsState] = useState<ColumnDef[]>(defaultColumns);
+  const [density, setDensityState] = useState<TableDensity>(defaultDensity);
 
-  const [density, setDensityState] = useState<TableDensity>(() => {
-    const saved = loadPrefs(tableId);
-    return saved?.density ?? defaultDensity;
-  });
+  // Loads the saved layout after hydration. A saved view, or another tab, can also change it while the table is open.
+  useEffect(() => {
+    function reload() {
+      const saved = loadPrefs(tableId);
+      setColumnsState(buildColumns(defaultColumns, saved));
+      setDensityState(saved?.density ?? defaultDensity);
+    }
+    function onEvent(e: Event) {
+      if ((e as CustomEvent).detail?.tableId === tableId) reload();
+    }
+    function onStorage(e: StorageEvent) {
+      if (e.key === getStorageKey(tableId)) reload();
+    }
+    reload();
+    window.addEventListener(EVENT, onEvent);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(EVENT, onEvent);
+      window.removeEventListener('storage', onStorage);
+    };
+    // The default columns are a module constant on every page that uses this hook.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableId]);
 
   const setColumns = useCallback(
     (cols: ColumnDef[]) => {
       setColumnsState(cols);
-      const visibilityMap: Record<string, boolean> = {};
-      for (const c of cols) {
-        visibilityMap[c.key] = c.visible;
-      }
-      savePrefs(tableId, { columns: visibilityMap, density });
+      savePrefs(tableId, { columns: Object.fromEntries(cols.map((c) => [c.key, c.visible])), order: cols.map((c) => c.key), density });
     },
     [tableId, density]
   );
@@ -73,14 +117,21 @@ export function useTablePrefs(
   const setDensity = useCallback(
     (d: TableDensity) => {
       setDensityState(d);
-      const visibilityMap: Record<string, boolean> = {};
-      for (const c of columns) {
-        visibilityMap[c.key] = c.visible;
-      }
-      savePrefs(tableId, { columns: visibilityMap, density: d });
+      savePrefs(tableId, { columns: Object.fromEntries(columns.map((c) => [c.key, c.visible])), order: columns.map((c) => c.key), density: d });
     },
     [tableId, columns]
   );
 
-  return { columns, setColumns, density, setDensity };
+  const resetLayout = useCallback(() => {
+    try {
+      localStorage.removeItem(getStorageKey(tableId));
+    } catch {
+      // ignore
+    }
+    setColumnsState(defaultColumns);
+    setDensityState(defaultDensity);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableId]);
+
+  return { columns, setColumns, density, setDensity, resetLayout };
 }

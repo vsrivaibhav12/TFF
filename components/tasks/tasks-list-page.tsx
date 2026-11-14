@@ -18,6 +18,9 @@ import { TaskViewWrapper } from '@/components/tasks/task-view-wrapper';
 import { TaskLabelFilterBar } from '@/components/tasks/task-label-filter-bar';
 import { TaskSearchBox } from '@/components/tasks/task-search-box';
 import { TaskQuickFilters } from '@/components/tasks/task-quick-filters';
+import { TaskToolbar } from '@/components/tasks/task-toolbar';
+import { SavedViewsMenu } from '@/components/tasks/saved-views-menu';
+import { listSavedViews } from '@/lib/repositories/saved-views';
 import { TaskSummaryTiles, type TileView } from '@/components/tasks/task-summary-tiles';
 import { taskTiles, tileFilterOpts, tileHref, tileIsActive } from '@/lib/tasks/tiles';
 import { ReassignAllMatching } from '@/components/tasks/reassign-all-matching';
@@ -25,6 +28,9 @@ import { parseTaskFilterParams, type TaskFilterParams } from '@/lib/tasks/filter
 import AdminTasksTable from '@/app/admin/tasks/tasks-table';
 import TeamTasksTable from '@/app/team/tasks/tasks-table-client';
 import { Layers, Inbox, ChevronLeft, ChevronRight } from 'lucide-react';
+
+// Filters the Filters panel owns; the quick chips and the view tabs are not counted.
+const FILTER_KEYS = ['priority', 'client', 'period_year', 'period_month', 'period_quarter', 'sub_service', 'label', 'is_billable', 'is_verified', 'verification'];
 
 const PAGE_SIZE = 50;
 
@@ -91,13 +97,15 @@ export default async function TasksListPage({
   const tiles = taskTiles({ todayIso, weekEndIso: addDaysIso(7), yesterdayIso: addDaysIso(-1), isAdmin: isAdminView });
   const base = `/${variant}/tasks`;
 
-  const [rawTasks, team, subServices, totalCount, allLabels, tileCounts] = await Promise.all([
+  const [rawTasks, team, subServices, totalCount, allLabels, tileCounts, savedViews] = await Promise.all([
     listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
     listTeamUsers(),
     listSubServices(),
     countTasks(filterOpts),
     listLabels(),
     Promise.all(tiles.map((tile) => countTasks({ ...tileFilterOpts(tile, flat), labels: baseFilter.labels, assignedTo: tileFilterOpts(tile, flat).assignedTo ?? assignedTo }))),
+    // Saved views are a convenience: if they cannot be read (for example before the migration is applied), show none.
+    listSavedViews('tasks').catch(() => []),
   ]);
   const tileViews: TileView[] = tiles.map((tile, i) => ({
     tile,
@@ -119,7 +127,7 @@ export default async function TasksListPage({
   const showCreateTools = isAdminView || canCreate;
 
   const body = (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Tasks"
         subtitle={isAdminView ? 'Operational oversight of active engagements and team workflows.' : `${tasks.length} task${tasks.length === 1 ? '' : 's'} in this view.`}
@@ -151,21 +159,28 @@ export default async function TasksListPage({
 
       <TaskSummaryTiles tiles={tileViews} />
 
-      <div className="tff-card p-3 space-y-3">
-        <TaskSearchBox />
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <TaskQuickFilters meId={me.id} todayIso={todayIso} weekEndIso={addDaysIso(7)} yesterdayIso={addDaysIso(-1)} />
-          {canAssign && totalCount > 0 && (
+      <TaskToolbar
+        activeCount={FILTER_KEYS.filter((k) => flat[k]).length}
+        row={
+          <>
+            <TaskSearchBox />
+            <TaskQuickFilters meId={me.id} todayIso={todayIso} weekEndIso={addDaysIso(7)} yesterdayIso={addDaysIso(-1)} />
+            <SavedViewsMenu views={savedViews} currentUserId={me.id} isAdmin={me.role === 'admin'} />
+          </>
+        }
+        trailing={
+          canAssign && totalCount > 0 ? (
             <ReassignAllMatching
               total={totalCount}
               team={(team ?? []).map((m: { id: string; full_name: string }) => ({ id: m.id, full_name: m.full_name }))}
               filters={{ ...searchParams, assigned: assignedTo, page: undefined } as TaskFilterParams}
             />
-          )}
-        </div>
+          ) : null
+        }
+      >
         <AdvancedTaskFilters team={team ?? []} subServices={subServices ?? []} />
         <TaskLabelFilterBar labels={allLabels ?? []} />
-      </div>
+      </TaskToolbar>
 
       {tasks.length === 0 ? (
         <EmptyState

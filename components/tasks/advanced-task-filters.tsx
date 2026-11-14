@@ -99,10 +99,10 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
 
         <Select value={f.priority || 'all'} onValueChange={(v) => update('priority', v)}>
           <SelectTrigger className="w-32 h-8 text-xs bg-white">
-            <SelectValue placeholder="Priority" />
+            <SelectValue>{f.priority && f.priority !== 'all' ? f.priority.charAt(0).toUpperCase() + f.priority.slice(1) : 'Any priority'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All priorities</SelectItem>
+            <SelectItem value="all">Any priority</SelectItem>
             <SelectItem value="low">Low</SelectItem>
             <SelectItem value="medium">Medium</SelectItem>
             <SelectItem value="high">High</SelectItem>
@@ -112,7 +112,7 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
 
         <Select value={f.assigned || 'all'} onValueChange={(v) => update('assigned', v)}>
           <SelectTrigger className="w-40 h-8 text-xs bg-white">
-            <SelectValue placeholder="Assignee" />
+            <SelectValue>{f.assigned === 'unassigned' ? 'Unassigned' : f.assigned && f.assigned !== 'all' ? (team.find((t) => t.id === f.assigned)?.full_name ?? 'Assignee') : 'Any assignee'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Any assignee</SelectItem>
