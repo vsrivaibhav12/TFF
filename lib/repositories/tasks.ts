@@ -556,6 +556,20 @@ export async function enrichTasksWithProgress<T extends { id: string }>(tasks: T
   });
 }
 
+/** Adds minutes_logged: the total of every work-done entry on each task. */
+export async function enrichTasksWithTimeSpent<T extends { id: string }>(tasks: T[]): Promise<(T & { minutes_logged: number })[]> {
+  if (tasks.length === 0) return [];
+  const sb = createClient();
+  const totals = new Map<string, number>();
+  for (const ids of chunkArray(tasks.map((t) => t.id), 150)) {
+    const rows = await fetchAll<{ task_id: string; duration_minutes: number }>(() =>
+      sb.from('task_workdone').select('task_id, duration_minutes').in('task_id', ids),
+    );
+    for (const r of rows) totals.set(r.task_id, (totals.get(r.task_id) ?? 0) + r.duration_minutes);
+  }
+  return tasks.map((t) => ({ ...t, minutes_logged: totals.get(t.id) ?? 0 }));
+}
+
 export async function enrichTasksWithLabels<T extends { id: string }>(tasks: T[]): Promise<T[]> {
   if (tasks.length === 0) return tasks;
   const { listLabelsForTasks } = await import('./task-custom-fields');

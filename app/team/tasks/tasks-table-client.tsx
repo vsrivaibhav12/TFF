@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { getStatusColour } from '@/lib/semantic-colours';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProgressMicro } from '@/components/ui/progress-micro';
+import { fmtHM } from '@/components/tasks/detail/helpers';
 import { formatDateIST, cn, displayTaskName } from '@/lib/utils';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 import { transitionTaskAction, updateTaskAction, bulkDeleteTasksAction } from '@/lib/actions/tasks';
@@ -41,6 +42,7 @@ interface TaskRow {
   sub_services?: { id: string; code: string; name: string } | null;
   labels?: { code: string; display_name: string; color_hex: string | null }[];
   progress_pct?: number;
+  minutes_logged?: number;
   step_total?: number;
   step_completed?: number;
 }
@@ -56,6 +58,7 @@ const COL_WIDTHS: Record<string, string> = {
   owner: '120px',
   labels: '100px',
   progress: '90px',
+  time_spent: '90px',
   priority: '100px',
   verified: '80px',
 };
@@ -90,6 +93,7 @@ const DEFAULT_COLUMNS = [
   { key: 'owner', label: 'Owner', visible: true, optional: true },
   { key: 'labels', label: 'Labels', visible: false, optional: true },
   { key: 'progress', label: 'Progress', visible: true, optional: true },
+  { key: 'time_spent', label: 'Time spent', visible: true, optional: true },
   { key: 'priority', label: 'Priority', visible: true, optional: true },
   { key: 'verified', label: 'Verified', visible: true, optional: true },
 ];
@@ -355,6 +359,9 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
             {colVisible('progress') && (
               <span className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider text-center">Progress</span>
             )}
+            {colVisible('time_spent') && (
+              <span className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider text-center">Time spent</span>
+            )}
             {colVisible('priority') && (
               <span className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Priority</span>
             )}
@@ -481,6 +488,11 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                   {colVisible('progress') && (
                     <div className="min-w-0 overflow-hidden text-center">
                       <ProgressMicro progress={t.progress_pct ?? 0} completed={t.step_completed ?? 0} total={t.step_total ?? 0} />
+                    </div>
+                  )}
+                  {colVisible('time_spent') && (
+                    <div className="min-w-0 overflow-hidden text-center text-xs tabular-nums text-zinc-600">
+                      {t.minutes_logged ? fmtHM(t.minutes_logged) : '—'}
                     </div>
                   )}
                   {colVisible('priority') && (

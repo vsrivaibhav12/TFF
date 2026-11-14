@@ -25,6 +25,7 @@ import { TaskLabelPills } from '@/components/tasks/task-label-pills';
 import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 import { ProgressMicro } from '@/components/ui/progress-micro';
+import { fmtHM } from '@/components/tasks/detail/helpers';
 import { transitionTaskAction, bulkDeleteTasksAction, bulkUpdateTasksAction } from '@/lib/actions/tasks';
 import { toast } from 'sonner';
 
@@ -46,6 +47,7 @@ type Task = {
   sub_services?: { id: string; code: string; name: string } | null;
   labels?: { code: string; display_name: string; color_hex: string | null }[];
   progress_pct?: number;
+  minutes_logged?: number;
   step_total?: number;
   step_completed?: number;
 };
@@ -61,6 +63,7 @@ const DEFAULT_COLUMNS = [
   { key: 'owner', label: 'Owner', visible: true, optional: true },
   { key: 'labels', label: 'Labels', visible: false, optional: true },
   { key: 'progress', label: 'Progress', visible: true, optional: true },
+  { key: 'time_spent', label: 'Time spent', visible: true, optional: true },
   { key: 'priority', label: 'Priority', visible: true, optional: true },
   { key: 'actions', label: 'Actions', visible: true, optional: false },
 ];
@@ -84,6 +87,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
     owner: 130,
     labels: 120,
     progress: 92,
+    time_spent: 92,
     priority: 92,
     actions: 60,
   });
@@ -293,6 +297,9 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
               {colVisible('progress') && (
                 <ResizableTableHead className="text-center" width={loaded ? widths.progress : undefined} onResize={(w) => setWidth('progress', w)}>Progress</ResizableTableHead>
               )}
+              {colVisible('time_spent') && (
+                <ResizableTableHead className="text-center" width={loaded ? widths.time_spent : undefined} onResize={(w) => setWidth('time_spent', w)}>Time spent</ResizableTableHead>
+              )}
               {colVisible('priority') && (
                 <ResizableTableHead className="text-center" width={loaded ? widths.priority : undefined} onResize={(w) => setWidth('priority', w)}>Priority</ResizableTableHead>
               )}
@@ -415,6 +422,11 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
                   {colVisible('progress') && (
                     <TableCell className={cn('text-center', rowPadding)}>
                       <ProgressMicro progress={t.progress_pct ?? 0} completed={t.step_completed ?? 0} total={t.step_total ?? 0} />
+                    </TableCell>
+                  )}
+                  {colVisible('time_spent') && (
+                    <TableCell className={cn('text-center text-xs tabular-nums text-zinc-600', rowPadding)}>
+                      {t.minutes_logged ? fmtHM(t.minutes_logged) : '—'}
                     </TableCell>
                   )}
                   {colVisible('priority') && (

@@ -26,15 +26,15 @@ export default async function WorkDonePage({ searchParams }: { searchParams?: { 
   if (searchParams?.task) listOpts.taskId = searchParams.task;
   if (canViewAll && searchParams?.user) listOpts.userId = searchParams.user;
 
+  // Entries load only once a filter is applied, so opening the page stays fast.
+  const hasFilter = Boolean(searchParams?.from || searchParams?.to || searchParams?.q || searchParams?.client || searchParams?.task || searchParams?.user);
+
   const [logs, clients, tasks, staff] = await Promise.all([
-    listWorkDone(listOpts),
+    hasFilter ? listWorkDone(listOpts) : Promise.resolve([]),
     listAccessibleClients(),
     listTasks(canViewAll ? { status: ['pending', 'in_progress'] } : { assignedTo: me.id, status: ['pending', 'in_progress'] }),
     canViewAll ? listTeamUsers() : Promise.resolve([]),
   ]);
-
-  const totalMinutes = logs.reduce((acc, l) => acc + l.duration_minutes, 0);
-  const totalHours = (totalMinutes / 60).toFixed(1);
 
   const exportData = logs.map((l: any) => ({
     work_date: l.work_date,
@@ -55,25 +55,25 @@ export default async function WorkDonePage({ searchParams }: { searchParams?: { 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-6">
           <WorkDoneForm clients={clients} tasks={tasks} />
-          
-          <div className="tff-card tff-card-pad bg-zinc-50">
-            <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Total logged</div>
-            <div className="mt-2 text-4xl font-bold text-zinc-900">{totalHours}h</div>
-            <div className="text-sm text-zinc-500 mt-1">across {logs.length} entries</div>
-          </div>
         </div>
 
         <div className="lg:col-span-2 space-y-4">
           <WorkDoneFilters clients={clients} tasks={tasks} showStaffFilter={canViewAll} staff={staff} />
-          <WorkDoneTable
-            logs={logs}
-            clients={clients}
-            tasks={tasks}
-            canViewAll={canViewAll}
-            canManage={canManageWorkDone}
-            currentUserId={me.id}
-            userRole="team"
-          />
+          {hasFilter ? (
+            <WorkDoneTable
+              logs={logs}
+              clients={clients}
+              tasks={tasks}
+              canViewAll={canViewAll}
+              canManage={canManageWorkDone}
+              currentUserId={me.id}
+              userRole="team"
+            />
+          ) : (
+            <div className="tff-card tff-card-pad text-sm text-zinc-500 text-center py-12">
+              Choose a date range, client or task and apply filters to see your entries.
+            </div>
+          )}
         </div>
       </div>
     </div>

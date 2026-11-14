@@ -84,6 +84,28 @@ export async function loadComplianceDashboard(opts: {
   });
 }
 
+/** Every calendar event due in [fromIso, toIso], past or future, with its task status. Paged. */
+export async function loadComplianceProgressEvents(fromIso: string, toIso: string) {
+  const sb = createClient();
+  const rows = await fetchAll<any>(() =>
+    sb
+      .from('compliance_calendar_events')
+      .select('id, rule_code, due_date, status, task_id, compliance_calendar_rules(display_name), tasks(status)')
+      .eq('is_deleted', false)
+      .gte('due_date', fromIso)
+      .lte('due_date', toIso),
+  );
+  const one = <T,>(v: T | T[] | null | undefined): T | null => (Array.isArray(v) ? (v[0] ?? null) : (v ?? null));
+  return rows.map((e) => ({
+    rule_code: e.rule_code as string,
+    rule_name: (one<{ display_name: string }>(e.compliance_calendar_rules)?.display_name ?? e.rule_code) as string,
+    due_date: e.due_date as string,
+    status: e.status as string,
+    task_id: (e.task_id ?? null) as string | null,
+    task_status: one<{ status: string }>(e.tasks)?.status ?? null,
+  }));
+}
+
 /**
  * Non-Comp view: clients without a task for a given (rule, period).
  * Used to drive the "create tasks for selected" flow.

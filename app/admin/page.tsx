@@ -1,12 +1,10 @@
 import { Suspense } from 'react';
 import { requireRole } from '@/lib/auth/require-role';
 import { getAdminDashboardData } from '@/lib/services/dashboard-service';
-import { loadComplianceDashboard } from '@/lib/repositories/compliance-dashboard';
+import { loadComplianceDashboard, loadComplianceProgressEvents } from '@/lib/repositories/compliance-dashboard';
 import { listExpiringDsc } from '@/lib/repositories/dsc';
-import { getTaskClosureVelocity } from '@/lib/repositories/tasks';
 import { MicroBarChart } from '@/components/charts/micro-bar-chart';
-import { Sparkline } from '@/components/charts/sparkline';
-import { DeadlineProgress, WorkloadBars, AgeingBars } from '@/components/dashboard/home-widgets';
+import { DeadlineProgress, WorkloadBars } from '@/components/dashboard/home-widgets';
 import { getAdminHome } from '@/lib/services/home-service';
 import { addDaysIso, formatInrCompact } from '@/lib/services/home-metrics';
 import Link from 'next/link';
@@ -15,7 +13,6 @@ import {
   AlertTriangle,
   Briefcase,
   CalendarClock,
-  Clock,
   Wallet,
   ShieldCheck,
   LogIn,
@@ -25,9 +22,10 @@ import { StatCard } from '@/components/ui/stat-card';
 import { PriorityList } from '@/components/dashboard/priority-list';
 import { AdminQuickActions } from '@/components/dashboard/admin-quick-actions';
 import { NeedsAttentionHub, type AttentionItem } from '@/components/dashboard/needs-attention-hub';
-import { ActivityFeed } from '@/components/dashboard/activity-feed';
+import { ComplianceProgress } from '@/components/dashboard/compliance-progress';
+import { isMonthKey, monthKeyOf, periodBounds, summariseProgress, type ProgressView } from '@/lib/services/compliance-progress';
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({ searchParams }: { searchParams?: { cview?: string; cmonth?: string } }) {
   await requireRole('admin');
 
   return (
@@ -41,13 +39,18 @@ export default async function AdminDashboard() {
       </div>
 
       <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardBody />
+        <DashboardBody cview={searchParams?.cview} cmonth={searchParams?.cmonth} />
       </Suspense>
     </div>
   );
 }
 
-async function DashboardBody() {
+async function DashboardBody({ cview, cmonth }: { cview?: string; cmonth?: string }) {
+  const currentMonthKey = monthKeyOf(todayIST());
+  const view: ProgressView = cview === 'quarter' ? 'quarter' : 'month';
+  const monthKey = isMonthKey(cmonth) ? cmonth : currentMonthKey;
+  const bounds = periodBounds(view, monthKey);
+
   const [
     {
       activeClients,
@@ -58,19 +61,20 @@ async function DashboardBody() {
       attentionTasks,
       pendingApprovals,
       attendanceToday,
-      recentAuditLogs,
     },
     complianceCells,
     dscExpiring,
-    closureVelocity,
+    progressEvents,
     home,
   ] = await Promise.all([
     getAdminDashboardData(),
     loadComplianceDashboard({ horizonMonths: 3 }),
     listExpiringDsc(90),
-    getTaskClosureVelocity(30),
+    loadComplianceProgressEvents(bounds.from, bounds.to),
     getAdminHome(),
   ]);
+
+  const progressRows = summariseProgress(progressEvents, home.todayIso);
 
   // Filing deadlines in the next 14 days, soonest first.
   const horizon = addDaysIso(home.todayIso, 14);
@@ -143,12 +147,10 @@ async function DashboardBody() {
           tone="red"
         />
         <StatCard
-          label="Waiting on client"
-          value={home.waiting}
-          hint={home.ageing.d8_plus > 0 ? `${home.ageing.d8_plus} for 8 days or more` : undefined}
-          icon={<Clock className="h-5 w-5" />}
-          href="/admin/tasks?status=blocked"
-          tone="amber"
+          label="Team present today"
+          value={`${attendanceToday.presentCount ?? 0} / ${attendanceToday.teamTotal ?? 0}`}
+          icon={<LogIn className="h-5 w-5" />}
+          href="/admin/attendance"
         />
         <StatCard
           label="Done, not yet billed"
@@ -170,35 +172,27 @@ async function DashboardBody() {
 
       <DeadlineProgress rows={deadlineRows} href="/admin/compliance" />
 
+      <ComplianceProgress
+        rows={progressRows}
+        view={view}
+        monthKey={monthKey}
+        currentMonthKey={currentMonthKey}
+        basePath="/admin"
+        complianceHref="/admin/compliance"
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-7">
           <WorkloadBars rows={home.workload} tasksHref="/admin/tasks" />
         </div>
-        <div className="lg:col-span-5">
-          <AgeingBars buckets={home.ageing} href="/admin/tasks?status=blocked" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7">
-          <ActivityFeed items={recentAuditLogs as any} href="/admin/audit" />
-        </div>
         <div className="lg:col-span-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <StatCard
-              label="Team present today"
-              value={`${attendanceToday.presentCount ?? 0} / ${attendanceToday.teamTotal ?? 0}`}
-              icon={<LogIn className="h-5 w-5" />}
-              href="/admin/attendance"
-            />
-            <StatCard
-              label="Pending approvals"
-              value={pendingApprovals.total}
-              icon={<ShieldCheck className="h-5 w-5" />}
-              href="/admin/approvals"
-              tone="amber"
-            />
-          </div>
+          <StatCard
+            label="Pending approvals"
+            value={pendingApprovals.total}
+            icon={<ShieldCheck className="h-5 w-5" />}
+            href="/admin/approvals"
+            tone="amber"
+          />
           {dscSegments.length > 0 && (
             <Link href="/admin/dsc" className="tff-card p-4 block hover:border-zinc-300 transition-colors">
               <div className="flex items-center justify-between mb-2">
@@ -207,23 +201,6 @@ async function DashboardBody() {
               </div>
               <MicroBarChart segments={dscSegments} />
             </Link>
-          )}
-          {closureVelocity.length > 0 && (
-            <div className="tff-card p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="tff-section-title">Tasks closed</h3>
-                <span className="text-xs text-zinc-500">Last 30 days</span>
-              </div>
-              <Sparkline
-                data={closureVelocity.map((d) => ({ label: d.date.slice(5), value: d.count }))}
-                color="#0D9488"
-                height={36}
-              />
-              <div className="flex items-center justify-between mt-2 text-xs text-zinc-500">
-                <span>Total <span className="font-medium text-zinc-900 tabular-nums">{closureVelocity.reduce((sum, d) => sum + d.count, 0)}</span></span>
-                <span>Average per day <span className="font-medium text-zinc-900 tabular-nums">{(closureVelocity.reduce((sum, d) => sum + d.count, 0) / 30).toFixed(1)}</span></span>
-              </div>
-            </div>
           )}
         </div>
       </div>

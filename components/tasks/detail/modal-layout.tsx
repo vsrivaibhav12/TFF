@@ -6,12 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Pencil, Loader2, Plus, Clock, Trash2 } from 'lucide-react';
+import { Pencil, Loader2, Plus, Clock } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { formatDateIST, formatTimeIST, timeAgo, cn } from '@/lib/utils';
+import { formatDateIST, timeAgo, cn } from '@/lib/utils';
 import TaskStepsPanel from '@/components/tasks/task-steps-panel';
 import CustomFieldsPanel from '@/components/tasks/custom-fields-panel';
-import { fmtHM, ReadField } from './helpers';
+import { ReadField } from './helpers';
+import { WorkLogList } from './work-log-list';
 import { TaskEditForm } from './task-edit-form';
 import { TaskStatusStepper } from './status-stepper';
 import type { Task } from './types';
@@ -189,31 +190,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
                 </div>
               </div>
             )}
-            {workdone.length > 0 && (
-              <ul className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                {workdone.slice(0, 10).map((e) => (
-                  <li key={e.id} className="flex items-center justify-between gap-2 text-sm">
-                    <div className="flex-1 min-w-0">
-                      <span className="font-medium tabular-nums text-xs">{fmtHM(e.duration_minutes)}</span>
-                      <span className="text-zinc-500 mx-1">·</span>
-                      <span className="text-zinc-600 text-xs">{e.users_profile?.full_name ?? 'You'}</span>
-                      <span className="text-zinc-500 mx-1">·</span>
-                      {e.started_at && e.ended_at ? (
-                        <span className="text-zinc-500 text-xs">{formatTimeIST(e.started_at)} – {formatTimeIST(e.ended_at)}</span>
-                      ) : (
-                        <span className="text-zinc-500 text-xs">{formatDateIST(e.work_date)}</span>
-                      )}
-                      {e.note && <div className="text-xs text-zinc-500 truncate">{e.note}</div>}
-                    </div>
-                    {e.user_id === currentUserId && (
-                      <button type="button" onClick={() => removeWorkEntry(e.id)} disabled={workPending} className="text-zinc-500 hover:text-red-600 p-1" aria-label="Delete entry">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <WorkLogList entries={workdone} currentUserId={currentUserId} onRemove={removeWorkEntry} removing={workPending} />
           </div>
 
           {/* Notes - last 2 only */}

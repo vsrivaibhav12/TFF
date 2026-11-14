@@ -7,9 +7,9 @@ const tilesFor = (isAdmin: boolean) => taskTiles({ ...dates, isAdmin });
 const tile = (key: string, isAdmin = true) => tilesFor(isAdmin).find((t) => t.key === key)!;
 
 describe('taskTiles', () => {
-  test('team members get six tiles, admins also see unassigned', () => {
-    assert.deepEqual(tilesFor(false).map((t) => t.key), ['open', 'overdue', 'today', 'week', 'waiting', 'verify']);
-    assert.deepEqual(tilesFor(true).map((t) => t.key), ['open', 'overdue', 'today', 'week', 'waiting', 'verify', 'unassigned']);
+  test('team members get five tiles, admins also see unassigned', () => {
+    assert.deepEqual(tilesFor(false).map((t) => t.key), ['open', 'overdue', 'today', 'week', 'waiting']);
+    assert.deepEqual(tilesFor(true).map((t) => t.key), ['open', 'overdue', 'today', 'week', 'waiting', 'unassigned']);
   });
 });
 
@@ -32,11 +32,6 @@ describe('tileFilterOpts', () => {
   });
   test('waiting on client uses the blocked status', () => {
     assert.deepEqual(tileFilterOpts(tile('waiting'), {}).status, ['blocked']);
-  });
-  test('to verify means completed and awaiting verification', () => {
-    const o = tileFilterOpts(tile('verify'), {});
-    assert.deepEqual(o.status, ['completed']);
-    assert.equal(o.verificationStatus, 'pending');
   });
   test('unassigned', () => {
     assert.equal(tileFilterOpts(tile('unassigned'), {}).assignedTo, 'unassigned');

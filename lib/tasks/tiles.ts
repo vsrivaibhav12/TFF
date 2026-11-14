@@ -3,7 +3,7 @@
 import { parseTaskFilterParams, type TaskFilterParams } from '@/lib/tasks/filter-params';
 import type { TaskFilterOpts } from '@/lib/repositories/tasks';
 
-export type TileKey = 'open' | 'overdue' | 'today' | 'week' | 'waiting' | 'verify' | 'unassigned';
+export type TileKey = 'open' | 'overdue' | 'today' | 'week' | 'waiting' | 'unassigned';
 
 export type Tile = {
   key: TileKey;
@@ -26,7 +26,6 @@ export function taskTiles(args: { todayIso: string; weekEndIso: string; yesterda
     { key: 'today', label: 'Due today', set: { due_from: args.todayIso, due_to: args.todayIso }, reset: SCOPE },
     { key: 'week', label: 'Due this week', set: { due_from: args.todayIso, due_to: args.weekEndIso }, reset: SCOPE },
     { key: 'waiting', label: 'Waiting on client', set: { status: 'blocked' }, reset: SCOPE, tone: 'warning' },
-    { key: 'verify', label: 'To verify', set: { status: 'completed', verification: 'pending' }, reset: SCOPE },
   ];
   if (args.isAdmin) tiles.push({ key: 'unassigned', label: 'Unassigned', set: { assigned: 'unassigned' }, reset: [...SCOPE, 'assigned'] });
   return tiles;

@@ -24,16 +24,15 @@ export default async function AdminWorkDonePage({ searchParams }: { searchParams
   if (searchParams?.task) listOpts.taskId = searchParams.task;
   if (searchParams?.user) listOpts.userId = searchParams.user;
 
+  // Entries load only once a filter is applied, so opening the page stays fast.
+  const hasFilter = Boolean(searchParams?.from || searchParams?.to || searchParams?.q || searchParams?.client || searchParams?.task || searchParams?.user);
+
   const [logs, clients, tasks, staff] = await Promise.all([
-    listWorkDone(listOpts),
+    hasFilter ? listWorkDone(listOpts) : Promise.resolve([]),
     listAccessibleClients(),
     listTasks({ status: ['pending', 'in_progress'] }),
     listTeamUsers(),
   ]);
-
-  const totalMinutes = logs.reduce((acc, l) => acc + l.duration_minutes, 0);
-  const totalHours = (totalMinutes / 60).toFixed(1);
-
 
   return (
     <div className="space-y-6">
@@ -46,25 +45,25 @@ export default async function AdminWorkDonePage({ searchParams }: { searchParams
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
           <WorkDoneForm clients={clients} tasks={tasks} />
-          
-          <div className="p-6 tff-card">
-            <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Total logged (firm)</div>
-            <div className="mt-2 text-4xl font-bold text-zinc-900">{totalHours}h</div>
-            <div className="text-sm text-zinc-500 mt-1">across {logs.length} entries</div>
-          </div>
         </div>
 
         <div className="lg:col-span-2 space-y-4">
           <WorkDoneFilters clients={clients} tasks={tasks} showStaffFilter staff={staff} />
-          <WorkDoneTable
-            logs={logs}
-            clients={clients}
-            tasks={tasks}
-            canViewAll
-            canManage={canManageWorkDone}
-            currentUserId={me.id}
-            userRole="admin"
-          />
+          {hasFilter ? (
+            <WorkDoneTable
+              logs={logs}
+              clients={clients}
+              tasks={tasks}
+              canViewAll
+              canManage={canManageWorkDone}
+              currentUserId={me.id}
+              userRole="admin"
+            />
+          ) : (
+            <div className="tff-card tff-card-pad text-sm text-zinc-500 text-center py-12">
+              Choose a date range, client, task or staff member and apply filters to see entries.
+            </div>
+          )}
         </div>
       </div>
     </div>

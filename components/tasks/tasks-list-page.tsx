@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { hasCapabilities } from '@/lib/auth/capabilities-cache';
-import { listTasks, countTasks, enrichTasksWithLabels, enrichTasksWithProgress } from '@/lib/repositories/tasks';
+import { listTasks, countTasks, enrichTasksWithLabels, enrichTasksWithProgress, enrichTasksWithTimeSpent } from '@/lib/repositories/tasks';
 import { listTeamUsers } from '@/lib/repositories/clients';
 import { listSubServices } from '@/lib/repositories/services';
 import { listLabels } from '@/lib/repositories/task-custom-fields';
@@ -108,11 +108,12 @@ export default async function TasksListPage({
   }));
   const split = { pending: splitCounts[0], in_progress: splitCounts[1], completed: splitCounts[2] };
 
-  const [tasksWithLabels, tasksWithProgress] = await Promise.all([
+  const [tasksWithLabels, tasksWithProgress, tasksWithTime] = await Promise.all([
     enrichTasksWithLabels(rawTasks),
     enrichTasksWithProgress(rawTasks),
+    enrichTasksWithTimeSpent(rawTasks),
   ]);
-  const tasks = tasksWithLabels.map((t, i) => ({ ...t, ...tasksWithProgress[i] }));
+  const tasks = tasksWithLabels.map((t, i) => ({ ...t, ...tasksWithProgress[i], minutes_logged: tasksWithTime[i].minutes_logged }));
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
