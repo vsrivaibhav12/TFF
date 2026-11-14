@@ -1,5 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role';
-import { listEffectiveCapabilities } from '@/lib/repositories/staff-capabilities';
+import { getCachedCapabilities } from '@/lib/auth/capabilities-cache';
 import { filterNavByCapabilities } from '@/lib/auth/nav-capabilities';
 import AppShell from '@/components/shell/app-shell';
 
@@ -8,7 +8,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const user = await requireRole('admin');
   const capabilities = user.role === 'admin'
     ? []
-    : await listEffectiveCapabilities(user.id);
+    : [...(await getCachedCapabilities(user.id))];
 
   const fullNav = [
     /* ── Primary ── */

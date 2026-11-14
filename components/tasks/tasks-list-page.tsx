@@ -97,15 +97,28 @@ export default async function TasksListPage({
   const tiles = taskTiles({ todayIso, weekEndIso: addDaysIso(7), yesterdayIso: addDaysIso(-1), isAdmin: isAdminView });
   const base = `/${variant}/tasks`;
 
+  // The same filter can be asked for twice (the Open tab and the page total when nothing is filtered). Ask once.
+  const countCache = new Map<string, Promise<number>>();
+  const countOnce = (opts: Parameters<typeof countTasks>[0]) => {
+    // Sorted keys, so the same filter written in a different order still counts as the same.
+    const key = JSON.stringify(Object.fromEntries(Object.entries(opts as Record<string, unknown>).filter(([, v]) => v !== undefined).sort(([a], [b]) => a.localeCompare(b))));
+    let p = countCache.get(key);
+    if (!p) {
+      p = countTasks(opts);
+      countCache.set(key, p);
+    }
+    return p;
+  };
+
   const [rawTasks, team, subServices, totalCount, allLabels, tileCounts, savedViews] = await Promise.all([
     listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
     listTeamUsers(),
     listSubServices(),
-    countTasks(filterOpts),
+    countOnce(filterOpts),
     listLabels(),
-    Promise.all(tiles.map((tile) => countTasks({ ...tileFilterOpts(tile, flat), labels: baseFilter.labels, assignedTo: tileFilterOpts(tile, flat).assignedTo ?? assignedTo }))),
+    Promise.all(tiles.map((tile) => countOnce({ ...tileFilterOpts(tile, flat), labels: baseFilter.labels, assignedTo: tileFilterOpts(tile, flat).assignedTo ?? assignedTo }))),
     // Saved views are a convenience: if they cannot be read (for example before the migration is applied), show none.
-    listSavedViews('tasks').catch(() => []),
+    listSavedViews('tasks', me.id).catch(() => []),
   ]);
   const tileViews: TileView[] = tiles.map((tile, i) => ({
     tile,

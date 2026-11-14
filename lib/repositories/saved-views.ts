@@ -14,19 +14,29 @@ export type SavedViewRow = {
 };
 
 /** The person's own views and the views shared with everyone. Row level security decides which rows come back. */
-export async function listSavedViews(scope: SavedViewScope): Promise<SavedViewRow[]> {
+export async function listSavedViews(scope: SavedViewScope, currentUserId?: string): Promise<SavedViewRow[]> {
   const sb = createClient();
   const { data, error } = await sb
     .from('saved_views')
-    .select('id, owner_id, scope, name, query, layout, is_shared, users_profile!saved_views_owner_id_fkey(full_name)')
+    .select('id, owner_id, scope, name, query, layout, is_shared')
     .eq('scope', scope)
     .order('name', { ascending: true })
     .limit(200);
   if (error) throw error;
-  return (data ?? []).map((r: any) => ({
+  const rows = (data ?? []) as any[];
+
+  // Owner names are needed only for views other people shared, so most pages skip this second query.
+  const otherOwners = [...new Set(rows.filter((r) => r.owner_id !== currentUserId).map((r) => r.owner_id as string))];
+  const names = new Map<string, string>();
+  if (otherOwners.length > 0) {
+    const { data: people } = await sb.from('users_profile').select('id, full_name').in('id', otherOwners);
+    for (const p of people ?? []) names.set(p.id as string, (p.full_name as string) ?? '');
+  }
+
+  return rows.map((r) => ({
     id: r.id,
     owner_id: r.owner_id,
-    owner_name: (Array.isArray(r.users_profile) ? r.users_profile[0] : r.users_profile)?.full_name ?? null,
+    owner_name: names.get(r.owner_id) ?? null,
     scope: r.scope,
     name: r.name,
     query: r.query ?? '',
