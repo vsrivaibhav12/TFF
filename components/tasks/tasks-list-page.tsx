@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { hasCapabilities } from '@/lib/auth/capabilities-cache';
-import { listTasks, countTasks, enrichTasksWithLabels, enrichTasksWithProgress, enrichTasksWithTimeSpent } from '@/lib/repositories/tasks';
+import { listTasks, countTasks, countTaskTabs, enrichTasksWithLabels, enrichTasksWithProgress, enrichTasksWithTimeSpent } from '@/lib/repositories/tasks';
 import { listTeamUsers } from '@/lib/repositories/clients';
 import { listSubServices } from '@/lib/repositories/services';
 import { listLabels } from '@/lib/repositories/task-custom-fields';
@@ -116,7 +116,13 @@ export default async function TasksListPage({
     listSubServices(),
     countOnce(filterOpts),
     listLabels(),
-    Promise.all(tiles.map((tile) => countOnce({ ...tileFilterOpts(tile, flat), labels: baseFilter.labels, assignedTo: tileFilterOpts(tile, flat).assignedTo ?? assignedTo }))),
+    (async () => {
+      // One database call for all the tabs; the per-tab counts below are the fallback.
+      const open = tileFilterOpts(tiles[0], flat);
+      const all = await countTaskTabs({ ...open, labels: baseFilter.labels, assignedTo: open.assignedTo ?? assignedTo }, { todayIso, weekEndIso: addDaysIso(7) });
+      if (all) return tiles.map((tile) => all[tile.key]);
+      return Promise.all(tiles.map((tile) => countOnce({ ...tileFilterOpts(tile, flat), labels: baseFilter.labels, assignedTo: tileFilterOpts(tile, flat).assignedTo ?? assignedTo })));
+    })(),
     // Saved views are a convenience: if they cannot be read (for example before the migration is applied), show none.
     listSavedViews('tasks', me.id).catch(() => []),
   ]);
@@ -215,14 +221,14 @@ export default async function TasksListPage({
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-slate-500">
                 Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, totalCount)} of {totalCount}
               </p>
               <div className="flex items-center gap-1">
                 <PageLink href={currentPage > 1 ? buildTaskUrl(base, searchParams, { page: String(currentPage - 1) }) : null} label="Previous page">
                   <ChevronLeft className="h-4 w-4" />
                 </PageLink>
-                <span className="px-3 text-sm font-medium text-zinc-700">Page {currentPage} of {totalPages}</span>
+                <span className="px-3 text-sm font-medium text-slate-700">Page {currentPage} of {totalPages}</span>
                 <PageLink href={currentPage < totalPages ? buildTaskUrl(base, searchParams, { page: String(currentPage + 1) }) : null} label="Next page">
                   <ChevronRight className="h-4 w-4" />
                 </PageLink>
@@ -240,7 +246,7 @@ export default async function TasksListPage({
 function PageLink({ href, label, children }: { href: string | null; label: string; children: React.ReactNode }) {
   if (!href) {
     return (
-      <span aria-disabled="true" className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-100 text-zinc-300">
+      <span aria-disabled="true" className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-slate-100 text-slate-300">
         {children}
       </span>
     );
@@ -249,7 +255,7 @@ function PageLink({ href, label, children }: { href: string | null; label: strin
     <Link
       href={href}
       aria-label={label}
-      className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors"
+      className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
     >
       {children}
     </Link>

@@ -277,6 +277,45 @@ export async function countTasks(opts: TaskFilterOpts = {}) {
   return total;
 }
 
+export type TaskTabCounts = { open: number; overdue: number; today: number; week: number; waiting: number; unassigned: number };
+
+/**
+ * The counts for the task list's six view tabs in one database call (see db/migrations/2026-11-15-task-tab-counts.sql).
+ * Returns null when the single query cannot answer: a text or label search is on, or the function is missing.
+ * The caller then falls back to counting each tab separately.
+ */
+export async function countTaskTabs(
+  base: TaskFilterOpts,
+  dates: { todayIso: string; weekEndIso: string },
+): Promise<TaskTabCounts | null> {
+  if (base.q?.trim() || base.labels?.length) return null;
+  const sb = createClient();
+  const { data, error } = await sb.rpc('task_tab_counts', {
+    p_today: dates.todayIso,
+    p_week_end: dates.weekEndIso,
+    p_client: base.clientId ?? null,
+    p_sub_services: base.subServiceIds?.length ? base.subServiceIds : null,
+    p_period_year: base.periodYear ?? null,
+    p_period_month: base.periodMonth ?? null,
+    p_is_billable: base.isBillable ?? null,
+    p_is_stuck: base.isStuck ?? null,
+    p_is_verified: base.isVerified ?? null,
+    p_priority: base.priority?.length ? base.priority : null,
+    p_assigned: base.assignedTo ?? null,
+  });
+  if (error || !data) return null;
+  const row = (Array.isArray(data) ? data[0] : data) as Record<string, number | string> | undefined;
+  if (!row) return null;
+  return {
+    open: Number(row.open_count),
+    overdue: Number(row.overdue_count),
+    today: Number(row.today_count),
+    week: Number(row.week_count),
+    waiting: Number(row.waiting_count),
+    unassigned: Number(row.unassigned_count),
+  };
+}
+
 export async function getTask(id: string): Promise<TaskDetail | null> {
   const sb = createClient();
   const { data, error } = await sb
