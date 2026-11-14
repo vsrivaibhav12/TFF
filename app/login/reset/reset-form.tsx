@@ -62,8 +62,8 @@ export default function ResetForm() {
 
   if (phase === 'checking') {
     return (
-      <Card className="border-zinc-200">
-        <CardContent className="py-10 flex justify-center text-zinc-500">
+      <Card className="border-slate-200">
+        <CardContent className="py-10 flex justify-center text-slate-500">
           <Loader2 className="h-5 w-5 animate-spin" />
         </CardContent>
       </Card>
@@ -72,9 +72,9 @@ export default function ResetForm() {
 
   if (phase === 'invalid') {
     return (
-      <Card className="border-zinc-200">
+      <Card className="border-slate-200">
         <CardContent className="py-8 text-center space-y-4">
-          <p className="text-sm text-zinc-600">This reset link is invalid or has expired. Request a new one.</p>
+          <p className="text-sm text-slate-600">This reset link is invalid or has expired. Request a new one.</p>
           <Link href="/login/forgot" className="text-sm text-teal-700 hover:underline inline-flex items-center gap-1">
             <ArrowLeft className="h-3 w-3" /> Request a new link
           </Link>
@@ -84,7 +84,7 @@ export default function ResetForm() {
   }
 
   return (
-    <Card className="border-zinc-200">
+    <Card className="border-slate-200">
       <CardContent className="pt-6">
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">

@@ -132,7 +132,7 @@ export default async function AttendanceReportPage({ searchParams }: { searchPar
       aria-current={view === v ? 'page' : undefined}
       className={cn(
         'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
-        view === v ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900',
+        view === v ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900',
       )}
     >
       {label}
@@ -176,7 +176,7 @@ export default async function AttendanceReportPage({ searchParams }: { searchPar
         <StatCard label="Not marked" value={totals.not_marked} icon={<CircleHelp className="h-4 w-4" />} tone={totals.not_marked > 0 ? 'amber' : 'zinc'} />
       </div>
 
-      <div className="inline-flex items-center gap-1 rounded-xl bg-zinc-100 p-1" role="navigation" aria-label="Report view">
+      <div className="inline-flex items-center gap-1 rounded-xl bg-slate-100 p-1" role="navigation" aria-label="Report view">
         {tab('summary', 'Summary by member')}
         {tab('log', 'Daily log')}
       </div>
@@ -189,7 +189,7 @@ export default async function AttendanceReportPage({ searchParams }: { searchPar
             <div className="overflow-x-auto">
               <Table className="min-w-[860px]">
                 <TableHeader>
-                  <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
+                  <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
                     <TableHead>Member</TableHead>
                     <TableHead className="text-right">Present</TableHead>
                     <TableHead className="text-right">Work from home</TableHead>
@@ -203,35 +203,35 @@ export default async function AttendanceReportPage({ searchParams }: { searchPar
                 </TableHeader>
                 <TableBody>
                   {summary.map((s) => (
-                    <TableRow key={s.user_id} className="hover:bg-zinc-50/60">
-                      <TableCell className="text-sm font-medium text-zinc-900">
+                    <TableRow key={s.user_id} className="hover:bg-slate-50/60">
+                      <TableCell className="text-sm font-medium text-slate-900">
                         <Link href={memberLogHref(s.user_id)} className="hover:text-teal-700" title="See this person's daily log">{s.name}</Link>
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-zinc-700">{s.present}</TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-zinc-700">{s.work_from_home}</TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-zinc-700">{s.leave}</TableCell>
-                      <TableCell className={cn('text-right text-sm tabular-nums', s.absent > 0 ? 'font-semibold text-red-600' : 'text-zinc-500')}>{s.absent}</TableCell>
-                      <TableCell className={cn('text-right text-sm tabular-nums', s.not_marked > 0 ? 'font-semibold text-amber-600' : 'text-zinc-500')}>{s.not_marked}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums text-slate-700">{s.present}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums text-slate-700">{s.work_from_home}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums text-slate-700">{s.leave}</TableCell>
+                      <TableCell className={cn('text-right text-sm tabular-nums', s.absent > 0 ? 'font-semibold text-red-600' : 'text-slate-500')}>{s.absent}</TableCell>
+                      <TableCell className={cn('text-right text-sm tabular-nums', s.not_marked > 0 ? 'font-semibold text-amber-600' : 'text-slate-500')}>{s.not_marked}</TableCell>
                       <TableCell>
                         {s.rate === null ? (
-                          <span className="text-sm text-zinc-500">—</span>
+                          <span className="text-sm text-slate-500">—</span>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <div className="h-1.5 flex-1 rounded-full bg-zinc-100 overflow-hidden" role="img" aria-label={`${s.rate} percent`}>
+                            <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden" role="img" aria-label={`${s.rate} percent`}>
                               <div className={cn('h-full rounded-full', s.rate >= 90 ? 'bg-emerald-500' : s.rate >= 70 ? 'bg-amber-500' : 'bg-red-500')} style={{ width: `${s.rate}%` }} />
                             </div>
-                            <span className="w-10 text-right text-sm tabular-nums text-zinc-700">{s.rate}%</span>
+                            <span className="w-10 text-right text-sm tabular-nums text-slate-700">{s.rate}%</span>
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-zinc-700">{fmtHours(s.avg_hours)}</TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-zinc-700">{fmtHours(s.total_hours)}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums text-slate-700">{fmtHours(s.avg_hours)}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums text-slate-700">{fmtHours(s.total_hours)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
                 <TableFooter>
-                  <TableRow className="bg-zinc-50/70 font-semibold">
-                    <TableCell className="text-sm text-zinc-900">Everyone</TableCell>
+                  <TableRow className="bg-slate-50/70 font-semibold">
+                    <TableCell className="text-sm text-slate-900">Everyone</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">{totals.present}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">{totals.work_from_home}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">{totals.leave}</TableCell>
@@ -245,7 +245,7 @@ export default async function AttendanceReportPage({ searchParams }: { searchPar
               </Table>
             </div>
           )}
-          <p className="border-t border-zinc-100 px-5 py-3 text-xs text-zinc-500">
+          <p className="border-t border-slate-100 px-5 py-3 text-xs text-slate-500">
             Working days are Monday to Saturday, counted up to today. Attendance rate is present plus work from home, out of working days that were not leave. Not marked means a working day with no record.
           </p>
         </section>
@@ -258,7 +258,7 @@ export default async function AttendanceReportPage({ searchParams }: { searchPar
               <div className="overflow-x-auto">
                 <Table className="min-w-[820px]">
                   <TableHeader>
-                    <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
+                    <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
                       <TableHead className="w-32">Date</TableHead>
                       <TableHead>Member</TableHead>
                       <TableHead>Status</TableHead>
@@ -272,15 +272,15 @@ export default async function AttendanceReportPage({ searchParams }: { searchPar
                     {pageRows.map((l) => {
                       const h = hoursWorked(l.check_in_time, l.check_out_time);
                       return (
-                        <TableRow key={l.id} className="hover:bg-zinc-50/60">
-                          <TableCell className="text-sm tabular-nums text-zinc-700 whitespace-nowrap">{formatDateIST(l.attendance_date)}</TableCell>
-                          <TableCell className="text-sm font-medium text-zinc-900">{l.user_name}</TableCell>
+                        <TableRow key={l.id} className="hover:bg-slate-50/60">
+                          <TableCell className="text-sm tabular-nums text-slate-700 whitespace-nowrap">{formatDateIST(l.attendance_date)}</TableCell>
+                          <TableCell className="text-sm font-medium text-slate-900">{l.user_name}</TableCell>
                           <TableCell><Badge variant={STATUS_VARIANT[l.status] ?? 'default'}>{STATUS_LABELS[l.status] ?? l.status}</Badge></TableCell>
-                          <TableCell className="text-sm tabular-nums text-zinc-700">{l.check_in_time ? formatTimeIST(l.check_in_time) : '—'}</TableCell>
-                          <TableCell className="text-sm tabular-nums text-zinc-700">{l.check_out_time ? formatTimeIST(l.check_out_time) : '—'}</TableCell>
-                          <TableCell className="text-right text-sm tabular-nums text-zinc-700">{h !== null ? fmtHours(h) : '—'}</TableCell>
-                          <TableCell className="text-sm text-zinc-500 max-w-[18rem] truncate" title={l.override_reason ?? ''}>
-                            {l.is_manually_created && <span className="mr-1 text-xs font-medium text-zinc-600">Entered by admin.</span>}
+                          <TableCell className="text-sm tabular-nums text-slate-700">{l.check_in_time ? formatTimeIST(l.check_in_time) : '—'}</TableCell>
+                          <TableCell className="text-sm tabular-nums text-slate-700">{l.check_out_time ? formatTimeIST(l.check_out_time) : '—'}</TableCell>
+                          <TableCell className="text-right text-sm tabular-nums text-slate-700">{h !== null ? fmtHours(h) : '—'}</TableCell>
+                          <TableCell className="text-sm text-slate-500 max-w-[18rem] truncate" title={l.override_reason ?? ''}>
+                            {l.is_manually_created && <span className="mr-1 text-xs font-medium text-slate-600">Entered by admin.</span>}
                             {l.override_reason || (l.is_manually_created ? '' : '—')}
                           </TableCell>
                         </TableRow>

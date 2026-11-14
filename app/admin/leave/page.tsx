@@ -71,7 +71,7 @@ export default async function AdminLeavePage({ searchParams }: { searchParams: {
       {/* Pending approvals section */}
       {pendingRows.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-base font-semibold text-zinc-900">Pending approvals ({pendingRows.length})</h2>
+          <h2 className="text-base font-semibold text-slate-900">Pending approvals ({pendingRows.length})</h2>
           <div className="rounded-2xl border border-amber-200 bg-amber-50/30 overflow-hidden">
             <Table>
               <TableHeader>
@@ -88,20 +88,20 @@ export default async function AdminLeavePage({ searchParams }: { searchParams: {
                 {pendingRows.map((r) => (
                   <TableRow key={r.id} data-row>
                     <TableCell>
-                      <div className="flex items-center gap-2 text-zinc-900 font-medium">
-                        <User className="h-4 w-4 text-zinc-500" />
+                      <div className="flex items-center gap-2 text-slate-900 font-medium">
+                        <User className="h-4 w-4 text-slate-500" />
                         {r.users_profile?.full_name ?? '—'}
                       </div>
                     </TableCell>
                     <TableCell><Badge variant="outline">{r.leave_type}</Badge></TableCell>
-                    <TableCell className="text-zinc-700 tabular-nums">
+                    <TableCell className="text-slate-700 tabular-nums">
                       <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-zinc-500" />
+                        <Calendar className="h-3.5 w-3.5 text-slate-500" />
                         {formatDateIST(r.from_date)} — {formatDateIST(r.to_date)}
                       </div>
                     </TableCell>
                     <TableCell className="tabular-nums">{r.number_of_days}</TableCell>
-                    <TableCell className="text-sm text-zinc-500 max-w-xs truncate">{r.reason}</TableCell>
+                    <TableCell className="text-sm text-slate-500 max-w-xs truncate">{r.reason}</TableCell>
                     <TableCell>
                       <ReviewLeave id={r.id} />
                     </TableCell>
@@ -115,7 +115,7 @@ export default async function AdminLeavePage({ searchParams }: { searchParams: {
 
       {/* All requests history */}
       <section className="space-y-3">
-        <h2 className="text-base font-semibold text-zinc-900">
+        <h2 className="text-base font-semibold text-slate-900">
           {pendingRows.length > 0 ? 'Request history' : 'All leave requests'}
         </h2>
         {historyRows.length === 0 ? (
@@ -128,7 +128,7 @@ export default async function AdminLeavePage({ searchParams }: { searchParams: {
           <div className="tff-card overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-zinc-50/50">
+                <TableRow className="hover:bg-slate-50/50">
                   <TableHead>Team member</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead className="text-center">Status</TableHead>
@@ -141,8 +141,8 @@ export default async function AdminLeavePage({ searchParams }: { searchParams: {
                 {historyRows.map((r) => (
                   <TableRow key={r.id} data-row>
                     <TableCell>
-                      <div className="flex items-center gap-2 text-zinc-900 font-medium">
-                        <User className="h-4 w-4 text-zinc-500" />
+                      <div className="flex items-center gap-2 text-slate-900 font-medium">
+                        <User className="h-4 w-4 text-slate-500" />
                         {r.users_profile?.full_name ?? '—'}
                       </div>
                     </TableCell>
@@ -160,14 +160,14 @@ export default async function AdminLeavePage({ searchParams }: { searchParams: {
                         {r.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-zinc-700 tabular-nums">
+                    <TableCell className="text-slate-700 tabular-nums">
                       <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-zinc-500" />
+                        <Calendar className="h-3.5 w-3.5 text-slate-500" />
                         {formatDateIST(r.from_date)} — {formatDateIST(r.to_date)}
                       </div>
                     </TableCell>
                     <TableCell className="tabular-nums">{r.number_of_days}</TableCell>
-                    <TableCell className="text-sm text-zinc-500 max-w-xs truncate">{r.reason}</TableCell>
+                    <TableCell className="text-sm text-slate-500 max-w-xs truncate">{r.reason}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -17,8 +17,8 @@ export default function SuperAdminsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Super admin passwords</h1>
-        <p className="text-sm text-zinc-500 mt-1">
+        <h1 className="text-xl font-semibold tracking-tight text-slate-900">Super admin passwords</h1>
+        <p className="text-sm text-slate-500 mt-1">
           Change the passwords for the two firm owners. They will need the new password to log in.
         </p>
       </div>
@@ -140,7 +140,7 @@ function AdminPasswordCard({ admin }: { admin: { email: string; name: string } }
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -175,7 +175,7 @@ function AdminPasswordCard({ admin }: { admin: { email: string; name: string } }
                 <Input
                   readOnly
                   value={result.password}
-                  className="bg-white border-teal-200 text-zinc-900 font-mono"
+                  className="bg-white border-teal-200 text-slate-900 font-mono"
                 />
                 <Button
                   type="button"

@@ -82,7 +82,7 @@ export default function CustomFieldsPanel({
     <div className="space-y-6">
       {/* Labels */}
       {allLabels.length > 0 && (
-        <div className="rounded-xl border border-zinc-200 bg-white p-5">
+        <div className="tff-card p-5">
           <h3 className="text-sm font-semibold flex items-center gap-1.5 mb-3">
             <Tag className="h-3.5 w-3.5 text-teal-600" /> Labels
           </h3>
@@ -96,7 +96,7 @@ export default function CustomFieldsPanel({
                   disabled={readonly || pending}
                   onClick={() => !readonly && toggleLabel(l.code, !isOn)}
                   className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                    isOn ? 'border-transparent text-white' : 'border-zinc-200 text-zinc-700 bg-white hover:bg-zinc-50'
+                    isOn ? 'border-transparent text-white' : 'border-slate-200 text-slate-700 bg-white hover:bg-slate-50'
                   } ${readonly ? 'cursor-default opacity-60' : ''}`}
                   style={isOn ? { backgroundColor: l.color_hex ?? '#64748b' } : undefined}
                 >
@@ -111,7 +111,7 @@ export default function CustomFieldsPanel({
 
       {/* Custom fields */}
       {definitions.length > 0 && (
-        <div className="rounded-xl border border-zinc-200 bg-white p-5">
+        <div className="tff-card p-5">
           <h3 className="text-sm font-semibold mb-3">Custom fields</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {definitions.map((d) => {
@@ -156,7 +156,7 @@ export default function CustomFieldsPanel({
                         onCheckedChange={(c) => persistValue(d.id, 'value_bool', c)}
                         disabled={readonly}
                       />
-                      <span className="text-xs text-zinc-500">{v?.value_bool ? 'Yes' : 'No'}</span>
+                      <span className="text-xs text-slate-500">{v?.value_bool ? 'Yes' : 'No'}</span>
                     </div>
                   )}
                   {d.field_type === 'dropdown' && (

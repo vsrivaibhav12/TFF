@@ -80,14 +80,14 @@ export default function CentresAdmin({
     <section className="space-y-4 tff-card tff-card-pad">
       <h2 className="font-semibold">{title}</h2>
       {rows.length > 0 ? (
-        <ul className="divide-y divide-zinc-100" data-testid={`centres-${kind}`}>
+        <ul className="divide-y divide-slate-100" data-testid={`centres-${kind}`}>
           {rows.map((r) => (
             <li key={r.code} className="flex items-center justify-between py-2.5">
               <div>
-                <code className="bg-zinc-100 rounded px-1.5 py-0.5 text-xs font-mono mr-2">{r.code}</code>
+                <code className="bg-slate-100 rounded px-1.5 py-0.5 text-xs font-mono mr-2">{r.code}</code>
                 <span className="font-medium">{r.name}</span>
                 {!r.is_active && <Badge variant="outline" className="ml-2 text-xs">inactive</Badge>}
-                {r.description && <p className="text-xs text-zinc-500 mt-0.5 ml-1">{r.description}</p>}
+                {r.description && <p className="text-xs text-slate-500 mt-0.5 ml-1">{r.description}</p>}
               </div>
               <div className="flex items-center gap-1">
                 <Button size="sm" variant="outline" onClick={() => startEdit(r)} disabled={pending} aria-label={`Edit ${r.name}`} data-testid={`centre-${kind}-edit-${r.code}`}>
@@ -103,9 +103,9 @@ export default function CentresAdmin({
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-zinc-500">None yet.</p>
+        <p className="text-sm text-slate-500">None yet.</p>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-3 border-t border-zinc-100">
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-3 border-t border-slate-100">
         <div className="sm:col-span-2 space-y-1">
           <Label className="text-xs">Code</Label>
           <Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="CAS" maxLength={12} disabled={!!editingCode} data-testid={`centre-${kind}-code`} />

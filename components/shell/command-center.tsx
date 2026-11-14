@@ -31,12 +31,12 @@ export default function CommandCenter({ userRole }: CommandCenterProps) {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-semibold text-zinc-900">Command center</h1>
-        <p className="text-zinc-500">Type what you want to do in plain language.</p>
+        <h1 className="text-xl font-semibold text-slate-900">Command center</h1>
+        <p className="text-slate-500">Type what you want to do in plain language.</p>
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -63,8 +63,8 @@ export default function CommandCenter({ userRole }: CommandCenterProps) {
                 {Icon ? <Icon className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
               </span>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-zinc-900">{suggestion.label}</div>
-                <div className="text-sm text-zinc-500">{suggestion.description}</div>
+                <div className="text-sm font-semibold text-slate-900">{suggestion.label}</div>
+                <div className="text-sm text-slate-500">{suggestion.description}</div>
               </div>
               <ArrowRight className="h-5 w-5 text-teal-600 shrink-0" />
             </button>
@@ -74,7 +74,7 @@ export default function CommandCenter({ userRole }: CommandCenterProps) {
 
       {!suggestion && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm text-zinc-500">
+          <div className="flex items-center gap-2 text-sm text-slate-500">
             <Lightbulb className="h-4 w-4" /> Try these
           </div>
           <div className="flex flex-wrap gap-2">
@@ -82,7 +82,7 @@ export default function CommandCenter({ userRole }: CommandCenterProps) {
               <button
                 key={prompt}
                 onClick={() => setQ(prompt)}
-                className="px-3 py-1.5 text-sm border border-zinc-200 rounded-full text-zinc-600 hover:border-teal-300 hover:text-teal-700 transition-colors"
+                className="px-3 py-1.5 text-sm border border-slate-200 rounded-full text-slate-600 hover:border-teal-300 hover:text-teal-700 transition-colors"
               >
                 {prompt}
               </button>
@@ -93,7 +93,7 @@ export default function CommandCenter({ userRole }: CommandCenterProps) {
 
       <div className="text-center">
         <Button variant="outline" onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}>
-          Open quick command palette <span className="ml-2 text-xs text-zinc-500">Ctrl K</span>
+          Open quick command palette <span className="ml-2 text-xs text-slate-500">Ctrl K</span>
         </Button>
       </div>
     </div>

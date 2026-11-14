@@ -33,7 +33,7 @@ const overrideStatusLabels: Record<string, string> = {
 
 const statusBadge: Record<string, string> = {
   present: "bg-teal-50 text-teal-700 border-teal-200",
-  absent: "bg-zinc-100 text-zinc-700 border-zinc-200",
+  absent: "bg-slate-100 text-slate-700 border-slate-200",
   leave: "bg-amber-50 text-amber-700 border-amber-200",
   work_from_home: "bg-blue-50 text-blue-700 border-blue-200",
 };
@@ -87,7 +87,7 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <CalendarDays className="h-4 w-4 text-zinc-500" />
+        <CalendarDays className="h-4 w-4 text-slate-500" />
         <Input
           type="date"
           value={selectedDate}
@@ -97,7 +97,7 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
           }}
           className="w-auto"
         />
-        <span className="text-sm text-zinc-500">
+        <span className="text-sm text-slate-500">
           {new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
         </span>
       </div>
@@ -105,25 +105,25 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
       <div className="tff-card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-zinc-50/50 border-b border-zinc-200">
-              <th className="text-left px-4 py-3 font-medium text-zinc-700">Staff member</th>
-              <th className="text-left px-4 py-3 font-medium text-zinc-700">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-zinc-700">In</th>
-              <th className="text-left px-4 py-3 font-medium text-zinc-700">Out</th>
-              <th className="text-right px-4 py-3 font-medium text-zinc-700">Action</th>
+            <tr className="bg-slate-50/50 border-b border-slate-200">
+              <th className="text-left px-4 py-3 font-medium text-slate-700">Staff member</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-700">Status</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-700">In</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-700">Out</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-700">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="divide-y divide-slate-100">
             {teamUsers.map((u) => {
               const log = logs.get(u.id);
               const editing = isEditing(u.id);
               const isSelf = u.id === currentUserId;
               return (
-                <tr key={u.id} className="hover:bg-zinc-50/50">
+                <tr key={u.id} className="hover:bg-slate-50/50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-zinc-500" />
-                      <span className="font-medium text-zinc-900">{u.full_name ?? u.email}</span>
+                      <User className="h-4 w-4 text-slate-500" />
+                      <span className="font-medium text-slate-900">{u.full_name ?? u.email}</span>
                       {isSelf && <Badge variant="outline" className="text-xs py-0">You</Badge>}
                     </div>
                   </td>
@@ -132,27 +132,27 @@ export default function AdminAttendanceRoster({ date, teamUsers, logs, currentUs
                       <select
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
-                        className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm"
+                        className="rounded-md border border-slate-200 bg-white px-2 py-1 text-sm"
                       >
                         {Object.entries(isSelf ? selfStatusLabels : overrideStatusLabels).map(([k, v]) => (
                           <option key={k} value={k}>{v}</option>
                         ))}
                       </select>
                     ) : (
-                      <Badge variant="outline" className={log ? statusBadge[log.status] : "bg-zinc-50 text-zinc-500 border-zinc-200"}>
+                      <Badge variant="outline" className={log ? statusBadge[log.status] : "bg-slate-50 text-slate-500 border-slate-200"}>
                         {log ? (isSelf ? selfStatusLabels[log.status] : overrideStatusLabels[log.status]) ?? log.status : "Not marked"}
                       </Badge>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-zinc-600 tabular-nums">
+                  <td className="px-4 py-3 text-xs text-slate-600 tabular-nums">
                     {log?.check_in_time ? formatTimeIST(log.check_in_time) : '—'}
                   </td>
-                  <td className="px-4 py-3 text-xs text-zinc-600 tabular-nums">
+                  <td className="px-4 py-3 text-xs text-slate-600 tabular-nums">
                     {log?.check_out_time ? formatTimeIST(log.check_out_time) : '—'}
                   </td>
                   <td className="px-4 py-3 text-right">
                     {readOnly ? (
-                      <span className="text-xs text-zinc-500">—</span>
+                      <span className="text-xs text-slate-500">—</span>
                     ) : editing ? (
                       <div className="space-y-2 inline-block text-left">
                         {!isSelf && (

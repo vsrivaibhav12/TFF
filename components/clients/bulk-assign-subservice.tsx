@@ -69,7 +69,7 @@ export default function BulkAssignSubService({ selectedClientIds, onDone }: Prop
               ))}
             </SelectContent>
           </Select>
-          {subServices.length === 0 && <p className="text-xs text-zinc-500">Loading sub-services…</p>}
+          {subServices.length === 0 && <p className="text-xs text-slate-500">Loading sub-services…</p>}
         </div>
         <DialogFooter>
           <Button onClick={submit} disabled={!subServiceId || pending}>Assign</Button>

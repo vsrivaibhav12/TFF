@@ -65,7 +65,7 @@ export function ExpandableCell({ children, className, maxLines = 1, ...props }: 
             e.stopPropagation();
             setIsExpanded(true);
           }}
-          className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 text-zinc-500 hover:text-teal-600 bg-zinc-50 rounded"
+          className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 text-slate-500 hover:text-teal-600 bg-slate-50 rounded"
           title="Expand"
         >
           <ChevronDown className="h-3 w-3" />
@@ -79,7 +79,7 @@ export function ExpandableCell({ children, className, maxLines = 1, ...props }: 
             e.stopPropagation();
             setIsExpanded(false);
           }}
-          className="shrink-0 p-0.5 text-zinc-500 hover:text-teal-600 bg-zinc-50 rounded"
+          className="shrink-0 p-0.5 text-slate-500 hover:text-teal-600 bg-slate-50 rounded"
           title="Collapse"
         >
           <ChevronUp className="h-3 w-3" />

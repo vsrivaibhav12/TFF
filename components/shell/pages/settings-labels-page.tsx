@@ -12,7 +12,7 @@ export default async function LabelsPage(_props: unknown, rolePrefix: string) {
   const labels = await listLabels();
   return (
     <div className="space-y-6 max-w-3xl">
-      <Link href={`${rolePrefix}/settings`} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={`${rolePrefix}/settings`} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
         <ChevronLeft className="h-4 w-4" /> Back to settings
       </Link>
       <div>

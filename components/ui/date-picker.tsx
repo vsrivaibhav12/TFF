@@ -29,13 +29,13 @@ export function DatePicker({ value, onChange, placeholder = 'Pick a date', disab
           type="button"
           disabled={disabled}
           className={cn(
-            'flex w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
-            !value && 'text-zinc-500',
+            'flex w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+            !value && 'text-slate-500',
             className
           )}
         >
           <span>{value ? format(date!, 'dd MMM yyyy') : placeholder}</span>
-          <CalendarIcon className="h-4 w-4 text-zinc-500 shrink-0 ml-2" />
+          <CalendarIcon className="h-4 w-4 text-slate-500 shrink-0 ml-2" />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -73,7 +73,7 @@ export function DateRangePicker({ from, to, onFromChange, onToChange, disabled, 
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <DatePicker value={from} onChange={onFromChange} placeholder="From" disabled={disabled} />
-      <span className="text-zinc-500 text-sm">to</span>
+      <span className="text-slate-500 text-sm">to</span>
       <DatePicker value={to} onChange={onToChange} placeholder="To" disabled={disabled} />
     </div>
   );

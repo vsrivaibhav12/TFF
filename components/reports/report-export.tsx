@@ -94,8 +94,8 @@ export function ReportExport({ datasets }: { datasets: ExportDataset[] }) {
           {datasets.map((ds) => (
             <li key={ds.filename} className="rounded-lg p-2">
               <div className="flex items-baseline justify-between">
-                <span className="text-sm font-medium text-zinc-900">{ds.label}</span>
-                <span className="text-xs text-zinc-500 tabular-nums">{ds.hint ?? `${ds.rows?.length ?? 0} rows`}</span>
+                <span className="text-sm font-medium text-slate-900">{ds.label}</span>
+                <span className="text-xs text-slate-500 tabular-nums">{ds.hint ?? `${ds.rows?.length ?? 0} rows`}</span>
               </div>
               <div className="mt-2 flex gap-2">
                 <Button size="sm" variant="outline" className="flex-1" disabled={busy !== null} onClick={() => run(ds, 'csv')}>

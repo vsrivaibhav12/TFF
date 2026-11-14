@@ -74,7 +74,7 @@ export default function LabelsAdmin({ initial }: { initial: TaskLabel[] }) {
                   key={c}
                   type="button"
                   onClick={() => setForm({ ...form, color_hex: c })}
-                  className={`h-7 w-7 rounded-full border-2 ${form.color_hex === c ? 'border-zinc-900' : 'border-transparent'}`}
+                  className={`h-7 w-7 rounded-full border-2 ${form.color_hex === c ? 'border-slate-900' : 'border-transparent'}`}
                   style={{ backgroundColor: c }}
                   aria-label={c}
                 />
@@ -91,13 +91,13 @@ export default function LabelsAdmin({ initial }: { initial: TaskLabel[] }) {
       </div>
 
       <div className="tff-card overflow-hidden">
-        <div className="px-6 py-4 border-b border-zinc-100">
+        <div className="px-6 py-4 border-b border-slate-100">
           <h2 className="text-base font-semibold">Existing labels</h2>
         </div>
         {initial.length === 0 ? (
-          <div className="p-8 text-sm text-zinc-500 text-center">No labels yet. Add your first above — for example "urgent", "high-value", "audit".</div>
+          <div className="p-8 text-sm text-slate-500 text-center">No labels yet. Add your first above — for example "urgent", "high-value", "audit".</div>
         ) : (
-          <ul className="divide-y divide-zinc-100">
+          <ul className="divide-y divide-slate-100">
             {initial.map((l) => (
               <li key={l.code} className="px-6 py-3 flex items-center justify-between gap-3">
                 {editingCode === l.code ? (
@@ -109,7 +109,7 @@ export default function LabelsAdmin({ initial }: { initial: TaskLabel[] }) {
                           key={c}
                           type="button"
                           onClick={() => setEditColor(c)}
-                          className={`h-6 w-6 rounded-full border-2 ${editColor === c ? 'border-zinc-900' : 'border-transparent'}`}
+                          className={`h-6 w-6 rounded-full border-2 ${editColor === c ? 'border-slate-900' : 'border-transparent'}`}
                           style={{ backgroundColor: c }}
                           aria-label={c}
                         />
@@ -123,7 +123,7 @@ export default function LabelsAdmin({ initial }: { initial: TaskLabel[] }) {
                     <div className="flex items-center gap-3">
                       <span className="h-3 w-3 rounded-full" style={{ backgroundColor: l.color_hex ?? '#64748b' }} />
                       <span className="font-medium">{l.display_name}</span>
-                      <code className="text-xs text-zinc-500">{l.code}</code>
+                      <code className="text-xs text-slate-500">{l.code}</code>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button
@@ -138,7 +138,7 @@ export default function LabelsAdmin({ initial }: { initial: TaskLabel[] }) {
                       <button
                         onClick={() => deactivate(l.code)}
                         disabled={pending}
-                        className="text-zinc-500 hover:text-red-600 p-1"
+                        className="text-slate-500 hover:text-red-600 p-1"
                         aria-label={`Archive ${l.display_name}`}
                       >
                         <Trash2 className="h-4 w-4" />

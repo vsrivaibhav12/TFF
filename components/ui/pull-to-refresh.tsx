@@ -68,7 +68,7 @@ export function PullToRefresh({ onRefresh, children, className }: PullToRefreshP
           <div
             className={cn(
               'h-8 w-8 rounded-full border-2 transition-colors duration-200',
-              translateY >= 60 ? 'border-teal-600 bg-teal-50' : 'border-zinc-300'
+              translateY >= 60 ? 'border-teal-600 bg-teal-50' : 'border-slate-300'
             )}
           />
         )}

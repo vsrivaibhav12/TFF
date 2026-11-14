@@ -37,7 +37,7 @@ export default function CredentialsControl({ userId, currentEmail }: { userId: s
     <div className="space-y-4">
       <div className="space-y-2">
         <Label className="flex items-center gap-1.5">
-          <Mail className="h-3.5 w-3.5 text-zinc-500" /> Login email
+          <Mail className="h-3.5 w-3.5 text-slate-500" /> Login email
         </Label>
         <Input
           type="email"
@@ -45,12 +45,12 @@ export default function CredentialsControl({ userId, currentEmail }: { userId: s
           onChange={(e) => setEmail(e.target.value)}
           placeholder="user@company.com"
         />
-        <p className="text-xs text-zinc-500">Changing this updates both the auth email and the profile.</p>
+        <p className="text-xs text-slate-500">Changing this updates both the auth email and the profile.</p>
       </div>
 
       <div className="space-y-2">
         <Label className="flex items-center gap-1.5">
-          <Lock className="h-3.5 w-3.5 text-zinc-500" /> New password
+          <Lock className="h-3.5 w-3.5 text-slate-500" /> New password
         </Label>
         <div className="flex gap-2">
           <Input

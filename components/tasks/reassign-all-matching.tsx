@@ -90,7 +90,7 @@ export function ReassignAllMatching({
               </SelectContent>
             </Select>
             {target && (
-              <p className="text-sm text-zinc-600" role="status">
+              <p className="text-sm text-slate-600" role="status">
                 {total} task{total === 1 ? '' : 's'} will be assigned to <strong>{targetName}</strong>.
               </p>
             )}

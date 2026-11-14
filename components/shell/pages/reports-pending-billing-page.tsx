@@ -98,7 +98,7 @@ export default async function PendingBillingReportPage(_props: unknown, rolePref
         <div className="tff-card overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
+              <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
                 <TableHead>Task</TableHead>
                 <TableHead>Client</TableHead>
                 <TableHead>Service</TableHead>
@@ -111,17 +111,17 @@ export default async function PendingBillingReportPage(_props: unknown, rolePref
               {typedTasks.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell>
-                    <div className="font-medium text-zinc-900">{t.title}</div>
-                    <div className="text-xs text-zinc-500 font-mono">{t.task_number ?? '—'}</div>
+                    <div className="font-medium text-slate-900">{t.title}</div>
+                    <div className="text-xs text-slate-500 font-mono">{t.task_number ?? '—'}</div>
                   </TableCell>
-                  <TableCell className="text-sm text-zinc-700">{t.clients?.business_name ?? '—'}</TableCell>
-                  <TableCell className="text-sm text-zinc-500">
+                  <TableCell className="text-sm text-slate-700">{t.clients?.business_name ?? '—'}</TableCell>
+                  <TableCell className="text-sm text-slate-500">
                     {t.sub_services?.services?.name ?? '—'} · {t.sub_services?.name ?? '—'}
                   </TableCell>
-                  <TableCell className="text-right font-medium text-zinc-900">
+                  <TableCell className="text-right font-medium text-slate-900">
                     {t.bill_amount ? `₹${t.bill_amount.toLocaleString('en-IN')}` : '—'}
                   </TableCell>
-                  <TableCell className="text-sm text-zinc-500 tabular-nums">
+                  <TableCell className="text-sm text-slate-500 tabular-nums">
                     {formatDateIST(t.completed_date) || '—'}
                   </TableCell>
                   <TableCell>

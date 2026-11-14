@@ -53,13 +53,13 @@ export default function TaskImportForm() {
 
   return (
     <div className="space-y-8 max-w-5xl">
-      <Link href={`${prefix}/tasks`} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={`${prefix}/tasks`} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
         <ChevronLeft className="h-4 w-4" /> Tasks
       </Link>
 
       <div>
         <h1 className="tff-page-title">Bulk import tasks</h1>
-        <p className="text-sm text-zinc-500 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Upload a CSV or Excel file to create tasks in bulk. We will automatically link clients to sub-services if missing, and attach the active task template.
         </p>
       </div>
@@ -70,14 +70,14 @@ export default function TaskImportForm() {
             <FileSpreadsheet className="h-5 w-5 text-teal-600 mt-0.5" />
             <div className="text-sm space-y-2">
               <p className="font-medium">Expected columns (any order, case-insensitive):</p>
-              <code className="block rounded bg-zinc-50 border border-zinc-200 p-3 text-xs leading-relaxed">
-                Client Name <span className="text-zinc-500">(required)</span>, Client PAN, Sub Service Code/Name <span className="text-zinc-500">(required)</span>,
+              <code className="block rounded bg-slate-50 border border-slate-200 p-3 text-xs leading-relaxed">
+                Client Name <span className="text-slate-500">(required)</span>, Client PAN, Sub Service Code/Name <span className="text-slate-500">(required)</span>,
                 Assignee Name, Priority, Year, Period
               </code>
-              <p className="text-zinc-500 text-xs">
+              <p className="text-slate-500 text-xs">
                 <strong>Priority</strong> must be one of: low, medium, high, urgent.
               </p>
-              <p className="text-zinc-500 text-xs">
+              <p className="text-slate-500 text-xs">
                 <strong>Period</strong> must fit the service. Monthly: Year plus a month number (for example 2026 and 10), or the key 2026-10.
                 Quarterly: Year is the financial year start (2026 for FY 2026-27) plus Q1 to Q4 (Q1 is April to June), or a key such as FY2026-27-Q2.
                 Yearly: Year is the financial year start, or a key such as FY2025-26. Services with no period must leave both blank.
@@ -108,7 +108,7 @@ export default function TaskImportForm() {
                     <AlertTriangle className="h-3 w-3" /> {preview.summary.error} with errors
                   </Badge>
                 )}
-                <span className="text-sm text-zinc-500">{preview.summary.total} total</span>
+                <span className="text-sm text-slate-500">{preview.summary.total} total</span>
               </div>
               <div className="flex gap-2">
                 <Button variant="ghost" size="sm" onClick={() => setPreview(null)} disabled={pending}>
@@ -124,8 +124,8 @@ export default function TaskImportForm() {
           <div className="tff-card overflow-hidden">
             <div className="overflow-x-auto max-h-[560px] overflow-y-auto">
               <Table className="w-full text-sm">
-                <TableHeader className="bg-zinc-50 sticky top-0">
-                  <TableRow className="text-left text-zinc-500 hover:bg-zinc-50">
+                <TableHeader className="bg-slate-50 sticky top-0">
+                  <TableRow className="text-left text-slate-500 hover:bg-slate-50">
                     <TableHead className="px-3 py-2 font-medium">Row</TableHead>
                     <TableHead className="px-3 py-2 font-medium">Client Name</TableHead>
                     <TableHead className="px-3 py-2 font-medium">PAN</TableHead>
@@ -142,14 +142,14 @@ export default function TaskImportForm() {
                     const hasErr = r.errors.length > 0;
                     return (
                       <TableRow key={r.row_index} className={hasErr ? 'bg-amber-50/40' : ''}>
-                        <TableCell className="px-3 py-2 text-zinc-500 align-top">{r.row_index}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-500 align-top">{r.row_index}</TableCell>
                         <TableCell className="px-3 py-2 font-medium align-top">{r.client_name || '—'}</TableCell>
-                        <TableCell className="px-3 py-2 text-zinc-600 align-top font-mono text-xs">{r.client_pan || '—'}</TableCell>
-                        <TableCell className="px-3 py-2 text-zinc-600 align-top">{r.sub_service || '—'}</TableCell>
-                        <TableCell className="px-3 py-2 text-zinc-600 align-top">{r.assignee || '—'}</TableCell>
-                        <TableCell className="px-3 py-2 text-zinc-600 align-top">{r.priority || '—'}</TableCell>
-                        <TableCell className="px-3 py-2 text-zinc-600 align-top">{r.period_year || '—'}</TableCell>
-                        <TableCell className="px-3 py-2 text-zinc-600 align-top">{r.period || '—'}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-600 align-top font-mono text-xs">{r.client_pan || '—'}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-600 align-top">{r.sub_service || '—'}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-600 align-top">{r.assignee || '—'}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-600 align-top">{r.priority || '—'}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-600 align-top">{r.period_year || '—'}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-600 align-top">{r.period || '—'}</TableCell>
                         <TableCell className="px-3 py-2 align-top">
                           {hasErr ? (
                             <span className="text-xs text-amber-700">{r.errors.join('; ')}</span>

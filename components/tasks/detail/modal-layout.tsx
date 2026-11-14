@@ -168,8 +168,8 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
           {!editing && task.description && (
             <section>
               <h3 className="tff-eyebrow mb-1.5">Description</h3>
-              <p className={cn('text-xs text-zinc-600 whitespace-pre-wrap leading-relaxed', !descExpanded && 'line-clamp-3')}>
-                {task.description || <span className="text-zinc-500 italic">No description provided.</span>}
+              <p className={cn('text-xs text-slate-600 whitespace-pre-wrap leading-relaxed', !descExpanded && 'line-clamp-3')}>
+                {task.description || <span className="text-slate-500 italic">No description provided.</span>}
               </p>
               {task.description && task.description.length > 120 && (
                 <button type="button" onClick={() => setDescExpanded(!descExpanded)} className="mt-2 text-xs text-teal-600 hover:text-teal-700 font-medium">
@@ -193,7 +193,7 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
               )}
             </div>
             {showWorkLog && (
-              <div className="rounded-lg border border-zinc-100 bg-white p-3 space-y-2">
+              <div className="rounded-lg border border-slate-100 bg-white p-3 space-y-2">
                 <div className="flex items-center gap-2">
                   <Input type="number" min={1} max={1440} value={workMinutes} onChange={(e) => setWorkMinutes(e.target.value)} placeholder="Minutes" className="w-24 h-8 text-xs" />
                   <Input type="time" value={workStartTime} onChange={(e) => setWorkStartTime(e.target.value)} className="w-24 h-8 text-xs" />
@@ -214,28 +214,28 @@ export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {
             <div className="mb-2 flex items-center justify-between">
               <h3 className="tff-eyebrow">Notes</h3>
               {notes.length > 2 && (
-                <span className="text-xs text-zinc-500">{notes.length} total</span>
+                <span className="text-xs text-slate-500">{notes.length} total</span>
               )}
             </div>
-            <div className="border border-zinc-200 rounded-xl p-3 bg-zinc-50 space-y-3 mb-3">
+            <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-3 mb-3">
               <Textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Add an internal note…" rows={1} className="border-0 focus-visible:ring-0 p-0 text-sm resize-none bg-transparent min-h-[28px]" />
-              <div className="flex justify-end pt-2 border-t border-zinc-200/50">
+              <div className="flex justify-end pt-2 border-t border-slate-200/50">
                 <Button type="button" size="sm" onClick={addNote} disabled={addingNote || !newNote.trim()} className="h-7 text-xs">
                   {addingNote ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null} Save
                 </Button>
               </div>
             </div>
             {notes.length === 0 ? (
-              <p className="text-xs text-zinc-500 italic">No notes yet.</p>
+              <p className="text-xs text-slate-500 italic">No notes yet.</p>
             ) : (
               <div className="space-y-2">
                 {notes.slice(-2).map((n) => (
-                  <div key={n.id} className="bg-zinc-50 p-3 rounded-lg border border-zinc-100">
-                    <div className="text-xs font-medium text-zinc-500 mb-1 flex justify-between">
+                  <div key={n.id} className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <div className="text-xs font-medium text-slate-500 mb-1 flex justify-between">
                       <span>{n.users_profile?.full_name}</span>
                       <span>{timeAgo(n.created_at)}</span>
                     </div>
-                    <p className="text-xs text-zinc-700 leading-relaxed whitespace-pre-wrap line-clamp-3">{n.note_text}</p>
+                    <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap line-clamp-3">{n.note_text}</p>
                   </div>
                 ))}
               </div>

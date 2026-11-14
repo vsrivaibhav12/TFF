@@ -19,25 +19,25 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         caption_label: 'text-sm font-medium',
         nav: 'space-x-1 flex items-center',
         nav_button: cn(
-          'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 border border-zinc-200 rounded-md flex items-center justify-center'
+          'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 border border-slate-200 rounded-md flex items-center justify-center'
         ),
         nav_button_previous: 'absolute left-1',
         nav_button_next: 'absolute right-1',
         table: 'w-full border-collapse space-y-1',
         head_row: 'flex',
-        head_cell: 'text-zinc-500 rounded-md w-9 font-normal text-[0.8rem]',
+        head_cell: 'text-slate-500 rounded-md w-9 font-normal text-[0.8rem]',
         row: 'flex w-full mt-2',
-        cell: 'h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-zinc-100/50 [&:has([aria-selected])]:bg-zinc-100 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
-        day: cn('h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md hover:bg-zinc-100 transition-colors'),
+        cell: 'h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-slate-100/50 [&:has([aria-selected])]:bg-slate-100 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
+        day: cn('h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md hover:bg-slate-100 transition-colors'),
         day_range_end: 'day-range-end',
         day_selected:
           'bg-teal-600 text-white hover:bg-teal-600 hover:text-white focus:bg-teal-600 focus:text-white',
-        day_today: 'bg-zinc-100 text-zinc-900',
+        day_today: 'bg-slate-100 text-slate-900',
         day_outside:
-          'day-outside text-zinc-500 opacity-50 aria-selected:bg-zinc-100/50 aria-selected:text-zinc-500 aria-selected:opacity-30',
-        day_disabled: 'text-zinc-500 opacity-50',
+          'day-outside text-slate-500 opacity-50 aria-selected:bg-slate-100/50 aria-selected:text-slate-500 aria-selected:opacity-30',
+        day_disabled: 'text-slate-500 opacity-50',
         day_range_middle:
-          'aria-selected:bg-zinc-100 aria-selected:text-zinc-900',
+          'aria-selected:bg-slate-100 aria-selected:text-slate-900',
         day_hidden: 'invisible',
         ...classNames,
       }}

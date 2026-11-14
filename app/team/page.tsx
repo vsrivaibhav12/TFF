@@ -22,6 +22,7 @@ import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-conta
 import EmptyState from '@/components/sophistication/empty-state';
 import { ClientsEmptyIllustration } from '@/components/ui/empty-illustrations';
 import { PriorityList } from '@/components/dashboard/priority-list';
+import { StatCard } from '@/components/ui/stat-card';
 import { TeamAttendancePrompt } from '@/components/dashboard/smart-prompts';
 import { TeamQuickActions } from '@/components/dashboard/team-quick-actions';
 import { WeekStrip, WaitingList, WorkloadBars } from '@/components/dashboard/home-widgets';
@@ -31,16 +32,7 @@ export default async function TeamWorkspace() {
   const me = await requireRole(['team', 'admin']);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">My workspace</h1>
-          <p className="text-sm text-zinc-500 mt-1">Your tasks, clients and approvals in one place.</p>
-        </div>
-      </div>
-
-      <TeamQuickActions />
-
+    <div className="space-y-3">
       <Suspense fallback={<WorkspaceSkeleton />}>
         <WorkspaceBody me={me} />
       </Suspense>
@@ -89,42 +81,40 @@ async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole
     }
   }
 
+  const hourIst = new Date(Date.now() + 5.5 * 3600_000).getUTCHours();
+  const greeting = hourIst < 12 ? 'Good morning' : hourIst < 17 ? 'Good afternoon' : 'Good evening';
+  const dateLabel = new Date(Date.now() + 5.5 * 3600_000).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+  const firstName = me.full_name?.split(' ')[0] ?? '';
   const totalAssigned = (counts.pending ?? 0) + (counts.in_progress ?? 0) + (counts.completed ?? 0);
 
   return (
-    <StaggerContainer className="space-y-6">
+    <StaggerContainer className="space-y-3">
       <TeamAttendancePrompt hasAttendance={!!todayAttendance} />
 
       <StaggerItem>
-        <p className="text-sm text-zinc-500">
-          <span className="tabular-nums">{totalAssigned}</span> tasks assigned · {overdueCount > 0 ? <><span className="tabular-nums">{overdueCount}</span> overdue</> : 'All on track'}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E8EAEE] bg-gradient-to-br from-[#ECFDF9] to-[#F1F5FF] px-5 py-3">
+          <div>
+            <h2 className="text-base font-semibold tracking-tight text-slate-900">{greeting}{firstName ? `, ${firstName}` : ''}. Here is your day.</h2>
+            <p className="text-xs text-slate-600">{dateLabel}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {overdueCount > 0 ? (
+              <Link href="/team/tasks" className="tff-pill tff-pill-bad tff-pill-dot">{overdueCount} overdue</Link>
+            ) : (
+              <span className="tff-pill tff-pill-good tff-pill-dot">All on track</span>
+            )}
+            <Link href="/team/tasks" className="tff-pill tff-pill-accent tff-pill-dot">{counts.pending ?? 0} pending</Link>
+          </div>
+          <TeamQuickActions />
+        </div>
       </StaggerItem>
 
       <StaggerItem>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'Assigned', value: totalAssigned, icon: Briefcase, tone: 'default' as const },
-            { label: 'Pending', value: counts.pending ?? 0, icon: Clock, tone: 'default' as const },
-            { label: 'In progress', value: counts.in_progress ?? 0, icon: CalendarDays, tone: 'default' as const },
-            { label: 'Overdue', value: overdueCount, icon: AlertTriangle, tone: 'warning' as const },
-          ].map((m) => (
-            <Link
-              key={m.label}
-              href="/team/tasks"
-              className="tff-card p-3 transition-colors duration-200"
-            >
-              <div className="flex items-center gap-3">
-                <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${m.tone === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-zinc-100 text-zinc-500'}`}>
-                  <m.icon className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className={`text-2xl font-bold tabular-nums tracking-tight ${m.tone === 'warning' ? 'text-amber-600' : 'text-zinc-900'}`}>{m.value}</div>
-                  <div className="text-xs font-medium text-zinc-500">{m.label}</div>
-                </div>
-              </div>
-            </Link>
-          ))}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatCard label="Assigned" value={totalAssigned} icon={<Briefcase className="h-5 w-5" />} href="/team/tasks" />
+          <StatCard label="Pending" value={counts.pending ?? 0} icon={<Clock className="h-5 w-5" />} href="/team/tasks" />
+          <StatCard label="In progress" value={counts.in_progress ?? 0} icon={<CalendarDays className="h-5 w-5" />} href="/team/tasks" />
+          <StatCard label="Overdue" value={overdueCount} icon={<AlertTriangle className="h-5 w-5" />} href="/team/tasks" tone="red" />
         </div>
       </StaggerItem>
 
@@ -152,15 +142,15 @@ async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole
         </StaggerItem>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 items-start">
         <StaggerItem className="xl:col-span-2">
           <PriorityList tasks={dueSoon} href="/team/tasks" emptyMessage="No pending tasks" />
         </StaggerItem>
         <StaggerItem className="space-y-4">
           <WeekStrip days={memberHome.strip} href={`/team/tasks?assigned=${me.id}`} />
           <div className="tff-card p-4 flex items-center justify-between text-sm">
-            <span className="text-zinc-500">Hours logged today</span>
-            <span className="font-medium text-zinc-900 tabular-nums">{Math.floor(memberHome.minutesToday / 60)}h {memberHome.minutesToday % 60}m</span>
+            <span className="text-slate-500">Hours logged today</span>
+            <span className="font-medium text-slate-900 tabular-nums">{Math.floor(memberHome.minutesToday / 60)}h {memberHome.minutesToday % 60}m</span>
           </div>
           <WaitingList tasks={memberHome.waiting} todayIso={memberHome.todayIso} href={`/team/tasks?status=blocked&assigned=${me.id}`} />
         </StaggerItem>
@@ -170,8 +160,8 @@ async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole
         <StaggerItem>
           <div className="space-y-3" data-testid="manager-home">
             <div>
-              <h2 className="text-base font-semibold text-zinc-900 tracking-tight">Your team</h2>
-              <p className="text-sm text-zinc-500 mt-1">
+              <h2 className="text-base font-semibold text-slate-900 tracking-tight">Your team</h2>
+              <p className="text-sm text-slate-500 mt-1">
                 <span className="tabular-nums">{managerHome.overdue}</span> overdue · <span className="tabular-nums">{managerHome.dueThisWeek}</span> due this week
                 {canVerify ? <> · <span className="tabular-nums">{managerHome.toVerify}</span> awaiting verification</> : null}
               </p>
@@ -185,8 +175,8 @@ async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole
         <div className="tff-card tff-card-pad">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-base font-semibold text-zinc-900 tracking-tight">My clients</h2>
-              <p className="text-sm text-zinc-500 mt-1">Quick access</p>
+              <h2 className="text-base font-semibold text-slate-900 tracking-tight">My clients</h2>
+              <p className="text-sm text-slate-500 mt-1">Quick access</p>
             </div>
             <Link
               href="/team/clients"
@@ -201,14 +191,14 @@ async function WorkspaceBody({ me }: { me: Awaited<ReturnType<typeof requireRole
                 key={c.id}
                 item={{ type: 'client', id: c.id }}
                 href={`/team/clients/${c.id}`}
-                className="flex items-center gap-3 rounded-xl border border-zinc-100 px-4 py-3 hover:border-teal-200 hover:bg-teal-50/20 transition-colors"
+                className="flex items-center gap-3 rounded-xl border border-slate-100 px-4 py-3 hover:border-teal-200 hover:bg-teal-50/20 transition-colors"
               >
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 flex items-center justify-center shrink-0">
                   <Users className="h-4 w-4 text-teal-600" />
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-medium truncate">{c.business_name}</div>
-                  <div className="text-xs text-zinc-500">{c.pan ?? '—'}</div>
+                  <div className="text-xs text-slate-500">{c.pan ?? '—'}</div>
                 </div>
               </DockLink>
             ))}
@@ -233,11 +223,11 @@ function WorkspaceSkeleton() {
     <div className="space-y-6 animate-pulse">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="tff-card p-3 h-24 bg-zinc-50" />
+          <div key={i} className="tff-card p-3 h-24 bg-slate-50" />
         ))}
       </div>
-      <div className="tff-card h-64 bg-zinc-50" />
-      <div className="tff-card h-48 bg-zinc-50" />
+      <div className="tff-card h-64 bg-slate-50" />
+      <div className="tff-card h-48 bg-slate-50" />
     </div>
   );
 }

@@ -232,7 +232,7 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
                 disabled={linkingSubService}
               />
               {clientSubServices.length === 0 && !linkingSubService && (
-                <p className="text-xs text-zinc-500">This client has no linked sub-services yet. Pick one above and it will be linked when you create the task.</p>
+                <p className="text-xs text-slate-500">This client has no linked sub-services yet. Pick one above and it will be linked when you create the task.</p>
               )}
             </div>
           )}
@@ -251,7 +251,7 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
                   </SelectContent>
                 </Select>
               ) : (
-                <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
                   No templates for this sub-service.
                 </div>
               )}
@@ -259,9 +259,9 @@ export default function NewTaskDialog({ clients = [], team, allSubServices = [],
           )}
 
           {autoTitle && (
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
-              <p className="text-xs text-zinc-500">Task name</p>
-              <p className="text-sm font-medium text-zinc-900">{autoTitle}</p>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs text-slate-500">Task name</p>
+              <p className="text-sm font-medium text-slate-900">{autoTitle}</p>
             </div>
           )}
           {errors.title && <p className="text-xs text-red-600">{errors.title}</p>}

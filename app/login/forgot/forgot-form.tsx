@@ -28,14 +28,14 @@ export default function ForgotForm() {
   }
 
   return (
-    <Card className="border-zinc-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+    <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardHeader>
         <CardTitle>Reset password</CardTitle>
       </CardHeader>
       <CardContent>
         {sent ? (
           <div className="text-center space-y-4 py-4">
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm text-slate-600">
               If an account exists for <strong>{email}</strong>, you will receive a password reset link shortly.
             </p>
             <Link href="/login" className="text-sm text-teal-700 hover:underline inline-flex items-center gap-1">

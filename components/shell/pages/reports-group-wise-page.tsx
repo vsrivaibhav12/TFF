@@ -116,7 +116,7 @@ export default async function GroupWiseReportPage({ searchParams }: { searchPara
         <div className="tff-card overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
+              <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
                 <TableHead>Group</TableHead>
                 <TableHead className="text-right">Clients</TableHead>
                 <TableHead className="text-right">Services</TableHead>
@@ -129,7 +129,7 @@ export default async function GroupWiseReportPage({ searchParams }: { searchPara
             <TableBody>
               {Object.values(byGroup).map((g) => (
                 <TableRow key={g.name}>
-                  <TableCell className="font-medium text-zinc-900">{g.name}</TableCell>
+                  <TableCell className="font-medium text-slate-900">{g.name}</TableCell>
                   <TableCell className="text-right tabular-nums">{g.clientCount}</TableCell>
                   <TableCell className="text-right tabular-nums">{g.serviceCount}</TableCell>
                   <TableCell className="text-right tabular-nums">{g.tasksCompleted}</TableCell>

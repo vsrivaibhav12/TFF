@@ -69,7 +69,7 @@ export function CategoryManager({ categories, onChange }: { categories: Category
       <ConfirmDialog />
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) startNew(); }}>
         <DialogTrigger asChild>
-          <Button size="sm" variant="outline" className="text-xs border-zinc-200 text-zinc-600 hover:text-zinc-900">
+          <Button size="sm" variant="outline" className="text-xs border-slate-200 text-slate-600 hover:text-slate-900">
             Manage categories
           </Button>
         </DialogTrigger>
@@ -91,21 +91,21 @@ export function CategoryManager({ categories, onChange }: { categories: Category
             {editing && <Button size="sm" variant="ghost" onClick={startNew}>Cancel edit</Button>}
           </div>
 
-          <div className="border-t border-zinc-100 pt-3">
-            <div className="text-xs text-zinc-500 font-semibold mb-2">Existing categories</div>
+          <div className="border-t border-slate-100 pt-3">
+            <div className="text-xs text-slate-500 font-semibold mb-2">Existing categories</div>
             {categories.length === 0 ? (
-              <div className="text-xs text-zinc-500 py-4 text-center">No categories yet.</div>
+              <div className="text-xs text-slate-500 py-4 text-center">No categories yet.</div>
             ) : (
               <ul className="space-y-1">
                 {categories.map((cat) => (
-                  <li key={cat.id} className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2">
+                  <li key={cat.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
                     <div>
-                      <div className="text-sm font-medium text-zinc-900">{cat.name}</div>
-                      {cat.description && <div className="text-xs text-zinc-500">{cat.description}</div>}
+                      <div className="text-sm font-medium text-slate-900">{cat.name}</div>
+                      {cat.description && <div className="text-xs text-slate-500">{cat.description}</div>}
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEdit(cat)}><Pencil className="h-3.5 w-3.5 text-zinc-500" /></Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => remove(cat.id)}><Trash2 className="h-3.5 w-3.5 text-zinc-500" /></Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEdit(cat)}><Pencil className="h-3.5 w-3.5 text-slate-500" /></Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => remove(cat.id)}><Trash2 className="h-3.5 w-3.5 text-slate-500" /></Button>
                     </div>
                   </li>
                 ))}

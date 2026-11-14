@@ -151,7 +151,7 @@ export default async function ClientServicesReportPage({ searchParams }: { searc
         <div className="tff-card overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
+              <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
                 <TableHead>Client</TableHead>
                 <TableHead>Group</TableHead>
                 <TableHead>Service</TableHead>
@@ -165,10 +165,10 @@ export default async function ClientServicesReportPage({ searchParams }: { searc
             <TableBody>
               {filteredRows.map((r) => (
                 <TableRow key={`${r.client_name}-${r.service_name}-${r.sub_service_name}`}>
-                  <TableCell className="font-medium text-zinc-900">{r.client_name}</TableCell>
-                  <TableCell className="text-sm text-zinc-500">{r.group_name}</TableCell>
-                  <TableCell className="text-sm text-zinc-700">{r.service_name}</TableCell>
-                  <TableCell className="text-sm text-zinc-700">{r.sub_service_name}</TableCell>
+                  <TableCell className="font-medium text-slate-900">{r.client_name}</TableCell>
+                  <TableCell className="text-sm text-slate-500">{r.group_name}</TableCell>
+                  <TableCell className="text-sm text-slate-700">{r.service_name}</TableCell>
+                  <TableCell className="text-sm text-slate-700">{r.sub_service_name}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {r.fee_amount ? `₹${r.fee_amount.toLocaleString('en-IN')}` : '—'}
                   </TableCell>

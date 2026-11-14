@@ -50,16 +50,16 @@ export function TaskHoverCard({ taskId, children }: { taskId: string; children: 
           </div>
         )}
         {!isLoading && !data && (
-          <div className="text-sm text-zinc-500">Unable to load preview.</div>
+          <div className="text-sm text-slate-500">Unable to load preview.</div>
         )}
         {data && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-teal-600" />
-              <span className="text-sm font-medium text-zinc-900 truncate">{data.sub_service_name ?? data.title}</span>
+              <span className="text-sm font-medium text-slate-900 truncate">{data.sub_service_name ?? data.title}</span>
             </div>
             {data.client_name && (
-              <p className="text-xs text-zinc-500">{data.client_name}</p>
+              <p className="text-xs text-slate-500">{data.client_name}</p>
             )}
             <div className="flex items-center gap-2">
               <Badge variant={data.status === 'completed' ? 'success' : data.status === 'in_progress' ? 'teal' : 'warning'} className="text-xs">
@@ -67,37 +67,37 @@ export function TaskHoverCard({ taskId, children }: { taskId: string; children: 
               </Badge>
               <Badge variant="outline" className="text-xs">{data.priority}</Badge>
             </div>
-            <div className="space-y-1.5 text-xs text-zinc-600">
+            <div className="space-y-1.5 text-xs text-slate-600">
               {data.client_name && (
                 <div className="flex items-center gap-1.5">
-                  <User className="h-3 w-3 text-zinc-500" />
+                  <User className="h-3 w-3 text-slate-500" />
                   <span>{data.client_name}</span>
                 </div>
               )}
               {data.assignee_name && (
                 <div className="flex items-center gap-1.5">
-                  <User className="h-3 w-3 text-zinc-500" />
+                  <User className="h-3 w-3 text-slate-500" />
                   <span>Assigned to {data.assignee_name}</span>
                 </div>
               )}
               {data.due_date && (
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="h-3 w-3 text-zinc-500" />
+                  <Calendar className="h-3 w-3 text-slate-500" />
                   <span>Due {formatDateIST(data.due_date)}</span>
                 </div>
               )}
               {(data.period_key || data.period_year || data.period_month || data.period_quarter) && (
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="h-3 w-3 text-zinc-500" />
+                  <Calendar className="h-3 w-3 text-slate-500" />
                   <span>
                     {formatPeriodColumns(data) || '—'}
                   </span>
                 </div>
               )}
               {data.latest_note && (
-                <div className="flex items-start gap-1.5 pt-1 border-t border-zinc-100">
-                  <FileText className="h-3 w-3 text-zinc-500 mt-0.5" />
-                  <span className="line-clamp-2 text-zinc-500">{data.latest_note}</span>
+                <div className="flex items-start gap-1.5 pt-1 border-t border-slate-100">
+                  <FileText className="h-3 w-3 text-slate-500 mt-0.5" />
+                  <span className="line-clamp-2 text-slate-500">{data.latest_note}</span>
                 </div>
               )}
             </div>

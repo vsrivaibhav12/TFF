@@ -73,14 +73,14 @@ export default function ClientTeamManager({
       </div>
 
       {activeAssignments.length === 0 ? (
-        <div className="tff-card tff-card-pad text-sm text-zinc-500 bg-zinc-50">No active assignments.</div>
+        <div className="tff-card tff-card-pad text-sm text-slate-500 bg-slate-50">No active assignments.</div>
       ) : (
         <div className="tff-card overflow-hidden divide-y">
           {activeAssignments.map((a) => (
             <div key={a.id} className="flex items-center justify-between p-4">
               <div>
                 <div className="font-medium">{a.users_profile?.full_name}</div>
-                <div className="text-xs text-zinc-500">{a.users_profile?.email} · since {a.assigned_from}</div>
+                <div className="text-xs text-slate-500">{a.users_profile?.email} · since {a.assigned_from}</div>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="teal">{a.role}</Badge>

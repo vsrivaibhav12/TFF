@@ -118,10 +118,10 @@ export default async function ServiceWiseReportPage({ searchParams }: { searchPa
         <div className="space-y-4">
           {Object.values(byService).map((svc) => (
             <div key={svc.serviceName} className="tff-card overflow-hidden">
-              <div className="px-5 py-3 bg-zinc-50 border-b border-zinc-200 font-semibold text-zinc-900">{svc.serviceName}</div>
+              <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 font-semibold text-slate-900">{svc.serviceName}</div>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
+                  <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
                     <TableHead>Sub-service</TableHead>
                     <TableHead className="text-right">Clients</TableHead>
                     <TableHead className="text-right">Tasks done</TableHead>
@@ -133,7 +133,7 @@ export default async function ServiceWiseReportPage({ searchParams }: { searchPa
                 <TableBody>
                   {Object.values(svc.subServices).map((ss) => (
                     <TableRow key={ss.code}>
-                      <TableCell className="font-medium text-zinc-900">{ss.name} <span className="text-xs text-zinc-500 font-mono">({ss.code})</span></TableCell>
+                      <TableCell className="font-medium text-slate-900">{ss.name} <span className="text-xs text-slate-500 font-mono">({ss.code})</span></TableCell>
                       <TableCell className="text-right tabular-nums">{ss.clientCount}</TableCell>
                       <TableCell className="text-right tabular-nums">{ss.completedTasks}</TableCell>
                       <TableCell className="text-right tabular-nums">{ss.totalFee > 0 ? `₹${ss.totalFee.toLocaleString('en-IN')}` : '—'}</TableCell>

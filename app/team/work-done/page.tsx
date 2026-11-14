@@ -72,7 +72,7 @@ export default async function WorkDonePage({ searchParams }: { searchParams?: { 
               userRole="team"
             />
           ) : (
-            <div className="tff-card tff-card-pad text-sm text-zinc-500 text-center py-12">
+            <div className="tff-card tff-card-pad text-sm text-slate-500 text-center py-12">
               Choose a date range, client or task and apply filters to see your entries.
             </div>
           )}

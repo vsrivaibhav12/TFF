@@ -32,7 +32,7 @@ export default async function ImportBatchDetail({ params }: { params: { id: stri
     <div className="space-y-8 max-w-5xl">
       <Link
         href="/admin/clients/import"
-        className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900"
+        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900"
       >
         <ChevronLeft className="h-4 w-4" /> Imports
       </Link>
@@ -40,7 +40,7 @@ export default async function ImportBatchDetail({ params }: { params: { id: stri
         <h1 className="tff-page-title">
           {(batch as any).source_filename ?? 'Import batch'}
         </h1>
-        <div className="flex flex-wrap gap-2 items-center mt-2 text-sm text-zinc-500">
+        <div className="flex flex-wrap gap-2 items-center mt-2 text-sm text-slate-500">
           <span>{formatDateIST((batch as any).uploaded_at)}</span>
           <span>·</span>
           <span>by {(batch as any).users_profile?.full_name ?? '—'}</span>
@@ -58,7 +58,7 @@ export default async function ImportBatchDetail({ params }: { params: { id: stri
           { label: 'Failed', value: (batch as any).error_rows },
         ].map((s) => (
           <div key={s.label} className="tff-card tff-card-pad">
-            <div className="text-xs text-zinc-500">{s.label}</div>
+            <div className="text-xs text-slate-500">{s.label}</div>
             <div className="text-2xl font-bold mt-1">{s.value}</div>
           </div>
         ))}
@@ -70,7 +70,7 @@ export default async function ImportBatchDetail({ params }: { params: { id: stri
           <div className="tff-card overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-zinc-50/50">
+                <TableRow className="hover:bg-slate-50/50">
                   <TableHead>Row</TableHead>
                   <TableHead>Business</TableHead>
                   <TableHead>Reason</TableHead>
@@ -79,7 +79,7 @@ export default async function ImportBatchDetail({ params }: { params: { id: stri
               <TableBody>
                 {errors.map((e: any) => (
                   <TableRow key={e.row_index} data-row>
-                    <TableCell className="text-zinc-500">{e.row_index}</TableCell>
+                    <TableCell className="text-slate-500">{e.row_index}</TableCell>
                     <TableCell>{e.business_name}</TableCell>
                     <TableCell className="text-amber-700 text-xs">{e.error}</TableCell>
                   </TableRow>

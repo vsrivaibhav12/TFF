@@ -94,8 +94,8 @@ export function ClientSearchCombobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            'w-full justify-between font-normal hover:bg-zinc-50',
-            !selectedOption && 'text-zinc-500',
+            'w-full justify-between font-normal hover:bg-slate-50',
+            !selectedOption && 'text-slate-500',
             className
           )}
         >
@@ -104,19 +104,19 @@ export function ClientSearchCombobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <div className="flex items-center border-b border-zinc-100 px-3">
+        <div className="flex items-center border-b border-slate-100 px-3">
           <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
           <input
-            className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-zinc-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
             placeholder={searchPlaceholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin text-zinc-500" />}
+          {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin text-slate-500" />}
         </div>
         <div className="max-h-60 overflow-y-auto p-1">
           {options.length === 0 ? (
-            <div className="py-6 text-center text-sm text-zinc-500">
+            <div className="py-6 text-center text-sm text-slate-500">
               {loading ? 'Searching...' : 'No clients found.'}
             </div>
           ) : (
@@ -137,8 +137,8 @@ export function ClientSearchCombobox({
                   clear();
                 })}
                 className={cn(
-                  'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-zinc-100 hover:text-zinc-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-                  value === c.id ? 'bg-zinc-100 text-zinc-900 font-medium' : ''
+                  'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-slate-100 hover:text-slate-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+                  value === c.id ? 'bg-slate-100 text-slate-900 font-medium' : ''
                 )}
               >
                 <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">

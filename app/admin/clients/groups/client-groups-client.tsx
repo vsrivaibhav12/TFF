@@ -104,16 +104,16 @@ export default function ClientGroupsClient({ groups }: { groups: Group[] }) {
 
       <div className="tff-card overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-zinc-50 border-b border-zinc-200">
+          <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
-              <th className="text-left px-4 py-3 font-semibold text-zinc-500 text-xs">Name</th>
-              <th className="text-left px-4 py-3 font-semibold text-zinc-500 text-xs">Description</th>
-              <th className="text-right px-4 py-3 font-semibold text-zinc-500 text-xs">Actions</th>
+              <th className="text-left px-4 py-3 font-semibold text-slate-500 text-xs">Name</th>
+              <th className="text-left px-4 py-3 font-semibold text-slate-500 text-xs">Description</th>
+              <th className="text-right px-4 py-3 font-semibold text-slate-500 text-xs">Actions</th>
             </tr>
           </thead>
           <tbody>
             {groups.map((g) => (
-              <tr key={g.id} className="border-b border-zinc-100 last:border-0">
+              <tr key={g.id} className="border-b border-slate-100 last:border-0">
                 {editingId === g.id ? (
                   <>
                     <td className="px-4 py-3">
@@ -128,19 +128,19 @@ export default function ClientGroupsClient({ groups }: { groups: Group[] }) {
                           <Check className="h-4 w-4 text-teal-600" />
                         </Button>
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingId(null)}>
-                          <X className="h-4 w-4 text-zinc-500" />
+                          <X className="h-4 w-4 text-slate-500" />
                         </Button>
                       </div>
                     </td>
                   </>
                 ) : (
                   <>
-                    <td className="px-4 py-3 font-medium text-zinc-900">{g.name}</td>
-                    <td className="px-4 py-3 text-zinc-500">{g.description || '—'}</td>
+                    <td className="px-4 py-3 font-medium text-slate-900">{g.name}</td>
+                    <td className="px-4 py-3 text-slate-500">{g.description || '—'}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingId(g.id); setEditName(g.name); setEditDesc(g.description || ''); }}>
-                          <Pencil className="h-4 w-4 text-zinc-500" />
+                          <Pencil className="h-4 w-4 text-slate-500" />
                         </Button>
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onDelete(g.id)}>
                           <Trash2 className="h-4 w-4 text-red-500" />

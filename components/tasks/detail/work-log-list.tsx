@@ -50,9 +50,9 @@ export function WorkLogList({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <div className="text-xs text-zinc-500">
+        <div className="text-xs text-slate-500">
           Total time{activeName ? ` by ${activeName}` : ''}{' '}
-          <span className="font-semibold text-zinc-900 tabular-nums">{fmtHM(totalMin)}</span>
+          <span className="font-semibold text-slate-900 tabular-nums">{fmtHM(totalMin)}</span>
           <span className="mx-1">·</span>
           {shown.length} {shown.length === 1 ? 'entry' : 'entries'}
         </div>
@@ -75,17 +75,17 @@ export function WorkLogList({
           <li key={e.id} className="flex items-center justify-between gap-2 text-sm">
             <div className="flex-1 min-w-0">
               <span className="font-medium tabular-nums text-xs">{fmtHM(e.duration_minutes)}</span>
-              <span className="text-zinc-500 mx-1">·</span>
-              <span className="text-zinc-600 text-xs">{e.users_profile?.full_name ?? 'You'}</span>
-              <span className="text-zinc-500 mx-1">·</span>
-              <span className="text-zinc-500 text-xs">
+              <span className="text-slate-500 mx-1">·</span>
+              <span className="text-slate-600 text-xs">{e.users_profile?.full_name ?? 'You'}</span>
+              <span className="text-slate-500 mx-1">·</span>
+              <span className="text-slate-500 text-xs">
                 {formatDateIST(e.work_date)}
                 {e.started_at && e.ended_at ? `, ${formatTimeIST(e.started_at)} – ${formatTimeIST(e.ended_at)}` : ''}
               </span>
-              {e.note && <div className="text-xs text-zinc-500 truncate">{e.note}</div>}
+              {e.note && <div className="text-xs text-slate-500 truncate">{e.note}</div>}
             </div>
             {e.user_id === currentUserId && (
-              <button type="button" onClick={() => onRemove(e.id)} disabled={removing} className="text-zinc-500 hover:text-red-600 p-1" aria-label="Delete entry">
+              <button type="button" onClick={() => onRemove(e.id)} disabled={removing} className="text-slate-500 hover:text-red-600 p-1" aria-label="Delete entry">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             )}

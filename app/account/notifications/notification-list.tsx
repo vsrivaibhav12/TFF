@@ -27,9 +27,9 @@ const TYPE_META: Record<string, { icon: React.ReactNode; color: string; bg: stri
   query_received: { icon: <MessageSquare className="h-4 w-4" />, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
   compliance_due: { icon: <ShieldCheck className="h-4 w-4" />, color: 'text-purple-600', bg: 'bg-purple-50 border-purple-100' },
   payment_reminder: { icon: <Bell className="h-4 w-4" />, color: 'text-orange-600', bg: 'bg-orange-50 border-orange-100' },
-  team_alert: { icon: <User className="h-4 w-4" />, color: 'text-zinc-600', bg: 'bg-zinc-50 border-zinc-100' },
-  system_alert: { icon: <Bell className="h-4 w-4" />, color: 'text-zinc-600', bg: 'bg-zinc-50 border-zinc-100' },
-  other: { icon: <Bell className="h-4 w-4" />, color: 'text-zinc-600', bg: 'bg-zinc-50 border-zinc-100' },
+  team_alert: { icon: <User className="h-4 w-4" />, color: 'text-slate-600', bg: 'bg-slate-50 border-slate-100' },
+  system_alert: { icon: <Bell className="h-4 w-4" />, color: 'text-slate-600', bg: 'bg-slate-50 border-slate-100' },
+  other: { icon: <Bell className="h-4 w-4" />, color: 'text-slate-600', bg: 'bg-slate-50 border-slate-100' },
 };
 
 function typeMeta(type: string) {
@@ -84,7 +84,7 @@ export default function NotificationList({ items: initial }: { items: Notificati
       </div>
 
       {filtered.length === 0 ? (
-        <div className="tff-card tff-card-pad bg-zinc-50 text-sm text-zinc-500 text-center">
+        <div className="tff-card tff-card-pad bg-slate-50 text-sm text-slate-500 text-center">
           {filter === 'unread' ? 'No unread notifications.' : 'Nothing yet. Activity from your tasks, queries, and compliance will appear here.'}
         </div>
       ) : (
@@ -98,15 +98,15 @@ export default function NotificationList({ items: initial }: { items: Notificati
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <div className="font-medium text-zinc-900">{n.title}</div>
+                    <div className="font-medium text-slate-900">{n.title}</div>
                     {!n.is_read && <Badge variant="teal" className="text-xs h-5">New</Badge>}
                   </div>
-                  <div className="text-sm text-zinc-500 mt-0.5">{n.message}</div>
-                  <div className="text-xs text-zinc-500 mt-1">{formatDateIST(n.created_at)}</div>
+                  <div className="text-sm text-slate-500 mt-0.5">{n.message}</div>
+                  <div className="text-xs text-slate-500 mt-1">{formatDateIST(n.created_at)}</div>
                 </div>
                 {!n.is_read && (
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => markOne(n.id)} disabled={pending}>
-                    <Check className="h-4 w-4 text-zinc-500" />
+                    <Check className="h-4 w-4 text-slate-500" />
                   </Button>
                 )}
               </div>

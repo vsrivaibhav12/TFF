@@ -79,8 +79,8 @@ export function ProgressRing({
           </motion.div>
         )}
       </div>
-      {label && <span className="text-xs font-medium text-zinc-700">{label}</span>}
-      {sublabel && <span className="text-xs text-zinc-500">{sublabel}</span>}
+      {label && <span className="text-xs font-medium text-slate-700">{label}</span>}
+      {sublabel && <span className="text-xs text-slate-500">{sublabel}</span>}
     </div>
   );
 }

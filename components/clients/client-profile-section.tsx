@@ -17,8 +17,8 @@ interface Props {
 function Field({ label, value, mono }: { label: string; value?: string | null; mono?: boolean }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs text-zinc-500">{label}</dt>
-      <dd className={`text-sm text-zinc-900 truncate ${mono ? 'font-mono' : ''}`}>{value || <span className="text-zinc-500">Not set</span>}</dd>
+      <dt className="text-xs text-slate-500">{label}</dt>
+      <dd className={`text-sm text-slate-900 truncate ${mono ? 'font-mono' : ''}`}>{value || <span className="text-slate-500">Not set</span>}</dd>
     </div>
   );
 }
@@ -43,7 +43,7 @@ export default function ClientProfileSection({ client, groups, owners, basePath,
         )}
       </div>
 
-      {!canEdit && <p className="text-xs text-zinc-500 mb-3">You do not have permission to edit this client.</p>}
+      {!canEdit && <p className="text-xs text-slate-500 mb-3">You do not have permission to edit this client.</p>}
 
       {editing ? (
         <ClientFormWrapper
@@ -68,8 +68,8 @@ export default function ClientProfileSection({ client, groups, owners, basePath,
           <Field label="State" value={client.state} />
           {client.notes && (
             <div className="col-span-2 min-w-0">
-              <dt className="text-xs text-zinc-500">Internal notes</dt>
-              <dd className="text-sm text-zinc-900 whitespace-pre-wrap">{client.notes}</dd>
+              <dt className="text-xs text-slate-500">Internal notes</dt>
+              <dd className="text-sm text-slate-900 whitespace-pre-wrap">{client.notes}</dd>
             </div>
           )}
         </dl>

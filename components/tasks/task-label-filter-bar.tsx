@@ -44,8 +44,8 @@ export function TaskLabelFilterBar({ labels }: TaskLabelFilterBarProps) {
   if (labels.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 flex-wrap border-t border-zinc-100 pt-3">
-      <div className="flex items-center gap-1 text-xs text-zinc-500" title="Tags">
+    <div className="flex items-center gap-2 flex-wrap border-t border-slate-100 pt-3">
+      <div className="flex items-center gap-1 text-xs text-slate-500" title="Tags">
         <Tag className="h-3.5 w-3.5" />
       </div>
       {labels.map((l) => {
@@ -80,7 +80,7 @@ export function TaskLabelFilterBar({ labels }: TaskLabelFilterBarProps) {
       {activeLabels.length > 0 && (
         <button
           onClick={clearAll}
-          className="text-xs text-zinc-500 hover:text-zinc-600 underline"
+          className="text-xs text-slate-500 hover:text-slate-600 underline"
         >
           Clear tags
         </button>

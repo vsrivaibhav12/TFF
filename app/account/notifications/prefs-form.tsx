@@ -39,7 +39,7 @@ export default function NotificationPrefsForm({ initial }: { initial: { email_fr
       <div className="flex items-end gap-3">
         <div className="flex-1">
           <Label>In-app notifications</Label>
-          <p className="text-xs text-zinc-500 mt-1">Bell icon updates in the top-right.</p>
+          <p className="text-xs text-slate-500 mt-1">Bell icon updates in the top-right.</p>
         </div>
         <Switch checked={inApp} onCheckedChange={(v) => setInApp(!!v)} data-testid="prefs-inapp" />
       </div>

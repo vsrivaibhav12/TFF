@@ -127,14 +127,14 @@ export function TaskEditForm({ ctx }: { ctx: TaskDetailCtx }) {
   return (
     <div className="tff-card p-4 space-y-4" data-testid="task-edit-form">
       {limited && (
-        <p className="text-xs text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+        <p className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
           This task is completed. You can correct its service, period, billing, ARN and description. Reopen the task to change priority, due date or assignees.
         </p>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5 sm:col-span-2">
-          <Label className="text-xs text-zinc-500">Service</Label>
+          <Label className="text-xs text-slate-500">Service</Label>
           <Select
             value={subServiceId}
             onValueChange={chooseService}
@@ -151,7 +151,7 @@ export function TaskEditForm({ ctx }: { ctx: TaskDetailCtx }) {
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label className="text-xs text-zinc-500">Template</Label>
+          <Label className="text-xs text-slate-500">Template</Label>
           <Select value={templateId || '__none__'} onValueChange={(v) => setTemplateId(v === '__none__' ? '' : v)}>
             <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="No template" /></SelectTrigger>
             <SelectContent>
@@ -162,19 +162,19 @@ export function TaskEditForm({ ctx }: { ctx: TaskDetailCtx }) {
             </SelectContent>
           </Select>
           {subServiceId && templatesForService.length === 0 && (
-            <p className="text-xs text-zinc-500">No templates for this service.</p>
+            <p className="text-xs text-slate-500">No templates for this service.</p>
           )}
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label className="text-xs text-zinc-500">Period</Label>
+          <Label className="text-xs text-slate-500">Period</Label>
           <PeriodPicker type={periodType} value={periodKey} onChange={setPeriodKey} />
         </div>
 
         {!limited && (
           <>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-500">Priority</Label>
+              <Label className="text-xs text-slate-500">Priority</Label>
               <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -186,7 +186,7 @@ export function TaskEditForm({ ctx }: { ctx: TaskDetailCtx }) {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-500">Due date</Label>
+              <Label className="text-xs text-slate-500">Due date</Label>
               <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-9 text-sm" />
             </div>
           </>
@@ -195,49 +195,49 @@ export function TaskEditForm({ ctx }: { ctx: TaskDetailCtx }) {
         {!limited && canAssign && (
           <>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs text-zinc-500">Assignees</Label>
+              <Label className="text-xs text-slate-500">Assignees</Label>
               <MultiSelect options={teamOptions} value={assigneeIds} onChange={setAssigneeIds} placeholder="Select assignees" searchPlaceholder="Search team..." />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs text-zinc-500">Reviewers</Label>
+              <Label className="text-xs text-slate-500">Reviewers</Label>
               <MultiSelect options={teamOptions} value={reviewerIds} onChange={setReviewerIds} placeholder="Select reviewers" searchPlaceholder="Search team..." />
             </div>
           </>
         )}
 
-        <div className="sm:col-span-2 flex items-center justify-between border-t border-zinc-100 pt-3">
-          <Label className="text-sm text-zinc-700">Billable</Label>
+        <div className="sm:col-span-2 flex items-center justify-between border-t border-slate-100 pt-3">
+          <Label className="text-sm text-slate-700">Billable</Label>
           <Switch checked={billable} onCheckedChange={setBillable} />
         </div>
         {billable && (
           <>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-500">Bill reference</Label>
+              <Label className="text-xs text-slate-500">Bill reference</Label>
               <Input value={billRef} onChange={(e) => setBillRef(e.target.value)} placeholder="INV-2026-01" className="h-9 text-sm" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-500">Bill amount (₹)</Label>
+              <Label className="text-xs text-slate-500">Bill amount (₹)</Label>
               <Input type="number" min={0} value={billAmount} onChange={(e) => setBillAmount(e.target.value)} placeholder="0" className="h-9 text-sm" />
             </div>
           </>
         )}
 
         <div className="space-y-1.5">
-          <Label className="text-xs text-zinc-500">ARN reference</Label>
+          <Label className="text-xs text-slate-500">ARN reference</Label>
           <Input value={arnRef} onChange={(e) => setArnRef(e.target.value)} placeholder="ARN12345678" className="h-9 text-sm" />
         </div>
         <div className="flex items-end justify-between pb-1.5">
-          <Label className="text-sm text-zinc-700">ARN visible to client</Label>
+          <Label className="text-sm text-slate-700">ARN visible to client</Label>
           <Switch checked={arnVisible} onCheckedChange={setArnVisible} />
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label className="text-xs text-zinc-500">Description</Label>
+          <Label className="text-xs text-slate-500">Description</Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="text-sm" maxLength={2000} />
         </div>
       </div>
 
-      <div className="flex items-center gap-2 border-t border-zinc-100 pt-3">
+      <div className="flex items-center gap-2 border-t border-slate-100 pt-3">
         <Button type="button" size="sm" onClick={save} disabled={busy}>
           {busy && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}Save changes
         </Button>

@@ -22,7 +22,7 @@ export function Pagination({ page, total, limit = 50 }: { page: number; total: n
 
   return (
     <div className="flex items-center justify-between px-2 mt-4">
-      <div className="text-sm text-zinc-500">
+      <div className="text-sm text-slate-500">
         Page {page} of {totalPages} ({total} total)
       </div>
       <div className="flex items-center space-x-2">

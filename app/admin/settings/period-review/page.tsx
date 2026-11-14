@@ -42,16 +42,16 @@ export default async function PeriodReviewPage() {
   const table = (items: typeof flagged, title: string, hint: string) => (
     <section className="space-y-2">
       <div>
-        <h2 className="text-base font-semibold text-zinc-900">{title} <span className="text-zinc-500 font-normal tabular-nums">({items.length})</span></h2>
-        <p className="text-sm text-zinc-500">{hint}</p>
+        <h2 className="text-base font-semibold text-slate-900">{title} <span className="text-slate-500 font-normal tabular-nums">({items.length})</span></h2>
+        <p className="text-sm text-slate-500">{hint}</p>
       </div>
       {items.length === 0 ? (
-        <p className="text-sm text-zinc-500">None.</p>
+        <p className="text-sm text-slate-500">None.</p>
       ) : (
         <div className="tff-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-zinc-500 border-b border-zinc-100">
+              <tr className="text-left text-xs text-slate-500 border-b border-slate-100">
                 <th className="px-3 py-2 font-medium">Task</th>
                 <th className="px-3 py-2 font-medium">Client</th>
                 <th className="px-3 py-2 font-medium">Service</th>
@@ -61,14 +61,14 @@ export default async function PeriodReviewPage() {
                 <th className="px-3 py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-slate-100">
               {items.map((x) => (
                 <tr key={x.r.id}>
                   <td className="px-3 py-2 font-mono text-xs">{x.r.task_number ?? '—'}</td>
                   <td className="px-3 py-2">{x.client?.business_name ?? '—'}</td>
                   <td className="px-3 py-2">{x.sub?.name ?? '—'}</td>
                   <td className="px-3 py-2 tabular-nums">{formatPeriodColumns(x.r) || 'None'}</td>
-                  <td className="px-3 py-2 text-zinc-600">{x.review.reason}</td>
+                  <td className="px-3 py-2 text-slate-600">{x.review.reason}</td>
                   <td className="px-3 py-2 tabular-nums">{x.review.suggestedKey ?? '—'}</td>
                   <td className="px-3 py-2 text-right">
                     <DockLink item={{ type: 'task', id: x.r.id, mode: 'edit' }} href={`/admin/tasks/${x.r.id}`} className="text-teal-700 hover:underline text-xs font-medium">
@@ -86,7 +86,7 @@ export default async function PeriodReviewPage() {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <Link href="/admin/settings" className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href="/admin/settings" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
         <ChevronLeft className="h-4 w-4" /> Settings
       </Link>
       <PageHeader

@@ -65,13 +65,13 @@ export default function LoginForm() {
     >
       <form onSubmit={onSubmit} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium text-zinc-700">
+          <Label htmlFor="email" className="text-sm font-medium text-slate-700">
             Email address
           </Label>
           <div className="relative">
             <Mail
               className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${
-                focusedField === 'email' ? 'text-teal-500' : 'text-zinc-500'
+                focusedField === 'email' ? 'text-teal-500' : 'text-slate-500'
               }`}
             />
             <Input
@@ -92,14 +92,14 @@ export default function LoginForm() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-sm font-medium text-zinc-700">
+            <Label htmlFor="password" className="text-sm font-medium text-slate-700">
               Password
             </Label>
           </div>
           <div className="relative">
             <Lock
               className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${
-                focusedField === 'password' ? 'text-teal-500' : 'text-zinc-500'
+                focusedField === 'password' ? 'text-teal-500' : 'text-slate-500'
               }`}
             />
             <Input
@@ -118,7 +118,7 @@ export default function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600 transition-colors"
               tabIndex={-1}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -127,8 +127,8 @@ export default function LoginForm() {
         </div>
 
         <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 text-sm text-zinc-600 cursor-pointer">
-            <input type="checkbox" className="rounded border-zinc-300 text-teal-600 focus:ring-teal-500" />
+          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+            <input type="checkbox" className="rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
             Remember me
           </label>
           <a

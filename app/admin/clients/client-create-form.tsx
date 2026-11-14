@@ -126,7 +126,7 @@ export function ClientCreateForm({ groups, onSuccess, onCancel }: { groups: { id
       {showMore && (
         <div className="animate-in fade-in slide-in-from-top-2 duration-200 space-y-8">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-zinc-900 border-b border-zinc-200 pb-2">Primary contact</h3>
+            <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2">Primary contact</h3>
             <div className="space-y-2">
               <Label>Phone</Label>
               <Input {...form.register('primary_contact_phone')} />
@@ -134,7 +134,7 @@ export function ClientCreateForm({ groups, onSuccess, onCancel }: { groups: { id
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-zinc-900 border-b border-zinc-200 pb-2">Address</h3>
+            <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2">Address</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>City</Label>
@@ -152,7 +152,7 @@ export function ClientCreateForm({ groups, onSuccess, onCancel }: { groups: { id
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-zinc-900 border-b border-zinc-200 pb-2">Engagement</h3>
+            <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-200 pb-2">Engagement</h3>
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

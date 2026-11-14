@@ -80,11 +80,11 @@ export default async function CredentialsPage({ searchParams }: Props) {
                   <TableCell className="font-medium">{c.clients?.business_name}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">{c.portal_name}
-                      {c.portal_url && <Link href={c.portal_url} target="_blank" className="text-zinc-500 hover:text-[#0D9488]"><ExternalLink className="h-3 w-3" /></Link>}
+                      {c.portal_url && <Link href={c.portal_url} target="_blank" className="text-slate-500 hover:text-[#0D9488]"><ExternalLink className="h-3 w-3" /></Link>}
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs">{c.username}</TableCell>
-                  <TableCell>{c.last_used_date ? formatDateIST(c.last_used_date) : <span className="text-zinc-500">never</span>}</TableCell>
+                  <TableCell>{c.last_used_date ? formatDateIST(c.last_used_date) : <span className="text-slate-500">never</span>}</TableCell>
                   <TableCell>{c.is_active ? <Badge variant="success">active</Badge> : <Badge variant="outline">inactive</Badge>}</TableCell>
                   <TableCell className="flex items-center gap-3">
                     <CredentialReveal id={c.id} />

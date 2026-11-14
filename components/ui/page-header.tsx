@@ -20,19 +20,19 @@ export function PageHeader({ title, subtitle, actions, showBreadcrumbs = true }:
   return (
     <div className="space-y-2">
       {showBreadcrumbs && segments.length > 0 && (
-        <div className="flex items-center gap-1.5 text-sm text-zinc-500 md:hidden">
-          <Link href={`/${role}`} className="hover:text-zinc-900 transition-colors capitalize">
+        <div className="flex items-center gap-1.5 text-sm text-slate-500 md:hidden">
+          <Link href={`/${role}`} className="hover:text-slate-900 transition-colors capitalize">
             {role}
           </Link>
           {segments.map((segment, i) => (
             <span key={`${segment}-${i}`} className="flex items-center gap-1.5">
-              <ChevronRight className="h-3.5 w-3.5 text-zinc-300" />
+              <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
               <span
                 className={cn(
                   'capitalize',
                   i === segments.length - 1
-                    ? 'text-zinc-900 font-medium'
-                    : 'hover:text-zinc-900 transition-colors'
+                    ? 'text-slate-900 font-medium'
+                    : 'hover:text-slate-900 transition-colors'
                 )}
               >
                 {segment.replace(/-/g, ' ').replace(/_/g, ' ')}

@@ -74,8 +74,8 @@ export default function TaskTemplateDialog({ subServiceId, subServiceName, initi
               <div className="space-y-2"><Label>Default due day</Label><Input type="number" min={1} max={31} value={f.due_day_of_month ?? ''} onChange={(e) => set('due_day_of_month', e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 20" /></div>
             </div>
             <div className="space-y-2"><Label>Estimated days to complete</Label><Input type="number" min={1} value={f.estimated_days ?? ''} onChange={(e) => set('estimated_days', e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 3" /></div>
-            <div className="flex items-center justify-between border-t border-zinc-100 pt-3">
-              <div><Label>Active</Label><p className="text-xs text-zinc-500">Inactive templates don’t appear when creating tasks.</p></div>
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+              <div><Label>Active</Label><p className="text-xs text-slate-500">Inactive templates don’t appear when creating tasks.</p></div>
               <Switch checked={f.is_active} onCheckedChange={(v) => set('is_active', !!v)} />
             </div>
           </div>

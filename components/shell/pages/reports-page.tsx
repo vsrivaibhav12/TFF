@@ -76,8 +76,8 @@ export default async function ReportsPage({ rolePrefix }: Props) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Reports</h1>
-        <p className="text-sm text-zinc-500 mt-1">Insights and analytics across the firm.</p>
+        <h1 className="text-xl font-semibold tracking-tight text-slate-900">Reports</h1>
+        <p className="text-sm text-slate-500 mt-1">Insights and analytics across the firm.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -87,20 +87,20 @@ export default async function ReportsPage({ rolePrefix }: Props) {
             <Link
               key={report.href}
               href={report.href}
-              className="group rounded-2xl border border-zinc-200 bg-white p-6 transition-all duration-200 hover:border-zinc-300 cursor-pointer"
+              className="group rounded-2xl border border-slate-200 bg-white p-6 transition-all duration-200 hover:border-slate-300 cursor-pointer"
             >
               <div className="flex items-start justify-between">
                 <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center', report.color)}>
                   <Icon className="h-5 w-5" />
                 </div>
-                <div className="w-8 h-8 rounded-lg bg-zinc-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
-                  <ArrowRight className="h-4 w-4 text-zinc-300 group-hover:text-teal-600 transition-colors" />
+                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
+                  <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-teal-600 transition-colors" />
                 </div>
               </div>
-              <h3 className="text-base font-semibold text-zinc-900 mt-4 group-hover:text-teal-700 transition-colors">
+              <h3 className="text-base font-semibold text-slate-900 mt-4 group-hover:text-teal-700 transition-colors">
                 {report.title}
               </h3>
-              <p className="text-sm text-zinc-500 mt-1">{report.description}</p>
+              <p className="text-sm text-slate-500 mt-1">{report.description}</p>
             </Link>
           );
         })}

@@ -72,7 +72,7 @@ function itemTypeBadgeClass(type: string): string {
     case 'compliance':
       return 'bg-amber-50 text-amber-700 border-amber-200';
     default:
-      return 'bg-zinc-50 text-zinc-700 border-zinc-200';
+      return 'bg-slate-50 text-slate-700 border-slate-200';
   }
 }
 
@@ -85,7 +85,7 @@ function priorityDot(priority: string): string {
     case 'low':
       return 'bg-green-500';
     default:
-      return 'bg-zinc-400';
+      return 'bg-slate-400';
   }
 }
 
@@ -177,13 +177,13 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
       {groups.map((group) => (
         <div key={group.label} className="space-y-3">
           <div className="flex items-center gap-3 sticky top-0 bg-white/80 backdrop-blur-sm py-2 z-10">
-            <h2 className="text-sm font-semibold text-zinc-900 tracking-tight">
+            <h2 className="text-sm font-semibold text-slate-900 tracking-tight">
               {group.label}
             </h2>
-            <span className="text-xs text-zinc-500 tabular-nums">
+            <span className="text-xs text-slate-500 tabular-nums">
               {group.items.length}
             </span>
-            <div className="flex-1 h-px bg-zinc-100" />
+            <div className="flex-1 h-px bg-slate-100" />
           </div>
 
           <div className="space-y-2">
@@ -197,8 +197,8 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
                 <div
                   key={itemKey}
                   className={cn(
-                    'rounded-xl border border-zinc-200 bg-white p-4',
-                    'hover:border-zinc-300 transition-colors'
+                    'tff-card p-4',
+                    'hover:border-slate-300 transition-colors'
                   )}
                 >
                   <div className="flex items-start gap-3">
@@ -208,7 +208,7 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
                         <Checkbox
                           disabled={isResolving}
                           onCheckedChange={() => handleResolve(item)}
-                          className="border-zinc-300"
+                          className="border-slate-300"
                         />
                       </div>
                     )}
@@ -227,7 +227,7 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
                         <span
                           role="button"
                           tabIndex={0}
-                          className="text-sm font-medium text-zinc-900 truncate cursor-pointer hover:text-teal-700"
+                          className="text-sm font-medium text-slate-900 truncate cursor-pointer hover:text-teal-700"
                           onClick={() => router.push(detailPath)}
                           onKeyDown={onEnterSpace(() => router.push(detailPath))}
                         >
@@ -250,17 +250,17 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
                         />
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
+                      <div className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
                         {item.client_name && (
                           <span className="truncate">{item.client_name}</span>
                         )}
-                        <span className="text-zinc-300">·</span>
+                        <span className="text-slate-300">·</span>
                         <span className="tabular-nums" title={formatDateIST(item.occurred_at)}>
                           {timeAgo(item.occurred_at)}
                         </span>
                         {item.due_date && (
                           <>
-                            <span className="text-zinc-300">·</span>
+                            <span className="text-slate-300">·</span>
                             <span className="tabular-nums">
                               Due {formatDateIST(item.due_date)}
                             </span>
@@ -268,8 +268,8 @@ export function InboxFeed({ items, basePath }: { items: UnifiedInboxItem[]; base
                         )}
                         {metaSummary(item) && (
                           <>
-                            <span className="text-zinc-300">·</span>
-                            <span className="text-zinc-500">{metaSummary(item)}</span>
+                            <span className="text-slate-300">·</span>
+                            <span className="text-slate-500">{metaSummary(item)}</span>
                           </>
                         )}
                       </div>

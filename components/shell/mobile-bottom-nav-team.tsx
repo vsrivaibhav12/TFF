@@ -30,7 +30,7 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
     <>
       <nav
         data-testid="mobile-bottom-nav-team"
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/90 backdrop-blur-lg border-t border-zinc-200/60 grid grid-cols-4 pb-[env(safe-area-inset-bottom,0)]"
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/90 backdrop-blur-lg border-t border-slate-200/60 grid grid-cols-4 pb-[env(safe-area-inset-bottom,0)]"
       >
         {mainItems.map((t) => {
           const Icon = ICONS[t.icon];
@@ -43,7 +43,7 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
               href={t.href}
               className={cn(
                 'relative flex flex-col items-center justify-center gap-1 py-2 text-xs font-semibold min-h-[56px] transition-colors',
-                active ? 'text-teal-700' : 'text-zinc-500'
+                active ? 'text-teal-700' : 'text-slate-500'
               )}
               data-testid={`bottom-tab-${t.label.toLowerCase().replace(/ /g, '-')}`}
             >
@@ -63,7 +63,7 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
           onClick={() => setMoreOpen(true)}
           className={cn(
             'relative flex flex-col items-center justify-center gap-1 py-2 text-xs font-semibold min-h-[56px] transition-colors',
-            isMoreActive ? 'text-teal-700' : 'text-zinc-500'
+            isMoreActive ? 'text-teal-700' : 'text-slate-500'
           )}
           data-testid="bottom-tab-more"
         >
@@ -97,10 +97,10 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
               className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl pb-[env(safe-area-inset-bottom,0)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
-                <div className="text-sm font-bold text-zinc-900">More</div>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <div className="text-sm font-bold text-slate-900">More</div>
                 <button onClick={() => setMoreOpen(false)} className="p-1">
-                  <X className="h-5 w-5 text-zinc-500" />
+                  <X className="h-5 w-5 text-slate-500" />
                 </button>
               </div>
               <div className="p-3 grid grid-cols-2 gap-2">
@@ -111,9 +111,9 @@ export default function MobileBottomNavTeam({ nav, role }: MobileBottomNavTeamPr
                       key={t.href}
                       href={t.href}
                       onClick={() => setMoreOpen(false)}
-                      className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50 border border-zinc-100"
+                      className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 border border-slate-100"
                     >
-                      {Icon && <Icon className="h-5 w-5 text-zinc-500" />}
+                      {Icon && <Icon className="h-5 w-5 text-slate-500" />}
                       {t.label}
                     </Link>
                   );

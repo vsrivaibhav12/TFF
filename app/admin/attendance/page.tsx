@@ -68,15 +68,15 @@ export default async function AdminAttendancePage({ searchParams }: { searchPara
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <div className="text-sm font-semibold text-zinc-900">My attendance</div>
-              <div className="text-xs text-zinc-500 mt-0.5">
+              <div className="text-sm font-semibold text-slate-900">My attendance</div>
+              <div className="text-xs text-slate-500 mt-0.5">
                 {today ? (
                   <span className="flex items-center gap-1.5">
                     <Badge variant={today.status === 'leave' ? 'warning' : today.status === 'present' ? 'success' : 'outline'}>
                       {today.status}
                     </Badge>
                     {today.check_in_time && (
-                      <span className="flex items-center gap-1 text-zinc-500">
+                      <span className="flex items-center gap-1 text-slate-500">
                         <Clock className="h-3 w-3" />
                         {formatTimeIST(today.check_in_time)}
                         {today.check_out_time && ` → ${formatTimeIST(today.check_out_time)}`}

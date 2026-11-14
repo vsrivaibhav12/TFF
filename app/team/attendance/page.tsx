@@ -171,7 +171,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
           <ExportButton data={exportData} filename="my-attendance" format="excel" />
           {isAdmin && <ManualAttendanceForm />}
           <CheckInOut today={today as AttendanceLog | null} geoRequired={geoRequired} />
-          <div className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+          <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
             Attendance is tracked automatically. Your manager reviews it at the end of each week.
           </div>
         </div>
@@ -252,7 +252,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
                       <TableCell className="text-xs">
                         {l.check_out_time ? formatTimeIST(l.check_out_time) : '—'}
                       </TableCell>
-                      <TableCell className="text-xs text-zinc-500">
+                      <TableCell className="text-xs text-slate-500">
                         {l.check_in_lat != null && l.check_in_lng != null ? (
                           <a
                             href={`https://www.openstreetmap.org/?mlat=${l.check_in_lat}&mlon=${l.check_in_lng}&zoom=16`}
@@ -293,8 +293,8 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
         {/* Leave tab */}
         <TabsContent value="leave" className="space-y-8">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-zinc-500">
-              Leave balance: <span className="font-semibold text-zinc-900">{leaveBalance} days</span> remaining this year
+            <div className="text-sm text-slate-500">
+              Leave balance: <span className="font-semibold text-slate-900">{leaveBalance} days</span> remaining this year
             </div>
             <LeaveForm />
           </div>
@@ -372,7 +372,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
                             {r.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-xs text-zinc-500">{r.review_remarks ?? '—'}</TableCell>
+                        <TableCell className="text-xs text-slate-500">{r.review_remarks ?? '—'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -385,7 +385,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
         {/* Permission tab */}
         <TabsContent value="permission" className="space-y-8">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-zinc-500">
+            <div className="text-sm text-slate-500">
               Request permission or on-duty (OD) for partial days.
             </div>
             <PermissionForm />
@@ -458,7 +458,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
                             {r.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-xs text-zinc-500">{r.review_remarks ?? '—'}</TableCell>
+                        <TableCell className="text-xs text-slate-500">{r.review_remarks ?? '—'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -476,9 +476,9 @@ function Metric({
   label,
   value,
   icon,
-  color = 'text-zinc-600',
-  bg = 'bg-zinc-100',
-  border = 'border-zinc-200',
+  color = 'text-slate-600',
+  bg = 'bg-slate-100',
+  border = 'border-slate-200',
 }: {
   label: string;
   value: string | number;
@@ -494,7 +494,7 @@ function Metric({
           {icon}
         </div>
         <div>
-          <div className="text-xs text-zinc-500 uppercase tracking-wide">{label}</div>
+          <div className="text-xs text-slate-500 uppercase tracking-wide">{label}</div>
           <div className="mt-1 text-xl font-semibold tabular-nums capitalize">{value}</div>
         </div>
       </div>

@@ -33,8 +33,8 @@ export default async function ClientEdit({ params }: { params: { id: string } },
       </div>
 
       <div>
-        <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Edit client</h1>
-        <p className="text-sm text-zinc-500 mt-1">{client.business_name}</p>
+        <h1 className="text-xl font-semibold tracking-tight text-slate-900">Edit client</h1>
+        <p className="text-sm text-slate-500 mt-1">{client.business_name}</p>
       </div>
 
       <ClientForm

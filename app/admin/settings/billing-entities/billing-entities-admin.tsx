@@ -73,9 +73,9 @@ export default function BillingEntitiesAdmin({
       </div>
 
       {entities.length === 0 ? (
-        <div className="tff-card tff-card-pad bg-zinc-50/50 border-dashed border-2 border-zinc-200 text-center py-12">
-          <Building2 className="h-6 w-6 text-zinc-500 mx-auto mb-2" />
-          <p className="text-sm text-zinc-500">
+        <div className="tff-card tff-card-pad bg-slate-50/50 border-dashed border-2 border-slate-200 text-center py-12">
+          <Building2 className="h-6 w-6 text-slate-500 mx-auto mb-2" />
+          <p className="text-sm text-slate-500">
             No billing entities yet. Add one to start tagging tasks and invoices.
           </p>
         </div>
@@ -96,7 +96,7 @@ export default function BillingEntitiesAdmin({
                       {e.name}
                     </div>
                     {e.legal_name && (
-                      <div className="text-sm text-zinc-500">{e.legal_name}</div>
+                      <div className="text-sm text-slate-500">{e.legal_name}</div>
                     )}
                   </div>
                   <div className="flex gap-1">
@@ -109,14 +109,14 @@ export default function BillingEntitiesAdmin({
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  {e.gstin && <div><span className="text-zinc-500">GSTIN:</span> <code className="font-mono">{e.gstin}</code></div>}
-                  {e.pan && <div><span className="text-zinc-500">PAN:</span> <code className="font-mono">{e.pan}</code></div>}
-                  <div><span className="text-zinc-500">Invoice prefix:</span> <code className="font-mono">{e.invoice_prefix}</code></div>
+                  {e.gstin && <div><span className="text-slate-500">GSTIN:</span> <code className="font-mono">{e.gstin}</code></div>}
+                  {e.pan && <div><span className="text-slate-500">PAN:</span> <code className="font-mono">{e.pan}</code></div>}
+                  <div><span className="text-slate-500">Invoice prefix:</span> <code className="font-mono">{e.invoice_prefix}</code></div>
                   {e.default_profit_centre_code && (
-                    <div><span className="text-zinc-500">Default PC:</span> <code className="font-mono">{e.default_profit_centre_code}</code></div>
+                    <div><span className="text-slate-500">Default PC:</span> <code className="font-mono">{e.default_profit_centre_code}</code></div>
                   )}
                 </div>
-                <div className="flex items-center justify-between text-xs text-zinc-500 pt-2 border-t border-zinc-100">
+                <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
                   <span>{accessUsers.length} staff</span>
                   {!e.is_active && <Badge variant="outline">inactive</Badge>}
                 </div>
@@ -231,7 +231,7 @@ function EntityDialog({
             <div className="space-y-1.5">
               <Label>Default profit centre</Label>
               <select
-                className="flex h-9 w-full rounded-md border border-zinc-200 bg-white px-3 text-sm"
+                className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm"
                 value={f.default_profit_centre_code}
                 onChange={(e) => set('default_profit_centre_code', e.target.value)}
               >
@@ -333,12 +333,12 @@ function AccessDialog({
           {staff.map((s) => (
             <label
               key={s.id}
-              className="flex items-center gap-3 p-2 rounded hover:bg-zinc-50 cursor-pointer"
+              className="flex items-center gap-3 p-2 rounded hover:bg-slate-50 cursor-pointer"
             >
               <Checkbox checked={selected.has(s.id)} onCheckedChange={() => toggle(s.id)} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium">{s.full_name}</div>
-                <div className="text-xs text-zinc-500">{s.email}</div>
+                <div className="text-xs text-slate-500">{s.email}</div>
               </div>
               <Badge variant={s.role === 'admin' ? 'teal' : 'outline'} className="text-xs">
                 {s.role}

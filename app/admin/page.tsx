@@ -210,16 +210,16 @@ function DashboardSkeleton() {
     <div className="space-y-6 animate-pulse">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="tff-card h-[74px] bg-zinc-50" />
+          <div key={i} className="tff-card h-[74px] bg-slate-50" />
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7 tff-card h-56 bg-zinc-50" />
-        <div className="lg:col-span-5 tff-card h-56 bg-zinc-50" />
+        <div className="lg:col-span-7 tff-card h-56 bg-slate-50" />
+        <div className="lg:col-span-5 tff-card h-56 bg-slate-50" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7 tff-card h-64 bg-zinc-50" />
-        <div className="lg:col-span-5 tff-card h-64 bg-zinc-50" />
+        <div className="lg:col-span-7 tff-card h-64 bg-slate-50" />
+        <div className="lg:col-span-5 tff-card h-64 bg-slate-50" />
       </div>
     </div>
   );

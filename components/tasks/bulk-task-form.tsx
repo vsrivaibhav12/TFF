@@ -212,7 +212,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
               else if (s === 'preview' && (step === 'clients' || step === 'details')) setStep('assignees');
               else setStep(s);
             }}
-            className={`px-3 py-1.5 rounded-md border whitespace-nowrap ${step === s ? 'border-teal-500 bg-teal-50 text-teal-800' : 'border-zinc-200 text-zinc-500 hover:bg-zinc-50'}`}
+            className={`px-3 py-1.5 rounded-md border whitespace-nowrap ${step === s ? 'border-teal-500 bg-teal-50 text-teal-800' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
           >
             {i + 1}. {s.charAt(0).toUpperCase() + s.slice(1)}
           </button>
@@ -240,28 +240,28 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
                 </SelectContent>
               </Select>
             </div>
-            <span className="text-sm text-zinc-500 ml-auto">{selectedClients.size} selected</span>
+            <span className="text-sm text-slate-500 ml-auto">{selectedClients.size} selected</span>
           </div>
 
           <div className="tff-card overflow-hidden">
-            <div className="bg-zinc-50 px-4 py-2 border-b border-zinc-200 flex items-center gap-2">
+            <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center gap-2">
               <Checkbox checked={allFilteredSelected} onCheckedChange={toggleAllFiltered} />
-              <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Select all visible</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Select all visible</span>
             </div>
             <div className="max-h-[28rem] overflow-y-auto">
               {filteredClients.map((c) => (
-                <label key={c.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-50 cursor-pointer border-b border-zinc-100 last:border-0">
+                <label key={c.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0">
                   <Checkbox checked={selectedClients.has(c.id)} onCheckedChange={() => toggleClient(c.id)} />
-                  <span className="text-sm text-zinc-900">{c.business_name}</span>
+                  <span className="text-sm text-slate-900">{c.business_name}</span>
                   {c.group_id && (
-                    <span className="text-xs text-zinc-500 ml-auto">
+                    <span className="text-xs text-slate-500 ml-auto">
                       {groups.find((g) => g.id === c.group_id)?.name}
                     </span>
                   )}
                 </label>
               ))}
               {filteredClients.length === 0 && (
-                <p className="text-sm text-zinc-500 px-4 py-6 text-center">No clients in this group</p>
+                <p className="text-sm text-slate-500 px-4 py-6 text-center">No clients in this group</p>
               )}
             </div>
           </div>
@@ -275,9 +275,9 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
       {step === 'details' && (
         <div className="space-y-4 max-w-xl">
           {autoTitle && (
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
-              <p className="text-xs text-zinc-500">Task name</p>
-              <p className="text-sm font-medium text-zinc-900">{autoTitle}</p>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs text-slate-500">Task name</p>
+              <p className="text-sm font-medium text-slate-900">{autoTitle}</p>
             </div>
           )}
           <div className="space-y-2">
@@ -301,7 +301,7 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
           </div>
 
           {templates.length > 0 && (
-            <div className="space-y-2 border-t border-zinc-100 pt-3 mt-1">
+            <div className="space-y-2 border-t border-slate-100 pt-3 mt-1">
               <Label>Allocate Task Template / SOP</Label>
               <Select value={f.task_template_id} onValueChange={(v) => set('task_template_id', v)}>
                 <SelectTrigger><SelectValue placeholder="No template selected" /></SelectTrigger>
@@ -310,20 +310,20 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
                   {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-zinc-500">Selecting a template will copy its SOP steps to all created tasks.</p>
+              <p className="text-xs text-slate-500">Selecting a template will copy its SOP steps to all created tasks.</p>
             </div>
           )}
 
           {periodType !== 'none' && (
-            <div className="space-y-2 border-t border-zinc-100 pt-3 mt-1">
+            <div className="space-y-2 border-t border-slate-100 pt-3 mt-1">
               <Label>Period</Label>
               <PeriodPicker type={periodType} value={f.period_key} onChange={(k) => set('period_key', k)} />
               {declaredPeriodType === 'gst_frequency' && (
-                <p className="text-xs text-zinc-500">Clients that file quarterly need a quarter. Those tasks are reported as failed so you can create them separately.</p>
+                <p className="text-xs text-slate-500">Clients that file quarterly need a quarter. Those tasks are reported as failed so you can create them separately.</p>
               )}
             </div>
           )}
-          <div className="flex items-center gap-3 border-t border-zinc-100 pt-3 mt-1">
+          <div className="flex items-center gap-3 border-t border-slate-100 pt-3 mt-1">
             <Checkbox id="billable" checked={f.is_billable} onCheckedChange={(v) => set('is_billable', v === true)} />
             <Label htmlFor="billable" className="cursor-pointer">Billable</Label>
             {f.is_billable && (
@@ -343,21 +343,21 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
 
       {step === 'assignees' && (
         <div className="space-y-4">
-          <div className="tff-card p-4 space-y-4 bg-zinc-50 border-dashed border-2">
+          <div className="tff-card p-4 space-y-4 bg-slate-50 border-dashed border-2">
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-zinc-500" />
+              <Users className="h-4 w-4 text-slate-500" />
               <h3 className="text-sm font-semibold">Bulk apply assignees</h3>
             </div>
             <div className="flex flex-wrap items-end gap-3">
               <div className="space-y-1.5 w-48">
-                <Label className="text-xs text-zinc-500">Assignee</Label>
+                <Label className="text-xs text-slate-500">Assignee</Label>
                 <Select value={bulkAssignee} onValueChange={setBulkAssignee}>
                   <SelectTrigger className="h-8 text-sm bg-white"><SelectValue placeholder="Select..." /></SelectTrigger>
                   <SelectContent>{team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5 w-48">
-                <Label className="text-xs text-zinc-500">Reviewer</Label>
+                <Label className="text-xs text-slate-500">Reviewer</Label>
                 <Select value={bulkReviewer} onValueChange={setBulkReviewer}>
                   <SelectTrigger className="h-8 text-sm bg-white"><SelectValue placeholder="Select..." /></SelectTrigger>
                   <SelectContent>{team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}</SelectContent>
@@ -370,9 +370,9 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
           </div>
 
           <div className="tff-card overflow-hidden">
-            <div className="bg-white border-b border-zinc-200">
+            <div className="bg-white border-b border-slate-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-zinc-50 text-xs text-zinc-500 border-b border-zinc-200 uppercase tracking-wider">
+                <thead className="bg-slate-50 text-xs text-slate-500 border-b border-slate-200 uppercase tracking-wider">
                   <tr>
                     <th className="px-4 py-2 w-10 text-center"><Checkbox checked={allSelectedForAssign} onCheckedChange={toggleAllAssignRows} /></th>
                     <th className="px-4 py-2">Client Task</th>
@@ -380,33 +380,33 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
                     <th className="px-4 py-2 w-48">Reviewer</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 max-h-[25rem] overflow-y-auto">
+                <tbody className="divide-y divide-slate-100 max-h-[25rem] overflow-y-auto">
                   {selectedClientsList.map((c) => {
                     const currentMap = assigneeMap[c.id] || {};
                     return (
-                      <tr key={c.id} className="hover:bg-zinc-50/50">
+                      <tr key={c.id} className="hover:bg-slate-50/50">
                         <td className="px-4 py-2 text-center">
                           <Checkbox checked={selectedForAssign.has(c.id)} onCheckedChange={() => toggleAssignRow(c.id)} />
                         </td>
-                        <td className="px-4 py-2 font-medium text-zinc-900">{c.business_name}</td>
+                        <td className="px-4 py-2 font-medium text-slate-900">{c.business_name}</td>
                         <td className="px-4 py-2">
                           <Select value={currentMap.assignee || 'unassigned'} onValueChange={(v) => setSingleAssignee(c.id, 'assignee', v)}>
-                            <SelectTrigger className="h-8 text-xs border-transparent hover:border-zinc-200 bg-transparent hover:bg-white shadow-none">
+                            <SelectTrigger className="h-8 text-xs border-transparent hover:border-slate-200 bg-transparent hover:bg-white shadow-none">
                               <SelectValue placeholder="Unassigned" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned" className="text-zinc-500">Unassigned</SelectItem>
+                              <SelectItem value="unassigned" className="text-slate-500">Unassigned</SelectItem>
                               {team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </td>
                         <td className="px-4 py-2">
                           <Select value={currentMap.reviewer || 'unassigned'} onValueChange={(v) => setSingleAssignee(c.id, 'reviewer', v)}>
-                            <SelectTrigger className="h-8 text-xs border-transparent hover:border-zinc-200 bg-transparent hover:bg-white shadow-none">
+                            <SelectTrigger className="h-8 text-xs border-transparent hover:border-slate-200 bg-transparent hover:bg-white shadow-none">
                               <SelectValue placeholder="None" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="unassigned" className="text-zinc-500">None</SelectItem>
+                              <SelectItem value="unassigned" className="text-slate-500">None</SelectItem>
                               {team.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}
                             </SelectContent>
                           </Select>
@@ -429,8 +429,8 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
       {step === 'preview' && (
         <div className="space-y-4">
           <div className="tff-card tff-card-pad space-y-3">
-            <h3 className="font-semibold text-zinc-900">Preview</h3>
-            <div className="text-sm text-zinc-600 space-y-1">
+            <h3 className="font-semibold text-slate-900">Preview</h3>
+            <div className="text-sm text-slate-600 space-y-1">
               <p><strong>Total Tasks:</strong> {selectedClients.size}</p>
               <p><strong>Task name:</strong> {autoTitle || '—'}</p>
               <p><strong>Due:</strong> {f.due_date || '—'}</p>
@@ -439,25 +439,25 @@ export default function BulkTaskForm({ clients, team, groups, templates = [], in
               <p><strong>Billable:</strong> {f.is_billable ? `Yes · ${f.bill_reference || 'No ref'} · ₹${f.bill_amount || 0}` : 'No'}</p>
             </div>
             
-            <div className="mt-4 pt-4 border-t border-zinc-100">
-              <h4 className="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-2">Assignment Overview</h4>
-              <div className="max-h-32 overflow-y-auto text-xs text-zinc-500 space-y-1">
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">Assignment Overview</h4>
+              <div className="max-h-32 overflow-y-auto text-xs text-slate-500 space-y-1">
                 {selectedClientsList.slice(0, 5).map(c => {
                   const m = assigneeMap[c.id];
                   const aName = m?.assignee ? team.find(t => t.id === m.assignee)?.full_name : 'Unassigned';
-                  return <div key={c.id} className="flex justify-between border-b border-zinc-50 pb-1"><span className="truncate pr-2">{c.business_name}</span><span className="font-medium shrink-0">{aName}</span></div>;
+                  return <div key={c.id} className="flex justify-between border-b border-slate-50 pb-1"><span className="truncate pr-2">{c.business_name}</span><span className="font-medium shrink-0">{aName}</span></div>;
                 })}
                 {selectedClientsList.length > 5 && <div className="pt-1 italic">...and {selectedClientsList.length - 5} more</div>}
               </div>
             </div>
 
             {pending && (
-              <div className="space-y-2 mt-4 pt-4 border-t border-zinc-100">
+              <div className="space-y-2 mt-4 pt-4 border-t border-slate-100">
                 <div className="flex items-center gap-2 text-sm text-teal-700 font-medium">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Creating {progress.done} of {progress.total} tasks…
                 </div>
-                <div className="h-2 bg-zinc-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-teal-500 transition-all duration-300 ease-out"
                     style={{ width: `${progress.total > 0 ? (progress.done / progress.total) * 100 : 0}%` }}

@@ -60,7 +60,7 @@ export default async function AdminTeamPage() {
             {team.length === 0 ? (
               <TableRow><TableCell colSpan={6} className="p-0"><EmptyState title="No team members" body="Create the first team member to get started." actionHref="/admin/team" actionLabel="Create member" variant="clients" /></TableCell></TableRow>
             ) : (team.map((u: any) => (
-              <TableRow key={u.id} className="cursor-pointer hover:bg-zinc-50">
+              <TableRow key={u.id} className="cursor-pointer hover:bg-slate-50">
                 <TableCell className="font-medium">
                   <DockLink item={{ type: 'team', id: u.id }} href={`/admin/team/${u.id}`} className="hover:underline" data-testid={`team-row-${u.id}`}>
                     {u.full_name}
@@ -70,7 +70,7 @@ export default async function AdminTeamPage() {
                 <TableCell>
                   <Badge variant={u.role === 'admin' ? 'teal' : 'outline'}>{u.role}</Badge>
                 </TableCell>
-                <TableCell className="text-sm text-zinc-500">
+                <TableCell className="text-sm text-slate-500">
                   {u.reports_to ? managerMap.get(u.reports_to) ?? '—' : '—'}
                 </TableCell>
                 <TableCell>

@@ -75,7 +75,7 @@ export default function TeamDetailShell({
     <div className="flex flex-col h-[calc(100vh-6.5rem)] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
       {!isModal && (
         <div className="flex-none mb-4 md:hidden">
-          <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 font-medium">
+          <Link href={basePath} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 font-medium">
             <ChevronLeft className="h-4 w-4" /> Back to team
           </Link>
         </div>
@@ -93,7 +93,7 @@ export default function TeamDetailShell({
                 <Badge variant={user.role === "admin" ? "teal" : "outline"}>
                   {user.role}
                 </Badge>
-                <span className="text-sm text-zinc-500">{user.email}</span>
+                <span className="text-sm text-slate-500">{user.email}</span>
                 {activeTemplate && (
                   <Badge variant="success" className="gap-1">
                     <ShieldCheck className="h-3 w-3" /> {activeTemplate.name}
@@ -123,10 +123,10 @@ export default function TeamDetailShell({
           {/* Employment details — now editable */}
           <div className="tff-card p-6 space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-[13px] font-semibold text-zinc-700">Employment details</h3>
+              <h3 className="text-[13px] font-semibold text-slate-700">Employment details</h3>
               {!editingEmployment ? (
                 <Button variant="ghost" size="sm" onClick={() => setEditingEmployment(true)} className="h-8 w-8 p-0">
-                  <Pencil className="h-4 w-4 text-zinc-500" />
+                  <Pencil className="h-4 w-4 text-slate-500" />
                 </Button>
               ) : (
                 <div className="flex items-center gap-1">
@@ -134,38 +134,38 @@ export default function TeamDetailShell({
                     <Check className="h-4 w-4 text-teal-600" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={cancelEmployment} disabled={pending} className="h-8 w-8 p-0">
-                    <X className="h-4 w-4 text-zinc-500" />
+                    <X className="h-4 w-4 text-slate-500" />
                   </Button>
                 </div>
               )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <div className="text-xs font-semibold text-zinc-500 mb-1.5">Job title</div>
+                <div className="text-xs font-semibold text-slate-500 mb-1.5">Job title</div>
                 {editingEmployment ? (
                   <Input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="e.g. Analyst" />
                 ) : (
-                  <div className="text-sm text-zinc-900">{user.job_title || '—'}</div>
+                  <div className="text-sm text-slate-900">{user.job_title || '—'}</div>
                 )}
               </div>
               <div>
-                <div className="text-xs font-semibold text-zinc-500 mb-1.5">Department</div>
+                <div className="text-xs font-semibold text-slate-500 mb-1.5">Department</div>
                 {editingEmployment ? (
                   <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Tax" />
                 ) : (
-                  <div className="text-sm text-zinc-900">{user.department || '—'}</div>
+                  <div className="text-sm text-slate-900">{user.department || '—'}</div>
                 )}
               </div>
               <div>
-                <div className="text-xs font-semibold text-zinc-500 mb-1.5">Phone</div>
+                <div className="text-xs font-semibold text-slate-500 mb-1.5">Phone</div>
                 {editingEmployment ? (
                   <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" />
                 ) : (
-                  <div className="text-sm text-zinc-900">{user.phone_number || '—'}</div>
+                  <div className="text-sm text-slate-900">{user.phone_number || '—'}</div>
                 )}
               </div>
               <div>
-                <div className="text-xs font-semibold text-zinc-500 mb-1">Reports to</div>
+                <div className="text-xs font-semibold text-slate-500 mb-1">Reports to</div>
                 <ManagerControl
                   userId={user.id}
                   currentManagerId={user.reports_to}
@@ -176,7 +176,7 @@ export default function TeamDetailShell({
           </div>
 
           <div className="tff-card p-6 space-y-5">
-            <h3 className="text-[13px] font-semibold text-zinc-700">Login credentials</h3>
+            <h3 className="text-[13px] font-semibold text-slate-700">Login credentials</h3>
             <CredentialsControl userId={user.id} currentEmail={user.email} />
           </div>
 
@@ -188,10 +188,10 @@ export default function TeamDetailShell({
           {user.role !== "admin" && (
             <div className="tff-card p-6 space-y-4">
               <div>
-                <h3 className="text-[13px] font-semibold flex items-center gap-2 text-zinc-700">
+                <h3 className="text-[13px] font-semibold flex items-center gap-2 text-slate-700">
                   <ShieldCheck className="h-4 w-4 text-teal-600" /> Apply a role
                 </h3>
-                <p className="text-[12px] text-zinc-500 mt-1">
+                <p className="text-[12px] text-slate-500 mt-1">
                   Pick a role template to bulk-grant capabilities. Manage
                   templates from{" "}
                   <Link href={`${basePath}/roles`} className="text-teal-700 hover:underline">
@@ -210,10 +210,10 @@ export default function TeamDetailShell({
           <div className="tff-card p-6">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-[13px] font-semibold flex items-center gap-2 text-zinc-700">
+                <h3 className="text-[13px] font-semibold flex items-center gap-2 text-slate-700">
                   <ShieldCheck className="h-4 w-4 text-teal-600" /> Capabilities
                 </h3>
-                <p className="text-[12px] text-zinc-500 mt-1">
+                <p className="text-[12px] text-slate-500 mt-1">
                   {user.role === "admin"
                     ? "Admins implicitly hold every capability."
                     : `${caps.length} of ${ALL_CAPABILITIES.length} granted.`}

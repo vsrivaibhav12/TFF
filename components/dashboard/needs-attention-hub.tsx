@@ -36,29 +36,29 @@ export function NeedsAttentionHub({ items = [] }: { items?: AttentionItem[] }) {
     <div className="tff-card p-5 h-full flex flex-col">
       <div className="flex items-baseline justify-between mb-3">
         <h3 className="tff-section-title">Needs attention</h3>
-        <span className="text-xs text-zinc-500">Overdue, stuck and awaiting approval</span>
+        <span className="text-xs text-slate-500">Overdue, stuck and awaiting approval</span>
       </div>
 
       {items.length === 0 ? (
         <EmptyState title="All clear" body="No items need your immediate attention right now." variant="all-clear" />
       ) : (
-        <ul className="-mx-2 divide-y divide-zinc-100">
+        <ul className="-mx-2 divide-y divide-slate-100">
           {items.map((item) => (
             <li key={item.id}>
               <Link
                 href={item.href}
-                className="group flex items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-zinc-50 transition-colors"
+                className="group flex items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-slate-50 transition-colors"
               >
                 <span className={`h-2 w-2 rounded-full shrink-0 ${DOT[item.color]}`} aria-hidden />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-zinc-900 truncate">{item.title}</div>
-                  <div className="text-xs text-zinc-500 truncate">{item.client}</div>
+                  <div className="text-sm font-medium text-slate-900 truncate">{item.title}</div>
+                  <div className="text-xs text-slate-500 truncate">{item.client}</div>
                 </div>
                 <span className={`text-xs font-medium shrink-0 ${REASON[item.color]}`}>
                   {item.reason}
                   {item.amountLabel ? ` · ${item.amountLabel}` : ''}
                 </span>
-                <ChevronRight className="h-4 w-4 text-zinc-300 group-hover:text-zinc-500 shrink-0" />
+                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500 shrink-0" />
               </Link>
             </li>
           ))}

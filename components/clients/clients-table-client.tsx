@@ -178,7 +178,7 @@ export default function ClientsTableClient({
   );
 
   function SortIcon({ col }: { col: typeof sortKey }) {
-    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 text-zinc-300" />;
+    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 text-slate-300" />;
     return sortDir === 'asc' ? (
       <ArrowUp className="h-3 w-3 text-teal-600" />
     ) : (
@@ -229,13 +229,13 @@ export default function ClientsTableClient({
       {/* Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
           <input
             type="text"
             placeholder="Search name or PAN"
             defaultValue={search}
             onChange={onSearch}
-            className="pl-9 pr-3 h-9 rounded-lg border border-zinc-200 bg-white text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 w-72"
+            className="pl-9 pr-3 h-9 rounded-lg border border-slate-200 bg-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 w-72"
           />
         </div>
         <div className="flex items-center gap-3 ml-auto">
@@ -245,34 +245,34 @@ export default function ClientsTableClient({
             density={density}
             onDensityChange={setDensity}
           />
-          <div className="text-sm text-zinc-500">
+          <div className="text-sm text-slate-500">
             {clients.length} clients
           </div>
         </div>
       </div>
 
       {/* Virtual scroll container */}
-      <div ref={parentRef} className="overflow-auto rounded-xl border border-zinc-200 bg-white" style={{ height: 'calc(100vh - 280px)', minHeight: '420px' }}>
+      <div ref={parentRef} className="overflow-auto tff-card" style={{ height: 'calc(100vh - 280px)', minHeight: '420px' }}>
         {/* Sticky header */}
-        <div className="sticky top-0 z-10 grid grid-cols-[auto_1fr_auto_auto_auto_auto] md:grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-zinc-600 bg-zinc-50 border-b border-zinc-200">
+        <div className="sticky top-0 z-10 grid grid-cols-[auto_1fr_auto_auto_auto_auto] md:grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-slate-600 bg-slate-50 border-b border-slate-200">
           <div className="col-span-1 md:col-span-1 flex items-center">
             <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
           </div>
           <button
-            className="col-span-4 text-left flex items-center gap-1 hover:text-zinc-600 transition-colors"
+            className="col-span-4 text-left flex items-center gap-1 hover:text-slate-600 transition-colors"
             onClick={() => toggleSort('name')}
           >
             Client <SortIcon col="name" />
           </button>
           <button
-            className="col-span-2 text-left hidden md:flex items-center gap-1 hover:text-zinc-600 transition-colors"
+            className="col-span-2 text-left hidden md:flex items-center gap-1 hover:text-slate-600 transition-colors"
             onClick={() => toggleSort('group')}
           >
             Group <SortIcon col="group" />
           </button>
           <div className="col-span-2 text-left hidden md:block">Compliance</div>
           <button
-            className="col-span-2 text-left hidden md:flex items-center gap-1 hover:text-zinc-600 transition-colors"
+            className="col-span-2 text-left hidden md:flex items-center gap-1 hover:text-slate-600 transition-colors"
             onClick={() => toggleSort('engagements')}
           >
             Work <SortIcon col="engagements" />
@@ -301,9 +301,9 @@ export default function ClientsTableClient({
                 >
                   <div
                     className={cn(
-                      'group grid grid-cols-[auto_1fr_auto_auto_auto_auto] md:grid-cols-12 gap-4 items-center px-4 border-b border-zinc-100 transition-colors cursor-pointer',
+                      'group grid grid-cols-[auto_1fr_auto_auto_auto_auto] md:grid-cols-12 gap-4 items-center px-4 border-b border-slate-100 transition-colors cursor-pointer',
                       density === 'compact' ? 'py-1.5' : 'py-2.5',
-                      selectedIds.has(c.id) ? 'bg-teal-50' : 'hover:bg-zinc-50',
+                      selectedIds.has(c.id) ? 'bg-teal-50' : 'hover:bg-slate-50',
                     )}
                   >
                     {/* Checkbox */}
@@ -322,11 +322,11 @@ export default function ClientsTableClient({
                     <div className="col-span-4 flex items-center gap-3 min-w-0">
                       <div className="min-w-0">
                         <ClientHoverCard clientId={c.id}>
-                          <div className="text-sm font-medium text-zinc-900 truncate">
+                          <div className="text-sm font-medium text-slate-900 truncate">
                             {c.business_name}
                           </div>
                         </ClientHoverCard>
-                        <div className="flex items-center gap-2 text-xs text-zinc-500 mt-0.5">
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
                           {c.city && (
                             <span className="flex items-center gap-0.5">
                               <MapPin className="h-3 w-3" />
@@ -375,7 +375,7 @@ export default function ClientsTableClient({
                     <div className="col-span-2 hidden md:block">
                       <span
                         className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold tabular-nums ${
-                          c.engagements > 0 ? 'bg-teal-50 text-teal-600' : 'bg-zinc-100 text-zinc-500'
+                          c.engagements > 0 ? 'bg-teal-50 text-teal-600' : 'bg-slate-100 text-slate-500'
                         }`}
                       >
                         {c.engagements}
@@ -384,8 +384,8 @@ export default function ClientsTableClient({
 
                     {/* View arrow */}
                     <div className="col-span-1 flex justify-end">
-                      <div className="opacity-0 group-hover:opacity-100 w-8 h-8 rounded-lg bg-zinc-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
-                        <ArrowUpRight className="h-4 w-4 text-zinc-500 group-hover:text-teal-600 transition-colors" />
+                      <div className="opacity-0 group-hover:opacity-100 w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
+                        <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-teal-600 transition-colors" />
                       </div>
                     </div>
                   </div>

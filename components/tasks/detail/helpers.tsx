@@ -10,9 +10,9 @@ export function ReadField({ label, children }: { label: string; children: import
 
 export function DetailItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between items-center py-2 border-b border-zinc-100 last:border-0">
-      <dt className="text-zinc-500 text-xs">{label}</dt>
-      <dd className="font-semibold text-zinc-900 text-right">{value}</dd>
+    <div className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
+      <dt className="text-slate-500 text-xs">{label}</dt>
+      <dd className="font-semibold text-slate-900 text-right">{value}</dd>
     </div>
   );
 }

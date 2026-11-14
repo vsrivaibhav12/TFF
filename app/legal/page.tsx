@@ -11,11 +11,11 @@ export default function LegalIndex() {
     <div className="max-w-3xl mx-auto px-6 py-12">
       <h1 className="tff-page-title">Legal documents</h1>
       <p className="tff-page-subtitle">Engagement, privacy, terms and SLA in one place.</p>
-      <div className="mt-8 divide-y divide-zinc-100 tff-card overflow-hidden">
+      <div className="mt-8 divide-y divide-slate-100 tff-card overflow-hidden">
         {docs.map((d) => (
-          <Link key={d.href} href={d.href} className="block p-5 hover:bg-zinc-50">
-            <div className="font-medium text-zinc-900">{d.label}</div>
-            <div className="text-sm text-zinc-500 mt-1">{d.desc}</div>
+          <Link key={d.href} href={d.href} className="block p-5 hover:bg-slate-50">
+            <div className="font-medium text-slate-900">{d.label}</div>
+            <div className="text-sm text-slate-500 mt-1">{d.desc}</div>
           </Link>
         ))}
       </div>

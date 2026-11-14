@@ -60,12 +60,12 @@ export default async function SettingsPage({ rolePrefix }: Props) {
               className="tff-card p-5 hover:border-teal-200 hover:bg-teal-50/20 transition-all group"
             >
               <div className="flex items-start gap-3">
-                <div className="rounded-xl bg-zinc-100 p-2.5 group-hover:bg-white group-hover:border group-hover:border-zinc-200 transition-all">
+                <div className="rounded-xl bg-slate-100 p-2.5 group-hover:bg-white group-hover:border group-hover:border-slate-200 transition-all">
                   <Icon className="h-5 w-5 text-teal-600" />
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold text-zinc-900">{c.title}</div>
-                  <p className="text-sm text-zinc-500 mt-1">{c.body}</p>
+                  <div className="font-semibold text-slate-900">{c.title}</div>
+                  <p className="text-sm text-slate-500 mt-1">{c.body}</p>
                 </div>
               </div>
             </Link>

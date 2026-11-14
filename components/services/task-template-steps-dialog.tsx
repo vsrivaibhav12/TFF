@@ -121,13 +121,13 @@ export default function TaskTemplateStepsDialog({
           <DialogTitle className="text-base">Steps — {template.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          {steps.length === 0 && <div className="text-xs text-zinc-500 italic">No steps yet. Add the first one below.</div>}
+          {steps.length === 0 && <div className="text-xs text-slate-500 italic">No steps yet. Add the first one below.</div>}
           {steps.map((step, idx) => {
             const isEditing = editingId === step.id;
             return (
-              <div key={step.id} className="flex items-start gap-2 rounded border border-zinc-200 bg-zinc-50 px-3 py-2">
-                <GripVertical className="h-3 w-3 text-zinc-300 mt-0.5 shrink-0" />
-                <span className="text-xs font-mono text-zinc-500 w-5 mt-0.5 shrink-0">{idx + 1}.</span>
+              <div key={step.id} className="flex items-start gap-2 rounded border border-slate-200 bg-slate-50 px-3 py-2">
+                <GripVertical className="h-3 w-3 text-slate-300 mt-0.5 shrink-0" />
+                <span className="text-xs font-mono text-slate-500 w-5 mt-0.5 shrink-0">{idx + 1}.</span>
                 <div className="flex-1 min-w-0">
                   {isEditing ? (
                     <div className="space-y-2">
@@ -141,22 +141,22 @@ export default function TaskTemplateStepsDialog({
                   ) : (
                     <>
                       <div className="text-sm">{step.title}</div>
-                      {step.guidance_notes && <div className="text-xs text-zinc-500 mt-0.5">{step.guidance_notes}</div>}
+                      {step.guidance_notes && <div className="text-xs text-slate-500 mt-0.5">{step.guidance_notes}</div>}
                     </>
                   )}
                 </div>
                 {!isEditing && (
                   <>
-                    <button onClick={() => startEdit(step)} className="text-zinc-500 hover:text-zinc-700 mt-0.5" title="Edit step"><Pencil className="h-3 w-3" /></button>
-                    <button onClick={() => move(idx, -1)} disabled={idx === 0} className="text-zinc-500 hover:text-zinc-700 disabled:opacity-30 text-xs mt-0.5">↑</button>
-                    <button onClick={() => move(idx, 1)} disabled={idx === steps.length - 1} className="text-zinc-500 hover:text-zinc-700 disabled:opacity-30 text-xs mt-0.5">↓</button>
-                    <button onClick={() => removeStep(step.id)} className="text-zinc-500 hover:text-red-600 mt-0.5"><Trash2 className="h-3 w-3" /></button>
+                    <button onClick={() => startEdit(step)} className="text-slate-500 hover:text-slate-700 mt-0.5" title="Edit step"><Pencil className="h-3 w-3" /></button>
+                    <button onClick={() => move(idx, -1)} disabled={idx === 0} className="text-slate-500 hover:text-slate-700 disabled:opacity-30 text-xs mt-0.5">↑</button>
+                    <button onClick={() => move(idx, 1)} disabled={idx === steps.length - 1} className="text-slate-500 hover:text-slate-700 disabled:opacity-30 text-xs mt-0.5">↓</button>
+                    <button onClick={() => removeStep(step.id)} className="text-slate-500 hover:text-red-600 mt-0.5"><Trash2 className="h-3 w-3" /></button>
                   </>
                 )}
               </div>
             );
           })}
-          <div className="space-y-2 pt-2 border-t border-zinc-100">
+          <div className="space-y-2 pt-2 border-t border-slate-100">
             <Input value={draftTitle} onChange={(e) => setDraftTitle(e.target.value)} placeholder="Step title, e.g. Reconcile vendor invoices vs 2B" className="text-sm" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addStep(); } }} />
             <Textarea value={draftGuidance} onChange={(e) => setDraftGuidance(e.target.value)} placeholder="Guidance notes for staff (optional)" rows={2} className="text-sm" />
             <Button onClick={addStep} disabled={pending || !draftTitle.trim()} size="sm"><Plus className="h-3 w-3" /> Add step</Button>

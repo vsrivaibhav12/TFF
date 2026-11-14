@@ -84,7 +84,7 @@ export default async function LeavePage() {
                   <TableCell className="text-xs">{formatDateIST(r.from_date)} → {formatDateIST(r.to_date)}</TableCell>
                   <TableCell>{r.number_of_days}</TableCell>
                   <TableCell><Badge variant={r.status === 'approved' ? 'success' : r.status === 'rejected' ? 'destructive' : 'warning'}>{r.status}</Badge></TableCell>
-                  <TableCell className="text-xs text-zinc-500">{r.review_remarks ?? '—'}</TableCell>
+                  <TableCell className="text-xs text-slate-500">{r.review_remarks ?? '—'}</TableCell>
                 </TableRow>
               ))}</TableBody>
             </Table>

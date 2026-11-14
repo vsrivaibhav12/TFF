@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils';
 export type StatTone = 'default' | 'zinc' | 'red' | 'amber' | 'warning';
 
 const ICON_TONE: Record<StatTone, string> = {
-  default: 'bg-zinc-100 text-zinc-500',
-  zinc: 'bg-zinc-100 text-zinc-600',
+  default: 'bg-slate-100 text-slate-500',
+  zinc: 'bg-slate-100 text-slate-600',
   red: 'bg-red-50 text-red-600',
   amber: 'bg-amber-50 text-amber-600',
   warning: 'bg-amber-50 text-amber-600',
@@ -34,7 +34,7 @@ export function StatCard({
   const isZero = value === 0 || value === '0';
   const effective: StatTone = isZero ? 'default' : tone;
   const valueColor =
-    effective === 'red' ? 'text-red-600' : effective === 'amber' || effective === 'warning' ? 'text-amber-600' : 'text-zinc-900';
+    effective === 'red' ? 'text-red-600' : effective === 'amber' || effective === 'warning' ? 'text-amber-600' : 'text-slate-900';
   const body = (
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-2 text-[13px] font-medium text-slate-600">

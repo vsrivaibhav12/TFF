@@ -99,7 +99,7 @@ export default async function BillingPage({ searchParams }: Props) {
           <div className="overflow-x-auto">
             <Table>
             <TableHeader>
-              <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
+              <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
                 <TableHead>Task</TableHead>
                 <TableHead>Client</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
@@ -112,11 +112,11 @@ export default async function BillingPage({ searchParams }: Props) {
               {tasks.map((t: any) => (
                 <TableRow key={t.id} className={t.billed ? 'opacity-60' : ''}>
                   <TableCell>
-                    <div className="font-medium text-zinc-900">{t.title}</div>
-                    <div className="text-xs text-zinc-500 font-mono">{t.task_number ?? '—'}</div>
+                    <div className="font-medium text-slate-900">{t.title}</div>
+                    <div className="text-xs text-slate-500 font-mono">{t.task_number ?? '—'}</div>
                   </TableCell>
-                  <TableCell className="text-sm text-zinc-700">{t.clients?.business_name ?? '—'}</TableCell>
-                  <TableCell className="text-right font-medium text-zinc-900">
+                  <TableCell className="text-sm text-slate-700">{t.clients?.business_name ?? '—'}</TableCell>
+                  <TableCell className="text-right font-medium text-slate-900">
                     {t.bill_amount ? `₹${t.bill_amount.toLocaleString('en-IN')}` : '—'}
                   </TableCell>
                   <TableCell className="text-center">
@@ -126,7 +126,7 @@ export default async function BillingPage({ searchParams }: Props) {
                       <Badge variant="warning">Pending</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm text-zinc-500 tabular-nums">
+                  <TableCell className="text-sm text-slate-500 tabular-nums">
                     {formatDateIST(t.completed_date) || '—'}
                   </TableCell>
                   <TableCell>

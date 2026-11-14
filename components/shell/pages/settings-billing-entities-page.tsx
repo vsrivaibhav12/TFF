@@ -22,7 +22,7 @@ export default async function BillingEntitiesPage(_props: unknown, rolePrefix: s
 
   return (
     <div className="space-y-8 max-w-5xl">
-      <Link href={`${rolePrefix}/settings`} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={`${rolePrefix}/settings`} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
         <ChevronLeft className="h-4 w-4" /> Settings
       </Link>
       <div>

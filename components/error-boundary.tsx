@@ -31,8 +31,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
       return (
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-6 text-center">
-          <p className="text-sm font-medium text-zinc-700">This widget failed to load.</p>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center">
+          <p className="text-sm font-medium text-slate-700">This widget failed to load.</p>
           <Button
             variant="outline"
             size="sm"

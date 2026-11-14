@@ -78,8 +78,8 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Clients</h1>
-          <p className="text-sm text-zinc-500 mt-1">{totalCount.toLocaleString('en-IN')} client{totalCount !== 1 ? 's' : ''} in your firm&apos;s roster.</p>
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">Clients</h1>
+          <p className="text-sm text-slate-500 mt-1">{totalCount.toLocaleString('en-IN')} client{totalCount !== 1 ? 's' : ''} in your firm&apos;s roster.</p>
         </div>
         <div className="flex gap-2">
           <FullExport source={{ kind: 'clients', filters: { group: searchParams.group, city: searchParams.city, q: searchParams.q } }} label="clients" filename="clients" total={totalCount} />
@@ -116,34 +116,34 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
           {/* Pagination controls */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-slate-500">
                 Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, totalCount)} of {totalCount}
               </p>
               <div className="flex items-center gap-1">
                 {currentPage > 1 ? (
                   <Link
                     href={pageHref(currentPage - 1)}
-                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors"
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Link>
                 ) : (
-                  <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-100 text-zinc-300">
+                  <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-slate-100 text-slate-300">
                     <ChevronLeft className="h-4 w-4" />
                   </span>
                 )}
-                <span className="px-3 text-sm font-medium text-zinc-700">
+                <span className="px-3 text-sm font-medium text-slate-700">
                   Page {currentPage} of {totalPages}
                 </span>
                 {currentPage < totalPages ? (
                   <Link
                     href={pageHref(currentPage + 1)}
-                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors"
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 ) : (
-                  <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-zinc-100 text-zinc-300">
+                  <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-slate-100 text-slate-300">
                     <ChevronRight className="h-4 w-4" />
                   </span>
                 )}

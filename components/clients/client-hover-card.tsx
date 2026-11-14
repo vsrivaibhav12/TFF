@@ -43,28 +43,28 @@ export function ClientHoverCard({ clientId, children }: { clientId: string; chil
           </div>
         )}
         {!isLoading && !data && (
-          <div className="text-sm text-zinc-500">Unable to load preview.</div>
+          <div className="text-sm text-slate-500">Unable to load preview.</div>
         )}
         {data && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-teal-600" />
-              <span className="text-sm font-medium text-zinc-900 truncate">{data.business_name}</span>
+              <span className="text-sm font-medium text-slate-900 truncate">{data.business_name}</span>
             </div>
-            <div className="space-y-1.5 text-xs text-zinc-600">
+            <div className="space-y-1.5 text-xs text-slate-600">
               <div className="flex items-center gap-1.5">
-                <Briefcase className="h-3 w-3 text-zinc-500" />
+                <Briefcase className="h-3 w-3 text-slate-500" />
                 <span>{data.open_work_count} open work items</span>
               </div>
               {data.compliance_score !== null && (
                 <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-3 w-3 text-zinc-500" />
+                  <ShieldCheck className="h-3 w-3 text-slate-500" />
                   <span>Compliance score: {data.compliance_score}%</span>
                 </div>
               )}
               {data.primary_contact_name && (
                 <div className="flex items-center gap-1.5">
-                  <Users className="h-3 w-3 text-zinc-500" />
+                  <Users className="h-3 w-3 text-slate-500" />
                   <span>Contact: {data.primary_contact_name}</span>
                 </div>
               )}

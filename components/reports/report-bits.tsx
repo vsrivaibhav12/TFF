@@ -14,20 +14,20 @@ export function BarList({
   emptyText?: string;
   barClass?: string;
 }) {
-  if (items.length === 0) return <div className="p-8 text-sm text-zinc-500 text-center">{emptyText}</div>;
+  if (items.length === 0) return <div className="p-8 text-sm text-slate-500 text-center">{emptyText}</div>;
   const max = Math.max(1, ...items.map((i) => i.value));
   return (
-    <ul className="divide-y divide-zinc-100">
+    <ul className="divide-y divide-slate-100">
       {items.map((i) => (
         <li key={i.key} className="px-5 py-2.5">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-sm font-medium text-zinc-900 truncate">{i.name}</span>
-            <span className="text-sm tabular-nums text-zinc-700 shrink-0">
+            <span className="text-sm font-medium text-slate-900 truncate">{i.name}</span>
+            <span className="text-sm tabular-nums text-slate-700 shrink-0">
               {format(i.value)}
-              {i.hint && <span className="ml-2 text-xs text-zinc-500">{i.hint}</span>}
+              {i.hint && <span className="ml-2 text-xs text-slate-500">{i.hint}</span>}
             </span>
           </div>
-          <div className="mt-1.5 h-1.5 rounded-full bg-zinc-100 overflow-hidden" role="img" aria-label={`${i.name}: ${format(i.value)}`}>
+          <div className="mt-1.5 h-1.5 rounded-full bg-slate-100 overflow-hidden" role="img" aria-label={`${i.name}: ${format(i.value)}`}>
             <div className={cn('h-full rounded-full', barClass)} style={{ width: `${Math.max(2, Math.round((i.value / max) * 100))}%` }} />
           </div>
         </li>
@@ -49,7 +49,7 @@ export function DayColumns({ days, format }: { days: { date: string; value: numb
           </div>
         ))}
       </div>
-      <div className="mt-1 flex justify-between text-xs text-zinc-500 tabular-nums">
+      <div className="mt-1 flex justify-between text-xs text-slate-500 tabular-nums">
         <span>{days[0].date}</span>
         <span>{days[days.length - 1].date}</span>
       </div>
@@ -64,19 +64,19 @@ export function Pager({ page, pages, total, pageSize, hrefFor }: { page: number;
   const to = Math.min(page * pageSize, total);
   const btn = 'inline-flex h-9 w-9 items-center justify-center rounded-lg border';
   return (
-    <div className="flex items-center justify-between border-t border-zinc-100 px-5 py-3">
-      <p className="text-sm text-zinc-500 tabular-nums">Showing {from}–{to} of {total}</p>
+    <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
+      <p className="text-sm text-slate-500 tabular-nums">Showing {from}–{to} of {total}</p>
       <div className="flex items-center gap-1">
         {page > 1 ? (
-          <Link href={hrefFor(page - 1)} aria-label="Previous page" className={cn(btn, 'border-zinc-200 text-zinc-600 hover:bg-zinc-50')}><ChevronLeft className="h-4 w-4" /></Link>
+          <Link href={hrefFor(page - 1)} aria-label="Previous page" className={cn(btn, 'border-slate-200 text-slate-600 hover:bg-slate-50')}><ChevronLeft className="h-4 w-4" /></Link>
         ) : (
-          <span aria-disabled="true" className={cn(btn, 'border-zinc-100 text-zinc-300')}><ChevronLeft className="h-4 w-4" /></span>
+          <span aria-disabled="true" className={cn(btn, 'border-slate-100 text-slate-300')}><ChevronLeft className="h-4 w-4" /></span>
         )}
-        <span className="px-3 text-sm font-medium text-zinc-700 tabular-nums">Page {page} of {pages}</span>
+        <span className="px-3 text-sm font-medium text-slate-700 tabular-nums">Page {page} of {pages}</span>
         {page < pages ? (
-          <Link href={hrefFor(page + 1)} aria-label="Next page" className={cn(btn, 'border-zinc-200 text-zinc-600 hover:bg-zinc-50')}><ChevronRight className="h-4 w-4" /></Link>
+          <Link href={hrefFor(page + 1)} aria-label="Next page" className={cn(btn, 'border-slate-200 text-slate-600 hover:bg-slate-50')}><ChevronRight className="h-4 w-4" /></Link>
         ) : (
-          <span aria-disabled="true" className={cn(btn, 'border-zinc-100 text-zinc-300')}><ChevronRight className="h-4 w-4" /></span>
+          <span aria-disabled="true" className={cn(btn, 'border-slate-100 text-slate-300')}><ChevronRight className="h-4 w-4" /></span>
         )}
       </div>
     </div>

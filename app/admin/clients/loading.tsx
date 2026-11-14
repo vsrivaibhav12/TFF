@@ -8,7 +8,7 @@ export default function ClientsLoading() {
         <Skeleton className="h-10 w-28" />
       </div>
       <div className="tff-card">
-        <div className="p-4 border-b border-zinc-100 space-y-3">
+        <div className="p-4 border-b border-slate-100 space-y-3">
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-4 w-5/6" />

@@ -31,7 +31,7 @@ interface Props {
 export default function TaskTemplatePanel({ subService, templates, stepsByTemplate }: Props) {
   if (templates.length === 0) {
     return (
-      <div className="mt-3 text-xs text-zinc-500 italic">
+      <div className="mt-3 text-xs text-slate-500 italic">
         No task templates yet.{' '}
         <TaskTemplateDialog subServiceId={subService.id} subServiceName={subService.name}>
           <button className="text-teal-700 hover:underline">Create one</button>
@@ -42,7 +42,7 @@ export default function TaskTemplatePanel({ subService, templates, stepsByTempla
 
   return (
     <div className="mt-3 space-y-2">
-      <div className="text-xs font-semibold text-zinc-500 flex items-center gap-1">
+      <div className="text-xs font-semibold text-slate-500 flex items-center gap-1">
         <ListChecks className="h-3 w-3" /> Task templates
       </div>
       <div className="space-y-1.5">
@@ -56,19 +56,19 @@ export default function TaskTemplatePanel({ subService, templates, stepsByTempla
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-sm font-medium truncate">{tmpl.title}</span>
-                <span className="font-mono text-xs text-zinc-500 shrink-0">{tmpl.frequency}</span>
+                <span className="font-mono text-xs text-slate-500 shrink-0">{tmpl.frequency}</span>
                 {tmpl.estimated_days != null && (
                   <Badge variant="outline" className="text-xs shrink-0">{tmpl.estimated_days}d</Badge>
                 )}
                 {!tmpl.is_active && <Badge variant="warning" className="text-xs shrink-0">inactive</Badge>}
-                <span className="text-xs text-zinc-500 shrink-0">{steps.length} step{steps.length !== 1 ? 's' : ''}</span>
+                <span className="text-xs text-slate-500 shrink-0">{steps.length} step{steps.length !== 1 ? 's' : ''}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <TaskTemplateStepsDialog template={tmpl} steps={steps}>
                   <button className="text-xs text-teal-700 hover:underline">Steps</button>
                 </TaskTemplateStepsDialog>
                 <TaskTemplateDialog subServiceId={subService.id} subServiceName={subService.name} initial={tmpl}>
-                  <button className="text-xs text-zinc-500 hover:text-zinc-900 hover:underline">Edit</button>
+                  <button className="text-xs text-slate-500 hover:text-slate-900 hover:underline">Edit</button>
                 </TaskTemplateDialog>
               </div>
             </div>

@@ -134,7 +134,7 @@ export function GlobalTimer({ role }: { role: string }) {
     return (
       <button
         onClick={handleStart}
-        className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-700 hover:bg-zinc-100 transition-colors"
+        className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-teal-700 hover:bg-slate-100 transition-colors"
         title="Start timer"
         aria-label="Start timer"
       >
@@ -144,15 +144,15 @@ export function GlobalTimer({ role }: { role: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-full px-2 py-1 transition-colors hover:bg-white">
-      <div className={`text-xs font-mono font-medium px-2 tabular-nums ${isRunning ? 'text-teal-700' : 'text-zinc-500'}`}>
+    <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-2 py-1 transition-colors hover:bg-white">
+      <div className={`text-xs font-mono font-medium px-2 tabular-nums ${isRunning ? 'text-teal-700' : 'text-slate-500'}`}>
         {formatTime(seconds)}
       </div>
-      <div className="flex items-center gap-1 border-l border-zinc-200 pl-2">
+      <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
         {!isRunning ? (
           <button
             onClick={handleStart}
-            className="p-1 rounded-full text-zinc-500 hover:text-teal-600 hover:bg-teal-50 transition-colors"
+            className="p-1 rounded-full text-slate-500 hover:text-teal-600 hover:bg-teal-50 transition-colors"
             title="Start timer"
           >
             <Play className="h-3.5 w-3.5" />
@@ -168,7 +168,7 @@ export function GlobalTimer({ role }: { role: string }) {
         )}
         <button
           onClick={handleStop}
-          className="p-1 rounded-full text-zinc-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+          className="p-1 rounded-full text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
           title="Stop and log time"
           aria-label="Stop and log time"
           disabled={logging}

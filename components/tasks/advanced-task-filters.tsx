@@ -159,17 +159,17 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-[420px] p-0" sideOffset={8}>
-            <div className="px-4 py-3 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 rounded-t-xl">
+            <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50 rounded-t-xl">
               <h4 className="font-semibold text-sm">Advanced filters</h4>
               {activeCount > 0 && (
-                <Button variant="ghost" size="sm" className="h-6 text-xs text-zinc-500 hover:text-red-600 px-2" onClick={clearAll}>
+                <Button variant="ghost" size="sm" className="h-6 text-xs text-slate-500 hover:text-red-600 px-2" onClick={clearAll}>
                   Clear all
                 </Button>
               )}
             </div>
             <div className="p-4 grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Sub-service</Label>
+                <Label className="text-xs text-slate-500">Sub-service</Label>
                 <Select value={f.sub_service || 'all'} onValueChange={(v) => update('sub_service', v)}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Any" /></SelectTrigger>
                   <SelectContent>
@@ -179,11 +179,11 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Period year</Label>
+                <Label className="text-xs text-slate-500">Period year</Label>
                 <Input type="number" placeholder="e.g. 2026" className="h-8 text-xs" value={f.period_year || ''} onChange={(e) => update('period_year', e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Period month</Label>
+                <Label className="text-xs text-slate-500">Period month</Label>
                 <Select value={f.period_month || 'all'} onValueChange={(v) => update('period_month', v)}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Any" /></SelectTrigger>
                   <SelectContent>
@@ -195,15 +195,15 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Due from</Label>
+                <Label className="text-xs text-slate-500">Due from</Label>
                 <Input type="date" className="h-8 text-xs" value={f.due_from || ''} onChange={(e) => update('due_from', e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Due to</Label>
+                <Label className="text-xs text-slate-500">Due to</Label>
                 <Input type="date" className="h-8 text-xs" value={f.due_to || ''} onChange={(e) => update('due_to', e.target.value)} />
               </div>
-              <div className="space-y-1.5 col-span-2 border-t border-zinc-100 pt-3">
-                <Label className="text-xs text-zinc-500 mb-2 block">Attributes</Label>
+              <div className="space-y-1.5 col-span-2 border-t border-slate-100 pt-3">
+                <Label className="text-xs text-slate-500 mb-2 block">Attributes</Label>
                 <div className="flex items-center gap-4 flex-wrap">
                   <label htmlFor="filter-billable" className="flex items-center gap-2 cursor-pointer">
                     <Checkbox id="filter-billable" checked={f.is_billable === 'true'} onCheckedChange={(c) => update('is_billable', c ? 'true' : 'false')} />
@@ -220,7 +220,7 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
                 </div>
               </div>
             </div>
-            <div className="px-4 py-3 bg-zinc-50 border-t border-zinc-100 rounded-b-xl flex justify-end">
+            <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 rounded-b-xl flex justify-end">
               <Button size="sm" onClick={() => setIsOpen(false)}>Done</Button>
             </div>
           </PopoverContent>
@@ -230,7 +230,7 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
       {/* Active filters display bar */}
       {activeCount > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs text-zinc-500 mr-1">Active:</span>
+          <span className="text-xs text-slate-500 mr-1">Active:</span>
           {Object.entries(f).map(([k, v]) => {
             if (!v || v === 'all' || v === 'false') return null;
             let label = `${k}: ${v}`;
@@ -257,7 +257,7 @@ export default function AdvancedTaskFilters({ clients: initialClients = [], team
               </Badge>
             );
           })}
-          <Button variant="ghost" size="sm" onClick={clearAll} className="h-5 px-2 ml-1 text-xs text-zinc-500 hover:text-zinc-900">
+          <Button variant="ghost" size="sm" onClick={clearAll} className="h-5 px-2 ml-1 text-xs text-slate-500 hover:text-slate-900">
             Clear
           </Button>
         </div>

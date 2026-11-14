@@ -95,13 +95,13 @@ export default function ClientImportPage() {
 
   return (
     <div className="space-y-8 max-w-5xl">
-      <Link href="/admin/clients" className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href="/admin/clients" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
         <ChevronLeft className="h-4 w-4" /> Clients
       </Link>
 
       <div>
         <h1 className="tff-page-title">Bulk import clients</h1>
-        <p className="text-sm text-zinc-500 mt-1">
+        <p className="text-sm text-slate-500 mt-1">
           Two ways to add clients in bulk: upload a CSV / Excel file, or paste a list
           of GSTINs and we&apos;ll derive state and PAN automatically.
         </p>
@@ -109,11 +109,11 @@ export default function ClientImportPage() {
 
       {/* Mode switcher */}
       {!preview && (
-        <div className="inline-flex rounded-lg border border-zinc-200 bg-white p-1 text-sm">
+        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 text-sm">
           <button
             type="button"
             onClick={() => setMode('file')}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-2 ${mode === 'file' ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:text-zinc-900'}`}
+            className={`px-3 py-1.5 rounded-md flex items-center gap-2 ${mode === 'file' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}
             data-testid="import-mode-file"
           >
             <FileSpreadsheet className="h-4 w-4" /> Upload file
@@ -121,7 +121,7 @@ export default function ClientImportPage() {
           <button
             type="button"
             onClick={() => setMode('paste')}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-2 ${mode === 'paste' ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:text-zinc-900'}`}
+            className={`px-3 py-1.5 rounded-md flex items-center gap-2 ${mode === 'paste' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}
             data-testid="import-mode-paste"
           >
             <ClipboardList className="h-4 w-4" /> Paste GSTINs
@@ -136,12 +136,12 @@ export default function ClientImportPage() {
             <FileSpreadsheet className="h-5 w-5 text-teal-600 mt-0.5" />
             <div className="text-sm space-y-2">
               <p className="font-medium">Expected columns (any order, case-insensitive):</p>
-              <code className="block rounded bg-zinc-50 border border-zinc-200 p-3 text-xs leading-relaxed">
-                business_name <span className="text-zinc-500">(required)</span>, pan, gstin, category,
+              <code className="block rounded bg-slate-50 border border-slate-200 p-3 text-xs leading-relaxed">
+                business_name <span className="text-slate-500">(required)</span>, pan, gstin, category,
                 industry, primary_contact_person, primary_contact_email,
                 primary_contact_phone, city, state, pincode, group
               </code>
-              <p className="text-zinc-500 text-xs">
+              <p className="text-slate-500 text-xs">
                 <strong>category</strong> must be one of: sole_proprietor, partnership, llp,
                 pvt_ltd, public_ltd, huf, aop, ngo, other.
               </p>
@@ -163,13 +163,13 @@ export default function ClientImportPage() {
             <ClipboardList className="h-5 w-5 text-teal-600 mt-0.5" />
             <div className="text-sm space-y-2">
               <p className="font-medium">Paste one GSTIN per line.</p>
-              <p className="text-zinc-500 text-xs leading-relaxed">
+              <p className="text-slate-500 text-xs leading-relaxed">
                 We&apos;ll validate the 15-char format, derive PAN from positions 3–12,
                 and look up the state from the first 2 digits. You fill in business
                 name and contact details in the preview table before importing.
                 Maximum 200 GSTINs per paste.
               </p>
-              <code className="block rounded bg-zinc-50 border border-zinc-200 p-2 text-xs leading-relaxed text-zinc-500">
+              <code className="block rounded bg-slate-50 border border-slate-200 p-2 text-xs leading-relaxed text-slate-500">
                 33ABCDE1234F1Z5<br />
                 27FGHIJ5678K2Z9<br />
                 07LMNOP9012Q3Z4
@@ -183,7 +183,7 @@ export default function ClientImportPage() {
               placeholder="Paste GSTINs here, one per line…"
               rows={8}
               required
-              className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-teal-500"
               data-testid="gstn-paste-input"
             />
             <Button type="submit" disabled={pending || !pasteText.trim()} data-testid="gstn-paste-preview-btn">
@@ -208,7 +208,7 @@ export default function ClientImportPage() {
                     <AlertTriangle className="h-3 w-3" /> {preview.summary.error} with errors
                   </Badge>
                 )}
-                <span className="text-sm text-zinc-500">{preview.summary.total} total</span>
+                <span className="text-sm text-slate-500">{preview.summary.total} total</span>
               </div>
               <div className="flex gap-2">
                 <Button variant="ghost" size="sm" onClick={() => setPreview(null)} disabled={pending}>
@@ -220,7 +220,7 @@ export default function ClientImportPage() {
               </div>
             </div>
             {isPasteMode && (
-              <p className="text-xs text-zinc-500 mt-3">
+              <p className="text-xs text-slate-500 mt-3">
                 Tip: fill in <strong>Business name</strong> for each row — it&apos;s required.
                 Email and phone are optional. State and PAN were auto-derived from the GSTIN.
               </p>
@@ -230,8 +230,8 @@ export default function ClientImportPage() {
           <div className="tff-card overflow-hidden">
             <div className="overflow-x-auto max-h-[560px] overflow-y-auto">
               <Table className="w-full text-sm">
-                <TableHeader className="bg-zinc-50 sticky top-0">
-                  <TableRow className="text-left text-zinc-500 hover:bg-zinc-50">
+                <TableHeader className="bg-slate-50 sticky top-0">
+                  <TableRow className="text-left text-slate-500 hover:bg-slate-50">
                     <TableHead className="px-3 py-2 font-medium">Row</TableHead>
                     <TableHead className="px-3 py-2 font-medium">Business name {isPasteMode && <span className="text-red-500">*</span>}</TableHead>
                     <TableHead className="px-3 py-2 font-medium">PAN</TableHead>
@@ -248,7 +248,7 @@ export default function ClientImportPage() {
                     const hasErr = r.errors.length > 0;
                     return (
                       <TableRow key={r.row_index} className={hasErr ? 'bg-amber-50/40' : ''} data-testid={`import-row-${r.row_index}`}>
-                        <TableCell className="px-3 py-2 text-zinc-500 align-top">{r.row_index}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-500 align-top">{r.row_index}</TableCell>
                         <TableCell className="px-3 py-2 align-top">
                           {isPasteMode ? (
                             <Input
@@ -261,9 +261,9 @@ export default function ClientImportPage() {
                             <span className="font-medium">{r.business_name || '—'}</span>
                           )}
                         </TableCell>
-                        <TableCell className="px-3 py-2 text-zinc-600 align-top font-mono text-xs">{r.pan ?? '—'}</TableCell>
-                        <TableCell className="px-3 py-2 text-zinc-600 align-top font-mono text-xs">{r.gstin ?? '—'}</TableCell>
-                        <TableCell className="px-3 py-2 text-zinc-600 align-top">{r.state ?? '—'}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-600 align-top font-mono text-xs">{r.pan ?? '—'}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-600 align-top font-mono text-xs">{r.gstin ?? '—'}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-600 align-top">{r.state ?? '—'}</TableCell>
                         <TableCell className="px-3 py-2 align-top">
                           {isPasteMode ? (
                             <Input
@@ -273,7 +273,7 @@ export default function ClientImportPage() {
                               className="h-8 text-sm w-48"
                             />
                           ) : (
-                            <span className="text-zinc-600">{r.primary_contact_email ?? '—'}</span>
+                            <span className="text-slate-600">{r.primary_contact_email ?? '—'}</span>
                           )}
                         </TableCell>
                         <TableCell className="px-3 py-2 align-top">
@@ -285,10 +285,10 @@ export default function ClientImportPage() {
                               className="h-8 text-sm w-36"
                             />
                           ) : (
-                            <span className="text-zinc-600">{r.primary_contact_phone ?? '—'}</span>
+                            <span className="text-slate-600">{r.primary_contact_phone ?? '—'}</span>
                           )}
                         </TableCell>
-                        <TableCell className="px-3 py-2 text-zinc-600 align-top">{r.group ?? '—'}</TableCell>
+                        <TableCell className="px-3 py-2 text-slate-600 align-top">{r.group ?? '—'}</TableCell>
                         <TableCell className="px-3 py-2 align-top">
                           {hasErr ? (
                             <span className="text-xs text-amber-700">{r.errors.join('; ')}</span>

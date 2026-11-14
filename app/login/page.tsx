@@ -25,19 +25,19 @@ export default function LoginPage() {
       </div>
 
       {/* Right side - form */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12 bg-zinc-50/50">
+      <div className="flex-1 flex items-center justify-center p-6 md:p-12 bg-slate-50/50">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <div className="inline-flex items-center gap-2">
               <Image src="/logo.png" width={160} height={32} className="h-8 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
-              <span className="text-lg font-bold text-zinc-900">The Fiscal Fulcrum</span>
+              <span className="text-lg font-bold text-slate-900">The Fiscal Fulcrum</span>
             </div>
           </div>
 
           <div className="mb-8">
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Welcome back</h1>
-            <p className="text-sm text-zinc-500 mt-1.5">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome back</h1>
+            <p className="text-sm text-slate-500 mt-1.5">
               Sign in to access your portal
             </p>
           </div>
@@ -46,7 +46,7 @@ export default function LoginPage() {
             <LoginForm />
           </Suspense>
 
-          <p className="mt-6 text-center text-xs text-zinc-500">
+          <p className="mt-6 text-center text-xs text-slate-500">
             Authorised users only. All sessions are logged and monitored.
           </p>
         </div>

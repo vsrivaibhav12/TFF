@@ -58,19 +58,19 @@ export function UniversalDetailDock() {
             {isStacked && (
               <button 
                 onClick={pop}
-                className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-500 transition-colors"
+                className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-slate-500 transition-colors"
                 title="Go back"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
             )}
-            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
               {{ task: 'Task', client: 'Client', team: 'Team member' }[topItem.type] ?? topItem.type}
             </span>
           </div>
           <button 
             onClick={clear}
-            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 text-zinc-600 transition-colors"
+            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-slate-600 transition-colors"
             title="Close"
             aria-label="Close panel"
           >
@@ -94,7 +94,7 @@ export function UniversalDetailDock() {
 function PanelSkeleton() {
   return (
     <div className="absolute inset-0 flex items-center justify-center">
-      <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+      <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
     </div>
   );
 }
@@ -268,5 +268,5 @@ function renderPanel(type: string, data: any, prefix: string, onRefresh?: () => 
     );
   }
 
-  return <div className="p-6 text-sm text-zinc-500">View for {type} not implemented yet.</div>;
+  return <div className="p-6 text-sm text-slate-500">View for {type} not implemented yet.</div>;
 }

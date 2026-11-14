@@ -89,18 +89,18 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
                 {SUB_SERVICE_PERIOD_TYPES.map((x) => <SelectItem key={x} value={x}>{PERIOD_TYPE_LABELS[x]}</SelectItem>)}
               </SelectContent>
             </Select>
-            <p className="text-xs text-zinc-500">The period each task covers: a month, a quarter, a half-year or a financial year. Services such as registrations have no period.</p>
+            <p className="text-xs text-slate-500">The period each task covers: a month, a quarter, a half-year or a financial year. Services such as registrations have no period.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2"><Label>Due day of quarter</Label><Input type="number" min={1} max={31} value={f.due_day_of_quarter ?? ''} onChange={(e) => set('due_day_of_quarter', e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 15" /></div>
             <div className="space-y-2"><Label>Due month (for annual)</Label><Input type="number" min={1} max={12} value={f.due_month ?? ''} onChange={(e) => set('due_month', e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 7 for July" /></div>
           </div>
-          <div className="flex items-center justify-between border-t border-zinc-100 pt-3">
-            <div><Label>Compliance item</Label><p className="text-xs text-zinc-500">Tracked on the compliance dashboard, such as GSTR-1 or TDS. Leave off for one-off work like registrations.</p></div>
+          <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+            <div><Label>Compliance item</Label><p className="text-xs text-slate-500">Tracked on the compliance dashboard, such as GSTR-1 or TDS. Leave off for one-off work like registrations.</p></div>
             <Switch checked={f.is_compliance} onCheckedChange={(v) => { setComplianceChosen(true); set('is_compliance', !!v); }} data-testid="ss-is-compliance" />
           </div>
-          <div className="flex items-center justify-between border-t border-zinc-100 pt-3">
-            <div><Label>Active</Label><p className="text-xs text-zinc-500">Inactive sub-services don’t appear when assigning to clients.</p></div>
+          <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+            <div><Label>Active</Label><p className="text-xs text-slate-500">Inactive sub-services don’t appear when assigning to clients.</p></div>
             <Switch checked={f.is_active} onCheckedChange={(v) => set('is_active', !!v)} />
           </div>
 
@@ -112,17 +112,17 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
             {showAdvanced ? 'Hide advanced options' : 'Show advanced options'}
           </button>
           {showAdvanced && (
-            <div className="space-y-3 pt-2 border-t border-zinc-100">
+            <div className="space-y-3 pt-2 border-t border-slate-100">
               <div className="flex items-center justify-between">
-                <div><Label>Recurring</Label><p className="text-xs text-zinc-500">Auto-generates a task every period.</p></div>
+                <div><Label>Recurring</Label><p className="text-xs text-slate-500">Auto-generates a task every period.</p></div>
                 <Switch checked={f.is_recurring} onCheckedChange={(v) => set('is_recurring', !!v)} />
               </div>
               <div className="flex items-center justify-between">
-                <div><Label>Needs client input</Label><p className="text-xs text-zinc-500">Adds an awaiting-client step in the workflow.</p></div>
+                <div><Label>Needs client input</Label><p className="text-xs text-slate-500">Adds an awaiting-client step in the workflow.</p></div>
                 <Switch checked={f.requires_client_input} onCheckedChange={(v) => set('requires_client_input', !!v)} />
               </div>
               <div className="flex items-center justify-between">
-                <div><Label>Requires reviewer verification</Label><p className="text-xs text-zinc-500">When completed, mark as pending verification until a senior reviewer signs off.</p></div>
+                <div><Label>Requires reviewer verification</Label><p className="text-xs text-slate-500">When completed, mark as pending verification until a senior reviewer signs off.</p></div>
                 <Switch checked={f.requires_verification} onCheckedChange={(v) => set('requires_verification', !!v)} data-testid="ss-requires-verification" />
               </div>
             </div>

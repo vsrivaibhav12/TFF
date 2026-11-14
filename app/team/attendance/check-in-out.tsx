@@ -63,7 +63,7 @@ export default function CheckInOut({
           <Clock className="h-4 w-4" /> {pending ? 'Checking out…' : 'Check out'}
         </Button>
       )}
-      {today?.check_out_time && <span className="text-sm text-zinc-500">Checked out</span>}
+      {today?.check_out_time && <span className="text-sm text-slate-500">Checked out</span>}
     </div>
   );
 }

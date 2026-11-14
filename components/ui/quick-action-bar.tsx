@@ -29,10 +29,10 @@ export function QuickActionBar({ actions, className }: QuickActionBarProps) {
               'flex items-center gap-2 h-9 px-3.5 rounded-lg text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2',
               isDefault
                 ? 'bg-teal-600 text-white hover:bg-teal-700'
-                : 'bg-white text-zinc-700 hover:bg-zinc-50 border border-zinc-200 hover:border-zinc-300'
+                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 hover:border-slate-300'
             )}
           >
-            <Icon className={cn('h-4 w-4', isDefault ? 'text-white' : 'text-zinc-500')} />
+            <Icon className={cn('h-4 w-4', isDefault ? 'text-white' : 'text-slate-500')} />
             {action.label}
           </button>
         );

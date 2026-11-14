@@ -196,8 +196,8 @@ export default function CreateDeadlineTasks({
       <ol className="flex items-center gap-5 text-sm">
         {['Deadline', 'Assign', 'Review and create'].map((label, i) => (
           <li key={label} className="flex items-center gap-2">
-            <span className={`h-5 w-5 rounded-full text-xs flex items-center justify-center ${stepNow > i ? 'bg-teal-600 text-white' : 'bg-zinc-100 text-zinc-500'}`}>{i + 1}</span>
-            <span className={stepNow > i ? 'text-zinc-900' : 'text-zinc-500'}>{label}</span>
+            <span className={`h-5 w-5 rounded-full text-xs flex items-center justify-center ${stepNow > i ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-500'}`}>{i + 1}</span>
+            <span className={stepNow > i ? 'text-slate-900' : 'text-slate-500'}>{label}</span>
           </li>
         ))}
       </ol>
@@ -235,25 +235,25 @@ export default function CreateDeadlineTasks({
             )}
           </div>
 
-          {loading && <p className="text-sm text-zinc-500 flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading clients</p>}
+          {loading && <p className="text-sm text-slate-500 flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading clients</p>}
           {loadError && <p className="text-sm text-red-600">{loadError}</p>}
 
           {plan && (
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg bg-zinc-50 px-3 py-2.5 text-sm">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
               <div className="flex items-center gap-2">
                 <CalendarClock className="h-4 w-4 text-teal-600" />
-                <span className="text-zinc-500">Due date</span>
-                <b className="font-medium text-zinc-900">{plan.due_date ? formatDateIST(plan.due_date) : 'Not set'}</b>
-                <span className="text-xs text-zinc-500">({SOURCE_LABEL[plan.due_source]})</span>
+                <span className="text-slate-500">Due date</span>
+                <b className="font-medium text-slate-900">{plan.due_date ? formatDateIST(plan.due_date) : 'Not set'}</b>
+                <span className="text-xs text-slate-500">({SOURCE_LABEL[plan.due_source]})</span>
                 <Button type="button" size="sm" variant="outline" className="h-7" onClick={() => setChangeOpen(true)} data-testid="change-deadline">
                   <Pencil className="h-3 w-3 mr-1" /> Change
                 </Button>
               </div>
               {plan.original_due_date && plan.original_due_date !== plan.due_date && (
-                <span className="text-xs text-zinc-500">Originally {formatDateIST(plan.original_due_date)}{plan.extension_note ? `. ${plan.extension_note}` : ''}</span>
+                <span className="text-xs text-slate-500">Originally {formatDateIST(plan.original_due_date)}{plan.extension_note ? `. ${plan.extension_note}` : ''}</span>
               )}
-              <span className="ml-auto text-zinc-500 tabular-nums">
-                {plan.counts.linked} linked · {plan.counts.applicable} apply · <b className="font-medium text-zinc-900">{plan.counts.exists} already have a task</b>
+              <span className="ml-auto text-slate-500 tabular-nums">
+                {plan.counts.linked} linked · {plan.counts.applicable} apply · <b className="font-medium text-slate-900">{plan.counts.exists} already have a task</b>
                 {plan.counts.notApplicable > 0 ? ` · ${plan.counts.notApplicable} do not apply` : ''}
               </span>
             </div>
@@ -264,7 +264,7 @@ export default function CreateDeadlineTasks({
       {plan && view === 'pick' && (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-zinc-500 tabular-nums">{selectedReady.length} selected</span>
+            <span className="text-sm text-slate-500 tabular-nums">{selectedReady.length} selected</span>
             <Button type="button" variant="outline" size="sm" onClick={useDefaults}>Use default assignees</Button>
             <div className="flex items-center gap-1">
               <Select value={bulkPerson} onValueChange={(v) => { setBulkPerson(v); assignSelected(v); }}>
@@ -274,7 +274,7 @@ export default function CreateDeadlineTasks({
             </div>
             <Button type="button" variant="outline" size="sm" onClick={split}>Split by workload</Button>
             {groups.length > 0 && (
-              <div className="ml-auto flex items-center gap-2 text-xs text-zinc-500">
+              <div className="ml-auto flex items-center gap-2 text-xs text-slate-500">
                 Group
                 <Select value={groupFilter} onValueChange={setGroupFilter}>
                   <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
@@ -288,7 +288,7 @@ export default function CreateDeadlineTasks({
           </div>
 
           <div className="tff-card overflow-hidden">
-            <div className="grid grid-cols-[28px_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1.1fr)] gap-3 items-center px-4 py-2 text-xs text-zinc-500 bg-zinc-50 border-b border-zinc-100">
+            <div className="grid grid-cols-[28px_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1.1fr)] gap-3 items-center px-4 py-2 text-xs text-slate-500 bg-slate-50 border-b border-slate-100">
               <Checkbox
                 checked={visible.some((c) => c.status === 'ready') && visible.filter((c) => c.status === 'ready').every((c) => selected.has(c.client_id))}
                 onCheckedChange={(v) => selectAllVisible(v === true)}
@@ -296,20 +296,20 @@ export default function CreateDeadlineTasks({
               />
               <span>Client</span><span>Default assignee</span><span>Assign to</span>
             </div>
-            <div className="divide-y divide-zinc-100 max-h-[28rem] overflow-y-auto">
-              {visible.length === 0 && <p className="p-6 text-sm text-zinc-500 text-center">No clients are linked to this service.</p>}
+            <div className="divide-y divide-slate-100 max-h-[28rem] overflow-y-auto">
+              {visible.length === 0 && <p className="p-6 text-sm text-slate-500 text-center">No clients are linked to this service.</p>}
               {visible.map((c) => {
                 const ready = c.status === 'ready';
                 return (
                   <div key={c.client_id} className={`grid grid-cols-[28px_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1.1fr)] gap-3 items-center px-4 py-2 text-sm ${ready ? '' : 'opacity-60'}`} data-testid={`deadline-row-${c.client_id}`}>
                     <Checkbox checked={ready && selected.has(c.client_id)} disabled={!ready} onCheckedChange={() => toggle(c.client_id)} aria-label={`Select ${c.business_name}`} />
                     <div className="min-w-0">
-                      <div className="truncate text-zinc-900">{c.business_name}</div>
-                      {c.group_name && <div className="text-xs text-zinc-500 truncate">{c.group_name}</div>}
+                      <div className="truncate text-slate-900">{c.business_name}</div>
+                      {c.group_name && <div className="text-xs text-slate-500 truncate">{c.group_name}</div>}
                     </div>
                     {ready ? (
                       <>
-                        <span className={`text-xs truncate ${c.default_assignee_id ? 'text-zinc-600' : 'text-amber-700'}`}>{c.default_assignee_id ? teamName(c.default_assignee_id) : 'Not set'}</span>
+                        <span className={`text-xs truncate ${c.default_assignee_id ? 'text-slate-600' : 'text-amber-700'}`}>{c.default_assignee_id ? teamName(c.default_assignee_id) : 'Not set'}</span>
                         <Select value={assign[c.client_id] ?? ''} onValueChange={(v) => setAssign((p) => ({ ...p, [c.client_id]: v }))} disabled={!selected.has(c.client_id)}>
                           <SelectTrigger className={`h-8 text-xs ${selected.has(c.client_id) && !assign[c.client_id] ? 'border-amber-400' : ''}`} aria-label={`Assignee for ${c.business_name}`}>
                             <SelectValue placeholder="Choose" />
@@ -318,7 +318,7 @@ export default function CreateDeadlineTasks({
                         </Select>
                       </>
                     ) : (
-                      <span className="col-span-2 text-xs text-zinc-600">{c.status === 'exists' ? 'Task exists' : c.reason ?? 'Does not apply'}</span>
+                      <span className="col-span-2 text-xs text-slate-600">{c.status === 'exists' ? 'Task exists' : c.reason ?? 'Does not apply'}</span>
                     )}
                   </div>
                 );
@@ -327,7 +327,7 @@ export default function CreateDeadlineTasks({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-slate-500">
               {selectedReady.length === 0
                 ? 'Select at least one client.'
                 : missing.length > 0
@@ -344,12 +344,12 @@ export default function CreateDeadlineTasks({
       {plan && view === 'review' && (
         <div className="tff-card p-4 space-y-4" data-testid="review-step">
           <div>
-            <h2 className="text-base font-semibold text-zinc-900">{selectedReady.length} task{selectedReady.length === 1 ? '' : 's'} for {sub?.name}, {plan.period_label}</h2>
-            <p className="text-sm text-zinc-500">Each task gets the checklist from the service. You can change a task afterwards.</p>
+            <h2 className="text-base font-semibold text-slate-900">{selectedReady.length} task{selectedReady.length === 1 ? '' : 's'} for {sub?.name}, {plan.period_label}</h2>
+            <p className="text-sm text-slate-500">Each task gets the checklist from the service. You can change a task afterwards.</p>
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
             {Object.entries(selectedReady.reduce<Record<string, number>>((acc, c) => { const k = assign[c.client_id]; acc[k] = (acc[k] ?? 0) + 1; return acc; }, {}))
-              .map(([id, n]) => <span key={id} className="text-zinc-600"><b className="font-medium text-zinc-900 tabular-nums">{n}</b> to {teamName(id)}</span>)}
+              .map(([id, n]) => <span key={id} className="text-slate-600"><b className="font-medium text-slate-900 tabular-nums">{n}</b> to {teamName(id)}</span>)}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
             <div className="space-y-1.5">
@@ -372,13 +372,13 @@ export default function CreateDeadlineTasks({
           {canRememberDefaults && (
             <div className="flex items-center gap-2">
               <Checkbox id="remember-defaults" checked={remember} onCheckedChange={(v) => setRemember(v === true)} />
-              <Label htmlFor="remember-defaults" className="text-sm font-normal text-zinc-700 cursor-pointer">
+              <Label htmlFor="remember-defaults" className="text-sm font-normal text-slate-700 cursor-pointer">
                 Remember these people as each client&apos;s default for this service
               </Label>
             </div>
           )}
           {plan.due_date && plan.due_date < todayIST() && dueDate === todayIST() && (
-            <p className="text-sm text-zinc-500">The statutory date ({formatDateIST(plan.due_date)}) has passed, so the tasks are due today.</p>
+            <p className="text-sm text-slate-500">The statutory date ({formatDateIST(plan.due_date)}) has passed, so the tasks are due today.</p>
           )}
           {!dueDate && <p className="text-sm text-red-600">Set a due date before creating.</p>}
           <div className="flex gap-2">
@@ -392,20 +392,20 @@ export default function CreateDeadlineTasks({
 
       {view === 'done' && result && (
         <div className="tff-card p-4 space-y-4" data-testid="result-step">
-          <div className="flex items-center gap-2 text-base font-semibold text-zinc-900">
+          <div className="flex items-center gap-2 text-base font-semibold text-slate-900">
             <Check className="h-5 w-5 text-teal-600" /> {result.created.length} task{result.created.length === 1 ? '' : 's'} created
           </div>
-          {result.defaults_saved > 0 && <p className="text-sm text-zinc-500">{result.defaults_saved} default assignee{result.defaults_saved === 1 ? '' : 's'} saved.</p>}
+          {result.defaults_saved > 0 && <p className="text-sm text-slate-500">{result.defaults_saved} default assignee{result.defaults_saved === 1 ? '' : 's'} saved.</p>}
           {result.skipped.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-zinc-900">Skipped ({result.skipped.length})</h3>
-              <ul className="text-sm text-zinc-600 list-disc pl-5">{result.skipped.map((s) => <li key={s.client_id}>{s.client_name}: {s.reason}</li>)}</ul>
+              <h3 className="text-sm font-medium text-slate-900">Skipped ({result.skipped.length})</h3>
+              <ul className="text-sm text-slate-600 list-disc pl-5">{result.skipped.map((s) => <li key={s.client_id}>{s.client_name}: {s.reason}</li>)}</ul>
             </div>
           )}
           {result.failed.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-red-700">Not created ({result.failed.length})</h3>
-              <ul className="text-sm text-zinc-600 list-disc pl-5">{result.failed.map((s) => <li key={s.client_id}>{s.client_name ?? s.client_id}: {s.reason}</li>)}</ul>
+              <ul className="text-sm text-slate-600 list-disc pl-5">{result.failed.map((s) => <li key={s.client_id}>{s.client_name ?? s.client_id}: {s.reason}</li>)}</ul>
             </div>
           )}
           <div className="flex gap-2">
@@ -472,7 +472,7 @@ function ChangeDueDateDialog({
           </div>
           <div className="flex items-center gap-2">
             <Checkbox id="move-open-tasks" checked={move} onCheckedChange={(v) => setMove(v === true)} />
-            <Label htmlFor="move-open-tasks" className="text-sm font-normal text-zinc-700 cursor-pointer">
+            <Label htmlFor="move-open-tasks" className="text-sm font-normal text-slate-700 cursor-pointer">
               Also move the due date on open tasks for this deadline that you can see
             </Label>
           </div>

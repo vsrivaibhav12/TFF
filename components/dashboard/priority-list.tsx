@@ -90,11 +90,11 @@ export function PriorityList({ tasks, href, emptyMessage = 'No urgent tasks' }: 
 
       {tasks.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center py-10">
-          <div className="h-10 w-10 rounded-full bg-zinc-50 flex items-center justify-center mb-3 border border-zinc-100">
-            <Inbox className="h-5 w-5 text-zinc-500" />
+          <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center mb-3 border border-slate-100">
+            <Inbox className="h-5 w-5 text-slate-500" />
           </div>
-          <p className="text-sm text-zinc-600 font-medium">{emptyMessage}</p>
-          <p className="text-xs text-zinc-500 mt-1">Open tasks due soonest will appear here.</p>
+          <p className="text-sm text-slate-600 font-medium">{emptyMessage}</p>
+          <p className="text-xs text-slate-500 mt-1">Open tasks due soonest will appear here.</p>
         </div>
       ) : (
         <div className="space-y-1">
@@ -105,7 +105,7 @@ export function PriorityList({ tasks, href, emptyMessage = 'No urgent tasks' }: 
               <div
                 key={t.id}
                 className={cn(
-                  'group flex items-center gap-3 rounded-lg border-l-2 py-2 px-3 hover:bg-zinc-50 transition-colors',
+                  'group flex items-center gap-3 rounded-lg border-l-2 py-2 px-3 hover:bg-slate-50 transition-colors',
                   urgencyBorder(t)
                 )}
               >
@@ -119,7 +119,7 @@ export function PriorityList({ tasks, href, emptyMessage = 'No urgent tasks' }: 
                 >
                   <input
                     type="checkbox"
-                    className="h-4 w-4 rounded border-zinc-300 text-teal-600 focus:ring-teal-600 cursor-pointer"
+                    className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-600 cursor-pointer"
                     checked={isCompleted}
                     onChange={(e) => handleComplete(e, t.id)}
                     disabled={isCompleted}
@@ -128,14 +128,14 @@ export function PriorityList({ tasks, href, emptyMessage = 'No urgent tasks' }: 
 
                 <Link href={`${href}/${t.id}`} className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate group-hover:text-teal-700 transition-colors">{displayTaskName(t)}</div>
-                  <div className="text-xs text-zinc-500">
+                  <div className="text-xs text-slate-500">
                     {clientName(t)}
                     {assigneeName(t) ? ` · ${assigneeName(t)}` : ''}
                   </div>
                 </Link>
 
                 <div className="flex items-center gap-2 shrink-0 group-hover:hidden">
-                  <span className="text-xs text-zinc-500">{dueLabel(t.due_date)}</span>
+                  <span className="text-xs text-slate-500">{dueLabel(t.due_date)}</span>
                   <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full border', priorityStyles[p] || priorityStyles.medium)}>
                     {p}
                   </span>
@@ -147,7 +147,7 @@ export function PriorityList({ tasks, href, emptyMessage = 'No urgent tasks' }: 
                       <Play className="h-3 w-3 mr-1" /> Start
                     </Button>
                   ) : t.status === 'in_progress' ? (
-                    <Button variant="ghost" size="sm" className="h-7 text-xs text-zinc-700 hover:bg-zinc-50" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const r = await transitionTaskAction({ task_id: t.id, to_status: 'completed' }); if (r.success) { toast.success('Task completed'); router.refresh(); } else toast.error(r.error); }}>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs text-slate-700 hover:bg-slate-50" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const r = await transitionTaskAction({ task_id: t.id, to_status: 'completed' }); if (r.success) { toast.success('Task completed'); router.refresh(); } else toast.error(r.error); }}>
                       <CheckCircle2 className="h-3 w-3 mr-1" /> Complete
                     </Button>
                   ) : null}

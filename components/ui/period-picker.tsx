@@ -31,7 +31,7 @@ export function PeriodPicker({
   }, [type]);
 
   if (type === 'none') {
-    return <p className="text-xs text-zinc-500 py-2">This service has no period.</p>;
+    return <p className="text-xs text-slate-500 py-2">This service has no period.</p>;
   }
 
   // A stored value of another period type (for example after changing the service) counts as unset.

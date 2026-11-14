@@ -43,7 +43,7 @@ export const ResizableTableHead = React.forwardRef<HTMLTableCellElement, Resizab
         ref={ref}
         style={{ ...style, width: width ? `${width}px` : undefined, minWidth: width ? `${width}px` : undefined }}
         className={cn(
-          'h-12 px-4 text-left align-middle font-semibold text-zinc-500 text-xs uppercase tracking-wider relative',
+          'h-12 px-4 text-left align-middle font-semibold text-slate-500 text-xs uppercase tracking-wider relative',
           resizing && 'select-none',
           className
         )}
@@ -73,7 +73,7 @@ export const ResizableTableHead = React.forwardRef<HTMLTableCellElement, Resizab
               )}
               title="Drag to resize"
             >
-              <span className="h-4 w-px bg-zinc-300" />
+              <span className="h-4 w-px bg-slate-300" />
             </span>
           )}
         </div>

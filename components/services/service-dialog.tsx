@@ -60,10 +60,10 @@ export default function ServiceDialog({ categories, initial, children }: { categ
                   {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-zinc-500">Optional. Group services visually on this page.</p>
+              <p className="text-xs text-slate-500">Optional. Group services visually on this page.</p>
             </div>
             <div className="space-y-2"><Label>Name *</Label><Input value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="GST Compliance" data-testid="svc-name" /></div>
-            <div className="space-y-2"><Label>Code *</Label><Input value={f.code} onChange={(e) => set('code', e.target.value.toUpperCase())} placeholder="GST_COMPLIANCE" data-testid="svc-code" /><p className="text-xs text-zinc-500">Uppercase letters, digits and underscore only.</p></div>
+            <div className="space-y-2"><Label>Code *</Label><Input value={f.code} onChange={(e) => set('code', e.target.value.toUpperCase())} placeholder="GST_COMPLIANCE" data-testid="svc-code" /><p className="text-xs text-slate-500">Uppercase letters, digits and underscore only.</p></div>
             <div className="space-y-2"><Label>Description</Label><Textarea rows={2} value={f.description} onChange={(e) => set('description', e.target.value)} /></div>
             <div className="space-y-2"><Label>Service kind</Label>
               <Select value={f.service_kind || 'unset'} onValueChange={(v) => set('service_kind', v === 'unset' ? '' : v)}>
@@ -78,7 +78,7 @@ export default function ServiceDialog({ categories, initial, children }: { categ
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-zinc-500">Used to show/hide data-entry modules per client. Leave blank to disable gating for this service.</p>
+              <p className="text-xs text-slate-500">Used to show/hide data-entry modules per client. Leave blank to disable gating for this service.</p>
             </div>
           </div>
           <DialogFooter className="gap-2">

@@ -84,7 +84,7 @@ export default function ShortcutsHelp({
       role="button"
       tabIndex={-1}
       aria-label="Close keyboard shortcuts"
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-zinc-900/40 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } }}
       data-testid="shortcuts-overlay"
@@ -93,24 +93,24 @@ export default function ShortcutsHelp({
         role="dialog"
         aria-modal="true"
         aria-label="Keyboard shortcuts"
-        className="max-w-md w-[90%] rounded-2xl border border-zinc-200/50 bg-white/90 backdrop-blur-2xl shadow-2xl p-6"
+        className="max-w-md w-[90%] rounded-2xl border border-slate-200/50 bg-white/90 backdrop-blur-2xl shadow-2xl p-6"
       >
         <h3 className="text-base font-semibold flex items-center gap-2 tracking-tight">
           <Keyboard className="h-4 w-4 text-teal-600" />
           Keyboard shortcuts
         </h3>
-        <div className="mt-4 divide-y divide-zinc-100">
+        <div className="mt-4 divide-y divide-slate-100">
           {SHORTCUTS.map(([k, label]) => (
             <div key={k} className="flex items-center justify-between py-2.5 text-sm">
-              <span className="text-zinc-700">{label}</span>
-              <kbd className="font-mono text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded border border-zinc-200">
+              <span className="text-slate-700">{label}</span>
+              <kbd className="font-mono text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
                 {k}
               </kbd>
             </div>
           ))}
         </div>
-        <div className="mt-4 text-xs text-zinc-500">
-          Press <kbd className="font-mono bg-zinc-100 px-1 py-0.5 rounded text-xs">?</kbd> anytime to toggle this overlay.
+        <div className="mt-4 text-xs text-slate-500">
+          Press <kbd className="font-mono bg-slate-100 px-1 py-0.5 rounded text-xs">?</kbd> anytime to toggle this overlay.
         </div>
       </div>
     </div>

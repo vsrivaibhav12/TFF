@@ -131,34 +131,34 @@ export default async function WorkDoneReportsPage({ searchParams }: { searchPara
           </div>
 
           <section className="tff-card overflow-hidden" aria-label="Time per day">
-            <div className="px-5 py-3 border-b border-zinc-100"><h2 className="text-sm font-semibold text-zinc-900">Time per day</h2></div>
+            <div className="px-5 py-3 border-b border-slate-100"><h2 className="text-sm font-semibold text-slate-900">Time per day</h2></div>
             <DayColumns days={dayColumns} format={formatMinutes} />
           </section>
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <section className="tff-card overflow-hidden" aria-label="By team member">
-              <div className="px-5 py-3 border-b border-zinc-100"><h2 className="text-sm font-semibold text-zinc-900">By team member</h2></div>
+              <div className="px-5 py-3 border-b border-slate-100"><h2 className="text-sm font-semibold text-slate-900">By team member</h2></div>
               <BarList items={s.by_member.map((b) => ({ key: b.key, name: b.name, value: b.minutes, hint: `${b.entries} entries` }))} format={formatMinutes} />
             </section>
             <section className="tff-card overflow-hidden" aria-label="By client">
-              <div className="px-5 py-3 border-b border-zinc-100"><h2 className="text-sm font-semibold text-zinc-900">By client</h2></div>
+              <div className="px-5 py-3 border-b border-slate-100"><h2 className="text-sm font-semibold text-slate-900">By client</h2></div>
               <BarList items={s.by_client.slice(0, 15).map((b) => ({ key: b.key, name: b.name, value: b.minutes, hint: `${b.entries} entries` }))} format={formatMinutes} barClass="bg-sky-500" />
             </section>
             <section className="tff-card overflow-hidden" aria-label="Top tasks">
-              <div className="px-5 py-3 border-b border-zinc-100"><h2 className="text-sm font-semibold text-zinc-900">Top tasks</h2></div>
+              <div className="px-5 py-3 border-b border-slate-100"><h2 className="text-sm font-semibold text-slate-900">Top tasks</h2></div>
               <BarList items={s.by_task.map((b) => ({ key: b.key, name: b.name, value: b.minutes, hint: `${b.entries} entries` }))} format={formatMinutes} barClass="bg-violet-500" emptyText="No time was logged against a task." />
             </section>
           </div>
 
           <section className="tff-card overflow-hidden" aria-label="All entries">
-            <div className="px-5 py-3 border-b border-zinc-100 flex items-baseline justify-between">
-              <h2 className="text-sm font-semibold text-zinc-900">All entries</h2>
-              <span className="text-xs text-zinc-500 tabular-nums">{rows.length} in total</span>
+            <div className="px-5 py-3 border-b border-slate-100 flex items-baseline justify-between">
+              <h2 className="text-sm font-semibold text-slate-900">All entries</h2>
+              <span className="text-xs text-slate-500 tabular-nums">{rows.length} in total</span>
             </div>
             <div className="overflow-x-auto">
               <Table className="min-w-[860px]">
                 <TableHeader>
-                  <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
+                  <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
                     <TableHead className="w-28">Date</TableHead>
                     <TableHead>Member</TableHead>
                     <TableHead>Client</TableHead>
@@ -169,13 +169,13 @@ export default async function WorkDoneReportsPage({ searchParams }: { searchPara
                 </TableHeader>
                 <TableBody>
                   {pageRows.map((r) => (
-                    <TableRow key={r.id} className="hover:bg-zinc-50/60">
-                      <TableCell className="text-sm tabular-nums text-zinc-700 whitespace-nowrap">{formatDateIST(r.work_date)}</TableCell>
-                      <TableCell className="text-sm font-medium text-zinc-900">{r.user_name}</TableCell>
-                      <TableCell className="text-sm text-zinc-700">{r.client_name}</TableCell>
-                      <TableCell className="text-sm text-zinc-700 max-w-[16rem] truncate" title={r.task_title}>{r.task_title}</TableCell>
-                      <TableCell className="text-right text-sm tabular-nums font-medium text-zinc-900">{formatMinutes(r.duration_minutes)}</TableCell>
-                      <TableCell className="text-sm text-zinc-500 max-w-[20rem] truncate" title={r.note ?? ''}>{r.note || '—'}</TableCell>
+                    <TableRow key={r.id} className="hover:bg-slate-50/60">
+                      <TableCell className="text-sm tabular-nums text-slate-700 whitespace-nowrap">{formatDateIST(r.work_date)}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">{r.user_name}</TableCell>
+                      <TableCell className="text-sm text-slate-700">{r.client_name}</TableCell>
+                      <TableCell className="text-sm text-slate-700 max-w-[16rem] truncate" title={r.task_title}>{r.task_title}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums font-medium text-slate-900">{formatMinutes(r.duration_minutes)}</TableCell>
+                      <TableCell className="text-sm text-slate-500 max-w-[20rem] truncate" title={r.note ?? ''}>{r.note || '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

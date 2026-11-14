@@ -150,7 +150,7 @@ export default function DscDialog({ clients, initial, children }: DscDialogProps
           <div className="space-y-2"><Label>Certificate issuer</Label><Input value={form.certificate_issuer} onChange={(e) => set('certificate_issuer', e.target.value)} /></div>
 
           {initial?.id && (
-            <div className="border border-zinc-200 rounded-lg p-3 space-y-2">
+            <div className="border border-slate-200 rounded-lg p-3 space-y-2">
               <Label>Certificate file</Label>
               <div className="flex items-center gap-2">
                 <input
@@ -181,7 +181,7 @@ export default function DscDialog({ clients, initial, children }: DscDialogProps
                   </Button>
                 )}
               </div>
-              <p className="text-xs text-zinc-500">PDF, PNG, JPG or PFX up to 5 MB.</p>
+              <p className="text-xs text-slate-500">PDF, PNG, JPG or PFX up to 5 MB.</p>
             </div>
           )}
 

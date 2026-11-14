@@ -13,8 +13,8 @@ const buttonVariants = cva(
         destructive: 'bg-red-600 text-white hover:bg-red-700',
         outline:
           'border border-[#DCDFE5] bg-white text-slate-800 shadow-[0_1px_1px_rgba(15,23,42,0.04)] hover:bg-slate-50 hover:border-slate-400',
-        secondary: 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200',
-        ghost: 'hover:bg-zinc-100 hover:text-zinc-900',
+        secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200',
+        ghost: 'hover:bg-slate-100 hover:text-slate-900',
         link: 'text-teal-700 underline-offset-4 hover:underline',
         teal: 'bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100 hover:border-teal-300',
       },

@@ -31,12 +31,12 @@ export function TaskViewWrapper({ tasks, hrefPrefix, children }: TaskViewWrapper
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-end">
-        <div className="flex items-center bg-zinc-100 rounded-lg p-0.5">
+        <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
           <button
             onClick={() => setView('list')}
             className={cn(
               'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all',
-              view === 'list' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'
+              view === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
             )}
             aria-pressed={view === 'list'}
           >
@@ -47,7 +47,7 @@ export function TaskViewWrapper({ tasks, hrefPrefix, children }: TaskViewWrapper
             onClick={() => setView('board')}
             className={cn(
               'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all',
-              view === 'board' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'
+              view === 'board' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
             )}
             aria-pressed={view === 'board'}
           >

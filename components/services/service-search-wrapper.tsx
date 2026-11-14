@@ -42,7 +42,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -51,7 +51,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
           />
           {query && (
             <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-              <X className="h-3.5 w-3.5 text-zinc-500 hover:text-zinc-600" />
+              <X className="h-3.5 w-3.5 text-slate-500 hover:text-slate-600" />
             </button>
           )}
         </div>
@@ -64,7 +64,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
                 className={`text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${
                   kindFilter === k
                     ? 'bg-teal-600 text-white border-teal-600'
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
                 }`}
               >
                 {k.replace(/_/g, ' ')}
@@ -76,8 +76,8 @@ export default function ServiceSearchWrapper({ categories, services, subServices
 
       {filteredServices.length === 0 ? (
         <div className="tff-card p-8 text-center">
-          <div className="text-sm font-medium text-zinc-900">No services match your search</div>
-          <p className="text-xs text-zinc-500 mt-1">Try a different keyword or clear the filter.</p>
+          <div className="text-sm font-medium text-slate-900">No services match your search</div>
+          <p className="text-xs text-slate-500 mt-1">Try a different keyword or clear the filter.</p>
           {(query || kindFilter) && (
             <button onClick={() => { setQuery(''); setKindFilter(null); }} className="text-xs text-teal-700 hover:underline mt-3">
               Clear all filters
@@ -92,7 +92,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
             return (
               <section key={cat.id} className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xs text-zinc-500 font-semibold">{cat.name}</h2>
+                  <h2 className="text-xs text-slate-500 font-semibold">{cat.name}</h2>
                   <Badge variant="outline" className="text-xs font-normal">{catServices.length}</Badge>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
@@ -113,7 +113,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
           {servicesWithoutCategory.length > 0 && (
             <section className="space-y-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-xs text-zinc-500 font-semibold">Uncategorized</h2>
+                <h2 className="text-xs text-slate-500 font-semibold">Uncategorized</h2>
                 <Badge variant="outline" className="text-xs font-normal">{servicesWithoutCategory.length}</Badge>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">

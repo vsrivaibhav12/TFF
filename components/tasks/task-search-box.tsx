@@ -26,14 +26,14 @@ export function TaskSearchBox() {
 
   return (
     <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
       <input
         type="text"
         placeholder="Search tasks…"
         aria-label="Search tasks"
         defaultValue={search}
         onChange={onSearch}
-        className="pl-9 pr-3 h-9 rounded-md border border-zinc-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 w-60"
+        className="pl-9 pr-3 h-9 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 w-60"
       />
     </div>
   );

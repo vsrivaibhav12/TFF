@@ -53,7 +53,7 @@ export default function ApplyRoleControl({
 
   if (templates.length === 0) {
     return (
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-slate-500">
         No role templates yet.{' '}
         <Link href="/admin/team/roles" className="text-teal-700 hover:underline">
           Create one
@@ -91,7 +91,7 @@ export default function ApplyRoleControl({
           size="sm"
           onClick={clearRole}
           disabled={pending}
-          className="text-zinc-500 hover:text-red-600"
+          className="text-slate-500 hover:text-red-600"
           title="Clear role template"
         >
           <X className="h-4 w-4 mr-1" /> Clear

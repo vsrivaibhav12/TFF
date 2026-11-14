@@ -102,7 +102,7 @@ export default function RoleTemplatesAdmin({ templates }: { templates: RoleTempl
                     {t.name}
                   </div>
                   {t.description && (
-                    <p className="text-sm text-zinc-600 mt-1">{t.description}</p>
+                    <p className="text-sm text-slate-600 mt-1">{t.description}</p>
                   )}
                 </div>
                 <div className="flex gap-1">
@@ -121,7 +121,7 @@ export default function RoleTemplatesAdmin({ templates }: { templates: RoleTempl
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 text-xs text-zinc-500">
+              <div className="flex items-center gap-3 text-xs text-slate-500">
                 <span className="inline-flex items-center gap-1">
                   <Users className="h-3 w-3" /> {t.staff_count} staff
                 </span>
@@ -246,7 +246,7 @@ function RoleEditorDialog({
             </div>
           </div>
 
-          <div className="space-y-3 border-t border-zinc-100 pt-4">
+          <div className="space-y-3 border-t border-slate-100 pt-4">
             <div className="flex items-center justify-between">
               <Label>Capabilities ({caps.size} selected)</Label>
               <Button
@@ -262,7 +262,7 @@ function RoleEditorDialog({
               const allSelected = cluster.caps.every((c) => caps.has(c));
               const someSelected = cluster.caps.some((c) => caps.has(c));
               return (
-                <div key={cluster.label} className="rounded-lg border border-zinc-200 p-3">
+                <div key={cluster.label} className="rounded-lg border border-slate-200 p-3">
                   <button
                     type="button"
                     onClick={() => toggleCluster(cluster.caps)}
@@ -273,7 +273,7 @@ function RoleEditorDialog({
                       data-state={allSelected ? 'checked' : someSelected ? 'indeterminate' : 'unchecked'}
                     />
                     {cluster.label}
-                    <span className="text-xs text-zinc-500 font-normal">
+                    <span className="text-xs text-slate-500 font-normal">
                       ({cluster.caps.filter((c) => caps.has(c)).length} / {cluster.caps.length})
                     </span>
                   </button>
@@ -284,7 +284,7 @@ function RoleEditorDialog({
                         <label
                           htmlFor={`cap-${c}`}
                           key={c}
-                          className="flex items-start gap-2 text-xs cursor-pointer hover:text-zinc-900"
+                          className="flex items-start gap-2 text-xs cursor-pointer hover:text-slate-900"
                         >
                           <Checkbox
                             id={`cap-${c}`}
@@ -293,9 +293,9 @@ function RoleEditorDialog({
                             className="mt-0.5"
                           />
                           <div className="flex-1 min-w-0">
-                            <span className="font-medium text-zinc-800">{meta.label}</span>
-                            <p className="text-xs text-zinc-500 mt-0.5 leading-snug">{meta.description}</p>
-                            <code className="font-mono text-xs text-zinc-500">{c}</code>
+                            <span className="font-medium text-slate-800">{meta.label}</span>
+                            <p className="text-xs text-slate-500 mt-0.5 leading-snug">{meta.description}</p>
+                            <code className="font-mono text-xs text-slate-500">{c}</code>
                           </div>
                         </label>
                       );

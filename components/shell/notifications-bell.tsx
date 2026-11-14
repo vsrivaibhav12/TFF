@@ -54,7 +54,7 @@ export default function NotificationsBell() {
         <button
           data-testid="notifications-bell"
           aria-label={count > 0 ? `Notifications, ${count} unread` : 'Notifications'}
-          className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
+          className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
         >
           <Bell className="h-4 w-4" />
           {count > 0 && (
@@ -69,35 +69,35 @@ export default function NotificationsBell() {
       </PopoverTrigger>
       {open && (
         <PopoverContent align="end" className="w-80 p-0 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
             <div className="text-sm font-semibold">Notifications</div>
             <button
               onClick={markAll}
               disabled={pending || count === 0}
-              className="text-xs text-teal-700 hover:underline disabled:text-zinc-500 disabled:no-underline"
+              className="text-xs text-teal-700 hover:underline disabled:text-slate-500 disabled:no-underline"
             >
               Mark all read
             </button>
           </div>
           <div className="max-h-80 overflow-y-auto">
             {items.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-zinc-500">You&apos;re all caught up.</div>
+              <div className="px-4 py-8 text-center text-sm text-slate-500">You&apos;re all caught up.</div>
             ) : (
               items.map((n) => (
                 <div
                   key={n.id}
                   className={cn(
-                    'px-4 py-3 border-b border-zinc-100 last:border-b-0',
+                    'px-4 py-3 border-b border-slate-100 last:border-b-0',
                     !n.is_read && 'bg-teal-50/40',
                   )}
                 >
-                  <div className="text-sm font-medium text-zinc-900">{n.title}</div>
-                  <div className="text-xs text-zinc-500 mt-0.5 line-clamp-2">{n.message}</div>
+                  <div className="text-sm font-medium text-slate-900">{n.title}</div>
+                  <div className="text-xs text-slate-500 mt-0.5 line-clamp-2">{n.message}</div>
                 </div>
               ))
             )}
           </div>
-          <div className="px-4 py-2 border-t border-zinc-200">
+          <div className="px-4 py-2 border-t border-slate-200">
             <Link
               href="/account/notifications"
               onClick={() => setOpen(false)}

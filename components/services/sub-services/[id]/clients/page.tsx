@@ -43,7 +43,7 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
 
   return (
     <div className="space-y-8">
-      <Link href={`/${me.role}/services`} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={`/${me.role}/services`} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
         <ChevronLeft className="h-4 w-4" /> Services catalogue
       </Link>
 
@@ -60,9 +60,9 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
 
       {activeLinks.length === 0 ? (
         <div className="tff-card p-8 text-center">
-          <Users className="h-8 w-8 text-zinc-300 mx-auto mb-3" />
-          <h3 className="font-semibold text-zinc-900">No clients linked yet</h3>
-          <p className="text-sm text-zinc-500 mt-1 max-w-md mx-auto">
+          <Users className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+          <h3 className="font-semibold text-slate-900">No clients linked yet</h3>
+          <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
             Link clients to this sub-service using the button above, or from the client's profile page.
           </p>
         </div>
@@ -70,24 +70,24 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <div className="tff-card overflow-hidden">
-              <div className="px-5 py-3 border-b border-zinc-100 flex items-center justify-between">
+              <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="font-semibold text-sm">Linked clients</h3>
-                <span className="text-xs text-zinc-500">{activeLinks.length} total</span>
+                <span className="text-xs text-slate-500">{activeLinks.length} total</span>
               </div>
-              <div className="divide-y divide-zinc-100">
+              <div className="divide-y divide-slate-100">
                 {activeLinks.map((link: any) => {
                   const client = link.clients;
                   return (
-                    <div key={link.id} className="flex items-center justify-between px-5 py-3 hover:bg-zinc-50 transition-colors">
+                    <div key={link.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-zinc-100 flex items-center justify-center">
-                          <Building2 className="h-4 w-4 text-zinc-500" />
+                        <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
+                          <Building2 className="h-4 w-4 text-slate-500" />
                         </div>
                         <div>
-                          <DockLink item={{ type: 'client', id: client.id }} href={`/admin/clients/${client.id}`} className="text-sm font-medium text-zinc-900 hover:text-teal-700">
+                          <DockLink item={{ type: 'client', id: client.id }} href={`/admin/clients/${client.id}`} className="text-sm font-medium text-slate-900 hover:text-teal-700">
                             {client.business_name}
                           </DockLink>
-                          <div className="text-xs text-zinc-500 mt-0.5">
+                          <div className="text-xs text-slate-500 mt-0.5">
                             {client.pan && <span className="font-mono mr-2">PAN {client.pan}</span>}
                             {client.gstin && <span className="font-mono mr-2">GSTIN {client.gstin}</span>}
                             {client.city && <span>{client.city}</span>}
@@ -108,7 +108,7 @@ export default async function SubServiceClientsPage({ params }: { params: { id: 
                 <Briefcase className="h-4 w-4 text-teal-600" />
                 <h3 className="font-semibold text-sm">Bulk create tasks</h3>
               </div>
-              <p className="text-xs text-zinc-500 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Use the new 4-step Task Wizard to easily create tasks for all these linked clients in one go, complete with assignee mapping and template selection.
               </p>
               <Link href={taskWizardHref} className="w-full flex">

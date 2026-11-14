@@ -51,7 +51,7 @@ export default async function ClientImportPage() {
           <div className="tff-card overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-zinc-50/50">
+                <TableRow className="hover:bg-slate-50/50">
                   <TableHead>Date</TableHead>
                   <TableHead>File</TableHead>
                   <TableHead>By</TableHead>
@@ -64,13 +64,13 @@ export default async function ClientImportPage() {
               <TableBody>
                 {batches.map((b: any) => (
                   <TableRow key={b.id} data-row>
-                    <TableCell className="text-zinc-500">{formatDateIST(b.uploaded_at)}</TableCell>
+                    <TableCell className="text-slate-500">{formatDateIST(b.uploaded_at)}</TableCell>
                     <TableCell className="font-medium">
                       <Link href={`/admin/clients/import/${b.id}`} className="hover:underline">
                         {b.source_filename ?? '—'}
                       </Link>
                     </TableCell>
-                    <TableCell className="text-zinc-500">
+                    <TableCell className="text-slate-500">
                       {b.users_profile?.full_name ?? '—'}
                     </TableCell>
                     <TableCell className="text-right">{b.successful_rows}</TableCell>

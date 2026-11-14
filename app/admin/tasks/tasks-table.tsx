@@ -181,7 +181,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
   }
 
   function SortIcon({ col }: { col: string }) {
-    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 text-zinc-300" />;
+    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 text-slate-300" />;
     return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 text-teal-600" /> : <ArrowDown className="h-3 w-3 text-teal-600" />;
   }
 
@@ -253,7 +253,7 @@ export default function TasksTable({ tasks, todayIso, team = [], canDelete = fal
             onDensityChange={setDensity}
             onReset={resetLayout}
           />
-          <div className="text-sm text-zinc-500">
+          <div className="text-sm text-slate-500">
             {tasks.length} tasks
           </div>
         </div>

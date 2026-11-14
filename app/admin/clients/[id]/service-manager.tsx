@@ -165,7 +165,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
             <DialogContent>
               <DialogHeader><DialogTitle>Subscribe to service</DialogTitle></DialogHeader>
               <div className="space-y-4 py-4">
-                <p className="text-sm text-zinc-500">Subscribing a client to a service links it to the client so tasks can be created for it.</p>
+                <p className="text-sm text-slate-500">Subscribing a client to a service links it to the client so tasks can be created for it.</p>
                 <Select value={pickedServiceId} onValueChange={setPickedServiceId}>
                   <SelectTrigger data-testid="pick-service"><SelectValue placeholder="Select service..." /></SelectTrigger>
                   <SelectContent>
@@ -183,7 +183,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
                     ))}
                   </SelectContent>
                 </Select>
-                {availableServices.length === 0 && <p className="text-xs text-zinc-500">All services already subscribed.</p>}
+                {availableServices.length === 0 && <p className="text-xs text-slate-500">All services already subscribed.</p>}
               </div>
               <DialogFooter>
                 <Button onClick={addService} disabled={!pickedServiceId || pending} className="bg-teal-600 hover:bg-teal-700">Subscribe</Button>
@@ -193,9 +193,9 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
         </div>
 
         {existingServices.length === 0 ? (
-          <div className="tff-card tff-card-pad bg-zinc-50/50 text-center py-10">
-            <div className="text-sm font-bold text-zinc-900">No active subscriptions</div>
-            <p className="text-xs text-zinc-500 mt-2 max-w-sm mx-auto leading-relaxed">
+          <div className="tff-card tff-card-pad bg-slate-50/50 text-center py-10">
+            <div className="text-sm font-bold text-slate-900">No active subscriptions</div>
+            <p className="text-xs text-slate-500 mt-2 max-w-sm mx-auto leading-relaxed">
               Main services like BizLens or vCFO must be subscribed here to enable their respective dashboards and portal access.
             </p>
           </div>
@@ -205,15 +205,15 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
               <div key={s.id} className="flex flex-col gap-3 p-5 tff-card hover:border-teal-200 transition-colors">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-bold text-zinc-900">{s.services?.name}</div>
-                    <div className="text-xs font-medium text-zinc-500 mt-1">
+                    <div className="font-bold text-slate-900">{s.services?.name}</div>
+                    <div className="text-xs font-medium text-slate-500 mt-1">
                       {s.services?.code} · Subscribed {formatDateIST(s.start_date ?? '')}
                     </div>
                   </div>
                   <Badge variant="success" className="bg-teal-50 text-teal-600 border-teal-100">Active</Badge>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500">Service head:</span>
+                  <span className="text-xs text-slate-500">Service head:</span>
                   <Select value={s.service_head_id ?? '__none__'} onValueChange={(v) => updateServiceHead(s.id, v)}>
                     <SelectTrigger className="h-8 text-xs w-full max-w-xs"><SelectValue placeholder="Select head..." /></SelectTrigger>
                     <SelectContent>
@@ -230,7 +230,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
         )}
       </div>
 
-      <div className="h-px bg-zinc-100" />
+      <div className="h-px bg-slate-100" />
 
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -242,11 +242,11 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
             <DialogContent className="max-w-xl">
               <DialogHeader><DialogTitle>Add sub-services</DialogTitle></DialogHeader>
               <div className="space-y-3 py-4">
-                <p className="text-sm text-zinc-500">Select one or more sub-services to link.</p>
-                <div className="max-h-80 overflow-y-auto space-y-2 border border-zinc-100 rounded-md p-2">
-                  {availableSubs.length === 0 && <p className="text-sm text-zinc-500 text-center py-4">All sub-services already linked.</p>}
+                <p className="text-sm text-slate-500">Select one or more sub-services to link.</p>
+                <div className="max-h-80 overflow-y-auto space-y-2 border border-slate-100 rounded-md p-2">
+                  {availableSubs.length === 0 && <p className="text-sm text-slate-500 text-center py-4">All sub-services already linked.</p>}
                   {availableSubs.map((s) => (
-                    <label htmlFor={`sub-service-${s.id}`} key={s.id} className="flex items-start gap-3 p-2 hover:bg-zinc-50 rounded-md cursor-pointer">
+                    <label htmlFor={`sub-service-${s.id}`} key={s.id} className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-md cursor-pointer">
                       <Checkbox
                         id={`sub-service-${s.id}`}
                         checked={pickedSubServiceIds.has(s.id)}
@@ -254,8 +254,8 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
                         className="mt-1"
                       />
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-zinc-900">{s.name} ({s.code})</div>
-                        <div className="text-xs text-zinc-500">{s.services?.name} · {s.frequency}</div>
+                        <div className="text-sm font-medium text-slate-900">{s.name} ({s.code})</div>
+                        <div className="text-xs text-slate-500">{s.services?.name} · {s.frequency}</div>
                       </div>
                     </label>
                   ))}
@@ -271,26 +271,26 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
         </div>
 
         {existingSubServices.length === 0 ? (
-          <div className="tff-card tff-card-pad bg-zinc-50/50 text-center py-10">
-            <div className="text-sm font-bold text-zinc-900">No sub-services active</div>
-            <p className="text-xs text-zinc-500 mt-2 max-w-sm mx-auto leading-relaxed">
+          <div className="tff-card tff-card-pad bg-slate-50/50 text-center py-10">
+            <div className="text-sm font-bold text-slate-900">No sub-services active</div>
+            <p className="text-xs text-slate-500 mt-2 max-w-sm mx-auto leading-relaxed">
               Add specific sub-services (e.g. GSTR-3B) to enable automated compliance task generation.
             </p>
           </div>
         ) : (
-          <div className="tff-card overflow-hidden divide-y divide-zinc-100">
+          <div className="tff-card overflow-hidden divide-y divide-slate-100">
             {existingSubServices.map((s) => (
-              <div key={s.id} className="flex items-center justify-between p-5 hover:bg-zinc-50 transition-colors">
+              <div key={s.id} className="flex items-center justify-between p-5 hover:bg-slate-50 transition-colors">
                 <div>
-                  <div className="font-bold text-zinc-900">{s.sub_services?.name}</div>
-                  <div className="text-xs font-medium text-zinc-500 mt-1">
+                  <div className="font-bold text-slate-900">{s.sub_services?.name}</div>
+                  <div className="text-xs font-medium text-slate-500 mt-1">
                     {s.sub_services?.services?.name} · {s.sub_services?.frequency} · {s.sub_services?.code}
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   {s.sub_service_id && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-zinc-500">Default assignee</span>
+                      <span className="text-xs text-slate-500">Default assignee</span>
                       <Select
                         value={s.default_assignee_id ?? '__none__'}
                         onValueChange={(v) => setDefaultAssignee(s.sub_service_id as string, v === '__none__' ? null : v)}
@@ -305,7 +305,7 @@ export default function ClientServiceManager({ clientId, existingSubServices, ex
                     </div>
                   )}
                   {s.is_active ? <Badge variant="success" className="bg-teal-50 text-teal-600 border-teal-100">Active</Badge> : <Badge variant="outline">Paused</Badge>}
-                  <Button variant="ghost" size="sm" onClick={() => unlinkSub(s.id)} disabled={pending} className="text-zinc-500 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => unlinkSub(s.id)} disabled={pending} className="text-slate-500 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
             ))}

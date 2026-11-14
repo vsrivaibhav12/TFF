@@ -38,26 +38,26 @@ export default function ForgotPage() {
       </div>
 
       {/* Right side - form */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12 bg-zinc-50/50">
+      <div className="flex-1 flex items-center justify-center p-6 md:p-12 bg-slate-50/50">
         <div className="w-full max-w-sm">
           <div className="lg:hidden text-center mb-8">
             <div className="inline-flex items-center gap-2">
               <Image src="/logo.png" width={160} height={32} className="h-8 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
-              <span className="text-lg font-bold text-zinc-900">The Fiscal Fulcrum</span>
+              <span className="text-lg font-bold text-slate-900">The Fiscal Fulcrum</span>
             </div>
           </div>
 
           <Link
             href="/login"
-            className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 transition-colors mb-6"
+            className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 transition-colors mb-6"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to sign in
           </Link>
 
           <div className="mb-6">
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Reset password</h1>
-            <p className="text-sm text-zinc-500 mt-1.5">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Reset password</h1>
+            <p className="text-sm text-slate-500 mt-1.5">
               Enter your email and we will send you a reset link
             </p>
           </div>

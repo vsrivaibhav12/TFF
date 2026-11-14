@@ -30,8 +30,8 @@ export default function CredentialReveal({ id }: { id: string }) {
       </button>
       {shown && (
         <>
-          <span className="font-mono text-xs bg-zinc-100 px-2 py-0.5 rounded">{shown.password}</span>
-          <button onClick={copyPwd} className="text-zinc-500 hover:text-teal-700"><Copy className="h-3 w-3" /></button>
+          <span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{shown.password}</span>
+          <button onClick={copyPwd} className="text-slate-500 hover:text-teal-700"><Copy className="h-3 w-3" /></button>
         </>
       )}
     </span>

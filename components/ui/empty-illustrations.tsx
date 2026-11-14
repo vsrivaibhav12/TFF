@@ -2,7 +2,7 @@
 
 /**
  * Bespoke SVG spot illustrations for empty states.
- * Uses the TFF design system palette: teal-500, teal-600, zinc-200, zinc-300.
+ * Uses the TFF design system palette: teal-500, teal-600, slate-200, slate-300.
  * Each illustration is ~80×80 and designed to feel premium and minimal.
  */
 

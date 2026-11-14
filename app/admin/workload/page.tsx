@@ -56,7 +56,7 @@ export default async function WorkloadPage() {
         <div className="tff-card overflow-x-auto">
           <Table className="min-w-[760px]">
             <TableHeader>
-              <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
+              <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
                 <TableHead>Team member</TableHead>
                 <TableHead className="w-[28%]">Open tasks</TableHead>
                 <TableHead className="text-right">Overdue</TableHead>
@@ -71,24 +71,24 @@ export default async function WorkloadPage() {
               {list.map((r) => {
                 const href = r.id ? `/admin/tasks?assigned=${r.id}&status=pending,in_progress` : '/admin/tasks?assigned=unassigned&status=pending,in_progress';
                 return (
-                  <TableRow key={r.id ?? 'unassigned'} className="hover:bg-zinc-50/60">
-                    <TableCell className="text-sm font-medium text-zinc-900">
+                  <TableRow key={r.id ?? 'unassigned'} className="hover:bg-slate-50/60">
+                    <TableCell className="text-sm font-medium text-slate-900">
                       <Link href={href} className="hover:text-teal-700">{r.name}</Link>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="h-2 flex-1 rounded-full bg-zinc-100 overflow-hidden" role="img" aria-label={`${r.total} open tasks`}>
+                        <div className="h-2 flex-1 rounded-full bg-slate-100 overflow-hidden" role="img" aria-label={`${r.total} open tasks`}>
                           <div className="h-full rounded-full bg-teal-500" style={{ width: `${Math.round((r.total / max) * 100)}%` }} />
                         </div>
-                        <span className="w-8 text-right text-sm font-semibold tabular-nums text-zinc-900">{r.total}</span>
+                        <span className="w-8 text-right text-sm font-semibold tabular-nums text-slate-900">{r.total}</span>
                       </div>
                     </TableCell>
-                    <TableCell className={`text-right text-sm tabular-nums ${r.overdue > 0 ? 'font-semibold text-red-600' : 'text-zinc-500'}`}>{r.overdue}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums text-zinc-700">{r.thisWeek}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums text-zinc-700">{r.nextWeek}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums text-zinc-500">{r.later}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums text-zinc-500">{r.noDate}</TableCell>
-                    <TableCell className={`text-right text-sm tabular-nums ${r.stuck > 0 ? 'font-semibold text-amber-600' : 'text-zinc-500'}`}>{r.stuck}</TableCell>
+                    <TableCell className={`text-right text-sm tabular-nums ${r.overdue > 0 ? 'font-semibold text-red-600' : 'text-slate-500'}`}>{r.overdue}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums text-slate-700">{r.thisWeek}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums text-slate-700">{r.nextWeek}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums text-slate-500">{r.later}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums text-slate-500">{r.noDate}</TableCell>
+                    <TableCell className={`text-right text-sm tabular-nums ${r.stuck > 0 ? 'font-semibold text-amber-600' : 'text-slate-500'}`}>{r.stuck}</TableCell>
                   </TableRow>
                 );
               })}

@@ -12,16 +12,16 @@ export default async function ProfitCostCentresPage(_props: unknown, rolePrefix:
   ]);
   return (
     <div className="space-y-8 max-w-4xl">
-      <Link href={`${rolePrefix}/settings`} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={`${rolePrefix}/settings`} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
         <ChevronLeft className="h-4 w-4" /> Settings
       </Link>
       <div>
         <h1 className="tff-page-title">Profit &amp; cost centres</h1>
         <p className="tff-page-subtitle">
           Two-character (or short) codes used to slice tasks, work-done, and reports.
-          Suggested split: <code className="bg-zinc-100 px-1 rounded text-xs">CAS</code> for CaaS,
-          {' '}<code className="bg-zinc-100 px-1 rounded text-xs">BIZ</code> for BizLens,
-          {' '}<code className="bg-zinc-100 px-1 rounded text-xs">VCFO</code> for vCFO advisory.
+          Suggested split: <code className="bg-slate-100 px-1 rounded text-xs">CAS</code> for CaaS,
+          {' '}<code className="bg-slate-100 px-1 rounded text-xs">BIZ</code> for BizLens,
+          {' '}<code className="bg-slate-100 px-1 rounded text-xs">VCFO</code> for vCFO advisory.
         </p>
       </div>
       <CentresAdmin

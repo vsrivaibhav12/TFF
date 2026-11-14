@@ -86,7 +86,7 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
   return (
     <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[220px] bg-white border-r border-[#E8EAEE] z-40 flex-col">
       {/* Logo */}
-      <div className="h-14 flex items-center px-4 border-b border-zinc-100 shrink-0">
+      <div className="h-14 flex items-center px-4 border-b border-slate-100 shrink-0">
         <Link href={`/${role}`} className="flex items-center gap-2">
           <Image src="/logo.png" width={140} height={28} className="h-7 w-auto object-contain" alt="The Fiscal Fulcrum" priority />
         </Link>
@@ -99,7 +99,7 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
             {group.section ? (
               <button
                 onClick={() => toggleSection(group.section!)}
-                className="w-full flex items-center gap-1 px-4 pt-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-700 transition-colors"
+                className="w-full flex items-center gap-1 px-4 pt-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-700 transition-colors"
               >
                 {group.section}
                 <ChevronRight className={cn('ml-auto h-3 w-3 transition-transform', collapsedSections[group.section!] && 'rotate-90')} />
@@ -139,16 +139,16 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
         {/* Recent items */}
         {recent.length > 0 && recentType && (
           <div className="px-2 pt-3">
-            <div className="px-2 py-1 text-xs font-medium text-zinc-500">Recents</div>
+            <div className="px-2 py-1 text-xs font-medium text-slate-500">Recents</div>
             <div className="space-y-0.5 mt-1">
               {recent.map((item) => (
                 <DockLink
                   key={item.id}
                   item={{ type: recentType as any, id: item.id }}
                   href={`/${role}/${recentType}s/${item.id}`}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 transition-colors truncate"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors truncate"
                 >
-                  <Clock className="h-3 w-3 text-zinc-500 shrink-0" />
+                  <Clock className="h-3 w-3 text-slate-500 shrink-0" />
                   <span className="truncate">{item.label}</span>
                 </DockLink>
               ))}
@@ -164,20 +164,20 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
             {getInitials(user.full_name)}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-medium text-zinc-900 truncate">{user.full_name || user.email}</div>
-            <div className="text-xs text-zinc-500 truncate">{user.email}</div>
+            <div className="text-xs font-medium text-slate-900 truncate">{user.full_name || user.email}</div>
+            <div className="text-xs text-slate-500 truncate">{user.email}</div>
           </div>
         </div>
         <div className="flex gap-1">
           <Link
             href="/account/notifications"
-            className="flex-1 flex items-center justify-center gap-1 rounded-md py-1.5 text-xs text-zinc-600 hover:bg-zinc-50 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1 rounded-md py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
           >
             <User className="h-3.5 w-3.5" /> Account
           </Link>
           <button
             onClick={onLogout}
-            className="flex-1 flex items-center justify-center gap-1 rounded-md py-1.5 text-xs text-zinc-600 hover:bg-zinc-50 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1 rounded-md py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
           >
             <LogOut className="h-3.5 w-3.5" /> Sign out
           </button>

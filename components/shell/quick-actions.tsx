@@ -46,8 +46,8 @@ export function QuickActionsDropdown({ role }: { role: string }) {
             onClick={() => setOpen(false)}
             onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setOpen(false); } }}
           />
-          <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-zinc-200 bg-white shadow-floating z-50 py-1 overflow-hidden">
-            <div className="px-3 py-2 text-xs font-medium text-zinc-500 border-b border-zinc-100">
+          <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-floating z-50 py-1 overflow-hidden">
+            <div className="px-3 py-2 text-xs font-medium text-slate-500 border-b border-slate-100">
               Quick actions
             </div>
             {links.map((link) => (
@@ -55,7 +55,7 @@ export function QuickActionsDropdown({ role }: { role: string }) {
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="block px-4 py-2 text-sm text-zinc-700 hover:bg-teal-50 hover:text-teal-700 transition-colors"
+                className="block px-4 py-2 text-sm text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition-colors"
               >
                 {link.label}
               </Link>

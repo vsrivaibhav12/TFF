@@ -47,7 +47,7 @@ export function TaskStatusFilter({
           className={cn(
             'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs transition-colors',
             isDefault
-              ? 'border-dashed border-zinc-300 bg-zinc-50 text-zinc-600 hover:border-zinc-400'
+              ? 'border-dashed border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400'
               : 'border-teal-300 bg-teal-50 text-teal-800 hover:border-teal-400',
           )}
         >
@@ -56,15 +56,15 @@ export function TaskStatusFilter({
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64 p-2">
-        <p className="px-2 pb-1 pt-1 text-xs font-medium text-zinc-500">Show tasks that are</p>
+        <p className="px-2 pb-1 pt-1 text-xs font-medium text-slate-500">Show tasks that are</p>
         <ul>
           {TASK_STATUS_OPTIONS.map((o, i) => {
             const checked = value.includes(o.value);
             const id = `status-opt-${o.value}`;
             return (
               <li key={o.value}>
-                {i === 4 && <div className="my-1 border-t border-zinc-100" role="separator" />}
-                <label htmlFor={id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-zinc-700 hover:bg-zinc-50">
+                {i === 4 && <div className="my-1 border-t border-slate-100" role="separator" />}
+                <label htmlFor={id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-slate-50">
                   <Checkbox id={id} checked={checked} onCheckedChange={() => toggle(o.value)} />
                   {o.label}
                 </label>
@@ -72,10 +72,10 @@ export function TaskStatusFilter({
             );
           })}
         </ul>
-        <div className="mt-1 flex items-center justify-between border-t border-zinc-100 px-2 pt-2">
+        <div className="mt-1 flex items-center justify-between border-t border-slate-100 px-2 pt-2">
           <button
             type="button"
-            className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 hover:text-zinc-900 disabled:opacity-40"
+            className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-slate-900 disabled:opacity-40"
             disabled={isDefault}
             onClick={() => onChange([...DEFAULT_TASK_STATUSES])}
           >

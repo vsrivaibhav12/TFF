@@ -256,10 +256,10 @@ h4, h5, h6 {
 .tff-card-pad { padding: 1rem; }
 
 /* Page titles: used on detail pages; previously had no definition. */
-.tff-page-title { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; color: #18181B; }
-.tff-page-subtitle { font-size: 0.875rem; line-height: 1.5; color: #52525B; margin-top: 0.25rem; }
+.tff-page-title { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; color: #0F172A; }
+.tff-page-subtitle { font-size: 0.8125rem; line-height: 1.5; color: #64748B; margin-top: 0.125rem; }
 .tff-page-header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-.tff-section-title { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; color: #18181B; }
+.tff-section-title { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; color: #0F172A; }
 .tff-stack-lg { display: flex; flex-direction: column; gap: 1.5rem; }
-.tff-kpi-value { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; color: #18181B; font-variant-numeric: tabular-nums; }
-.tff-kpi-label { font-size: 0.75rem; font-weight: 500; color: #52525B; }
+.tff-kpi-value { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; color: #0F172A; font-variant-numeric: tabular-nums; }
+.tff-kpi-label { font-size: 0.75rem; font-weight: 500; color: #475569; }

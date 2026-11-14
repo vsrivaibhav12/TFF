@@ -23,9 +23,9 @@ export default async function CapabilitiesPage({ params }: { params: { id: strin
   if ((user as any).role === 'admin') {
     return (
       <div className="space-y-4">
-        <Link href={`/admin/team/${id}`} className="inline-flex items-center gap-1 text-sm text-zinc-500"><ChevronLeft className="h-4 w-4" /> Back</Link>
+        <Link href={`/admin/team/${id}`} className="inline-flex items-center gap-1 text-sm text-slate-500"><ChevronLeft className="h-4 w-4" /> Back</Link>
         <h1 className="tff-page-title">{(user as any).full_name}</h1>
-        <div className="tff-card tff-card-pad bg-zinc-50 text-sm text-zinc-600">Admins implicitly hold every capability. There is nothing to grant.</div>
+        <div className="tff-card tff-card-pad bg-slate-50 text-sm text-slate-600">Admins implicitly hold every capability. There is nothing to grant.</div>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export default async function CapabilitiesPage({ params }: { params: { id: strin
 
   return (
     <div className="space-y-8 max-w-3xl">
-      <Link href={`/admin/team/${id}`} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+      <Link href={`/admin/team/${id}`} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
         <ChevronLeft className="h-4 w-4" /> Back to {(user as any).full_name}
       </Link>
       <div>

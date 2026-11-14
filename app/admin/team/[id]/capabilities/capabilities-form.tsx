@@ -103,10 +103,10 @@ export default function CapabilitiesForm({
 
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter capabilities…" className="pl-9" data-testid="caps-filter" />
         </div>
-        <div className="text-sm text-zinc-500 whitespace-nowrap">{selected.size} / {all.length} selected</div>
+        <div className="text-sm text-slate-500 whitespace-nowrap">{selected.size} / {all.length} selected</div>
       </div>
 
       <div className="space-y-8">
@@ -119,17 +119,17 @@ export default function CapabilitiesForm({
           if (list.length === 0) return null;
           return (
             <div key={persona.key} className="tff-card overflow-hidden">
-              <div className="px-4 py-3 border-b border-zinc-100 bg-zinc-50/50">
-                <div className="text-sm font-semibold text-zinc-900">{persona.label}</div>
-                <div className="text-xs text-zinc-500 mt-0.5">{persona.description}</div>
+              <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                <div className="text-sm font-semibold text-slate-900">{persona.label}</div>
+                <div className="text-xs text-slate-500 mt-0.5">{persona.description}</div>
               </div>
-              <ul className="divide-y divide-zinc-100">
+              <ul className="divide-y divide-slate-100">
                 {list.map((cap) => {
                   const meta = CAPABILITY_DETAILS[cap as Capability];
                   const fromTemplate = templateSet.has(cap);
                   const isSelected = selected.has(cap);
                   return (
-                    <li key={cap} className={`flex items-start gap-3 px-4 py-3 ${fromTemplate ? 'bg-zinc-50/50' : ''}`}>
+                    <li key={cap} className={`flex items-start gap-3 px-4 py-3 ${fromTemplate ? 'bg-slate-50/50' : ''}`}>
                       <Checkbox
                         id={`cap-${cap}`}
                         checked={isSelected}
@@ -139,14 +139,14 @@ export default function CapabilitiesForm({
                         className="mt-0.5"
                       />
                       <div className="flex-1 min-w-0">
-                        <Label htmlFor={`cap-${cap}`} className="text-sm cursor-pointer font-medium text-zinc-800">
+                        <Label htmlFor={`cap-${cap}`} className="text-sm cursor-pointer font-medium text-slate-800">
                           {meta.label}
                         </Label>
-                        <p className="text-xs text-zinc-500 mt-0.5">{meta.description}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{meta.description}</p>
                         {!canGrantCapability({ is_prime_admin: isSuperAdmin }, cap) && (
                           <p className="text-xs text-amber-700 mt-0.5">Only a super admin can change this.</p>
                         )}
-                        <code className="text-xs text-zinc-500 font-mono mt-1 block">{cap}</code>
+                        <code className="text-xs text-slate-500 font-mono mt-1 block">{cap}</code>
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         {fromTemplate && isSelected && (
@@ -168,8 +168,8 @@ export default function CapabilitiesForm({
         })}
       </div>
 
-      <div className="flex items-center justify-between border-t border-zinc-200 pt-6">
-        <div className="text-sm text-zinc-500">
+      <div className="flex items-center justify-between border-t border-slate-200 pt-6">
+        <div className="text-sm text-slate-500">
           {templateCaps.length > 0
             ? 'Only deviations from the role template are stored. Capabilities matching the template are derived automatically.'
             : 'Saving will grant or revoke against the current state. Each change writes one audit entry.'}

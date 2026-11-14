@@ -76,7 +76,7 @@ export function TaskCard({ task, hrefPrefix }: TaskCardProps) {
     <Link
       href={`${hrefPrefix}/${task.id}`}
       className={cn(
-        'group block rounded-xl bg-white p-4 hover:border-zinc-300 transition-colors border border-transparent border-l-4',
+        'group block rounded-xl bg-white p-4 hover:border-slate-300 transition-colors border border-transparent border-l-4',
         typeBorderColours[workType] || typeBorderColours.task
       )}
     >
@@ -94,11 +94,11 @@ export function TaskCard({ task, hrefPrefix }: TaskCardProps) {
 
       {/* Sub Service + Client */}
       <div className="mt-2.5">
-        <span className="font-medium text-sm text-zinc-900 line-clamp-2 leading-snug group-hover:text-teal-700 transition-colors">
+        <span className="font-medium text-sm text-slate-900 line-clamp-2 leading-snug group-hover:text-teal-700 transition-colors">
           {displayTaskName(task)}
         </span>
         {clientName(task) && (
-          <p className="text-xs text-zinc-500 mt-1 truncate">{clientName(task)}</p>
+          <p className="text-xs text-slate-500 mt-1 truncate">{clientName(task)}</p>
         )}
         {task.labels && task.labels.length > 0 && (
           <div className="mt-1.5">
@@ -109,7 +109,7 @@ export function TaskCard({ task, hrefPrefix }: TaskCardProps) {
 
       {/* Bottom row: due date + progress ring */}
       <div className="flex items-center justify-between mt-3">
-        <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+        <div className="flex items-center gap-1.5 text-xs text-slate-500">
           <Calendar className="h-3 w-3" />
           <span className={cn(overdue && 'text-red-500 font-medium')}>{task.due_date ? formatDateIST(task.due_date) : 'No due date'}</span>
         </div>
@@ -121,8 +121,8 @@ export function TaskCard({ task, hrefPrefix }: TaskCardProps) {
       </div>
 
       {/* Progress ring */}
-      <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between">
-        <span className="text-xs text-zinc-500 font-medium">{progress}% complete</span>
+      <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+        <span className="text-xs text-slate-500 font-medium">{progress}% complete</span>
         <ProgressRing progress={progress} size={28} strokeWidth={3} hideLabel gradient />
       </div>
 

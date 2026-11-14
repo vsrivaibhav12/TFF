@@ -43,25 +43,25 @@ export function NotFoundState({
     >
       <div className="space-y-4 max-w-md">
         {Icon && !isRoot && (
-          <div className="h-16 w-16 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto">
-            <Icon className="h-8 w-8 text-zinc-500" />
+          <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
+            <Icon className="h-8 w-8 text-slate-500" />
           </div>
         )}
         {!Icon && !isRoot && !isEntity && (
-          <div className="h-16 w-16 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto">
-            <span className="text-2xl font-bold text-zinc-500">404</span>
+          <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
+            <span className="text-2xl font-bold text-slate-500">404</span>
           </div>
         )}
         <h1
           className={cn(
-            'font-bold text-zinc-900',
+            'font-bold text-slate-900',
             (isRoot || isEntity) && 'text-4xl',
             !isRoot && !isEntity && 'text-2xl'
           )}
         >
           {resolvedTitle}
         </h1>
-        <p className="text-zinc-500 text-sm">{resolvedMessage}</p>
+        <p className="text-slate-500 text-sm">{resolvedMessage}</p>
         <Button asChild variant="default" className="bg-teal-600 hover:bg-teal-700">
           <Link href={homeHref}>{homeLabel}</Link>
         </Button>
@@ -79,11 +79,11 @@ export function NotFoundStatePortal({
   return (
     <div className="flex items-center justify-center min-h-[60vh] text-center px-4">
       <div className="space-y-4 max-w-md">
-        <div className="h-16 w-16 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto">
-          <FileQuestion className="h-8 w-8 text-zinc-500" />
+        <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
+          <FileQuestion className="h-8 w-8 text-slate-500" />
         </div>
-        <h1 className="text-2xl font-bold text-zinc-900">{title}</h1>
-        <p className="text-zinc-500 text-sm">{message}</p>
+        <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
+        <p className="text-slate-500 text-sm">{message}</p>
         <Button asChild variant="default" className="bg-teal-600 hover:bg-teal-700">
           <Link href={homeHref}>{homeLabel}</Link>
         </Button>

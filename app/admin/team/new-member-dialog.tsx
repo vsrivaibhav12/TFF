@@ -68,7 +68,7 @@ export default function NewTeamMemberDialog({ team }: { team: TeamMember[] }) {
         <DialogHeader>
           <DialogTitle>Create team member account</DialogTitle>
         </DialogHeader>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-slate-500">
           Set their login credentials. They can sign in immediately and change their password later.
         </p>
         <div className="grid gap-3 mt-2">

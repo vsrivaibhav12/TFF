@@ -61,7 +61,7 @@ export default async function AdminWorkDonePage({ searchParams }: { searchParams
               userRole="admin"
             />
           ) : (
-            <div className="tff-card tff-card-pad text-sm text-zinc-500 text-center py-12">
+            <div className="tff-card tff-card-pad text-sm text-slate-500 text-center py-12">
               Choose a date range, client, task or staff member and apply filters to see entries.
             </div>
           )}

@@ -68,7 +68,7 @@ export function ReportFilters({
               'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
               preset === p.key
                 ? 'border-teal-600 bg-teal-50 text-teal-700'
-                : 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:text-zinc-900',
+                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900',
             )}
           >
             {p.label}
@@ -78,11 +78,11 @@ export function ReportFilters({
 
       <div className="flex flex-wrap items-end gap-3">
         <div className="space-y-1">
-          <label htmlFor="rf-from" className="text-xs font-medium text-zinc-500">From</label>
+          <label htmlFor="rf-from" className="text-xs font-medium text-slate-500">From</label>
           <Input id="rf-from" type="date" value={customFrom} max={customTo} onChange={(e) => setCustomFrom(e.target.value)} className="h-9 w-44" />
         </div>
         <div className="space-y-1">
-          <label htmlFor="rf-to" className="text-xs font-medium text-zinc-500">To</label>
+          <label htmlFor="rf-to" className="text-xs font-medium text-slate-500">To</label>
           <Input id="rf-to" type="date" value={customTo} min={customFrom} onChange={(e) => setCustomTo(e.target.value)} className="h-9 w-44" />
         </div>
         <Button
@@ -96,7 +96,7 @@ export function ReportFilters({
 
         {selects.map((s) => (
           <div key={s.key} className="space-y-1">
-            <label className="text-xs font-medium text-zinc-500">{s.label}</label>
+            <label className="text-xs font-medium text-slate-500">{s.label}</label>
             <Select
               value={sp.get(s.key) ?? ALL}
               onValueChange={(v) => push((q) => { if (v === ALL) q.delete(s.key); else q.set(s.key, v); })}
@@ -119,13 +119,13 @@ export function ReportFilters({
             className="space-y-1"
             onSubmit={(e) => { e.preventDefault(); push((q) => { if (text.trim()) q.set(search.key, text.trim()); else q.delete(search.key); }); }}
           >
-            <label htmlFor="rf-search" className="text-xs font-medium text-zinc-500">Search</label>
+            <label htmlFor="rf-search" className="text-xs font-medium text-slate-500">Search</label>
             <Input id="rf-search" value={text} onChange={(e) => setText(e.target.value)} placeholder={search.placeholder} className="h-9 w-56" />
           </form>
         )}
 
         {filtered && (
-          <Button size="sm" variant="ghost" className="text-zinc-500" onClick={() => router.push(pathname)}>
+          <Button size="sm" variant="ghost" className="text-slate-500" onClick={() => router.push(pathname)}>
             <RotateCcw className="h-3.5 w-3.5 mr-1" /> Reset
           </Button>
         )}

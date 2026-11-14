@@ -249,7 +249,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
   }
 
   function SortIcon({ col }: { col: string }) {
-    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 text-zinc-300" />;
+    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 text-slate-300" />;
     return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 text-teal-600" /> : <ArrowDown className="h-3 w-3 text-teal-600" />;
   }
 
@@ -290,27 +290,27 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
                 },
               ]}
             >
-              <div className={cn('bg-white border border-zinc-200 rounded-xl p-4 space-y-2', urgencyBorder)}>
+              <div className={cn('tff-card p-4 space-y-2', urgencyBorder)}>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono text-zinc-500">{t.task_number ?? '—'}</span>
+                  <span className="text-xs font-mono text-slate-500">{t.task_number ?? '—'}</span>
                   <Badge className={cn('text-xs whitespace-nowrap', getStatusColour(t.status).bg, getStatusColour(t.status).text, getStatusColour(t.status).border)}>
                     {t.status.replace(/_/g, ' ')}
                   </Badge>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-zinc-900">{displayTaskName(t)}</p>
-                  <p className="text-xs text-zinc-500">{t.clients?.business_name ?? '—'}</p>
+                  <p className="text-sm font-semibold text-slate-900">{displayTaskName(t)}</p>
+                  <p className="text-xs text-slate-500">{t.clients?.business_name ?? '—'}</p>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 tabular-nums">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 tabular-nums">
                     {formatPeriodColumns(t) || '—'}
                   </span>
-                  <span className={cn('text-xs tabular-nums', overdue ? 'text-red-600 font-medium' : dueSoon ? 'text-amber-600 font-medium' : 'text-zinc-500')}>
+                  <span className={cn('text-xs tabular-nums', overdue ? 'text-red-600 font-medium' : dueSoon ? 'text-amber-600 font-medium' : 'text-slate-500')}>
                     {formatDateIST(t.due_date)}
                   </span>
                 </div>
                 {t.users_profile?.full_name && (
-                  <div className="flex items-center gap-1 text-xs text-zinc-500">
+                  <div className="flex items-center gap-1 text-xs text-slate-500">
                     <User className="h-3 w-3" /> {t.users_profile.full_name}
                   </div>
                 )}
@@ -331,7 +331,7 @@ export default function TasksTableClient({ tasks, todayIso, canEdit = false, can
               onDensityChange={setDensity}
               onReset={resetLayout}
             />
-            <div className="text-sm text-zinc-500">
+            <div className="text-sm text-slate-500">
               {tasks.length} tasks
             </div>
           </div>

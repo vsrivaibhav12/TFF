@@ -59,7 +59,7 @@ export function TaskQuickFilters({
               'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
               active
                 ? 'border-teal-600 bg-teal-50 text-teal-700'
-                : 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:text-zinc-900',
+                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900',
             )}
           >
             {p.label}

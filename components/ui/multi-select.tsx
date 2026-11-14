@@ -64,10 +64,10 @@ export function MultiSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn('w-full justify-between font-normal hover:bg-zinc-50 h-auto min-h-9 py-1 px-2', className)}
+          className={cn('w-full justify-between font-normal hover:bg-slate-50 h-auto min-h-9 py-1 px-2', className)}
         >
           <div className="flex flex-wrap gap-1">
-            {selectedLabels.length === 0 && <span className="text-zinc-500">{placeholder}</span>}
+            {selectedLabels.length === 0 && <span className="text-slate-500">{placeholder}</span>}
             {selectedLabels.map((o) => (
               <Badge key={o.value} variant="default" className="font-normal text-xs gap-1 pr-1">
                 {o.label}
@@ -88,9 +88,9 @@ export function MultiSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <div className="flex items-center border-b border-zinc-100 px-3">
+        <div className="flex items-center border-b border-slate-100 px-3">
           <Input
-            className="h-10 border-0 bg-transparent px-0 text-sm outline-none placeholder:text-zinc-500"
+            className="h-10 border-0 bg-transparent px-0 text-sm outline-none placeholder:text-slate-500"
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -98,7 +98,7 @@ export function MultiSelect({
         </div>
         <div className="max-h-60 overflow-y-auto p-1">
           {filtered.length === 0 ? (
-            <div className="py-6 text-center text-sm text-zinc-500">No results found.</div>
+            <div className="py-6 text-center text-sm text-slate-500">No results found.</div>
           ) : (
             filtered.map((o) => {
               const checked = selectedSet.has(o.value);
@@ -112,10 +112,10 @@ export function MultiSelect({
                   onKeyDown={onEnterSpace(() => toggle(o.value))}
                   className={cn(
                     'flex items-center gap-2 px-2 py-1.5 text-sm rounded cursor-pointer',
-                    checked ? 'bg-teal-50 text-teal-900' : 'hover:bg-zinc-50'
+                    checked ? 'bg-teal-50 text-teal-900' : 'hover:bg-slate-50'
                   )}
                 >
-                  <div className={cn('flex h-4 w-4 items-center justify-center rounded border', checked ? 'bg-teal-600 border-teal-600' : 'border-zinc-300')}>
+                  <div className={cn('flex h-4 w-4 items-center justify-center rounded border', checked ? 'bg-teal-600 border-teal-600' : 'border-slate-300')}>
                     {checked && <Check className="h-3 w-3 text-white" />}
                   </div>
                   <span className="truncate">{o.label}</span>

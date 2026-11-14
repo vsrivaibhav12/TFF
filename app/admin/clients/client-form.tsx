@@ -104,13 +104,13 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
     <form onSubmit={onSubmit} className="space-y-6" data-testid="client-form">
       <ConfirmDialog />
       {readOnly && (
-        <p className="text-sm text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+        <p className="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
           You do not have permission to edit this client.
         </p>
       )}
       {/* Essential fields */}
       <div className="tff-card tff-card-pad space-y-4">
-        <h3 className="text-base font-semibold text-zinc-900">Essentials</h3>
+        <h3 className="text-base font-semibold text-slate-900">Essentials</h3>
         <div className="space-y-2"><Label htmlFor="bn">Business name *</Label><Input id="bn" required value={form.business_name} onChange={(e) => set('business_name', e.target.value)} disabled={readOnly} data-testid="client-business-name" /></div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2"><Label>PAN</Label><Input value={form.pan} onChange={(e) => set('pan', e.target.value.toUpperCase())} placeholder="ABCDE1234F" maxLength={10} disabled={readOnly} /></div>
@@ -135,7 +135,7 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
       {showMore && (
         <div className="animate-in fade-in slide-in-from-top-2 duration-200 space-y-8">
           <div className="tff-card tff-card-pad space-y-4">
-            <h3 className="text-base font-semibold text-zinc-900">Business details</h3>
+            <h3 className="text-base font-semibold text-slate-900">Business details</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Category</Label>
                 <Select value={form.category} onValueChange={(v) => set('category', v)} disabled={readOnly}>
@@ -152,7 +152,7 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
           </div>
 
           <div className="tff-card tff-card-pad space-y-4">
-            <h3 className="text-base font-semibold text-zinc-900">Primary contact</h3>
+            <h3 className="text-base font-semibold text-slate-900">Primary contact</h3>
             <div className="space-y-2">
               <Label>Phone</Label>
               <Input value={form.primary_contact_phone} onChange={(e) => set('primary_contact_phone', e.target.value)} disabled={readOnly} />
@@ -160,7 +160,7 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
           </div>
 
           <div className="tff-card tff-card-pad space-y-4">
-            <h3 className="text-base font-semibold text-zinc-900">Address</h3>
+            <h3 className="text-base font-semibold text-slate-900">Address</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2"><Label>City</Label><Input value={form.city} onChange={(e) => set('city', e.target.value)} disabled={readOnly} /></div>
               <div className="space-y-2"><Label>State</Label><Input value={form.state} onChange={(e) => set('state', e.target.value)} disabled={readOnly} /></div>
@@ -169,7 +169,7 @@ export default function ClientForm({ groups, owners, initial, readOnly = false, 
           </div>
 
           <div className="tff-card tff-card-pad space-y-4">
-            <h3 className="text-base font-semibold text-zinc-900">Engagement</h3>
+            <h3 className="text-base font-semibold text-slate-900">Engagement</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Group</Label>
                 <Select value={form.group_id} onValueChange={(v) => set('group_id', v)} disabled={readOnly}>

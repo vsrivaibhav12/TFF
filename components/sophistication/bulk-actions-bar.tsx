@@ -54,8 +54,8 @@ export default function BulkActionsBar({ ids, onClear, actions, children }: Bulk
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-3xl px-4">
-      <div className="flex items-center gap-3 p-3 bg-white/95 backdrop-blur-md text-zinc-900 rounded-2xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)] border border-zinc-200/60 ring-1 ring-black/5 transition-all" data-testid="bulk-bar">
-        <div className="flex items-center gap-2 px-3 border-r border-zinc-200/60 mr-2">
+      <div className="flex items-center gap-3 p-3 bg-white/95 backdrop-blur-md text-slate-900 rounded-2xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)] border border-slate-200/60 ring-1 ring-black/5 transition-all" data-testid="bulk-bar">
+        <div className="flex items-center gap-2 px-3 border-r border-slate-200/60 mr-2">
           <CheckCircle2 className="h-4 w-4 text-teal-600" />
           <span className="text-sm font-semibold">{ids.length} selected</span>
         </div>
@@ -69,7 +69,7 @@ export default function BulkActionsBar({ ids, onClear, actions, children }: Bulk
                     value={values[action.label] || ''}
                     onValueChange={(v) => setValues((prev) => ({ ...prev, [action.label]: v }))}
                   >
-                    <SelectTrigger className="w-40 h-8 text-xs bg-zinc-50/50 border-zinc-200 text-zinc-900 focus:ring-teal-500 shadow-sm transition-colors hover:bg-zinc-100">
+                    <SelectTrigger className="w-40 h-8 text-xs bg-slate-50/50 border-slate-200 text-slate-900 focus:ring-teal-500 shadow-sm transition-colors hover:bg-slate-100">
                       <SelectValue placeholder={action.label} />
                     </SelectTrigger>
                     <SelectContent>
@@ -80,7 +80,7 @@ export default function BulkActionsBar({ ids, onClear, actions, children }: Bulk
                   </Select>
                   <Button
                     size="sm"
-                    className="h-8 text-xs bg-zinc-900 hover:bg-zinc-800 text-white shadow-sm border border-transparent transition-colors"
+                    className="h-8 text-xs bg-slate-900 hover:bg-slate-800 text-white shadow-sm border border-transparent transition-colors"
                     onClick={() => handleApply(action)}
                     disabled={pending || !values[action.label]}
                   >
@@ -99,7 +99,7 @@ export default function BulkActionsBar({ ids, onClear, actions, children }: Bulk
                 className={
                   action.variant === 'danger'
                     ? 'h-8 text-xs shrink-0 shadow-sm'
-                    : 'h-8 text-xs bg-white text-zinc-700 hover:bg-zinc-50 border-zinc-200 shadow-sm shrink-0'
+                    : 'h-8 text-xs bg-white text-slate-700 hover:bg-slate-50 border-slate-200 shadow-sm shrink-0'
                 }
                 onClick={() => handleApply(action)}
                 disabled={pending}

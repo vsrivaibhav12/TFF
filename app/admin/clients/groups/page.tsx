@@ -16,7 +16,7 @@ export default async function ClientGroupsPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center gap-2">
-        <Link href="/admin/clients" className="text-sm text-zinc-500 hover:text-zinc-900">
+        <Link href="/admin/clients" className="text-sm text-slate-500 hover:text-slate-900">
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div>

@@ -31,7 +31,7 @@ export default function BillingActions({ taskId, billed, billReference }: { task
       size="sm"
       onClick={markBilled}
       disabled={pending || billed}
-      className={billed ? 'text-teal-700' : 'text-zinc-700'}
+      className={billed ? 'text-teal-700' : 'text-slate-700'}
     >
       {billed ? <><Check className="h-3 w-3 mr-1" /> Billed</> : 'Mark billed'}
     </Button>

@@ -25,7 +25,7 @@ export function TaskRowEditButton({
         e.stopPropagation();
         push({ type: 'task', id: taskId, mode: 'edit' });
       }}
-      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-zinc-600 hover:text-teal-700"
+      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-teal-700"
       aria-label="Edit task"
       data-testid="task-row-edit"
     >
