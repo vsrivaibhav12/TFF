@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { formatDateIST, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 /** Filings falling due soon: a date block, what is due, how many are done, and one status chip. */
 export function DeadlineProgress({

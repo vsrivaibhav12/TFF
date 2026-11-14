@@ -1,7 +1,6 @@
 'use client';
-import { AlertCircle, Hand } from 'lucide-react';
+import { Hand } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 
 export function TeamAttendancePrompt({ hasAttendance }: { hasAttendance: boolean }) {
   if (hasAttendance) return null;

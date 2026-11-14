@@ -3,14 +3,12 @@ import { requireRole } from '@/lib/auth/require-role';
 import { requireCapabilityOrRedirect, hasCapability } from '@/lib/auth/require-capability';
 import { cn } from '@/lib/utils';
 import {
-  Briefcase,
   Users,
   Receipt,
   BarChart3,
   Layers,
   Clock,
-  ArrowRight,
-} from 'lucide-react';
+  ArrowRight } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 

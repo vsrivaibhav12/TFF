@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { parseNaturalLanguage, examplePrompts, type SmartSuggestion } from '@/lib/cmdk/natural-language';
-import { cn } from '@/lib/utils';
 
 interface CommandCenterProps {
   userRole: 'admin' | 'team';

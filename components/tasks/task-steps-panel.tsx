@@ -1,8 +1,6 @@
 'use client';
 import { useState, useTransition, useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { toggleTaskStepAction } from '@/lib/actions/task-steps';
 import { toast } from 'sonner';
 import { HelpCircle } from 'lucide-react';

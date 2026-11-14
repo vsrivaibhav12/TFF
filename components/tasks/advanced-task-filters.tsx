@@ -10,7 +10,7 @@ import { searchClients } from '@/lib/actions/clients';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { X, Calendar as CalendarIcon, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
+import { X, Calendar as SlidersHorizontal } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TaskStatusFilter } from '@/components/tasks/status-filter';
 import { effectiveStatuses, statusParamFor, TASK_STATUS_OPTIONS } from '@/lib/tasks/filter-params';

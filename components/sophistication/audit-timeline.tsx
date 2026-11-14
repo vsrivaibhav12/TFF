@@ -1,6 +1,6 @@
 'use client';
 import { formatDateIST } from '@/lib/utils';
-import { User, FileEdit, PlusCircle, CheckCircle2, AlertCircle } from 'lucide-react';
+import { FileEdit, PlusCircle, CheckCircle2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface AuditEntry {

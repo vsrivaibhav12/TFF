@@ -115,7 +115,7 @@ ESLint is configured via `.eslintrc.json` extending `next/core-web-vitals`. No P
   NEXTJS_BACKEND_ARCHITECTURE.md
   GO_FORWARD_PLAN.md
   PRD.md
-  MIGRATION_NOTE.md
+  archive/                     # Superseded audits, plans and notes (history only)
 
 /__tests__           # Unit tests (Node native test runner)
 ```
@@ -329,7 +329,7 @@ RLS is the **primary access-control boundary**. Every new table gets RLS policie
 - **Delegation**: the `compliance.generate_tasks` capability (create tasks from deadlines). Only a super admin (`is_prime_admin`) can grant or revoke it (`lib/auth/capability-grant.ts`).
 - **Completed tasks** can be corrected by admins only, for a fixed list of fields (`lib/services/task-modify-guard.ts`); every such edit is audited. Any new action that changes a task must call `canEditTaskFields`.
 - **Compliance tracking** reads tasks, not calendar events. A sub-service marked `is_compliance` (Services screen) is a compliance item; the home panel and the Compliance page group its tasks by due date, however the tasks were created (`lib/repositories/compliance-tasks.ts`, `lib/services/compliance-progress.ts`). The old `compliance_calendar_events` table and its nightly refresh were retired and the table is empty. A few older helpers still read it (the compliance column on the clients list); do not build new features on it.
-- **Migrations** are applied by hand with `npm run db:apply-migration`, in date order. Code that reads a new column fails until its migration is applied, so apply first, then deploy. Pending at the time of writing: `2026-11-15-sub-service-is-compliance.sql`.
+- **Migrations** are applied by hand with `npm run db:apply-migration`, in date order. Code that reads a new column fails until its migration is applied, so apply first, then deploy. Pending at the time of writing: `2026-11-15-saved-views-policy-speed.sql` (an optional speed-up for the saved views policies).
 
 ## Data access rules (read before writing queries)
 
@@ -455,4 +455,4 @@ ADMIN_SEED_EMAIL=admin@example.com
 - **Active backlog**: `memory/GO_FORWARD_PLAN.md`
 - **Workflows / UX rules**: `WORKFLOWS.md`
 - **Schema**: `db/schema.sql` + `db/schema-additions.sql`
-- **Historical reasoning**: `memory/PRD.md` + `BUILD_PLAN.md`
+- **Historical reasoning**: `memory/PRD.md`; older audits, plans and notes are in `memory/archive/`

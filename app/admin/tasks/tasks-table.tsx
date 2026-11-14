@@ -1,7 +1,6 @@
 'use client';
-import { useState, useMemo, useTransition } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { DockLink } from '@/components/shell/dock-link';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -13,12 +12,11 @@ import { ResizableTableHead } from '@/components/ui/resizable-table-head';
 import { useColumnWidths } from '@/lib/hooks/use-column-widths';
 import { cn, displayTaskName } from '@/lib/utils';
 import {
-  Filter, AlertTriangle, Building2, ArrowUpRight, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck, Trash2,
-} from 'lucide-react';
+  ArrowUpRight, ArrowUpDown, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 import { TaskCellContent } from '@/components/tasks/task-cells';
-import { transitionTaskAction, bulkDeleteTasksAction, bulkUpdateTasksAction } from '@/lib/actions/tasks';
+import { transitionTaskAction, bulkUpdateTasksAction } from '@/lib/actions/tasks';
 import { toast } from 'sonner';
 
 type Task = {

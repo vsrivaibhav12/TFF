@@ -2,11 +2,10 @@
 
 import { formatPeriodColumns } from '@/lib/periods';
 import { DockLink } from '@/components/shell/dock-link';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Pencil, Loader2, Plus, Clock } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { formatDateIST, timeAgo, cn, todayIST } from '@/lib/utils';
 import TaskStepsPanel from '@/components/tasks/task-steps-panel';
@@ -17,7 +16,7 @@ import { TaskActionRail } from './task-action-rail';
 import { DuePill } from '@/components/tasks/task-cells';
 import { TaskEditForm } from './task-edit-form';
 import { TaskStatusStepper } from './status-stepper';
-import type { Task } from './types';
+import type { } from './types';
 import type { TaskDetailCtx } from './use-task-detail';
 
 export default function TaskDetailModalLayout({ ctx }: { ctx: TaskDetailCtx }) {

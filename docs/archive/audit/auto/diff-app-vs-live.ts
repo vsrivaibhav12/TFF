@@ -5,7 +5,6 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
-import { execSync } from 'child_process';
 
 const ROOT = '/app';
 const SCAN_DIRS = ['lib', 'app', 'components', 'scripts'];

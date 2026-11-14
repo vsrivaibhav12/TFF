@@ -6,8 +6,6 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/page-header';
 import ExportButton from '@/components/sophistication/export-button';
 import ServiceDialog from '@/components/services/service-dialog';
-import SubServiceDialog from '@/components/services/sub-service-dialog';
-import TaskTemplatePanel from '@/components/services/task-template-panel';
 import { CategoryManager } from '@/components/services/category-dialog';
 import EmptyState from '@/components/sophistication/empty-state';
 

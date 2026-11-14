@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, useMemo } from 'react';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export interface DockItem {
   type: 'task' | 'client' | 'team';

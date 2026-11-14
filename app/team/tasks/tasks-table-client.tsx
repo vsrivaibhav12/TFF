@@ -2,25 +2,19 @@
 
 import { formatPeriodColumns } from '@/lib/periods';
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
-import { DockLink } from '@/components/shell/dock-link';
-import { TaskRowEditButton } from '@/components/tasks/task-row-edit-button';
-import { TaskHoverCard } from '@/components/tasks/task-hover-card';
 import { EditableCell } from '@/components/tasks/editable-cell';
 import { Badge } from '@/components/ui/badge';
 import { getStatusColour } from '@/lib/semantic-colours';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ProgressMicro } from '@/components/ui/progress-micro';
 import { TaskCellContent, type CellContext } from '@/components/tasks/task-cells';
 import { formatDateIST, cn, displayTaskName } from '@/lib/utils';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
 import { transitionTaskAction, updateTaskAction, bulkDeleteTasksAction } from '@/lib/actions/tasks';
-import { TaskLabelPills } from '@/components/tasks/task-label-pills';
 import { SwipeableRow } from '@/components/ui/swipeable-row';
-import { ShieldCheck, User, Check, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Trash2 } from 'lucide-react';
+import { User, Check, ArrowUpDown, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
 

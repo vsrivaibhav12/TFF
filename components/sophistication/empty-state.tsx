@@ -1,6 +1,5 @@
 'use client';
 import Link from 'next/link';
-import { Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   GenericEmptyIllustration,

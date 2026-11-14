@@ -14,13 +14,9 @@ import {
   UserCircle,
   Key,
   Inbox,
-  Sparkles,
-  Building2,
-  Calendar,
-  ArrowRight,
-} from 'lucide-react';
+  ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { parseNaturalLanguage, type SmartSuggestion } from '@/lib/cmdk/natural-language';
+import { parseNaturalLanguage } from '@/lib/cmdk/natural-language';
 
 interface CmdItem {
   id: string;

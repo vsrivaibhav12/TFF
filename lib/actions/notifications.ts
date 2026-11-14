@@ -1,7 +1,7 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { requireRole, requireUser } from '@/lib/auth/require-role';
+import { requireUser } from '@/lib/auth/require-role';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 import { listNotifications, type NotificationRow } from '@/lib/repositories/notifications';
 

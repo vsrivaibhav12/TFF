@@ -2,7 +2,6 @@ import { fetchAll } from '@/lib/supabase/fetch-all';
 import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
-import { Badge } from '@/components/ui/badge';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';

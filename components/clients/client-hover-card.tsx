@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, Briefcase, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Users, Briefcase, ShieldCheck } from 'lucide-react';
 import useSWR from 'swr';
 
 interface ClientPreview {

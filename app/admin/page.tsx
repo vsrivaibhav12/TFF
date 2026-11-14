@@ -8,14 +8,11 @@ import { getAdminHome } from '@/lib/services/home-service';
 import { addDaysIso, formatInrCompact } from '@/lib/services/home-metrics';
 import Link from 'next/link';
 import {
-  Users,
   AlertTriangle,
-  Briefcase,
   CalendarClock,
   Wallet,
   ShieldCheck,
-  LogIn,
-} from 'lucide-react';
+  LogIn } from 'lucide-react';
 import { todayIST } from '@/lib/utils';
 import { StatCard } from '@/components/ui/stat-card';
 import { PriorityList } from '@/components/dashboard/priority-list';

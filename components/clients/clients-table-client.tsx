@@ -51,12 +51,15 @@ function CompliancePill({ open, overdue }: { open: number; overdue: number }) {
   return <span className="tff-pill tff-pill-good tff-pill-dot">Up to date</span>;
 }
 
+/** The clients list for both workspaces. `base` is '/admin' or '/team'; bulk assign is shown only when allowed. */
 export default function ClientsTableClient({
+  base,
   clients,
   showBulkAssign = false,
   canDelete = false,
   groups,
 }: {
+  base: '/admin' | '/team';
   clients: EnrichedClient[];
   showBulkAssign?: boolean;
   canDelete?: boolean;
@@ -71,7 +74,7 @@ export default function ClientsTableClient({
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [ConfirmDialog, confirm] = useConfirm();
-  const { density, setDensity } = useTablePrefs('admin-clients', [], 'comfortable');
+  const { density, setDensity } = useTablePrefs(`${base.slice(1)}-clients`, [], 'comfortable');
   const parentRef = useRef<HTMLDivElement>(null);
 
   const onSearch = useDebouncedCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -293,7 +296,7 @@ export default function ClientsTableClient({
               >
                 <DockLink
                   item={{ type: 'client', id: c.id }}
-                  href={`/admin/clients/${c.id}`}
+                  href={`${base}/clients/${c.id}`}
                   className="block w-full"
                 >
                   <div

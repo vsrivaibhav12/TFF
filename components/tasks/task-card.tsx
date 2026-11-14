@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatDateIST, displayTaskName } from '@/lib/utils';
-import { getStatusColour, getPriorityColour } from '@/lib/semantic-colours';
-import { Calendar, AlertTriangle, Briefcase, Bell, MessageSquare, Tag } from 'lucide-react';
+import { getPriorityColour } from '@/lib/semantic-colours';
+import { Calendar, AlertTriangle, Briefcase, Bell, MessageSquare } from 'lucide-react';
 import { TaskLabelPills, type TaskLabel } from './task-label-pills';
 import { ProgressRing } from '@/components/ui/progress-ring';
 

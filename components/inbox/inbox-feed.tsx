@@ -8,12 +8,9 @@ import {
   Inbox,
   CheckCircle,
   ArrowRight,
-  AlertCircle,
   FileText,
   Calendar,
-  HelpCircle,
-  Loader2,
-} from 'lucide-react';
+  Loader2 } from 'lucide-react';
 import { cn, formatDateIST, timeAgo, onEnterSpace } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';

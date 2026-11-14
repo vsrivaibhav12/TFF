@@ -6,11 +6,7 @@ import {
   Plus,
   CalendarDays,
   ClipboardCheck,
-  FileCheck,
-  AlertTriangle,
-  MessageSquare,
-  Timer,
-} from 'lucide-react';
+  Timer } from 'lucide-react';
 
 export function TeamQuickActions() {
   const router = useRouter();

@@ -26,7 +26,6 @@
  *   - annual_turnover_above: number — applies when client.annual_turnover_estimate >= this
  */
 
-import { fetchAll } from '@/lib/supabase/fetch-all';
 import { fiscalQuarterOfMonth, fyStartYear as fiscalYearStart, makeHalfYearly, makeMonthly, makeQuarterly, makeYearly } from '@/lib/periods';
 
 export interface CalendarRule {

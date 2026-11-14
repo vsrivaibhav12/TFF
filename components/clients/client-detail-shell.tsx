@@ -1,9 +1,8 @@
 import Link from 'next/link';
 import { DockLink } from '@/components/shell/dock-link';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, Briefcase, ArrowRight, Pencil } from 'lucide-react';
+import { ChevronLeft, Building2, MapPin, Phone, Mail, FileText, Briefcase, ArrowRight } from 'lucide-react';
 import AuditTimeline from '@/components/sophistication/audit-timeline';
-import { Button } from '@/components/ui/button';
 import { displayTaskName, formatDateIST } from '@/lib/utils';
 import ClientFormWrapper from './client-form-wrapper';
 import ClientProfileSection from './client-profile-section';

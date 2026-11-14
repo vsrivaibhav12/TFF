@@ -6,7 +6,7 @@ import { requireRole } from '@/lib/auth/require-role';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { ok, fail, type ActionResult } from '@/lib/actions/result';
 import { notify } from '@/lib/services/notification-service';
-import { getWeekBounds, computeWeekSummary } from '@/lib/repositories/weekly-approval';
+import { computeWeekSummary } from '@/lib/repositories/weekly-approval';
 
 const submitSchema = z.object({
   week_start: z.string().date(),

@@ -8,10 +8,10 @@ import { getClientComplianceSummary } from '@/lib/repositories/compliance-tasks'
 import { todayIST } from '@/lib/utils';
 import { countActiveEngagementsForClients } from '@/lib/repositories/client-sub-services';
 import { Button } from '@/components/ui/button';
-import { Plus, Upload, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Upload, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import FilterBar from '@/components/sophistication/filter-bar';
-import ClientsTableClient from './clients-table-client';
+import ClientsTableClient from '@/components/clients/clients-table-client';
 import { FullExport } from '@/components/reports/full-export';
 
 
@@ -111,7 +111,7 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
         />
       ) : (
         <>
-          <ClientsTableClient clients={enrichedClients as any} showBulkAssign={canAssignServices} canDelete={canDelete} />
+          <ClientsTableClient base="/admin" clients={enrichedClients as any} showBulkAssign={canAssignServices} canDelete={canDelete} />
 
           {/* Pagination controls */}
           {totalPages > 1 && (

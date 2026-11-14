@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { formatDateIST } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Upload } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import {
   Table,

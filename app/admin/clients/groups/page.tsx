@@ -2,7 +2,6 @@ import { requireCapabilityOrRedirect } from '@/lib/auth/require-capability';
 import Link from 'next/link';
 import { requireRole } from '@/lib/auth/require-role';
 import { listClientGroups } from '@/lib/repositories/clients';
-import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import ClientGroupsClient from './client-groups-client';

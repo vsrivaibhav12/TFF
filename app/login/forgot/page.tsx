@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import { Suspense } from 'react';
 import Image from 'next/image';
 import ForgotForm from './forgot-form';
 import { ArrowLeft } from 'lucide-react';

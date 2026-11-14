@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { upsertServiceCategoryAction, deleteServiceCategoryAction } from '@/lib/actions/services-catalogue';
 import { toast } from 'sonner';
 import { useConfirm } from '@/components/ui/use-confirm';
-import { Trash2, Pencil, Plus } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 
 interface Category {
   id: string;

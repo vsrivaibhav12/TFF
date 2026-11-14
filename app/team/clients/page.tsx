@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { FullExport } from '@/components/reports/full-export';
 import EmptyState from '@/components/sophistication/empty-state';
 import FilterBar from '@/components/sophistication/filter-bar';
-import ClientsTableClient from './clients-table-client';
+import ClientsTableClient from '@/components/clients/clients-table-client';
 import { PullToRefreshWrapper } from '@/components/ui/pull-to-refresh-wrapper';
 
 
@@ -107,7 +107,7 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
         />
       ) : (
         <>
-          <ClientsTableClient clients={enrichedClients} groups={groups} canDelete={canDelete} />
+          <ClientsTableClient base="/team" clients={enrichedClients} groups={groups} canDelete={canDelete} />
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">

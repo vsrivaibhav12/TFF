@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/require-role';
-import { ALL_CAPABILITIES, type Capability } from '@/lib/auth/capabilities';
+import { ALL_CAPABILITIES } from '@/lib/auth/capabilities';
 import { requireCapability } from '@/lib/auth/require-capability';
 import { canGrantCapability, restrictedCapabilityChanges } from '@/lib/auth/capability-grant';
 import { writeAudit } from '@/lib/services/audit-service';

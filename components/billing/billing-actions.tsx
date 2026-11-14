@@ -1,10 +1,10 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { markTaskBilledAction } from '@/lib/actions/tasks';
-import { Check, RotateCcw } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 export default function BillingActions({ taskId, billed, billReference }: { taskId: string; billed: boolean; billReference: string | null }) {
   const router = useRouter();

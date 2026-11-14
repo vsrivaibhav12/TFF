@@ -6,10 +6,8 @@ import {
   Plus,
   Users,
   Timer,
-  ClipboardList,
   Layers,
-  CalendarClock,
-} from 'lucide-react';
+  CalendarClock } from 'lucide-react';
 
 export function AdminQuickActions() {
   const router = useRouter();

@@ -2,7 +2,6 @@
 
 import { z } from 'zod';
 import { requireRole } from '@/lib/auth/require-role';
-import { requireCapability } from '@/lib/auth/require-capability';
 import { transitionTaskAction } from './tasks';
 import { ok, fail, type ActionResult } from './result';
 

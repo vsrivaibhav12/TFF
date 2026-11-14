@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { reviewLeaveAction } from '@/lib/actions/leave';
 import { toast } from 'sonner';

@@ -1,5 +1,5 @@
 import 'server-only';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { mergeById, wrapLike } from '@/lib/supabase/safe-search';

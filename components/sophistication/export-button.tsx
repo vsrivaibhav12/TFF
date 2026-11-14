@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { FileSpreadsheet, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { convertToCsv } from '@/lib/csv-utils';
 import { exportTableDataToExcelAction } from '@/lib/actions/export';

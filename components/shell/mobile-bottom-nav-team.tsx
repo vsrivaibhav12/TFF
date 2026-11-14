@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Bell } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { ICONS, type NavItem } from './nav-icons';
 
 interface MobileBottomNavTeamProps {
