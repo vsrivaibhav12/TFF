@@ -1,152 +1,55 @@
 import { Button } from '@/components/ui/button';
-import { fetchAll } from '@/lib/supabase/fetch-all';
-import { createClient } from '@/lib/supabase/server';
+import { listComplianceTasks } from '@/lib/repositories/compliance-tasks';
+import { monthKeyOf, periodBounds, shiftMonth, summariseByDueMonth } from '@/lib/services/compliance-progress';
 import { requireRole } from '@/lib/auth/require-role';
-import { Badge } from '@/components/ui/badge';
-import { formatDateIST } from '@/lib/utils';
+import { formatDateIST, todayIST } from '@/lib/utils';
 import Link from 'next/link';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { CheckCircle2, Clock, AlertTriangle, CalendarDays, Briefcase, Timer, TrendingUp, CalendarClock } from 'lucide-react';
+import { CheckCircle2, Clock, AlertTriangle, CalendarDays, Timer, TrendingUp, CalendarClock } from 'lucide-react';
 import EmptyState from '@/components/sophistication/empty-state';
 import ExportButton from '@/components/sophistication/export-button';
 import SimpleBarChart from '@/components/compliance/simple-bar-chart';
 
-interface ComplianceEvent {
-  id: string;
-  rule_code: string;
-  period_label: string;
-  due_date: string;
-  status: string;
-  task_id: string | null;
-  compliance_calendar_rules: { display_name: string | null; service_kind: string | null } | null;
-  sub_services: { name: string | null } | null;
-  tasks: { status: string | null; completed_date: string | null; due_date: string | null; is_stuck: boolean | null } | null;
+function formatMonthKey(key: string) {
+  return new Date(`${key}-01T00:00:00Z`).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 }
-
 
 export default async function AdminCompliancePage() {
   await requireRole('admin');
-  const sb = createClient();
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const horizonIso = new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10);
+  const todayIso = todayIST();
+  const fromIso = shiftMonth(monthKeyOf(todayIso), -11) + '-01';
+  const toIso = periodBounds('month', shiftMonth(monthKeyOf(todayIso), 3)).to;
 
-  // Fetch compliance events with linked tasks — includes both rule-driven and service-driven
-  // Every event in the window. The API returns at most 1,000 rows per request, so page through them.
-  const events = await fetchAll<ComplianceEvent>(() =>
-    sb
-      .from('compliance_calendar_events')
-      .select(`
-      id, rule_code, period_label, due_date, status, task_id,
-      compliance_calendar_rules(display_name, service_kind),
-      sub_services(name),
-      tasks(status, completed_date, due_date, is_stuck)
-    `)
-      .gte('due_date', todayIso)
-      .lte('due_date', horizonIso),
-  );
+  // Every task of a sub-service marked as a compliance item, however it was created.
+  const tasks = await listComplianceTasks(fromIso, toIso);
+  const periodRows = summariseByDueMonth(tasks, todayIso);
 
-  // Aggregate metrics
-  let total = 0;
-  let tasksCreated = 0;
-  let filed = 0;
-  let pending = 0;
-  let overdue = 0;
-  let onTime = 0;
-  let delayed = 0;
+  const total = tasks.length;
+  const filed = periodRows.reduce((n, r) => n + r.done, 0);
+  const pending = periodRows.reduce((n, r) => n + r.pending, 0);
+  const overdue = periodRows.reduce((n, r) => n + r.overdue, 0);
+  const onTime = periodRows.reduce((n, r) => n + r.onTime, 0);
+  const delayed = periodRows.reduce((n, r) => n + r.delayed, 0);
 
-  const serviceMap: Record<string, { filed: number; pending: number; overdue: number }> = {};
-  const periodMap: Record<string, {
-    rule_code: string;
-    rule_name: string;
-    service_kind: string;
-    period_label: string;
-    due_date: string;
-    total: number;
-    filed: number;
-    pending: number;
-    overdue: number;
-    delayed: number;
-  }> = {};
-
-  for (const e of events ?? []) {
-    const taskStatus = e.tasks?.status;
-    const taskCompleted = e.tasks?.completed_date;
-    const taskDue = e.tasks?.due_date;
-    const taskStuck = !!e.tasks?.is_stuck;
-    const dueDate = e.due_date;
-    const isPastDue = dueDate < todayIso;
-    const serviceKind = e.compliance_calendar_rules?.service_kind
-      ?? (e.sub_services ? 'service_driven' : 'other');
-    const ruleName = e.compliance_calendar_rules?.display_name
-      ?? e.sub_services?.name
-      ?? e.rule_code;
-    const key = `${e.rule_code}::${e.period_label}`;
-
-    total += 1;
-
-    if (!serviceMap[serviceKind]) serviceMap[serviceKind] = { filed: 0, pending: 0, overdue: 0 };
-    if (!periodMap[key]) {
-      periodMap[key] = {
-        rule_code: e.rule_code,
-        rule_name: ruleName,
-        service_kind: serviceKind,
-        period_label: e.period_label,
-        due_date: dueDate,
-        total: 0,
-        filed: 0,
-        pending: 0,
-        overdue: 0,
-        delayed: 0,
-      };
-    }
-
-    const p = periodMap[key];
-    p.total += 1;
-
-    if (taskStatus === 'completed') {
-      filed += 1;
-      p.filed += 1;
-      serviceMap[serviceKind].filed += 1;
-      tasksCreated += 1;
-
-      if (taskCompleted && taskDue && taskCompleted <= taskDue) {
-        onTime += 1;
-      } else if (taskCompleted && taskDue && taskCompleted > taskDue) {
-        delayed += 1;
-        p.delayed += 1;
-      }
-    } else if (e.task_id) {
-      tasksCreated += 1;
-      if (taskStuck || isPastDue) {
-        overdue += 1;
-        p.overdue += 1;
-        serviceMap[serviceKind].overdue += 1;
-      } else {
-        pending += 1;
-        p.pending += 1;
-        serviceMap[serviceKind].pending += 1;
-      }
-    } else if (isPastDue) {
-      overdue += 1;
-      p.overdue += 1;
-      serviceMap[serviceKind].overdue += 1;
-    } else {
-      pending += 1;
-      p.pending += 1;
-      serviceMap[serviceKind].pending += 1;
-    }
+  // Chart: one group of bars per compliance sub-service.
+  const byService = new Map<string, { name: string; filed: number; pending: number; overdue: number }>();
+  for (const r of periodRows) {
+    const s = byService.get(r.sub_service_id) ?? { name: r.name, filed: 0, pending: 0, overdue: 0 };
+    s.filed += r.done; s.pending += r.pending; s.overdue += r.overdue;
+    byService.set(r.sub_service_id, s);
   }
-
-  const periodRows = Object.values(periodMap).sort((a, b) => a.due_date.localeCompare(b.due_date));
-  const serviceKinds = Object.keys(serviceMap).sort();
-  const chartCategories = serviceKinds.map((k) => k.toUpperCase());
+  const services = [...byService.values()].sort((a, b) => a.name.localeCompare(b.name));
+  const chartCategories = services.map((s) => s.name);
   const chartSeries = [
-    { name: 'Filed', data: serviceKinds.map((k) => serviceMap[k].filed), color: '#10B981' },
-    { name: 'Pending', data: serviceKinds.map((k) => serviceMap[k].pending), color: '#F59E0B' },
-    { name: 'Overdue', data: serviceKinds.map((k) => serviceMap[k].overdue), color: '#EF4444' },
+    { name: 'Filed', data: services.map((s) => s.filed), color: '#10B981' },
+    { name: 'Pending', data: services.map((s) => s.pending), color: '#F59E0B' },
+    { name: 'Overdue', data: services.map((s) => s.overdue), color: '#EF4444' },
   ];
+  const exportRows = periodRows.map((r) => ({
+    filing: r.name, due_month: r.month, total: r.total, filed: r.done, pending: r.pending, overdue: r.overdue, delayed: r.delayed,
+  }));
 
   return (
     <div className="space-y-8">
@@ -154,31 +57,30 @@ export default async function AdminCompliancePage() {
         <div>
           <h1 className="tff-page-title">Compliance dashboard</h1>
           <p className="tff-page-subtitle">
-            Filing health across your portfolio. Track what is on time, delayed or overdue.
+            Every task of a compliance sub-service, grouped by the month it falls due. The last 12 months and the next 3.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/admin/compliance/create-tasks">
             <Button size="sm" data-testid="create-deadline-tasks-link"><CalendarClock className="h-4 w-4 mr-1" /> Create tasks for a deadline</Button>
           </Link>
-          <ExportButton data={periodRows} filename="compliance-dashboard" format="excel" />
+          <ExportButton data={exportRows} filename="compliance-dashboard" format="excel" />
         </div>
       </div>
 
       {total === 0 ? (
         <EmptyState
           variant="chart"
-          title="No compliance events in the next 12 months"
-          body="Events appear once compliance rules generate filing dates for your clients. Add or review rules to start tracking due dates here."
-          actionHref="/admin/settings/compliance-rules"
-          actionLabel="Review compliance rules"
+          title="No compliance tasks yet"
+          body="Tasks appear here when their sub-service is marked as a compliance item. Mark GSTR-1, GSTR-3B, TDS and similar services in the Services screen."
+          actionHref="/admin/services"
+          actionLabel="Open services"
         />
       ) : (
       <>
       {/* Metric cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard label="Total events" value={total} icon={<CalendarDays className="h-5 w-5" />} color="text-zinc-700" bg="bg-zinc-100" border="border-zinc-200" />
-        <MetricCard label="Tasks created" value={tasksCreated} icon={<Briefcase className="h-5 w-5" />} color="text-zinc-600" bg="bg-zinc-100" border="border-zinc-200" />
+        <MetricCard label="Tasks" value={total} icon={<CalendarDays className="h-5 w-5" />} color="text-zinc-700" bg="bg-zinc-100" border="border-zinc-200" />
         <MetricCard label="Filed" value={filed} icon={<CheckCircle2 className="h-5 w-5" />} color="text-teal-600" bg="bg-teal-50" border="border-teal-100" />
         <MetricCard label="Pending" value={pending} icon={<Clock className="h-5 w-5" />} color="text-amber-600" bg="bg-amber-50" border="border-amber-100" />
         <MetricCard label="Overdue" value={overdue} icon={<AlertTriangle className="h-5 w-5" />} color="text-red-600" bg="bg-red-50" border="border-red-100" highlight={overdue > 0} />
@@ -188,9 +90,9 @@ export default async function AdminCompliancePage() {
       </div>
 
       {/* Service-wise chart */}
-      {serviceKinds.length > 0 && (
+      {services.length > 0 && (
         <div className="tff-card tff-card-pad">
-          <h2 className="tff-section-title mb-4">Filing by service kind</h2>
+          <h2 className="tff-section-title mb-4">Filing by service</h2>
           <SimpleBarChart categories={chartCategories} series={chartSeries} height={280} />
         </div>
       )}
@@ -204,10 +106,9 @@ export default async function AdminCompliancePage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-zinc-50/50 hover:bg-zinc-50/50">
-                <TableHead>Rule</TableHead>
-                <TableHead>Service</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead>Due</TableHead>
+                <TableHead>Filing</TableHead>
+                <TableHead>Due month</TableHead>
+                <TableHead>First due</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead className="text-right">Filed</TableHead>
                 <TableHead className="text-right">Pending</TableHead>
@@ -218,23 +119,18 @@ export default async function AdminCompliancePage() {
             <TableBody>
               {periodRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-sm text-zinc-500 py-10">
-                    No compliance events in the upcoming 12 months.
+                  <TableCell colSpan={8} className="text-center text-sm text-zinc-500 py-10">
+                    No compliance tasks in this window.
                   </TableCell>
                 </TableRow>
               ) : (
                 periodRows.map((r) => (
-                  <TableRow key={`${r.rule_code}::${r.period_label}`}>
-                    <TableCell className="font-medium">{r.rule_name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs uppercase">
-                        {r.service_kind === 'service_driven' ? 'Custom' : r.service_kind}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs">{r.period_label}</TableCell>
-                    <TableCell className="text-xs tabular-nums">{formatDateIST(r.due_date)}</TableCell>
+                  <TableRow key={r.key}>
+                    <TableCell className="font-medium">{r.name}</TableCell>
+                    <TableCell className="text-xs">{formatMonthKey(r.month)}</TableCell>
+                    <TableCell className="text-xs tabular-nums">{formatDateIST(r.first_due)}</TableCell>
                     <TableCell className="text-right font-semibold">{r.total}</TableCell>
-                    <TableCell className="text-right text-teal-600">{r.filed}</TableCell>
+                    <TableCell className="text-right text-teal-600">{r.done}</TableCell>
                     <TableCell className="text-right text-amber-600">{r.pending}</TableCell>
                     <TableCell className="text-right text-red-600">{r.overdue}</TableCell>
                     <TableCell className="text-right text-amber-600">{r.delayed}</TableCell>

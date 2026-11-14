@@ -328,7 +328,8 @@ RLS is the **primary access-control boundary**. Every new table gets RLS policie
 - **Deadlines**: a deadline is a sub-service plus a period plus a due date. The date comes from `compliance_deadlines` (a changed date), else the compliance rule linked to the sub-service, else the sub-service's own due day (`lib/services/deadline-due-date.ts`). Tasks for a deadline are created through the `create_deadline_tasks` database function so a delegate needs no wider access.
 - **Delegation**: the `compliance.generate_tasks` capability (create tasks from deadlines). Only a super admin (`is_prime_admin`) can grant or revoke it (`lib/auth/capability-grant.ts`).
 - **Completed tasks** can be corrected by admins only, for a fixed list of fields (`lib/services/task-modify-guard.ts`); every such edit is audited. Any new action that changes a task must call `canEditTaskFields`.
-- **Migrations** are applied by hand with `npm run db:apply-migration`, in date order. Code that reads a new column fails until its migration is applied, so apply first, then deploy. Pending at the time of writing: `2026-11-13-period-types.sql`, then `2026-11-14-compliance-task-creation.sql`.
+- **Compliance tracking** reads tasks, not calendar events. A sub-service marked `is_compliance` (Services screen) is a compliance item; the home panel and the Compliance page group its tasks by due date, however the tasks were created (`lib/repositories/compliance-tasks.ts`, `lib/services/compliance-progress.ts`). The old `compliance_calendar_events` table and its nightly refresh were retired and the table is empty. A few older helpers still read it (the compliance column on the clients list); do not build new features on it.
+- **Migrations** are applied by hand with `npm run db:apply-migration`, in date order. Code that reads a new column fails until its migration is applied, so apply first, then deploy. Pending at the time of writing: `2026-11-15-sub-service-is-compliance.sql`.
 
 ## Data access rules (read before writing queries)
 
@@ -386,7 +387,6 @@ Defined in `vercel.json`. All schedules are UTC.
 | `/api/cron/due-alerts` | `30 3 * * *` | Daily task due-date email alerts (~09:00 IST) |
 | `/api/cron/dsc-alerts` | `30 2 * * *` | Daily DSC expiry alerts (~08:00 IST) |
 | `/api/cron/notification-digest` | `0 4 * * *` | Daily/weekly digest emails (~09:30 IST) |
-| `/api/cron/refresh-compliance-events` | `0 1 * * *` | Refresh compliance calendar events |
 
 Cron handlers:
 - Must call `isAuthorizedCron(request)` from `lib/auth/cron-auth.ts` (checks `Authorization: Bearer $CRON_SECRET`; the `x-vercel-cron` header is spoofable and is NOT trusted; the secret is never accepted in the URL).

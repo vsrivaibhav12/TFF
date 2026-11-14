@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { requireRole } from '@/lib/auth/require-role';
 import { getAdminDashboardData } from '@/lib/services/dashboard-service';
-import { loadComplianceDashboard, loadComplianceProgressEvents } from '@/lib/repositories/compliance-dashboard';
+import { listComplianceTasks } from '@/lib/repositories/compliance-tasks';
 import { listExpiringDsc } from '@/lib/repositories/dsc';
 import { MicroBarChart } from '@/components/charts/micro-bar-chart';
 import { DeadlineProgress, WorkloadBars } from '@/components/dashboard/home-widgets';
@@ -23,7 +23,7 @@ import { PriorityList } from '@/components/dashboard/priority-list';
 import { AdminQuickActions } from '@/components/dashboard/admin-quick-actions';
 import { NeedsAttentionHub, type AttentionItem } from '@/components/dashboard/needs-attention-hub';
 import { ComplianceProgress } from '@/components/dashboard/compliance-progress';
-import { isMonthKey, monthKeyOf, periodBounds, summariseProgress, type ProgressView } from '@/lib/services/compliance-progress';
+import { isMonthKey, monthKeyOf, periodBounds, summariseProgress, tasksToProgressEvents, upcomingFilings, type ProgressView } from '@/lib/services/compliance-progress';
 
 export default async function AdminDashboard({ searchParams }: { searchParams?: { cview?: string; cmonth?: string } }) {
   await requireRole('admin');
@@ -62,35 +62,29 @@ async function DashboardBody({ cview, cmonth }: { cview?: string; cmonth?: strin
       pendingApprovals,
       attendanceToday,
     },
-    complianceCells,
     dscExpiring,
-    progressEvents,
+    complianceTasks,
     home,
   ] = await Promise.all([
     getAdminDashboardData(),
-    loadComplianceDashboard({ horizonMonths: 3 }),
     listExpiringDsc(90),
-    loadComplianceProgressEvents(bounds.from, bounds.to),
+    listComplianceTasks(bounds.from < todayIST() ? bounds.from : todayIST(), bounds.to > addDaysIso(todayIST(), 14) ? bounds.to : addDaysIso(todayIST(), 14)),
     getAdminHome(),
   ]);
 
-  const progressRows = summariseProgress(progressEvents, home.todayIso);
+  const inPeriod = complianceTasks.filter((t) => t.due_date >= bounds.from && t.due_date <= bounds.to);
+  const progressRows = summariseProgress(tasksToProgressEvents(inPeriod), home.todayIso);
 
   // Filing deadlines in the next 14 days, soonest first.
-  const horizon = addDaysIso(home.todayIso, 14);
-  const deadlineRows = complianceCells
-    .filter((c) => c.period_due_date <= horizon)
-    .sort((x, y) => x.period_due_date.localeCompare(y.period_due_date))
-    .slice(0, 6)
-    .map((c) => ({
-      key: `${c.rule_code}::${c.period_label}`,
-      name: c.rule_name,
-      period: c.period_label,
-      due_date: c.period_due_date,
-      filed: c.filed,
-      total: c.total_clients,
-      overdue: c.overdue,
-    }));
+  const deadlineRows = upcomingFilings(complianceTasks, home.todayIso, addDaysIso(home.todayIso, 14)).map((r) => ({
+    key: r.key,
+    name: r.name,
+    period: '',
+    due_date: r.due_date,
+    filed: r.filed,
+    total: r.total,
+    overdue: r.overdue,
+  }));
 
   // One query for the whole 90-day window, bucketed here (was three separate queries).
   const todayMs = Date.parse(`${todayIST()}T00:00:00Z`);

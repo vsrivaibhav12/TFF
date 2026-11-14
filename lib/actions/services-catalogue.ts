@@ -124,6 +124,7 @@ const subServiceSchema = z.object({
   due_month: z.number().int().min(1).max(12).optional().nullable(),
   is_recurring: z.boolean().default(true),
   requires_client_input: z.boolean().default(true),
+  is_compliance: z.boolean().default(false),
   is_active: z.boolean().default(true),
 });
 export async function upsertSubServiceAction(input: z.infer<typeof subServiceSchema>): Promise<ActionResult<{ id: string }>> {

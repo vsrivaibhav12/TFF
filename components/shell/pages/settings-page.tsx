@@ -6,7 +6,7 @@ import { hasCapability } from '@/lib/auth/require-capability';
 import type { Capability } from '@/lib/auth/capabilities';
 import { PageHeader } from '@/components/ui/page-header';
 import {
-  ShieldCheck, Wallet, FolderTree, Calendar, Settings as SettingsIcon, Lock, FileText,
+  Wallet, FolderTree, Calendar, Lock,
 } from 'lucide-react';
 
 interface SettingCard {
@@ -25,18 +25,15 @@ export default async function SettingsPage({ rolePrefix }: Props) {
   const me = await requireRole(['admin', 'team']);
 
   const ALL_CARDS: (SettingCard & { cap: Capability | Capability[] })[] = [
-    { href: `${rolePrefix}/team/roles`, title: 'Staff role templates', body: 'Group capabilities into roles like Senior Tax Associate. Apply to team members in one click.', icon: ShieldCheck, testid: 'set-roles', cap: 'staff.grant_capabilities' },
     { href: `${rolePrefix}/settings/billing-entities`, title: 'Billing entities', body: 'TFF LLP, your existing CA practice — manage GSTIN, invoice prefix, signing authority, bank details.', icon: Wallet, testid: 'set-billing-entities', cap: 'manage_billing_entities' },
     { href: `${rolePrefix}/settings/profit-cost-centres`, title: 'Profit & cost centres', body: 'Two-character codes used to slice tasks, work-done, and reports by pillar (CaaS / BizLens / vCFO).', icon: FolderTree, testid: 'set-pc-cc', cap: 'services.manage' },
-    { href: `${rolePrefix}/settings/compliance-rules`, title: 'Compliance calendar rules', body: 'Edit the statutory due-date master. Add, disable, or change reminder windows.', icon: Calendar, testid: 'set-rules', cap: 'manage_compliance_rules' },
     { href: `${rolePrefix}/settings/labels`, title: 'Labels', body: 'Categorise tasks and clients with custom colour-coded labels.', icon: Lock, testid: 'set-labels', cap: 'manage_labels' },
     { href: `${rolePrefix}/settings/period-review`, title: 'Period review', body: 'Find tasks whose period does not fit their service, and correct them.', icon: Calendar, testid: 'set-period-review', cap: 'services.manage' },
-    { href: `${rolePrefix}/services`, title: 'Service catalogue', body: 'Define services, sub-services, and reusable task templates.', icon: SettingsIcon, testid: 'set-catalogue', cap: 'services.manage' },
   ];
 
   // This screen only exists under /admin. Linking to it from the team workspace
   // produced a 404, so hide it there until a team version is built.
-  const ADMIN_ONLY_CARDS = new Set(['set-roles', 'set-period-review']);
+  const ADMIN_ONLY_CARDS = new Set(['set-period-review']);
 
   const CARDS: SettingCard[] = [];
   for (const c of ALL_CARDS) {

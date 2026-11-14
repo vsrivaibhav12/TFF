@@ -56,3 +56,45 @@ describe('summariseProgress', () => {
     assert.deepEqual(summariseProgress([], today), []);
   });
 });
+
+import { tasksToProgressEvents, summariseByDueMonth, upcomingFilings, type ComplianceTask } from '../lib/services/compliance-progress';
+
+const task = (o: Partial<ComplianceTask>): ComplianceTask => ({
+  id: Math.random().toString(36).slice(2), client_id: 'c', sub_service_id: 's1', sub_service_name: 'GSTR-1',
+  due_date: '2026-11-11', status: 'pending', is_stuck: false, completed_date: null, ...o,
+});
+
+describe('compliance tasks', () => {
+  const today = '2026-11-14';
+  test('every task counts, whichever way it was created', () => {
+    const rows = summariseProgress(tasksToProgressEvents([
+      task({ status: 'completed', completed_date: '2026-11-10' }),
+      task({ due_date: '2026-11-25', status: 'in_progress' }),
+      task({}),
+    ]), today);
+    assert.deepEqual([rows[0].rule_name, rows[0].total, rows[0].completed, rows[0].inProgress, rows[0].overdue], ['GSTR-1', 3, 1, 1, 1]);
+  });
+  test('by due month splits on-time, delayed, pending and overdue', () => {
+    const rows = summariseByDueMonth([
+      task({ status: 'completed', completed_date: '2026-11-10' }),
+      task({ status: 'completed', completed_date: '2026-11-13T05:00:00Z' }),
+      task({ due_date: '2026-11-25' }),
+      task({ due_date: '2026-11-20', is_stuck: true }),
+      task({}),
+      task({ due_date: '2026-12-11' }),
+    ], today);
+    assert.equal(rows.length, 2);
+    const nov = rows[0];
+    assert.deepEqual([nov.month, nov.total, nov.done, nov.onTime, nov.delayed, nov.pending, nov.overdue], ['2026-11', 5, 2, 1, 1, 1, 2]);
+  });
+  test('upcoming filings stay inside the window and sort by date', () => {
+    const rows = upcomingFilings([
+      task({ due_date: '2026-11-20' }),
+      task({ due_date: '2026-11-15', status: 'completed' }),
+      task({ due_date: '2026-11-10' }),
+      task({ due_date: '2026-12-30' }),
+    ], today, '2026-11-28');
+    assert.deepEqual(rows.map((r) => r.due_date), ['2026-11-15', '2026-11-20']);
+    assert.equal(rows[0].filed, 1);
+  });
+});

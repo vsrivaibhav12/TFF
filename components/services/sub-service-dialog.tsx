@@ -31,8 +31,11 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
     is_recurring: initial?.is_recurring ?? true,
     requires_client_input: initial?.requires_client_input ?? true,
     requires_verification: initial?.requires_verification ?? false,
+    // A new sub-service that repeats is most likely a compliance item; the switch below overrides it.
+    is_compliance: initial?.is_compliance ?? (subServicePeriodType({ frequency: 'monthly' }) !== 'none'),
     is_active: initial?.is_active ?? true,
   });
+  const [complianceChosen, setComplianceChosen] = useState(!!initial);
   // Until the period is chosen by hand, it follows the schedule (an on-demand service has no period).
   const [periodChosen, setPeriodChosen] = useState(!!initial?.period_type);
   const [showAdvanced, setShowAdvanced] = useState(
@@ -80,7 +83,7 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
           </div>
           <div className="space-y-2">
             <Label>Period</Label>
-            <Select value={f.period_type} onValueChange={(v) => { setPeriodChosen(true); set('period_type', v); }}>
+            <Select value={f.period_type} onValueChange={(v) => { setPeriodChosen(true); set('period_type', v); if (!complianceChosen) set('is_compliance', v !== 'none'); }}>
               <SelectTrigger data-testid="sub-svc-period-type"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {SUB_SERVICE_PERIOD_TYPES.map((x) => <SelectItem key={x} value={x}>{PERIOD_TYPE_LABELS[x]}</SelectItem>)}
@@ -91,6 +94,10 @@ export default function SubServiceDialog({ serviceId, serviceName, initial, chil
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2"><Label>Due day of quarter</Label><Input type="number" min={1} max={31} value={f.due_day_of_quarter ?? ''} onChange={(e) => set('due_day_of_quarter', e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 15" /></div>
             <div className="space-y-2"><Label>Due month (for annual)</Label><Input type="number" min={1} max={12} value={f.due_month ?? ''} onChange={(e) => set('due_month', e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 7 for July" /></div>
+          </div>
+          <div className="flex items-center justify-between border-t border-zinc-100 pt-3">
+            <div><Label>Compliance item</Label><p className="text-xs text-zinc-500">Tracked on the compliance dashboard, such as GSTR-1 or TDS. Leave off for one-off work like registrations.</p></div>
+            <Switch checked={f.is_compliance} onCheckedChange={(v) => { setComplianceChosen(true); set('is_compliance', !!v); }} data-testid="ss-is-compliance" />
           </div>
           <div className="flex items-center justify-between border-t border-zinc-100 pt-3">
             <div><Label>Active</Label><p className="text-xs text-zinc-500">Inactive sub-services don’t appear when assigning to clients.</p></div>

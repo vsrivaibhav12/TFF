@@ -15,7 +15,7 @@ export function DeadlineProgress({
     <section className="tff-card p-4 space-y-3" data-testid="deadline-progress">
       <div className="flex items-center justify-between">
         <h3 className="tff-section-title">Statutory deadlines</h3>
-        <span className="text-xs text-zinc-500">Filed out of linked clients, next 14 days</span>
+        <span className="text-xs text-zinc-500">Done out of tasks created, next 14 days</span>
       </div>
       {rows.length === 0 ? (
         <p className="text-sm text-zinc-500">No filing deadlines in the next 14 days.</p>
@@ -28,7 +28,7 @@ export function DeadlineProgress({
               <li key={r.key}>
                 <div className="flex items-baseline justify-between gap-2 text-sm">
                   <span className="text-zinc-900 truncate">
-                    {r.name} <span className="text-zinc-500">· {r.period}</span>
+                    {r.name}{r.period ? <span className="text-zinc-500"> · {r.period}</span> : null}
                     <span className="ml-2 text-xs text-zinc-500">due {formatDateIST(r.due_date)}</span>
                   </span>
                   <span className="text-xs text-zinc-500 tabular-nums whitespace-nowrap">{r.filed} of {r.total} filed</span>

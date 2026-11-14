@@ -15,10 +15,6 @@
     {
       "path": "/api/cron/notification-digest",
       "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/cron/refresh-compliance-events",
-      "schedule": "0 1 * * *"
     }
   ],
   "regions": [
