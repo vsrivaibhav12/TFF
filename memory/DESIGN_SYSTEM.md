@@ -1,7 +1,23 @@
 # THE FISCAL FULCRUM — DESIGN SYSTEM REFERENCE
 
-**Version:** v1 (locked)
+**Version:** v2 (Nov 2026). The v2 section below overrides anything older in this file.
 **Status:** Final. Do not deviate.
+
+---
+
+## v2: modern workspace (Nov 2026, read this first)
+
+The app moved from a flat, bordered look to a modern SaaS workspace. Same teal and Inter; new surfaces.
+
+- **Canvas and cards:** canvas `#F6F7F9`; cards are white, `rounded-2xl`, `border-[#E8EAEE]`, with a soft two-layer shadow (`shadow-card`, or the `.tff-card` class). Soft shadows and the heading gradient are now allowed. Heavy shadows stay on floating UI only.
+- **Slate, not zinc:** text `slate-900/600/500`, hairlines `#E8EAEE` and `#DCDFE5`. Accent teal-600; the active-nav and selected tint is `#E6F6F3` with text `#0B6B62`.
+- **No progress bars, no mini charts.** Completion and counts are numbers and chips. Use `.tff-pill` with `-good`, `-warn`, `-bad`, `-info`, `-accent`, `-mute` (add `.tff-pill-dot` for a leading dot). Percentages are tiered chips: 90% and above good, 75 to 89% warn, below 75% bad. Step progress is a `3/5` chip (`ProgressMicro`).
+- **Buttons:** primary is a teal gradient with an inner highlight and a soft teal shadow; outline is white with a hairline and tiny shadow; radius 10px.
+- **Views as tabs:** a list page opens with saved views as tabs with a count chip (the tasks page `TaskSummaryTiles`), then a single filter row, then the table.
+- **Detail panel:** records open in the right-hand dock on a `#F6F7F9` background with a blurred scrim; white cards inside.
+- **Home:** a gradient greeting band with status pills, a row of four stat cards that lift on hover, then compliance, deadlines, needs-you and team.
+- **Top bar:** translucent canvas with backdrop blur; the search box is a white rounded pill-card.
+- Dark mode is not built yet.
 **Use:** Paste this entire document into every Emergent prompt that touches UI.
 
 ---

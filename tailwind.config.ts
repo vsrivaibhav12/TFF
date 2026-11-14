@@ -77,8 +77,8 @@ const config: Config = {
       },
       boxShadow: {
         'xs': '0 1px 2px 0 rgb(0 0 0 / 0.03)',
-        'card': 'none',
-        'card-hover': 'none',
+        'card': '0 1px 2px rgba(15,23,42,.04), 0 6px 20px rgba(15,23,42,.05)',
+        'card-hover': '0 2px 4px rgba(15,23,42,.05), 0 10px 28px rgba(15,23,42,.08)',
         'floating': '0 10px 25px rgba(28, 25, 23, 0.08)',
         'sidebar': '0 4px 20px rgba(28, 25, 23, 0.06)',
       },

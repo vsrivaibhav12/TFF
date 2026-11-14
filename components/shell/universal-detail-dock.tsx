@@ -39,15 +39,15 @@ export function UniversalDetailDock() {
         role="button"
         tabIndex={-1}
         aria-label="Close detail panel"
-        className="fixed inset-0 z-[100] bg-zinc-900/20 transition-opacity"
+        className="fixed inset-0 z-[100] bg-slate-900/35 backdrop-blur-[2px] transition-opacity"
         onClick={clear}
         onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); clear(); } }}
       />
       <div
-        className="fixed right-0 top-0 bottom-0 w-full md:w-[50vw] md:min-w-[640px] max-w-full md:max-w-[90vw] bg-white shadow-floating z-[101] flex flex-col border-l border-zinc-200 transition-transform duration-200 ease-out"
+        className="fixed right-0 top-0 bottom-0 w-full md:w-[50vw] md:min-w-[640px] max-w-full md:max-w-[90vw] bg-[#F6F7F9] shadow-[0_20px_60px_rgba(15,23,42,0.18)] z-[101] flex flex-col border-l border-[#E8EAEE] transition-transform duration-200 ease-out"
         style={{ transform: 'translateX(0)' }}
       >
-        <div className="h-14 flex items-center justify-between px-4 border-b border-zinc-200 bg-white shrink-0">
+        <div className="h-14 flex items-center justify-between px-4 border-b border-[#E8EAEE] bg-white shrink-0">
           <div className="flex items-center gap-2">
             {isStacked && (
               <button 

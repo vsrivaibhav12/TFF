@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import { formatDateIST, cn } from '@/lib/utils';
 
-const BAR = 'h-2 rounded-full bg-zinc-100 overflow-hidden flex gap-0.5';
-
-/** Filed clients out of linked clients for each statutory return coming up. */
+/** Filings falling due soon: a date block, what is due, how many are done, and one status chip. */
 export function DeadlineProgress({
   rows,
   href,
@@ -12,109 +10,80 @@ export function DeadlineProgress({
   href: string;
 }) {
   return (
-    <section className="tff-card p-4 space-y-3" data-testid="deadline-progress">
-      <div className="flex items-center justify-between">
-        <h3 className="tff-section-title">Statutory deadlines</h3>
-        <span className="text-xs text-zinc-500">Done out of tasks created, next 14 days</span>
+    <section className="tff-card" data-testid="deadline-progress">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[#E8EAEE]">
+        <h3 className="tff-section-title">Next deadlines</h3>
+        <span className="text-xs text-slate-500">Next 14 days</span>
       </div>
       {rows.length === 0 ? (
-        <p className="text-sm text-zinc-500">No filing deadlines in the next 14 days.</p>
+        <p className="px-5 py-6 text-sm text-slate-500">No compliance tasks fall due in the next 14 days.</p>
       ) : (
-        <ul className="space-y-3">
+        <ul>
           {rows.map((r) => {
-            const filedPct = r.total > 0 ? (r.filed / r.total) * 100 : 0;
-            const overduePct = r.total > 0 ? (r.overdue / r.total) * 100 : 0;
+            const d = new Date(`${r.due_date}T00:00:00Z`);
+            const open = r.total - r.filed;
             return (
-              <li key={r.key}>
-                <div className="flex items-baseline justify-between gap-2 text-sm">
-                  <span className="text-zinc-900 truncate">
-                    {r.name}{r.period ? <span className="text-zinc-500"> · {r.period}</span> : null}
-                    <span className="ml-2 text-xs text-zinc-500">due {formatDateIST(r.due_date)}</span>
-                  </span>
-                  <span className="text-xs text-zinc-500 tabular-nums whitespace-nowrap">{r.filed} of {r.total} filed</span>
+              <li key={r.key} className="flex items-center gap-3 px-5 py-3 border-b border-[#E8EAEE] last:border-0">
+                <div className="w-11 shrink-0 rounded-[10px] border border-[#E8EAEE] bg-slate-50 py-1 text-center">
+                  <div className="text-base font-semibold leading-tight text-slate-900 tabular-nums">{d.getUTCDate()}</div>
+                  <div className="text-[10.5px] uppercase tracking-wider text-slate-500">{d.toLocaleDateString('en-IN', { month: 'short', timeZone: 'UTC' })}</div>
                 </div>
-                <div className={cn(BAR, 'mt-1')} role="img" aria-label={`${r.filed} of ${r.total} filed, ${r.overdue} overdue`}>
-                  <div className="bg-teal-600" style={{ width: `${filedPct}%` }} />
-                  <div className="bg-red-600" style={{ width: `${overduePct}%` }} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-slate-900">{r.name}{r.period ? ` · ${r.period}` : ''}</div>
+                  <div className="text-xs text-slate-500 tabular-nums">{r.filed} of {r.total} done</div>
                 </div>
+                {open === 0 ? (
+                  <span className="tff-pill tff-pill-good">Complete</span>
+                ) : r.overdue > 0 ? (
+                  <span className="tff-pill tff-pill-bad">{r.overdue} stuck</span>
+                ) : (
+                  <span className="tff-pill tff-pill-warn">{open} open</span>
+                )}
               </li>
             );
           })}
         </ul>
       )}
-      <Link href={href} className="text-xs text-teal-700 hover:underline font-medium">Open compliance</Link>
+      <div className="px-5 py-3 border-t border-[#E8EAEE]">
+        <Link href={href} className="text-xs font-medium text-teal-700 hover:underline">Open compliance</Link>
+      </div>
     </section>
   );
 }
 
 export type WorkloadRowView = { user_id: string; name: string; open: number; overdue: number; dueSoon: number; onTrack: number; aboveAverage: boolean };
 
-/** Open tasks per person, split into on track, due this week and overdue. */
+const AVATAR_TONES = ['bg-indigo-100 text-indigo-800', 'bg-pink-100 text-pink-800', 'bg-amber-100 text-amber-800', 'bg-emerald-100 text-emerald-800'];
+function initials(name: string) {
+  return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+}
+
+/** Open tasks per person as a small table: open, overdue and due this week, with no bars. */
 export function WorkloadBars({ rows, title = 'Team workload', tasksHref }: { rows: WorkloadRowView[]; title?: string; tasksHref: string }) {
-  const max = Math.max(1, ...rows.map((r) => r.open));
   return (
-    <section className="tff-card p-4 space-y-3" data-testid="workload-bars">
-      <div className="flex items-center justify-between">
+    <section className="tff-card" data-testid="workload-bars">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[#E8EAEE]">
         <h3 className="tff-section-title">{title}</h3>
-        <span className="text-xs text-zinc-500">Open tasks per person</span>
+        <span className="text-xs text-slate-500">Open · due this week · overdue</span>
       </div>
       {rows.length === 0 ? (
-        <p className="text-sm text-zinc-500">No open tasks are assigned.</p>
+        <p className="px-5 py-6 text-sm text-slate-500">No open tasks are assigned.</p>
       ) : (
-        <ul className="space-y-3">
-          {rows.slice(0, 8).map((r) => (
-            <li key={r.user_id}>
-              <div className="flex items-baseline justify-between text-sm">
-                <Link href={`${tasksHref}?assigned=${r.user_id}`} className="text-zinc-900 hover:text-teal-700 truncate">{r.name}</Link>
-                <span className="text-xs text-zinc-500 tabular-nums">
-                  {r.open} open{r.aboveAverage ? ' · above the team average' : ''}
-                </span>
-              </div>
-              <div className={cn(BAR, 'mt-1')} role="img" aria-label={`${r.onTrack} on track, ${r.dueSoon} due this week, ${r.overdue} overdue`}>
-                <div className="bg-teal-600" style={{ width: `${(r.onTrack / max) * 100}%` }} />
-                <div className="bg-amber-500" style={{ width: `${(r.dueSoon / max) * 100}%` }} />
-                <div className="bg-red-600" style={{ width: `${(r.overdue / max) * 100}%` }} />
-              </div>
+        <ul>
+          {rows.slice(0, 8).map((r, i) => (
+            <li key={r.user_id} className="flex items-center gap-3 px-5 py-2.5 border-b border-[#E8EAEE] last:border-0 hover:bg-slate-50/70">
+              <span className={cn('h-7 w-7 shrink-0 rounded-full text-[11px] font-semibold flex items-center justify-center', AVATAR_TONES[i % AVATAR_TONES.length])}>{initials(r.name)}</span>
+              <Link href={`${tasksHref}?assigned=${r.user_id}`} className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900 hover:text-teal-700">
+                {r.name}
+                {r.aboveAverage && <span className="ml-2 text-xs font-normal text-slate-500">above average</span>}
+              </Link>
+              <span className="w-8 text-right text-sm tabular-nums text-slate-900">{r.open}</span>
+              <span className={cn('tff-pill w-10 justify-center', r.dueSoon > 0 ? 'tff-pill-warn' : 'tff-pill-mute')}>{r.dueSoon}</span>
+              <span className={cn('tff-pill w-10 justify-center', r.overdue > 0 ? 'tff-pill-bad' : 'tff-pill-good')}>{r.overdue}</span>
             </li>
           ))}
         </ul>
       )}
-      <div className="flex gap-4 text-xs text-zinc-500">
-        <span><span className="inline-block h-2 w-2 rounded-sm bg-teal-600 mr-1" />On track</span>
-        <span><span className="inline-block h-2 w-2 rounded-sm bg-amber-500 mr-1" />Due this week</span>
-        <span><span className="inline-block h-2 w-2 rounded-sm bg-red-600 mr-1" />Overdue</span>
-      </div>
-    </section>
-  );
-}
-
-/** Tasks waiting on a client, by how long since they last changed. */
-export function AgeingBars({ buckets, href }: { buckets: { d0_3: number; d4_7: number; d8_plus: number }; href: string }) {
-  const items = [
-    { label: '0-3 days', n: buckets.d0_3, color: 'bg-teal-600' },
-    { label: '4-7 days', n: buckets.d4_7, color: 'bg-amber-500' },
-    { label: '8+ days', n: buckets.d8_plus, color: 'bg-red-600' },
-  ];
-  const max = Math.max(1, ...items.map((i) => i.n));
-  return (
-    <section className="tff-card p-4 space-y-3" data-testid="ageing-bars">
-      <div className="flex items-center justify-between">
-        <h3 className="tff-section-title">Waiting on client</h3>
-        <span className="text-xs text-zinc-500">Days since last update</span>
-      </div>
-      <div className="flex items-end gap-3 h-24">
-        {items.map((i) => (
-          <div key={i.label} className="flex-1 flex flex-col justify-end h-full">
-            <div className={cn('rounded-t', i.color)} style={{ height: `${(i.n / max) * 100}%`, minHeight: i.n > 0 ? 4 : 0 }} />
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-3 text-xs text-center text-zinc-500">
-        {items.map((i) => (
-          <div key={i.label} className="flex-1">{i.label}<div className="text-sm font-medium text-zinc-900 tabular-nums">{i.n}</div></div>
-        ))}
-      </div>
-      <Link href={href} className="text-xs text-teal-700 hover:underline font-medium">See these tasks</Link>
     </section>
   );
 }

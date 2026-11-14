@@ -26,7 +26,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useConfirm } from '@/components/ui/use-confirm';
 import { TableToolbar, useTablePrefs } from '@/components/ui/table-enhancements';
 import BulkActionsBar from '@/components/sophistication/bulk-actions-bar';
-import { ComplianceHealthBar } from '@/components/clients/compliance-health';
 
 interface EnrichedClient {
   id: string;
@@ -42,33 +41,13 @@ interface EnrichedClient {
   group_id: string | null;
   group_name: string | null;
   engagements: number;
-  compliance: { gst: string; tds: string; it: string };
-  complianceHealth: number;
+  compliance: { open: number; overdue: number };
 }
 
-function ComplianceDot({ status }: { status: string }) {
-  const color =
-    status === 'filed' || status === 'completed'
-      ? 'bg-teal-500'
-      : status === 'overdue'
-        ? 'bg-red-500'
-        : status === 'in_progress' || status === 'processing'
-          ? 'bg-amber-500'
-          : 'bg-zinc-200';
-  return <span className={`inline-block w-2 h-2 rounded-full ${color}`} title={status} />;
-}
-
-function ComplianceDots({ gst, tds, it }: { gst: string; tds: string; it: string }) {
-  return (
-    <div className="flex items-center gap-1.5" title={`GST: ${gst} | TDS: ${tds} | IT: ${it}`}>
-      <span className="text-xs text-zinc-500 uppercase font-medium">G</span>
-      <ComplianceDot status={gst} />
-      <span className="text-xs text-zinc-500 uppercase font-medium ml-1">T</span>
-      <ComplianceDot status={tds} />
-      <span className="text-xs text-zinc-500 uppercase font-medium ml-1">I</span>
-      <ComplianceDot status={it} />
-    </div>
-  );
+function CompliancePill({ open, overdue }: { open: number; overdue: number }) {
+  if (overdue > 0) return <span className="tff-pill tff-pill-bad tff-pill-dot">{overdue} overdue</span>;
+  if (open > 0) return <span className="tff-pill tff-pill-accent tff-pill-dot">{open} open</span>;
+  return <span className="tff-pill tff-pill-good tff-pill-dot">Up to date</span>;
 }
 
 export default function ClientsTableClient({
@@ -370,7 +349,7 @@ export default function ClientsTableClient({
 
                     {/* Compliance health */}
                     <div className="col-span-2">
-                      <ComplianceHealthBar gst={c.compliance.gst} tds={c.compliance.tds} it={c.compliance.it} />
+                      <CompliancePill open={c.compliance.open} overdue={c.compliance.overdue} />
                     </div>
 
                     {/* Engagements */}

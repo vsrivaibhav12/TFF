@@ -1,5 +1,6 @@
 import { listAccessibleClients, listClientGroups, countAccessibleClients } from '@/lib/repositories/clients';
-import { getComplianceStatusForClients } from '@/lib/repositories/compliance';
+import { getClientComplianceSummary } from '@/lib/repositories/compliance-tasks';
+import { todayIST } from '@/lib/utils';
 import { countActiveEngagementsForClients } from '@/lib/repositories/client-sub-services';
 import { requireRole } from '@/lib/auth/require-role';
 import { hasCapabilities } from '@/lib/auth/capabilities-cache';
@@ -47,23 +48,18 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
   const clientIds = clients.map((c) => c.id);
 
   const [complianceMap, engagementMap] = await Promise.all([
-    clientIds.length > 0 ? getComplianceStatusForClients(clientIds) : Promise.resolve<Record<string, { gst: string; tds: string; it: string }>>({}),
+    getClientComplianceSummary(clientIds, todayIST()),
     clientIds.length > 0 ? countActiveEngagementsForClients(clientIds) : Promise.resolve<Record<string, number>>({}),
   ]);
 
 
   const enrichedClients = clients.map((c) => {
-    const compliance = complianceMap[c.id] ?? { gst: 'unknown', tds: 'unknown', it: 'unknown' };
-    const filedCount = [compliance.gst, compliance.tds, compliance.it].filter((s) => s === 'filed' || s === 'completed').length;
-    const inProgressCount = [compliance.gst, compliance.tds, compliance.it].filter((s) => s === 'in_progress' || s === 'processing').length;
-    const score = filedCount * 1 + inProgressCount * 0.5 + (3 - filedCount - inProgressCount) * (['unknown', 'pending'].includes(compliance.gst) ? 0.5 : 0);
-    const health = Math.min(100, Math.round((score / 3) * 100));
+    const compliance = complianceMap[c.id] ?? { open: 0, overdue: 0 };
     return {
       ...c,
       group_name: c.client_groups?.name ?? null,
       compliance,
       engagements: engagementMap[c.id] ?? 0,
-      complianceHealth: health,
     };
   });
 

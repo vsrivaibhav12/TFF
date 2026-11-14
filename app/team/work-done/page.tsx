@@ -5,6 +5,7 @@ import { listAccessibleClients, listTeamUsers } from '@/lib/repositories/clients
 import { listTasks } from '@/lib/repositories/tasks';
 import WorkDoneForm from './work-done-form';
 import WorkDoneFilters from '@/components/operations/work-done-filters';
+import WorkDoneRanges from '@/components/operations/work-done-ranges';
 import WorkDoneTable from '@/components/operations/work-done-table';
 import { displayTaskName } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
@@ -58,7 +59,8 @@ export default async function WorkDonePage({ searchParams }: { searchParams?: { 
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <WorkDoneFilters clients={clients} tasks={tasks} showStaffFilter={canViewAll} staff={staff} />
+          <WorkDoneRanges basePath="/team/work-done" params={searchParams ?? {}} />
+          <WorkDoneFilters key={JSON.stringify(searchParams ?? {})} clients={clients} tasks={tasks} showStaffFilter={canViewAll} staff={staff} />
           {hasFilter ? (
             <WorkDoneTable
               logs={logs}

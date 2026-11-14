@@ -1,7 +1,7 @@
 // Pure: completion of each filing (GSTR-1, GSTR-3B, TDS...) for the filings due in a month or a fiscal quarter.
 // A filing is complete when its task is completed. Dismissed events are not counted.
 
-export type ProgressView = 'month' | 'quarter';
+export type ProgressView = 'month' | 'quarter' | 'year';
 
 export type ProgressEvent = {
   rule_code: string;
@@ -39,27 +39,36 @@ export function shiftMonth(key: string, delta: number): string {
   return `${Math.floor(idx / 12)}-${String((idx % 12) + 1).padStart(2, '0')}`;
 }
 
-/** Inclusive ISO date bounds of the month, or of the fiscal quarter (Apr-Jun, Jul-Sep, Oct-Dec, Jan-Mar) containing it. */
+/** Inclusive ISO date bounds of the month, the fiscal quarter (Apr-Jun, Jul-Sep, Oct-Dec, Jan-Mar) or the financial year (Apr-Mar) containing it. */
 export function periodBounds(view: ProgressView, monthKey: string): { from: string; to: string } {
   const [y, m] = monthKey.split('-').map(Number);
-  let startMonth = m;
+  let startKey = monthKey;
   let months = 1;
   if (view === 'quarter') {
-    startMonth = m >= 4 ? 4 + Math.floor((m - 4) / 3) * 3 : 1;
+    const startMonth = m >= 4 ? 4 + Math.floor((m - 4) / 3) * 3 : 1;
+    startKey = `${y}-${String(startMonth).padStart(2, '0')}`;
     months = 3;
+  } else if (view === 'year') {
+    startKey = `${m >= 4 ? y : y - 1}-04`;
+    months = 12;
   }
-  const from = `${y}-${String(startMonth).padStart(2, '0')}-01`;
-  const endKey = shiftMonth(`${y}-${String(startMonth).padStart(2, '0')}`, months - 1);
+  const endKey = shiftMonth(startKey, months - 1);
   const [ey, em] = endKey.split('-').map(Number);
   const lastDay = new Date(Date.UTC(ey, em, 0)).getUTCDate();
-  return { from, to: `${endKey}-${String(lastDay).padStart(2, '0')}` };
+  return { from: `${startKey}-01`, to: `${endKey}-${String(lastDay).padStart(2, '0')}` };
 }
 
 export function periodLabel(view: ProgressView, monthKey: string): string {
   const { from, to } = periodBounds(view, monthKey);
   if (view === 'month') return new Date(`${from}T00:00:00Z`).toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  if (view === 'year') return `FY ${from.slice(0, 4)}-${to.slice(2, 4)}`;
   const short = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-IN', { month: 'short', timeZone: 'UTC' });
   return `${short(from)} to ${short(to)} ${to.slice(0, 4)}`;
+}
+
+/** How many months to step when moving to the next or previous period. */
+export function periodStep(view: ProgressView): number {
+  return view === 'year' ? 12 : view === 'quarter' ? 3 : 1;
 }
 
 export function summariseProgress(events: ProgressEvent[], todayIso: string): ProgressRow[] {

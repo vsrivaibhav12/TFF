@@ -84,7 +84,7 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
   });
 
   return (
-    <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[220px] bg-white border-r border-zinc-200 z-40 flex-col">
+    <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[220px] bg-white border-r border-[#E8EAEE] z-40 flex-col">
       {/* Logo */}
       <div className="h-14 flex items-center px-4 border-b border-zinc-100 shrink-0">
         <Link href={`/${role}`} className="flex items-center gap-2">
@@ -115,13 +115,13 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
                       key={n.href}
                       href={n.href}
                       className={cn(
-                        'flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors',
+                        'flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-[13px] font-medium transition-colors',
                         active
-                          ? 'bg-teal-50 text-teal-700'
-                          : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
+                          ? 'bg-[#E6F6F3] text-[#0B6B62]'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       )}
                     >
-                      <Icon className={cn('h-4 w-4 shrink-0', active ? 'text-teal-600' : 'text-zinc-500')} />
+                      <Icon className={cn('h-4 w-4 shrink-0', active ? 'text-teal-600' : 'text-slate-400')} />
                       <span className="truncate">{n.label}</span>
                       {n.href.endsWith('/approvals') && (counts?.approvals ?? 0) > 0 && (
                         <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-teal-600 px-1 text-[11px] font-semibold text-white" aria-label={`${counts!.approvals} pending`}>
@@ -158,7 +158,7 @@ export function PersistentSidebar({ role, nav, user, onLogout }: PersistentSideb
       </nav>
 
       {/* User */}
-      <div className="shrink-0 border-t border-zinc-100 p-3">
+      <div className="shrink-0 border-t border-[#E8EAEE] p-3 m-2 mt-0 rounded-xl bg-slate-50/70 border">
         <div className="flex items-center gap-2 mb-2">
           <div className="h-8 w-8 rounded-full bg-teal-50 text-teal-700 border border-teal-100 flex items-center justify-center text-xs font-semibold shrink-0">
             {getInitials(user.full_name)}

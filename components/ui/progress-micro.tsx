@@ -6,17 +6,16 @@ interface ProgressMicroProps {
   total: number;
 }
 
-export function ProgressMicro({ progress, completed, total }: ProgressMicroProps) {
-  if (total === 0) return <span className="text-xs text-zinc-500">—</span>;
-
-  const color = progress >= 80 ? 'bg-teal-500' : progress >= 40 ? 'bg-amber-500' : 'bg-red-500';
-
+/** Step progress as a count chip such as "3/5", green once every step is done. */
+export function ProgressMicro({ completed, total }: ProgressMicroProps) {
+  if (total === 0) return <span className="text-xs text-slate-400">—</span>;
+  const done = completed >= total;
   return (
-    <div className="flex items-center gap-2" title={`${completed} of ${total} steps completed`}>
-      <div className="h-1.5 w-10 bg-zinc-100 rounded-full overflow-hidden">
-        <div className={`h-full ${color} rounded-full transition-[width] duration-500`} style={{ width: `${progress}%` }} />
-      </div>
-      <span className="text-xs font-medium text-zinc-500 tabular-nums">{progress}%</span>
-    </div>
+    <span
+      className={`tff-pill ${done ? 'tff-pill-good' : completed > 0 ? 'tff-pill-accent' : 'tff-pill-mute'}`}
+      title={`${completed} of ${total} steps completed`}
+    >
+      {completed}/{total}
+    </span>
   );
 }

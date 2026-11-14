@@ -3,7 +3,6 @@ import { requireRole } from '@/lib/auth/require-role';
 import { getAdminDashboardData } from '@/lib/services/dashboard-service';
 import { listComplianceTasks } from '@/lib/repositories/compliance-tasks';
 import { listExpiringDsc } from '@/lib/repositories/dsc';
-import { MicroBarChart } from '@/components/charts/micro-bar-chart';
 import { DeadlineProgress, WorkloadBars } from '@/components/dashboard/home-widgets';
 import { getAdminHome } from '@/lib/services/home-service';
 import { addDaysIso, formatInrCompact } from '@/lib/services/home-metrics';
@@ -123,8 +122,25 @@ async function DashboardBody({ cview, cmonth }: { cview?: string; cmonth?: strin
     }] : []),
   ].slice(0, 5);
 
+  const hourIst = new Date(Date.now() + 5.5 * 3600_000).getUTCHours();
+  const greeting = hourIst < 12 ? 'Good morning' : hourIst < 17 ? 'Good afternoon' : 'Good evening';
+  const dateLabel = new Date(`${home.todayIso}T00:00:00Z`).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+  const stuckCount = (attentionTasks ?? []).filter((t: any) => t.is_stuck).length;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <div className="rounded-[18px] border border-[#E8EAEE] bg-gradient-to-br from-[#ECFDF9] to-[#F1F5FF] px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-[22px] font-semibold tracking-tight text-slate-900">{greeting}. Here is your day.</h2>
+          <p className="text-sm text-slate-600 mt-0.5">{dateLabel}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/admin/tasks?due_to=${addDaysIso(home.todayIso, -1)}`} className="tff-pill tff-pill-bad tff-pill-dot">{home.overdue} overdue</Link>
+          <Link href={`/admin/tasks?due_from=${home.todayIso}&due_to=${addDaysIso(home.todayIso, 7)}`} className="tff-pill tff-pill-warn tff-pill-dot">{home.dueThisWeek} due this week</Link>
+          {stuckCount > 0 && <Link href="/admin/tasks?is_stuck=true" className="tff-pill tff-pill-info tff-pill-dot">{stuckCount} stuck</Link>}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Due this week"
@@ -141,59 +157,56 @@ async function DashboardBody({ cview, cmonth }: { cview?: string; cmonth?: strin
           tone="red"
         />
         <StatCard
-          label="Team present today"
-          value={`${attendanceToday.presentCount ?? 0} / ${attendanceToday.teamTotal ?? 0}`}
-          icon={<LogIn className="h-5 w-5" />}
-          href="/admin/attendance"
-        />
-        <StatCard
           label="Done, not yet billed"
           value={formatInrCompact(home.unbilled.amount)}
           hint={`${home.unbilled.count.toLocaleString('en-IN')} task${home.unbilled.count === 1 ? '' : 's'}`}
           icon={<Wallet className="h-5 w-5" />}
           href="/admin/reports/pending-billing"
         />
+        <StatCard
+          label="Team present today"
+          value={`${attendanceToday.presentCount ?? 0} / ${attendanceToday.teamTotal ?? 0}`}
+          hint={pendingApprovals.total > 0 ? `${pendingApprovals.total} approval${pendingApprovals.total === 1 ? '' : 's'} waiting` : undefined}
+          icon={<LogIn className="h-5 w-5" />}
+          href="/admin/attendance"
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-7">
-          <NeedsAttentionHub items={attentionItems} />
+          <ComplianceProgress
+            rows={progressRows}
+            view={view}
+            monthKey={monthKey}
+            currentMonthKey={currentMonthKey}
+            basePath="/admin"
+            complianceHref="/admin/compliance"
+          />
         </div>
         <div className="lg:col-span-5">
-          <PriorityList tasks={recentTasks} href="/admin/tasks" />
+          <DeadlineProgress rows={deadlineRows} href="/admin/compliance" />
         </div>
       </div>
 
-      <DeadlineProgress rows={deadlineRows} href="/admin/compliance" />
-
-      <ComplianceProgress
-        rows={progressRows}
-        view={view}
-        monthKey={monthKey}
-        currentMonthKey={currentMonthKey}
-        basePath="/admin"
-        complianceHref="/admin/compliance"
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7">
-          <WorkloadBars rows={home.workload} tasksHref="/admin/tasks" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-7 space-y-4">
+          <NeedsAttentionHub items={attentionItems} />
+          <PriorityList tasks={recentTasks} href="/admin/tasks" />
         </div>
         <div className="lg:col-span-5 space-y-4">
-          <StatCard
-            label="Pending approvals"
-            value={pendingApprovals.total}
-            icon={<ShieldCheck className="h-5 w-5" />}
-            href="/admin/approvals"
-            tone="amber"
-          />
+          <WorkloadBars rows={home.workload} tasksHref="/admin/tasks" />
           {dscSegments.length > 0 && (
-            <Link href="/admin/dsc" className="tff-card p-4 block hover:border-zinc-300 transition-colors">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="tff-section-title">DSC expiry</h3>
-                <span className="text-xs text-zinc-500">Next 90 days</span>
+            <Link href="/admin/dsc" className="tff-card p-4 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
+              <span className="h-9 w-9 rounded-[10px] bg-amber-50 text-amber-600 flex items-center justify-center"><ShieldCheck className="h-4 w-4" /></span>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-slate-900">DSC expiry</div>
+                <div className="text-xs text-slate-500">Next 90 days</div>
               </div>
-              <MicroBarChart segments={dscSegments} />
+              <div className="flex flex-wrap gap-1.5 justify-end">
+                {dscSegments.map((s) => (
+                  <span key={s.label} className={`tff-pill ${s.label === '0-30 days' ? 'tff-pill-bad' : s.label === '31-60 days' ? 'tff-pill-warn' : 'tff-pill-mute'}`}>{s.value} in {s.label}</span>
+                ))}
+              </div>
             </Link>
           )}
         </div>

@@ -12,11 +12,15 @@ import BillingActions from '@/components/billing/billing-actions';
 
 import ExportButton from '@/components/sophistication/export-button';
 import { Pagination } from '@/components/ui/pagination';
+import { ViewTabs } from '@/components/ui/view-tabs';
+import { StatCard } from '@/components/ui/stat-card';
+import { PageHeader } from '@/components/ui/page-header';
+import { Wallet, Receipt, Clock } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 interface Props {
-  searchParams: { page?: string };
+  searchParams: { page?: string; v?: string };
 }
 
 export default async function BillingPage({ searchParams }: Props) {
@@ -28,13 +32,16 @@ export default async function BillingPage({ searchParams }: Props) {
 
   const mePromise = requireRole(['admin', 'team']);
 
-  const tasksPromise = sb
+  const view = searchParams.v === 'pending' || searchParams.v === 'billed' ? searchParams.v : 'all';
+
+  let tasksQuery = sb
     .from('tasks')
     .select('id, task_number, title, status, bill_amount, bill_reference, billed, billed_date, completed_date, client_id, clients!tasks_client_id_fkey(business_name)', { count: 'exact' })
     .eq('is_billable', true)
-    .eq('is_deleted', false)
-    .order('completed_date', { ascending: false })
-    .range(from, to);
+    .eq('is_deleted', false);
+  if (view === 'pending') tasksQuery = tasksQuery.eq('billed', false);
+  if (view === 'billed') tasksQuery = tasksQuery.eq('billed', true);
+  const tasksPromise = tasksQuery.order('completed_date', { ascending: false }).range(from, to);
 
   const aggPromise = fetchAll<{ billed: boolean; bill_amount: number | null }>(() =>
     sb.from('tasks').select('billed, bill_amount').eq('is_billable', true).eq('is_deleted', false),
@@ -45,6 +52,7 @@ export default async function BillingPage({ searchParams }: Props) {
 
   const pendingCount = (aggData ?? []).filter((t: any) => !t.billed).length;
   const totalAmount = (aggData ?? []).reduce((sum: number, t: any) => sum + (t.bill_amount || 0), 0);
+  const billedCount = (aggData ?? []).length - pendingCount;
   const pendingAmount = (aggData ?? []).filter((t: any) => !t.billed).reduce((sum: number, t: any) => sum + (t.bill_amount || 0), 0);
 
   const exportData = (tasks ?? []).map((t: any) => ({
@@ -57,29 +65,28 @@ export default async function BillingPage({ searchParams }: Props) {
   }));
 
   return (
-    <div className="tff-stack-lg">
-      <div className="tff-page-header">
-        <div>
-          <h1 className="tff-page-title">Billing tracker</h1>
-          <p className="tff-page-subtitle">Track billable tasks and mark them as billed when invoices are raised externally.</p>
-        </div>
-        <ExportButton data={exportData} filename="billing-tracker" format="excel" />
+    <div className="space-y-5">
+      <PageHeader
+        title="Billing tracker"
+        subtitle="Track billable tasks and mark them as billed when invoices are raised externally."
+        showBreadcrumbs={false}
+        actions={<ExportButton data={exportData} filename="billing-tracker" format="excel" />}
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard label="Billable tasks" value={(aggData ?? []).length.toLocaleString('en-IN')} icon={<Receipt className="h-5 w-5" />} />
+        <StatCard label="Pending billing" value={pendingCount.toLocaleString('en-IN')} icon={<Clock className="h-5 w-5" />} tone="amber" />
+        <StatCard label="Pending amount" value={`₹${pendingAmount.toLocaleString('en-IN')}`} hint={`of ₹${totalAmount.toLocaleString('en-IN')} billable in total`} icon={<Wallet className="h-5 w-5" />} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="tff-card p-5">
-          <div className="tff-kpi-value">{count ?? 0}</div>
-          <div className="tff-kpi-label mt-1">Billable tasks</div>
-        </div>
-        <div className="tff-card p-5">
-          <div className="tff-kpi-value text-amber-600">{pendingCount}</div>
-          <div className="tff-kpi-label mt-1">Pending billing</div>
-        </div>
-        <div className="tff-card p-5">
-          <div className="tff-kpi-value">₹{pendingAmount.toLocaleString('en-IN')}</div>
-          <div className="tff-kpi-label mt-1">Pending amount</div>
-        </div>
-      </div>
+      <ViewTabs
+        label="Billing views"
+        tabs={[
+          { key: 'all', label: 'All', count: (aggData ?? []).length, href: '?', active: view === 'all' },
+          { key: 'pending', label: 'Pending', count: pendingCount, href: '?v=pending', active: view === 'pending', tone: 'warning' },
+          { key: 'billed', label: 'Billed', count: billedCount, href: '?v=billed', active: view === 'billed' },
+        ]}
+      />
 
       {(!tasks || tasks.length === 0) ? (
         <EmptyState

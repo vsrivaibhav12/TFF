@@ -91,14 +91,13 @@ export default async function TasksListPage({
   const tiles = taskTiles({ todayIso, weekEndIso: addDaysIso(7), yesterdayIso: addDaysIso(-1), isAdmin: isAdminView });
   const base = `/${variant}/tasks`;
 
-  const [rawTasks, team, subServices, totalCount, allLabels, tileCounts, splitCounts] = await Promise.all([
+  const [rawTasks, team, subServices, totalCount, allLabels, tileCounts] = await Promise.all([
     listTasks({ ...filterOpts, limit: PAGE_SIZE, offset }),
     listTeamUsers(),
     listSubServices(),
     countTasks(filterOpts),
     listLabels(),
     Promise.all(tiles.map((tile) => countTasks({ ...tileFilterOpts(tile, flat), labels: baseFilter.labels, assignedTo: tileFilterOpts(tile, flat).assignedTo ?? assignedTo }))),
-    Promise.all((['pending', 'in_progress', 'completed'] as const).map((s) => countTasks({ ...filterOpts, status: [s] }))),
   ]);
   const tileViews: TileView[] = tiles.map((tile, i) => ({
     tile,
@@ -106,7 +105,6 @@ export default async function TasksListPage({
     href: tileHref(tile, flat, base),
     active: tileIsActive(tile, flat),
   }));
-  const split = { pending: splitCounts[0], in_progress: splitCounts[1], completed: splitCounts[2] };
 
   const [tasksWithLabels, tasksWithProgress, tasksWithTime] = await Promise.all([
     enrichTasksWithLabels(rawTasks),
@@ -151,7 +149,7 @@ export default async function TasksListPage({
         }
       />
 
-      <TaskSummaryTiles tiles={tileViews} split={split} />
+      <TaskSummaryTiles tiles={tileViews} />
 
       <div className="tff-card p-3 space-y-3">
         <TaskSearchBox />

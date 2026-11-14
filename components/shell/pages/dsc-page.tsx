@@ -13,11 +13,12 @@ import { formatDateIST } from '@/lib/utils';
 import { differenceInDays, parseISO } from 'date-fns';
 
 import FilterBar from '@/components/sophistication/filter-bar';
+import { ViewTabs } from '@/components/ui/view-tabs';
 
 export const dynamic = 'force-dynamic';
 
 interface Props {
-  searchParams: { query?: string };
+  searchParams: { query?: string; v?: string };
 }
 
 export default async function DscPage({ searchParams }: Props) {
@@ -34,6 +35,24 @@ export default async function DscPage({ searchParams }: Props) {
       (d.clients?.business_name ?? '').toLowerCase().includes(q)
     );
   }
+
+  // Views: expiring within 30 days, expired, or everything. Counts follow the search.
+  const daysTo = (d: any) => (d.expiry_date ? differenceInDays(parseISO(d.expiry_date), today) : null);
+  const counts = {
+    all: filteredItems.length,
+    soon: filteredItems.filter((d: any) => { const n = daysTo(d); return n !== null && n >= 0 && n <= 30; }).length,
+    expired: filteredItems.filter((d: any) => { const n = daysTo(d); return n !== null && n < 0; }).length,
+  };
+  const view = searchParams.v === 'soon' || searchParams.v === 'expired' ? searchParams.v : 'all';
+  if (view === 'soon') filteredItems = filteredItems.filter((d: any) => { const n = daysTo(d); return n !== null && n >= 0 && n <= 30; });
+  if (view === 'expired') filteredItems = filteredItems.filter((d: any) => { const n = daysTo(d); return n !== null && n < 0; });
+  const tabHref = (v: string) => {
+    const qs = new URLSearchParams();
+    if (searchParams.query) qs.set('query', searchParams.query);
+    if (v !== 'all') qs.set('v', v);
+    const s = qs.toString();
+    return s ? `?${s}` : '?';
+  };
 
   const exportData = (filteredItems ?? []).map((d: any) => ({
     client: d.clients?.business_name ?? '',
@@ -57,12 +76,21 @@ export default async function DscPage({ searchParams }: Props) {
         }
       />
 
+      <ViewTabs
+        label="DSC views"
+        tabs={[
+          { key: 'all', label: 'All certificates', count: counts.all, href: tabHref('all'), active: view === 'all' },
+          { key: 'soon', label: 'Expiring in 30 days', count: counts.soon, href: tabHref('soon'), active: view === 'soon', tone: 'warning' },
+          { key: 'expired', label: 'Expired', count: counts.expired, href: tabHref('expired'), active: view === 'expired', tone: 'danger' },
+        ]}
+      />
+
       <FilterBar inputs={[{ key: 'query', placeholder: 'Search holder or client...' }]} />
 
       {filteredItems.length === 0 ? (
         <EmptyState
-          title="No DSCs registered"
-          body="Add the first digital signature certificate to start tracking expiries."
+          title={view === 'all' && !searchParams.query ? 'No DSCs registered' : 'No certificates match'}
+          body={view === 'all' && !searchParams.query ? 'Add the first digital signature certificate to start tracking expiries.' : 'Try another view or clear the search.'}
           variant="key"
         />
       ) : (

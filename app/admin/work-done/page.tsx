@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { FullExport } from '@/components/reports/full-export';
 import WorkDoneForm from '@/app/team/work-done/work-done-form';
 import WorkDoneFilters from '@/components/operations/work-done-filters';
+import WorkDoneRanges from '@/components/operations/work-done-ranges';
 import WorkDoneTable from '@/components/operations/work-done-table';
 import { displayTaskName } from '@/lib/utils';
 
@@ -48,7 +49,8 @@ export default async function AdminWorkDonePage({ searchParams }: { searchParams
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <WorkDoneFilters clients={clients} tasks={tasks} showStaffFilter staff={staff} />
+          <WorkDoneRanges basePath="/admin/work-done" params={searchParams ?? {}} />
+          <WorkDoneFilters key={JSON.stringify(searchParams ?? {})} clients={clients} tasks={tasks} showStaffFilter staff={staff} />
           {hasFilter ? (
             <WorkDoneTable
               logs={logs}
