@@ -89,7 +89,7 @@ export default async function ServicesPage() {
   const servicesWithoutCategory = (services as Service[]).filter((s) => !s.category_id);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Services catalogue"
         subtitle="Define what your firm offers. Each sub-service can have task templates — reusable work packages with ordered steps."

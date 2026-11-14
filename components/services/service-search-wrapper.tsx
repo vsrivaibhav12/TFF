@@ -85,7 +85,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
           )}
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-5">
           {(categories as any[]).map((cat) => {
             const catServices = servicesWithCategory.filter((s) => s.category_id === cat.id);
             if (catServices.length === 0) return null;
@@ -95,7 +95,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
                   <h2 className="text-xs text-zinc-500 font-semibold">{cat.name}</h2>
                   <Badge variant="outline" className="text-xs font-normal">{catServices.length}</Badge>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
                   {catServices.map((s: any) => (
                     <ServiceCard
                       key={s.id}
@@ -116,7 +116,7 @@ export default function ServiceSearchWrapper({ categories, services, subServices
                 <h2 className="text-xs text-zinc-500 font-semibold">Uncategorized</h2>
                 <Badge variant="outline" className="text-xs font-normal">{servicesWithoutCategory.length}</Badge>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
                 {servicesWithoutCategory.map((s: any) => (
                   <ServiceCard
                     key={s.id}

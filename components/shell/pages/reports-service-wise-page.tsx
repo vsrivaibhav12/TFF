@@ -116,7 +116,7 @@ export default async function ServiceWiseReportPage({ searchParams }: { searchPa
       {Object.keys(byService).length === 0 ? (
         <EmptyState title="No data" body="No active client services found." variant="chart" />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {Object.values(byService).map((svc) => (
             <div key={svc.serviceName} className="tff-card overflow-hidden">
               <div className="px-5 py-3 bg-zinc-50 border-b border-zinc-200 font-semibold text-zinc-900">{svc.serviceName}</div>

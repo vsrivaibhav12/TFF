@@ -1,52 +1,34 @@
 'use client';
-import {
-  Calculator,
-  Receipt,
-  FileText,
-  ShieldCheck,
-  BarChart3,
-  TrendingUp,
-  AlertTriangle,
-  Wallet,
-  Boxes,
-  ChevronRight,
-  ListChecks,
-  Footprints,
-  Users,
-} from 'lucide-react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { Calculator, Receipt, FileText, ShieldCheck, AlertTriangle, Boxes, Users, ListChecks, Pencil, Plus, } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useRolePrefix } from '@/lib/hooks/use-role-prefix';
 import { getServiceColour } from '@/lib/semantic-colours';
+import { subServicePeriodType } from '@/lib/periods';
 import ServiceDialog from './service-dialog';
 import SubServiceDialog from './sub-service-dialog';
 import TaskTemplatePanel from './task-template-panel';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
-export function serviceKindIcon(kind: string) {
+function serviceKindIcon(kind: string) {
   const map: Record<string, React.ReactNode> = {
-    gst: <Calculator className="h-6 w-6" />,
-    tds: <Receipt className="h-6 w-6" />,
-    income_tax: <FileText className="h-6 w-6" />,
-    compliance: <ShieldCheck className="h-6 w-6" />,
-    notice: <AlertTriangle className="h-6 w-6" />,
+    gst: <Calculator className="h-4 w-4" />,
+    tds: <Receipt className="h-4 w-4" />,
+    income_tax: <FileText className="h-4 w-4" />,
+    compliance: <ShieldCheck className="h-4 w-4" />,
+    notice: <AlertTriangle className="h-4 w-4" />,
   };
-  return map[kind] ?? <Boxes className="h-6 w-6" />;
+  return map[kind] ?? <Boxes className="h-4 w-4" />;
 }
 
-export function serviceKindColor(kind: string): string {
+function serviceKindColor(kind: string): string {
   const c = getServiceColour(kind);
   return `${c.lightBg} ${c.text} ${c.border}`;
 }
 
-function frequencyColor(frequency: string): string {
-  const map: Record<string, string> = {
-    monthly: 'bg-blue-50 text-blue-600 border-blue-100',
-    quarterly: 'bg-purple-50 text-purple-600 border-purple-100',
-    annually: 'bg-amber-50 text-amber-600 border-amber-100',
-    on_demand: 'bg-zinc-50 text-zinc-500 border-zinc-100',
-  };
-  return map[frequency] ?? 'bg-zinc-50 text-zinc-500 border-zinc-100';
-}
+const PERIOD_SHORT: Record<string, string> = { none: '', monthly: 'Monthly', quarterly: 'Quarterly', half_yearly: 'Half-yearly', yearly: 'Yearly', gst_frequency: 'GST frequency' };
+
+const iconBtn = 'inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900';
 
 interface ServiceCardProps {
   s: any;
@@ -56,235 +38,86 @@ interface ServiceCardProps {
   stepsByTemplate: Record<string, any[]>;
 }
 
-export default function ServiceCard({
-  s,
-  categories,
-  subServices,
-  templatesBySub,
-  stepsByTemplate,
-}: ServiceCardProps) {
+/** One sub-service as a row: name and tags on the left, the same three actions on the right. */
+function SubServiceRow({ ss, templates, stepsByTemplate }: { ss: any; templates: any[]; stepsByTemplate: Record<string, any[]> }) {
   const prefix = useRolePrefix();
-  const subs = subServices.filter((ss) => ss.service_id === s.id);
-  const icon = serviceKindIcon(s.service_kind);
-  const colorCls = serviceKindColor(s.service_kind);
-
-  const totalTemplates = subs.reduce(
-    (sum, ss) => sum + (templatesBySub[ss.id]?.length ?? 0),
-    0
-  );
-  const totalSteps = subs.reduce(
-    (sum, ss) =>
-      sum +
-      (templatesBySub[ss.id] ?? []).reduce(
-        (sSum, t) => sSum + (stepsByTemplate[t.id]?.length ?? 0),
-        0
-      ),
-    0
-  );
+  const [open, setOpen] = useState(false);
+  const period = subServicePeriodType({ period_type: ss.period_type, frequency: ss.frequency });
+  const steps = templates.reduce((n, t) => n + (stepsByTemplate[t.id]?.length ?? 0), 0);
 
   return (
-    <div className="tff-card p-5 group hover:border-zinc-300 transition-colors flex flex-col">
-      {/* Header: icon + name */}
-      <div className="flex items-start gap-3.5">
-        <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${colorCls} transition-transform duration-300 group-hover:scale-105`}
-        >
-          {icon}
+    <li className="border-b border-[#E8EAEE] last:border-0">
+      <div className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50/70">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="truncate text-[13px] font-medium text-slate-900">{ss.name}</span>
+          {period !== 'none' && <span className="tff-pill tff-pill-mute !py-0 text-[11.5px]">{PERIOD_SHORT[period]}</span>}
+          {ss.is_compliance && <span className="tff-pill tff-pill-accent !py-0 text-[11.5px]">Compliance</span>}
+          {!ss.is_active && <span className="tff-pill tff-pill-warn !py-0 text-[11.5px]">Paused</span>}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3 className="font-semibold text-zinc-900 text-[15px] leading-snug group-hover:text-teal-700 transition-colors truncate">
-                {s.name}
-              </h3>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="font-mono text-xs text-zinc-500">{s.code}</span>
-                {s.service_kind && (
-                  <span className="text-xs text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded font-medium">
-                    {s.service_kind.replace(/_/g, ' ')}
-                  </span>
-                )}
-              </div>
-            </div>
-            <ServiceDialog categories={categories} initial={s}>
-              <button className="text-xs text-zinc-500 hover:text-teal-700 font-medium transition-colors shrink-0">
-                Edit
-              </button>
-            </ServiceDialog>
-          </div>
-        </div>
-      </div>
-
-      {/* Description */}
-      {s.description && (
-        <p className="text-xs text-zinc-500 mt-3 line-clamp-2 leading-relaxed">
-          {s.description}
-        </p>
-      )}
-
-      {/* Sub-services chips */}
-      {subs.length === 0 ? (
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-xs text-zinc-500 italic">No sub-services yet.</span>
-          <SubServiceDialog serviceId={s.id} serviceName={s.name}>
-            <button className="text-xs text-teal-700 hover:underline font-medium">
-              + Add sub-service
+        <span className="hidden whitespace-nowrap text-xs tabular-nums text-slate-500 sm:inline">
+          {templates.length > 0 ? `${templates.length} template${templates.length === 1 ? '' : 's'} · ${steps} steps` : 'No templates'}
+        </span>
+        <div className="flex items-center gap-0.5">
+          <Link href={`${prefix}/services/sub-services/${ss.id}/clients`} className={iconBtn} title="Clients" aria-label={`Clients for ${ss.name}`}>
+            <Users className="h-3.5 w-3.5" />
+          </Link>
+          <button type="button" onClick={() => setOpen((v) => !v)} className={cn(iconBtn, open && 'bg-slate-100 text-slate-900')} title="Task templates" aria-expanded={open} aria-label={`Task templates for ${ss.name}`}>
+            <ListChecks className="h-3.5 w-3.5" />
+          </button>
+          <SubServiceDialog serviceId={ss.service_id} serviceName={ss.services?.name ?? ''} initial={ss}>
+            <button type="button" className={iconBtn} title="Edit" aria-label={`Edit ${ss.name}`}>
+              <Pencil className="h-3.5 w-3.5" />
             </button>
           </SubServiceDialog>
         </div>
-      ) : (
-        <div className="mt-4">
-          <div className="flex flex-wrap gap-1.5">
-            {subs.map((ss: any) => (
-              <span
-                key={ss.id}
-                className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border ${
-                  ss.is_active
-                    ? frequencyColor(ss.frequency)
-                    : 'bg-zinc-50 border-zinc-100 text-zinc-500'
-                }`}
-              >
-                {ss.name}
-                <span className="text-xs uppercase opacity-70">{ss.frequency}</span>
-                {!ss.is_active && (
-                  <span className="text-xs text-amber-600 font-medium">paused</span>
-                )}
-              </span>
-            ))}
-            <SubServiceDialog serviceId={s.id} serviceName={s.name}>
-              <button className="inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-medium text-teal-700 bg-teal-50 border border-teal-100 hover:bg-teal-100 transition-colors">
-                +<span className="sr-only">Add sub-service</span>
-              </button>
-            </SubServiceDialog>
-          </div>
-
-          {/* Expandable sub-service details */}
-          <div className="mt-3 space-y-2">
-            {subs.slice(0, 3).map((ss: any) => (
-              <div
-                key={ss.id}
-                className="rounded-xl bg-zinc-50/70 p-2.5 border border-zinc-100"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Footprints className="h-3 w-3 text-zinc-500 shrink-0" />
-                    <span className="text-[13px] font-medium text-zinc-900 truncate">
-                      {ss.name}
-                    </span>
-                    {!ss.is_active && (
-                      <span className="text-xs text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded shrink-0">
-                        inactive
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`${prefix}/services/sub-services/${ss.id}/clients`}
-                      className="inline-flex items-center gap-1 text-xs text-teal-700 hover:text-teal-800 font-medium transition-colors"
-                    >
-                      <Users className="h-3 w-3" /> Clients
-                    </Link>
-                    <SubServiceDialog
-                      serviceId={ss.service_id}
-                      serviceName={ss.services?.name ?? ''}
-                      initial={ss}
-                    >
-                      <button className="text-xs text-zinc-500 hover:text-teal-700 font-medium transition-colors shrink-0">
-                        Edit
-                      </button>
-                    </SubServiceDialog>
-                  </div>
-                </div>
-                <TaskTemplatePanel
-                  subService={ss}
-                  templates={templatesBySub[ss.id] ?? []}
-                  stepsByTemplate={stepsByTemplate}
-                />
-              </div>
-            ))}
-            {subs.length > 3 && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button className="text-xs text-teal-700 hover:text-teal-800 hover:underline font-medium pl-1 text-left">
-                    View all {subs.length} sub-services...
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>{s.name} Sub-services</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 pt-2">
-                    {subs.map((ss: any) => (
-                      <div
-                        key={ss.id}
-                        className="rounded-xl bg-zinc-50/70 p-3 border border-zinc-100"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <Footprints className="h-4 w-4 text-zinc-500 shrink-0" />
-                            <span className="text-[14px] font-semibold text-zinc-900 truncate">
-                              {ss.name}
-                            </span>
-                            {!ss.is_active && (
-                              <span className="text-xs text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded shrink-0">
-                                inactive
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Link
-                              href={`${prefix}/services/sub-services/${ss.id}/clients`}
-                              className="inline-flex items-center gap-1 text-[12px] text-teal-700 hover:text-teal-800 font-medium transition-colors"
-                            >
-                              <Users className="h-3.5 w-3.5" /> Manage Clients
-                            </Link>
-                            <SubServiceDialog
-                              serviceId={ss.service_id}
-                              serviceName={ss.services?.name ?? ''}
-                              initial={ss}
-                            >
-                              <button className="text-[12px] text-zinc-500 hover:text-teal-700 font-medium transition-colors shrink-0">
-                                Edit Settings
-                              </button>
-                            </SubServiceDialog>
-                          </div>
-                        </div>
-                        <p className="text-xs text-zinc-500 mb-3">{ss.description || 'No description provided.'}</p>
-                        <TaskTemplatePanel
-                          subService={ss}
-                          templates={templatesBySub[ss.id] ?? []}
-                          stepsByTemplate={stepsByTemplate}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
+      </div>
+      {open && (
+        <div className="border-t border-[#E8EAEE] bg-slate-50/60 px-4 pb-3">
+          <TaskTemplatePanel subService={ss} templates={templates} stepsByTemplate={stepsByTemplate} />
         </div>
       )}
+    </li>
+  );
+}
 
-      {/* Footer stats */}
-      <div className="mt-auto pt-4 flex items-center justify-between border-t border-zinc-100">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 text-xs text-zinc-500">
-            <ListChecks className="h-3 w-3" />
-            <span className="font-medium">{subs.length}</span> sub-services
-          </div>
-          {totalTemplates > 0 && (
-            <div className="flex items-center gap-1 text-xs text-zinc-500">
-              <Footprints className="h-3 w-3" />
-              <span className="font-medium">{totalSteps}</span> steps
-            </div>
-          )}
+export default function ServiceCard({ s, categories, subServices, templatesBySub, stepsByTemplate }: ServiceCardProps) {
+  const subs = subServices.filter((ss) => ss.service_id === s.id);
+
+  return (
+    <div className="tff-card flex flex-col overflow-hidden">
+      <div className="flex items-center gap-3 border-b border-[#E8EAEE] px-4 py-3">
+        <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border', serviceKindColor(s.service_kind))}>
+          {serviceKindIcon(s.service_kind)}
         </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-sm font-semibold text-slate-900">{s.name}</h3>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="font-mono">{s.code}</span>
+            <span>·</span>
+            <span className="tabular-nums">{subs.length} sub-service{subs.length === 1 ? '' : 's'}</span>
+          </div>
+        </div>
+        <ServiceDialog categories={categories} initial={s}>
+          <button type="button" className={iconBtn} title="Edit service" aria-label={`Edit ${s.name}`}>
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        </ServiceDialog>
         <SubServiceDialog serviceId={s.id} serviceName={s.name}>
-          <button className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:text-teal-800 transition-colors">
-            Add work <ChevronRight className="h-3 w-3" />
+          <button type="button" className="inline-flex h-7 items-center gap-1 rounded-md border border-[#DCDFE5] bg-white px-2 text-xs font-medium text-slate-700 hover:bg-slate-50">
+            <Plus className="h-3.5 w-3.5" /> Sub-service
           </button>
         </SubServiceDialog>
       </div>
+
+      {subs.length === 0 ? (
+        <p className="px-4 py-4 text-xs text-slate-500">No sub-services yet. Add one to start creating tasks.</p>
+      ) : (
+        <ul>
+          {subs.map((ss: any) => (
+            <SubServiceRow key={ss.id} ss={ss} templates={templatesBySub[ss.id] ?? []} stepsByTemplate={stepsByTemplate} />
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -18,7 +18,7 @@ export function PageHeader({ title, subtitle, actions, showBreadcrumbs = true }:
   const segments = pathname.split('/').filter(Boolean).slice(1);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {showBreadcrumbs && segments.length > 0 && (
         <div className="flex items-center gap-1.5 text-sm text-zinc-500 md:hidden">
           <Link href={`/${role}`} className="hover:text-zinc-900 transition-colors capitalize">
@@ -44,8 +44,8 @@ export function PageHeader({ title, subtitle, actions, showBreadcrumbs = true }:
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">{title}</h1>
-          {subtitle && <p className="text-sm text-zinc-500 mt-1">{subtitle}</p>}
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">{title}</h1>
+          {subtitle && <p className="text-[13px] text-slate-500 mt-0.5">{subtitle}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>

@@ -28,7 +28,7 @@ export default async function AdminTeamPage() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Team"
         subtitle="Internal users with admin or team role. Create an account with admin-assigned credentials."

@@ -75,7 +75,7 @@ export default async function AdminClientsList({ searchParams }: { searchParams:
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">Clients</h1>

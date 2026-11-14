@@ -267,7 +267,7 @@ export default function AppShell({
         {/* Main content */}
         <main className={`flex-1 min-w-0 transition-colors duration-300 ${desktopMargin}`}>
           {/* Desktop top bar */}
-          <div className="hidden md:flex items-center justify-between gap-4 px-8 h-14 sticky top-0 z-20 bg-[#F6F7F9]/80 backdrop-blur-md border-b border-[#E8EAEE]">
+          <div className="hidden md:flex items-center justify-between gap-4 px-6 h-12 sticky top-0 z-20 bg-[#F6F7F9]/80 backdrop-blur-md border-b border-[#E8EAEE]">
             {/* Breadcrumbs */}
             <div className="flex items-center gap-1.5 text-sm text-zinc-500">
               <Link href={`/${userRole}`} className="hover:text-zinc-900 transition-colors capitalize">
@@ -299,7 +299,7 @@ export default function AppShell({
                 onClick={() =>
                   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))
                 }
-                className="flex items-center gap-2 h-9 w-64 xl:w-80 px-3 text-sm text-zinc-500 bg-white border border-[#E8EAEE] rounded-xl shadow-card hover:border-[#DCDFE5] transition-colors group"
+                className="flex items-center gap-2 h-8 w-64 xl:w-80 px-3 text-sm text-zinc-500 bg-white border border-[#E8EAEE] rounded-xl shadow-card hover:border-[#DCDFE5] transition-colors group"
               >
                 <Search className="h-4 w-4 text-zinc-500 group-hover:text-zinc-700" />
                 <span className="text-zinc-500 flex-1 text-left">Search clients, tasks, pages</span>
@@ -319,7 +319,7 @@ export default function AppShell({
           </div>
 
           {/* Content area */}
-          <div id="main-content" className="px-6 md:px-8 py-6 md:py-8 pt-20 md:pt-6 pb-24 md:pb-8 bg-[#F6F7F9] min-h-screen">
+          <div id="main-content" className="px-4 md:px-6 py-4 md:py-5 pt-20 md:pt-4 pb-24 md:pb-6 bg-[#F6F7F9] min-h-screen">
             <div className="mx-auto w-full max-w-[1600px]">{children}</div>
           </div>
         </main>

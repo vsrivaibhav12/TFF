@@ -22,7 +22,7 @@ export default async function CapabilitiesPage({ params }: { params: { id: strin
   if (!user) notFound();
   if ((user as any).role === 'admin') {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Link href={`/admin/team/${id}`} className="inline-flex items-center gap-1 text-sm text-zinc-500"><ChevronLeft className="h-4 w-4" /> Back</Link>
         <h1 className="tff-page-title">{(user as any).full_name}</h1>
         <div className="tff-card tff-card-pad bg-zinc-50 text-sm text-zinc-600">Admins implicitly hold every capability. There is nothing to grant.</div>

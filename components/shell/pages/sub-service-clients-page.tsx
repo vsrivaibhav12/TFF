@@ -106,7 +106,7 @@ export default async function SubServiceClientsPage({ params, rolePrefix }: Prop
             </div>
           </div>
 
-          <aside className="space-y-6">
+          <aside className="space-y-4">
             <div className="tff-card p-5 space-y-3">
               <div className="flex items-center gap-2">
                 <Briefcase className="h-4 w-4 text-teal-600" />

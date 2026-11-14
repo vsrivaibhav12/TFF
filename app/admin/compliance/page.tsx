@@ -140,7 +140,7 @@ export default async function AdminCompliancePage({ searchParams }: { searchPara
               <h2 className="tff-section-title">Filings</h2>
               {selected && <Link href={href({ f: undefined, s: undefined })} className="text-sm font-medium text-teal-700 hover:underline">Show all filings</Link>}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
               {filings.map((f) => (
                 <Link
                   key={f.id}

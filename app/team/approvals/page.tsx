@@ -19,7 +19,7 @@ export default async function TeamApprovalsPage() {
   ]).then((arr) => arr.some(Boolean));
   if (!canApproveAny && me.role !== 'admin') {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <h1 className="tff-page-title">Approvals</h1>
         <p className="text-zinc-500">You do not have approval authority.</p>
       </div>

@@ -217,7 +217,7 @@ export default async function AttendancePage({ searchParams }: { searchParams?: 
         </TabsList>
 
         {/* Attendance tab */}
-        <TabsContent value="attendance" className="space-y-6">
+        <TabsContent value="attendance" className="space-y-4">
           <div className="tff-card overflow-hidden">
             <Table>
               <TableHeader>

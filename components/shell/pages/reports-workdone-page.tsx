@@ -80,7 +80,7 @@ export default async function WorkDoneReportsPage({ searchParams }: { searchPara
     b.map((x) => ({ [label]: x.name, Minutes: x.minutes, Duration: formatMinutes(x.minutes), Entries: x.entries }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Work done report"
         subtitle={`Time logged by the team, ${rangeLabel}.`}

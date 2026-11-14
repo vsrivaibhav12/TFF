@@ -31,7 +31,7 @@ export default async function TeamWorkspace() {
   const me = await requireRole(['team', 'admin']);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">My workspace</h1>

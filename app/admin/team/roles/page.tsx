@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export default async function RoleTemplatesPage() {
   const templates = await listRoleTemplates();
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <BackButton href="/admin/team" label="Back to team" />
       <RoleTemplatesAdmin templates={templates} />
     </div>

@@ -36,7 +36,7 @@ export default async function AdminWorkDonePage({ searchParams }: { searchParams
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Work done"
         subtitle="Track daily output and time spent on client tasks across the firm."

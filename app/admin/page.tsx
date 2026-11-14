@@ -28,15 +28,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   await requireRole('admin');
 
   return (
-    <div className="space-y-6">
-      <div className="tff-page-header">
-        <div>
-          <h1 className="tff-page-title">Firm overview</h1>
-          <p className="tff-page-subtitle">Everything you need to run the firm, at a glance.</p>
-        </div>
-        <AdminQuickActions />
-      </div>
-
+    <div className="space-y-3">
       <Suspense fallback={<DashboardSkeleton />}>
         <DashboardBody cview={searchParams?.cview} cmonth={searchParams?.cmonth} />
       </Suspense>
@@ -128,20 +120,21 @@ async function DashboardBody({ cview, cmonth }: { cview?: string; cmonth?: strin
   const stuckCount = (attentionTasks ?? []).filter((t: any) => t.is_stuck).length;
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-[18px] border border-[#E8EAEE] bg-gradient-to-br from-[#ECFDF9] to-[#F1F5FF] px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-3">
+      <div className="rounded-2xl border border-[#E8EAEE] bg-gradient-to-br from-[#ECFDF9] to-[#F1F5FF] px-5 py-3 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-[22px] font-semibold tracking-tight text-slate-900">{greeting}. Here is your day.</h2>
-          <p className="text-sm text-slate-600 mt-0.5">{dateLabel}</p>
+          <h2 className="text-base font-semibold tracking-tight text-slate-900">{greeting}. Here is your day.</h2>
+          <p className="text-xs text-slate-600">{dateLabel}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href={`/admin/tasks?due_to=${addDaysIso(home.todayIso, -1)}`} className="tff-pill tff-pill-bad tff-pill-dot">{home.overdue} overdue</Link>
           <Link href={`/admin/tasks?due_from=${home.todayIso}&due_to=${addDaysIso(home.todayIso, 7)}`} className="tff-pill tff-pill-warn tff-pill-dot">{home.dueThisWeek} due this week</Link>
           {stuckCount > 0 && <Link href="/admin/tasks?is_stuck=true" className="tff-pill tff-pill-info tff-pill-dot">{stuckCount} stuck</Link>}
         </div>
+        <AdminQuickActions />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
           label="Due this week"
           value={home.dueThisWeek}
@@ -172,7 +165,7 @@ async function DashboardBody({ cview, cmonth }: { cview?: string; cmonth?: strin
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
         <div className="lg:col-span-7">
           <ComplianceProgress
             rows={progressRows}
@@ -188,12 +181,12 @@ async function DashboardBody({ cview, cmonth }: { cview?: string; cmonth?: strin
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className="lg:col-span-7 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+        <div className="lg:col-span-7 space-y-3">
           <NeedsAttentionHub items={attentionItems} />
           <PriorityList tasks={recentTasks} href="/admin/tasks" />
         </div>
-        <div className="lg:col-span-5 space-y-4">
+        <div className="lg:col-span-5 space-y-3">
           <WorkloadBars rows={home.workload} tasksHref="/admin/tasks" />
           {dscSegments.length > 0 && (
             <Link href="/admin/dsc" className="tff-card p-4 flex items-center gap-3 hover:-translate-y-0.5 transition-all">
@@ -218,7 +211,7 @@ async function DashboardBody({ cview, cmonth }: { cview?: string; cmonth?: strin
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="tff-card h-[74px] bg-zinc-50" />
         ))}

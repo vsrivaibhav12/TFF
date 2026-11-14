@@ -46,7 +46,7 @@ export default async function AdminAttendancePage({ searchParams }: { searchPara
   const geoRequired = !!(profile as any)?.geo_check_in_required;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Attendance"
         subtitle="Mark and review attendance for all staff members. Admin override is always possible."

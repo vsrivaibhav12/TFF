@@ -47,7 +47,7 @@ export default async function WorkloadPage() {
   const totalOpen = rows.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader title="Workload" subtitle={`${totalOpen} open task${totalOpen === 1 ? '' : 's'} across ${team.length} team member${team.length === 1 ? '' : 's'}, grouped by due date.`} />
 
       {list.length === 0 ? (

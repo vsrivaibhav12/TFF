@@ -45,7 +45,7 @@ export default async function CredentialsPage({ searchParams }: Props) {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Credentials Vault"
         subtitle="Encrypted (AES-GCM). Every reveal is audited."

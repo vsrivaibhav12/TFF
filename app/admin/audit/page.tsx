@@ -37,7 +37,7 @@ export default async function AuditPage({ searchParams }: { searchParams: { acto
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Audit trail"
         subtitle="Every privileged action across the firm. Filterable and exportable."

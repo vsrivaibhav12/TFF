@@ -74,7 +74,7 @@ export default async function TeamClientsList({ searchParams }: { searchParams: 
 
   return (
     <PullToRefreshWrapper>
-      <div className="space-y-6">
+      <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[24px] font-semibold tracking-tight text-zinc-900">My clients</h1>

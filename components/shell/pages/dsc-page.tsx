@@ -64,7 +64,7 @@ export default async function DscPage({ searchParams }: Props) {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="DSC Vault"
         subtitle="Digital signature certificates across the firm. Alerts fire 30 days before expiry."

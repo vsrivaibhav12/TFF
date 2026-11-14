@@ -11,7 +11,7 @@ export default async function InboxPage(_props: unknown, rolePrefix: string) {
   const items = await listUnifiedInbox({ limit: 200 });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Inbox"
         subtitle={rolePrefix === '/team' ? 'Your chronological feed of assigned tasks and compliance events.' : 'Chronological feed of tasks and compliance events across all clients.'}
